@@ -11,7 +11,8 @@
                         <AppIcon name="message-square-more" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
                         <div>
                             <h1 class="text-2xl short:text-xl font-bold text-gray-700">Interviewed Applicants</h1>
-                            <p class="text-sm text-gray-600 short:text-xs">Review interview assessments and manage approvals</p>
+                            <p class="text-sm text-gray-600 short:text-xs">Review interview assessments and manage
+                                approvals</p>
                         </div>
                     </div>
                 </template>
@@ -22,12 +23,12 @@
                                 class="cursor-pointer rounded-full  px-4 py-[0.65rem] text-slate-700 transition-colors"
                                 :class="activeTab === 'interviewed'
                                     ? ' bg-blue-400 !text-slate-50'
-                                    : ' bg-white hover:border-blue-200'"
-                                @click="activeTab = 'interviewed'">
+                                    : ' bg-white hover:border-blue-200'" @click="activeTab = 'interviewed'">
                                 <div class="flex items-center gap-2">
                                     <AppIcon name="clipboard-list" :size="14" />
                                     <span>Interviewed Applicants</span>
-                                    <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                                    <span
+                                        class="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
                                         {{ filteredList.length }}
                                     </span>
                                 </div>
@@ -36,12 +37,12 @@
                                 class="cursor-pointer rounded-full  px-4 py-[0.65rem] text-slate-700 transition-colors"
                                 :class="activeTab === 'recommendation-lists'
                                     ? 'bg-blue-400 !text-slate-50'
-                                    : ' bg-white hover:border-blue-200'"
-                                @click="activeTab = 'recommendation-lists'">
+                                    : ' bg-white hover:border-blue-200'" @click="activeTab = 'recommendation-lists'">
                                 <div class="flex items-center gap-2">
                                     <AppIcon name="list-checks" :size="14" />
                                     <span>Recommendation Lists</span>
-                                    <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                    <span
+                                        class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                                         {{ recommendationLists.length }}
                                     </span>
                                 </div>
@@ -49,15 +50,16 @@
                         </div>
                         <AppButton icon="users" label="Cumulative List" severity="secondary" rounded size="small"
                             @click="openCumulativeScholarListModal" />
-                        <AppButton v-if="activeTab === 'interviewed'" icon="printer" severity="info" text rounded size="large"
-                            @click="openReportModal" v-tooltip.bottom="'Print Report'" />
+                        <AppButton v-if="activeTab === 'interviewed'" icon="printer" severity="info" text rounded
+                            size="large" @click="openReportModal" v-tooltip.bottom="'Print Report'" />
                     </div>
                 </template>
             </Toolbar>
 
             <Tabs v-model:value="activeTab">
                 <Panel class="mb-6 short:mb-3 !rounded-4xl overflow-hidden">
-                    <div v-if="activeTab === 'interviewed'" class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap">
+                    <div v-if="activeTab === 'interviewed'"
+                        class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap">
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
                             <IconField iconPosition="left">
@@ -69,8 +71,9 @@
                         </div>
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
-                            <Select v-model="filters.recommendation" :options="recommendationOptions" optionLabel="label"
-                                optionValue="value" placeholder="All Recommendations" size="small" class="w-full" />
+                            <Select v-model="filters.recommendation" :options="recommendationOptions"
+                                optionLabel="label" optionValue="value" placeholder="All Recommendations" size="small"
+                                class="w-full" />
                         </div>
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
@@ -102,8 +105,9 @@
                         </div>
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
-                            <Select v-model="filters.recommendation" :options="recommendationOptions" optionLabel="label"
-                                optionValue="value" placeholder="All Recommendations" size="small" class="w-full" />
+                            <Select v-model="filters.recommendation" :options="recommendationOptions"
+                                optionLabel="label" optionValue="value" placeholder="All Recommendations" size="small"
+                                class="w-full" />
                         </div>
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
@@ -127,524 +131,612 @@
                 <TabPanels>
                     <TabPanel value="interviewed">
 
-                            <Panel class="mb-4 short:mb-2 !rounded-4xl overflow-hidden border border-sky-100 bg-sky-50/70 shadow-sm">
-                                <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                                    <div class="flex items-start gap-3">
-                                        <AppIcon name="info-circle" :size="18" class="mt-0.5 text-sky-600" />
-                                        <div>
-                                            <div class="text-sm font-semibold text-sky-900">How to create a recommendation list</div>
-                                            <div class="mt-2 flex flex-wrap gap-2 text-xs text-sky-800">
-                                                <span class="rounded-full bg-white px-3 py-1 shadow-sm">1. Filter to Recommended for Approval</span>
-                                                <span class="rounded-full bg-white px-3 py-1 shadow-sm">2. Show applicants not yet in a recommendation list</span>
-                                                <span class="rounded-full bg-white px-3 py-1 shadow-sm">3. Select applicants</span>
-                                                <span class="rounded-full bg-white px-3 py-1 shadow-sm">4. Click Create Recommendation List</span>
-                                            </div>
-                                            <div class="mt-2 text-xs text-sky-700">
-                                                Applicants already saved in a recommendation list are flagged in the table and excluded by the eligible filter.
-                                            </div>
+                        <Panel
+                            class="mb-4 short:mb-2 !rounded-4xl overflow-hidden border border-sky-100 bg-sky-50/70 shadow-sm">
+                            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                                <div class="flex items-start gap-3">
+                                    <AppIcon name="info-circle" :size="18" class="mt-0.5 text-sky-600" />
+                                    <div>
+                                        <div class="text-sm font-semibold text-sky-900">How to create a recommendation
+                                            list</div>
+                                        <div class="mt-2 flex flex-wrap gap-2 text-xs text-sky-800">
+                                            <span class="rounded-full bg-white px-3 py-1 shadow-sm">1. Filter to
+                                                Recommended for
+                                                Approval</span>
+                                            <span class="rounded-full bg-white px-3 py-1 shadow-sm">2. Show applicants
+                                                not yet in a
+                                                recommendation list</span>
+                                            <span class="rounded-full bg-white px-3 py-1 shadow-sm">3. Select
+                                                applicants</span>
+                                            <span class="rounded-full bg-white px-3 py-1 shadow-sm">4. Click Create
+                                                Recommendation
+                                                List</span>
+                                        </div>
+                                        <div class="mt-2 text-xs text-sky-700">
+                                            Applicants already saved in a recommendation list are flagged in the table
+                                            and excluded
+                                            by the eligible filter.
                                         </div>
                                     </div>
                                 </div>
-                            </Panel>
+                            </div>
+                        </Panel>
 
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 short:gap-2 mb-6 short:mb-3">
-                                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
-                                    <div class="text-2xl short:text-xl font-bold text-blue-600">{{ stats.total }}</div>
-                                    <div class="text-xs text-gray-500">Total Interviewed</div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 short:gap-2 mb-6 short:mb-3">
+                            <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                                <div class="text-2xl short:text-xl font-bold text-blue-600">{{ stats.total }}</div>
+                                <div class="text-xs text-gray-500">Total Interviewed</div>
+                            </div>
+                            <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                                <div class="text-2xl short:text-xl font-bold text-green-600">{{ stats.recommended }}
                                 </div>
-                                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
-                                    <div class="text-2xl short:text-xl font-bold text-green-600">{{ stats.recommended }}</div>
-                                    <div class="text-xs text-gray-500">Recommended</div>
+                                <div class="text-xs text-gray-500">Recommended</div>
+                            </div>
+                            <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                                <div class="text-2xl short:text-xl font-bold text-yellow-600">{{ stats.furtherEval }}
                                 </div>
-                                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
-                                    <div class="text-2xl short:text-xl font-bold text-yellow-600">{{ stats.furtherEval }}</div>
-                                    <div class="text-xs text-gray-500">For Further Evaluation</div>
+                                <div class="text-xs text-gray-500">For Further Evaluation</div>
+                            </div>
+                            <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
+                                <div class="text-2xl short:text-xl font-bold text-red-600">{{ stats.notRecommended }}
                                 </div>
-                                <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
-                                    <div class="text-2xl short:text-xl font-bold text-red-600">{{ stats.notRecommended }}</div>
-                                    <div class="text-xs text-gray-500">Not Recommended</div>
+                                <div class="text-xs text-gray-500">Not Recommended</div>
+                            </div>
+                        </div>
+
+                        <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                            <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
+                                <span class="text-sm text-gray-500">
+                                    {{ filteredList.length }} applicant(s)
+                                    <span v-if="selectedRows.length">&middot; {{ selectedRows.length }} selected</span>
+                                </span>
+                            </div>
+
+                            <div v-if="selectedRows.length > 0"
+                                class="mb-4 rounded-3xl border border-yellow-200 bg-yellow-50 p-3">
+                                <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <AppIcon name="check-circle" :size="18" class="text-yellow-600" />
+                                        <div>
+                                            <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
+                                                applicant(s) selected</div>
+                                            <div class="text-xs text-yellow-700">
+                                                Create a saved recommendation list or export the current selection.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <AppButton icon="list-checks" label="Create Recommendation List" severity="info"
+                                            rounded size="small" :disabled="!canCreateRecommendationListFromSelection"
+                                            @click="openCreateRecommendationListModal" />
+                                        <AppButton icon="file-type" label="Export PDF" severity="danger" outlined
+                                            rounded size="small" @click="exportSelected('pdf')" />
+                                        <AppButton icon="file-spreadsheet" label="Export Excel" severity="success"
+                                            outlined rounded size="small" @click="exportSelected('excel')" />
+                                    </div>
+                                </div>
+                                <div v-if="selectionHasNonRecommended" class="mt-2 text-xs font-medium text-amber-700">
+                                    Only applicants already marked Recommended for Approval can be saved in a
+                                    recommendation list.
+                                </div>
+                                <div v-if="selectionHasExistingRecommendationList"
+                                    class="mt-2 text-xs font-medium text-amber-700">
+                                    Remove applicants already in a recommendation list before creating a new
+                                    recommendation list.
                                 </div>
                             </div>
 
-                            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
-                                <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
-                                    <span class="text-sm text-gray-500">
-                                        {{ filteredList.length }} applicant(s)
-                                        <span v-if="selectedRows.length">&middot; {{ selectedRows.length }} selected</span>
+                            <div v-if="filteredList.length === 0" class="text-center py-8 text-gray-500">
+                                No interviewed applicants found
+                            </div>
+                            <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                                :value="filteredList" responsiveLayout="scroll"
+                                class="text-sm ios-interviewed-table ios-datatable-clean" dataKey="id"
+                                v-model:expandedRows="expandedRows" showGridlines stripedRows scrollable
+                                :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.id] ? 'ios-row-blurred' : ''"
+                                @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)"
+                                contextMenu>
+                                <Column :exportable="false" headerClass="w-12" bodyClass="w-12">
+                                    <template #header>
+                                        <div class="flex justify-center">
+                                            <Checkbox :modelValue="allSelectableFilteredRowsSelected" binary
+                                                :indeterminate="someSelectableFilteredRowsSelected"
+                                                :disabled="selectableFilteredRows.length === 0"
+                                                @update:modelValue="toggleSelectAllFilteredRows" />
+                                        </div>
+                                    </template>
+                                    <template #body="slotProps">
+                                        <div class="flex justify-center"
+                                            v-tooltip.top="slotProps.data.is_in_recommendation_list ? 'Already included in a recommendation list' : 'Select applicant'">
+                                            <Checkbox :modelValue="isRowSelected(slotProps.data)" binary
+                                                :disabled="!isRowSelectable(slotProps.data)"
+                                                @update:modelValue="(checked) => toggleRowSelection(slotProps.data, checked)" />
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
+                                <Column field="profile.last_name" header="Name" sortable>
+                                    <template #body="slotProps">
+                                        <div class="font-medium">
+                                            {{ slotProps.data.profile.last_name }}, {{ slotProps.data.profile.first_name
+                                            }}
+                                        </div>
+                                        <div class="text-[11px] mono text-gray-500">{{ slotProps.data.profile.contact_no
+                                            }}</div>
+
+                                    </template>
+                                </Column>
+                                <Column field="program.shortname" header="Program" sortable>
+                                    <template #body="slotProps">
+                                        <span class="text-xs"> {{ slotProps.data.program?.shortname || 'N/A' }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="school.shortname" header="School" sortable>
+                                    <template #body="slotProps">
+                                        <span class="text-xs"> {{ slotProps.data.school?.shortname ||
+                                            slotProps.data.school?.name || 'N/A' }}</span>
+                                    </template>
+                                </Column>
+                                <Column field="course.shortname" header="Course" sortable>
+                                    <template #body="slotProps">
+                                        <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name || 'N/A'
+                                            }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Year Level" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                                    <template #body="slotProps">
+                                        <span class="text-xs"> {{ getSystemOptionLabel('year_level',
+                                            slotProps.data.year_level,
+                                            'N/A') }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Term" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                                    <template #body="slotProps">
+                                        <span class="text-xs"> {{ getSystemOptionLabel('term', slotProps.data.term,
+                                            'N/A') }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Academic Year" headerClass="min-w-[140px]" bodyClass="min-w-[140px]">
+                                    <template #body="slotProps">
+                                        <span class="text-xs"> {{ slotProps.data.academic_year || 'N/A' }}</span>
+                                    </template>
+                                </Column>
+                                <Column header="Grant Provision" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
+                                    <template #body="slotProps">
+                                        <div class="text-xs leading-snug">
+                                            {{ slotProps.data.grant_provision_label ||
+                                                getSystemOptionLabel('grant_provision',
+                                            slotProps.data.grant_provision, 'N/A') }}
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Recommendation" sortable sortField="recommendation"
+                                    headerClass="min-w-[220px]" bodyClass="min-w-[220px]">
+                                    <template #body="slotProps">
+                                        <div class="flex flex-col gap-1">
+                                            <span
+                                                :class="['text-[11px] font-semibold', getRecommendationTextClass(slotProps.data.recommendation)]">
+                                                {{ formatRecommendation(slotProps.data.recommendation) }}
+                                            </span>
+                                            <span v-if="slotProps.data.is_in_recommendation_list"
+                                                class="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                Already in Recommendation List
+                                            </span>
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Endorsed By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
+                                    <template #body="slotProps">
+                                        <div class="text-sm leading-snug uppercase">
+                                            {{ slotProps.data.endorsed_by || '-' }}
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Actions" :style="{ width: '80px' }">
+                                    <template #body="slotProps">
+                                        <AppButton icon="ellipsis-vertical"
+                                            @click="openContextMenu($event, slotProps.data)" text rounded size="small"
+                                            v-tooltip.top="'Actions'" />
+                                    </template>
+                                </Column>
+
+                                <template #expansion="slotProps">
+                                    <div class="px-4 pb-4">
+                                        <div class="overflow-hidden rounded border border-slate-200 bg-slate-50">
+                                            <table class="w-full table-fixed border-collapse text-sm">
+                                                <thead>
+                                                    <tr class="bg-slate-100">
+                                                        <th colspan="3"
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                            Projected Detail
+                                                        </th>
+                                                        <th colspan="2"
+                                                            class="border-b border-l border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                            Interview Detail
+                                                        </th>
+                                                    </tr>
+                                                    <tr class="bg-white">
+                                                        <th
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            Terms</th>
+                                                        <th
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            Expense</th>
+                                                        <th
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            Completion</th>
+                                                        <th
+                                                            class="border-b border-l border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            Interview Date</th>
+                                                        <th
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            Interviewed By</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="bg-white align-top">
+                                                        <td class="px-3 py-3 text-sm font-semibold text-slate-700">
+                                                            <span v-if="slotProps.data.projected_term_count !== null">
+                                                                {{
+                                                                formatProjectedTerms(slotProps.data.projected_term_count)
+                                                                }}
+                                                            </span>
+                                                            <span v-else class="text-amber-700">Not configured</span>
+                                                        </td>
+                                                        <td class="px-3 py-3 text-sm font-semibold text-emerald-700">
+                                                            <span
+                                                                v-if="slotProps.data.projected_total_expense !== null">
+                                                                {{
+                                                                formatCurrency(slotProps.data.projected_total_expense)
+                                                                }}
+                                                            </span>
+                                                            <span v-else class="text-amber-700">Not configured</span>
+                                                        </td>
+                                                        <td class="px-3 py-3 text-sm text-slate-700">
+                                                            <div v-if="slotProps.data.projected_completion_year !== null"
+                                                                class="font-semibold">
+                                                                {{ slotProps.data.projected_completion_year }}
+                                                            </div>
+                                                            <div v-if="slotProps.data.projected_completion_academic_year"
+                                                                class="text-xs text-gray-500">
+                                                                AY {{ slotProps.data.projected_completion_academic_year
+                                                                }}
+                                                            </div>
+                                                            <div v-else-if="slotProps.data.projected_completion_year === null"
+                                                                class="text-amber-700">
+                                                                Not configured
+                                                            </div>
+                                                        </td>
+                                                        <td
+                                                            class="border-l border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700">
+                                                            {{ formatDate(slotProps.data.interviewed_at) }}
+                                                        </td>
+                                                        <td
+                                                            class="px-3 py-3 text-sm font-semibold text-slate-700 uppercase">
+                                                            {{ slotProps.data.interviewer?.name || 'N/A' }}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </template>
+                            </DataTable>
+                        </Panel>
+                    </TabPanel>
+
+                    <TabPanel value="recommendation-lists">
+                        <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                            <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
+                                <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                                    <span>{{ filteredRecommendationLists.length }} saved transaction(s)</span>
+                                    <span v-if="deletedRecommendationLists.length > 0"
+                                        class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                                        {{ filteredDeletedRecommendationLists.length }} deleted
                                     </span>
                                 </div>
+                            </div>
 
-                                <div v-if="selectedRows.length > 0"
-                                    class="mb-4 rounded-3xl border border-yellow-200 bg-yellow-50 p-3">
-                                    <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <AppIcon name="check-circle" :size="18" class="text-yellow-600" />
-                                            <div>
-                                                <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
-                                                    applicant(s) selected</div>
-                                                <div class="text-xs text-yellow-700">
-                                                    Create a saved recommendation list or export the current selection.
-                                                </div>
+                            <div v-if="filteredRecommendationLists.length === 0"
+                                class="py-10 text-center text-gray-500">
+                                No saved recommendation lists yet
+                            </div>
+
+                            <DataTable v-else :value="filteredRecommendationLists" dataKey="id"
+                                v-model:expandedRows="recommendationListExpandedRows" showGridlines stripedRows
+                                scrollable responsiveLayout="scroll"
+                                class="text-sm ios-interviewed-table ios-datatable-clean">
+                                <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
+                                <Column field="list_number" header="List No." sortable headerClass="min-w-[160px]"
+                                    bodyClass="min-w-[160px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
+                                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                                            <span
+                                                :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
+                                                {{ getRecommendationListApprovalLabel(slotProps.data) }}
+                                            </span>
+                                            <span v-if="slotProps.data.approved_at" class="text-[10px] text-slate-500">
+                                                {{ formatDateTime(slotProps.data.approved_at) }}
+                                            </span>
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Applicants" sortable field="record_count" headerClass="min-w-[110px]"
+                                    bodyClass="min-w-[110px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-slate-800">{{ slotProps.data.record_count }}
+                                        </div>
+                                        <div class="text-[11px] text-green-700 font-semibold">Recommended for Approval
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Projected Grant" sortable field="total_projected_expense"
+                                    headerClass="min-w-[170px]" bodyClass="min-w-[170px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-emerald-700">
+                                            {{ formatCurrency(slotProps.data.total_projected_expense) }}
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Budget Allocation" headerClass="min-w-[260px]"
+                                    bodyClass="min-w-[260px]">
+                                    <template #body="slotProps">
+                                        <div v-if="slotProps.data.budget_allocation" class="leading-relaxed">
+                                            <div class="font-semibold text-slate-800">{{
+                                                formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
+                                            <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
+                                                class="text-[11px] text-slate-500">
+                                                {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation)
+                                                }}
                                             </div>
                                         </div>
+                                        <div v-else class="text-xs leading-relaxed text-slate-500">
+                                            No saved budget allocation
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Prepared By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-slate-800">{{ slotProps.data.prepared_by || 'N/A'
+                                            }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ slotProps.data.prepared_by_position
+                                            || 'Position not set' }}</div>
+                                    </template>
+                                </Column>
+                                <Column header="Created" sortable field="created_at" headerClass="min-w-[170px]"
+                                    bodyClass="min-w-[170px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-slate-800">{{
+                                            formatDateTime(slotProps.data.created_at) }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ slotProps.data.creator?.name ||
+                                            'Unknown user' }}</div>
+                                    </template>
+                                </Column>
+                                <Column header="Actions" :style="{ width: '390px' }">
+                                    <template #body="slotProps">
                                         <div class="flex flex-wrap gap-2">
-                                            <AppButton icon="list-checks" label="Create Recommendation List" severity="info"
-                                                rounded size="small" :disabled="!canCreateRecommendationListFromSelection"
-                                                @click="openCreateRecommendationListModal" />
-                                            <AppButton icon="file-type" label="Export PDF" severity="danger" outlined rounded size="small"
-                                                @click="exportSelected('pdf')" />
-                                            <AppButton icon="file-spreadsheet" label="Export Excel" severity="success" outlined rounded
-                                                size="small" @click="exportSelected('excel')" />
+                                            <AppButton v-if="slotProps.data.is_approved" icon="rotate-ccw"
+                                                label="Revert Approval" severity="warning" outlined rounded size="small"
+                                                @click="revertRecommendationListApproval(slotProps.data)" />
+                                            <AppButton v-else icon="check-circle" label="Approve" severity="success"
+                                                rounded size="small"
+                                                @click="approveRecommendationList(slotProps.data)" />
+                                            <AppButton icon="pencil" label="Edit" severity="secondary" outlined rounded
+                                                size="small" @click="openEditRecommendationListModal(slotProps.data)" />
+                                            <AppButton icon="printer" label="Print" severity="info" rounded size="small"
+                                                @click="printSavedRecommendationList(slotProps.data)" />
+                                            <AppButton icon="trash" label="Delete" severity="danger" outlined rounded
+                                                size="small" @click="deleteRecommendationList(slotProps.data)" />
                                         </div>
-                                    </div>
-                                    <div v-if="selectionHasNonRecommended" class="mt-2 text-xs font-medium text-amber-700">
-                                        Only applicants already marked Recommended for Approval can be saved in a recommendation list.
-                                    </div>
-                                    <div v-if="selectionHasExistingRecommendationList" class="mt-2 text-xs font-medium text-amber-700">
-                                        Remove applicants already in a recommendation list before creating a new recommendation list.
-                                    </div>
-                                </div>
+                                    </template>
+                                </Column>
 
-                                <div v-if="filteredList.length === 0" class="text-center py-8 text-gray-500">
-                                    No interviewed applicants found
-                                </div>
-                                <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredList"
-                                    responsiveLayout="scroll" class="text-sm ios-interviewed-table ios-datatable-clean" dataKey="id"
-                                    v-model:expandedRows="expandedRows" showGridlines stripedRows scrollable
-                                    :rowClass="(row) => Object.keys(expandedRows).length > 0 && !expandedRows[row.id] ? 'ios-row-blurred' : ''"
-                                    @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu>
-                                    <Column :exportable="false" headerClass="w-12" bodyClass="w-12">
-                                        <template #header>
-                                            <div class="flex justify-center">
-                                                <Checkbox :modelValue="allSelectableFilteredRowsSelected" binary
-                                                    :indeterminate="someSelectableFilteredRowsSelected"
-                                                    :disabled="selectableFilteredRows.length === 0"
-                                                    @update:modelValue="toggleSelectAllFilteredRows" />
-                                            </div>
-                                        </template>
-                                        <template #body="slotProps">
-                                            <div class="flex justify-center"
-                                                v-tooltip.top="slotProps.data.is_in_recommendation_list ? 'Already included in a recommendation list' : 'Select applicant'">
-                                                <Checkbox :modelValue="isRowSelected(slotProps.data)" binary
-                                                    :disabled="!isRowSelectable(slotProps.data)"
-                                                    @update:modelValue="(checked) => toggleRowSelection(slotProps.data, checked)" />
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
-                                    <Column field="profile.last_name" header="Name" sortable>
-                                        <template #body="slotProps">
-                                            <div class="font-medium">
-                                                {{ slotProps.data.profile.last_name }}, {{ slotProps.data.profile.first_name }}
-                                            </div>
-                                            <div class="text-[11px] mono text-gray-500">{{ slotProps.data.profile.contact_no }}</div>
-                                        
-                                        </template>
-                                    </Column>
-                                    <Column field="program.shortname" header="Program" sortable>
-                                        <template #body="slotProps">
-                                            <span class="text-xs"> {{ slotProps.data.program?.shortname || 'N/A' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column field="school.shortname" header="School" sortable>
-                                        <template #body="slotProps">
-                                            <span class="text-xs"> {{ slotProps.data.school?.shortname ||
-                                                slotProps.data.school?.name || 'N/A' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column field="course.shortname" header="Course" sortable>
-                                        <template #body="slotProps">
-                                            <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name || 'N/A' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Year Level" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                                        <template #body="slotProps">
-                                            <span class="text-xs"> {{ getSystemOptionLabel('year_level', slotProps.data.year_level,
-                                                'N/A') }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Term" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
-                                        <template #body="slotProps">
-                                            <span class="text-xs"> {{ getSystemOptionLabel('term', slotProps.data.term, 'N/A') }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Academic Year" headerClass="min-w-[140px]" bodyClass="min-w-[140px]">
-                                        <template #body="slotProps">
-                                            <span class="text-xs"> {{ slotProps.data.academic_year || 'N/A' }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="Grant Provision" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
-                                        <template #body="slotProps">
-                                            <div class="text-xs leading-snug">
-                                                {{ slotProps.data.grant_provision_label || getSystemOptionLabel('grant_provision',
-                                                    slotProps.data.grant_provision, 'N/A') }}
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Recommendation" sortable sortField="recommendation" headerClass="min-w-[220px]"
-                                        bodyClass="min-w-[220px]">
-                                        <template #body="slotProps">
-                                            <div class="flex flex-col gap-1">
-                                                <span
-                                                    :class="['text-[11px] font-semibold', getRecommendationTextClass(slotProps.data.recommendation)]">
-                                                    {{ formatRecommendation(slotProps.data.recommendation) }}
-                                                </span>
-                                                <span v-if="slotProps.data.is_in_recommendation_list"
-                                                    class="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                                                    Already in Recommendation List
-                                                </span>
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Endorsed By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
-                                        <template #body="slotProps">
-                                            <div class="text-sm leading-snug uppercase">
-                                                {{ slotProps.data.endorsed_by || '-' }}
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Actions" :style="{ width: '80px' }">
-                                        <template #body="slotProps">
-                                            <AppButton icon="ellipsis-vertical" @click="openContextMenu($event, slotProps.data)" text
-                                                rounded size="small" v-tooltip.top="'Actions'" />
-                                        </template>
-                                    </Column>
+                                <template #expansion="slotProps">
+                                    <div class="grid gap-4 px-4 pb-4 xl:grid-cols-[280px,1fr]">
+                                        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                                Transaction Summary</div>
+                                            <dl class="mt-3 space-y-3 text-sm">
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">
+                                                        Recommendation</dt>
+                                                    <dd class="mt-1 font-semibold text-green-700">Recommended for
+                                                        Approval</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">List
+                                                        Approval</dt>
+                                                    <dd class="mt-1">
+                                                        <span
+                                                            :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
+                                                            {{ getRecommendationListApprovalLabel(slotProps.data) }}
+                                                        </span>
+                                                    </dd>
+                                                    <dd class="text-xs text-slate-500">{{
+                                                        formatRecommendationListApprovalMeta(slotProps.data) }}</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">Prepared
+                                                        By</dt>
+                                                    <dd class="mt-1 font-semibold text-slate-800">{{
+                                                        slotProps.data.prepared_by || 'N/A' }}</dd>
+                                                    <dd class="text-xs text-slate-500">{{
+                                                        slotProps.data.prepared_by_position || 'Position not set' }}
+                                                    </dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">Approved
+                                                        By</dt>
+                                                    <dd class="mt-1 font-semibold text-slate-800">{{
+                                                        slotProps.data.approved_by || 'N/A' }}</dd>
+                                                    <dd class="text-xs text-slate-500">{{
+                                                        slotProps.data.approved_by_position || 'Position not set' }}
+                                                    </dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">Budget
+                                                        Allocation</dt>
+                                                    <dd v-if="slotProps.data.budget_allocation"
+                                                        class="mt-1 leading-relaxed">
+                                                        <div class="font-semibold text-slate-800">{{
+                                                            formatBudgetAllocationTitle(slotProps.data.budget_allocation)
+                                                            }}</div>
+                                                        <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
+                                                            class="text-xs text-slate-500">
+                                                            {{
+                                                            formatBudgetAllocationDescription(slotProps.data.budget_allocation)
+                                                            }}
+                                                        </div>
+                                                    </dd>
+                                                    <dd v-else class="mt-1 text-xs leading-relaxed text-slate-500">No
+                                                        saved budget allocation</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">JPM
+                                                        Highlight</dt>
+                                                    <dd class="mt-1 text-xs leading-relaxed"
+                                                        :class="slotProps.data.highlight_jpm_members ? 'font-semibold text-emerald-700' : 'text-slate-500'">
+                                                        {{ slotProps.data.highlight_jpm_members ? 'Enabled for printed
+                                                        applicant names' : 'Disabled' }}
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
 
-                                    <template #expansion="slotProps">
-                                        <div class="px-4 pb-4">
-                                            <div class="overflow-hidden rounded border border-slate-200 bg-slate-50">
-                                                <table class="w-full table-fixed border-collapse text-sm">
-                                                    <thead>
-                                                        <tr class="bg-slate-100">
-                                                            <th colspan="3"
-                                                                class="border-b border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                                                Projected Detail
-                                                            </th>
-                                                            <th colspan="2"
-                                                                class="border-b border-l border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                                                Interview Detail
-                                                            </th>
-                                                        </tr>
-                                                        <tr class="bg-white">
-                                                            <th
-                                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                                Terms</th>
-                                                            <th
-                                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                                Expense</th>
-                                                            <th
-                                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                                Completion</th>
-                                                            <th
-                                                                class="border-b border-l border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                                Interview Date</th>
-                                                            <th
-                                                                class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                                Interviewed By</th>
+                                        <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white">
+                                            <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                                                <div class="text-sm font-semibold text-slate-800">Saved Applicants
+                                                    Snapshot</div>
+                                                <div class="text-xs text-slate-500">The printed report uses this stored
+                                                    selection.</div>
+                                            </div>
+                                            <div class="overflow-x-auto">
+                                                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                                    <thead
+                                                        class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                                                        <tr>
+                                                            <th class="px-4 py-3 text-left">Name</th>
+                                                            <th class="px-4 py-3 text-left">Program</th>
+                                                            <th class="px-4 py-3 text-left">School</th>
+                                                            <th class="px-4 py-3 text-left">Projected Terms</th>
+                                                            <th class="px-4 py-3 text-left">Projected Grant</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody>
-                                                        <tr class="bg-white align-top">
-                                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700">
-                                                                <span v-if="slotProps.data.projected_term_count !== null">
-                                                                    {{ formatProjectedTerms(slotProps.data.projected_term_count) }}
+                                                    <tbody class="divide-y divide-slate-100">
+                                                        <tr v-for="record in slotProps.data.records"
+                                                            :key="`recommendation-record-${slotProps.data.id}-${record.id}`">
+                                                            <td class="px-4 py-3 font-semibold text-slate-800">
+                                                                <span class="inline-block"
+                                                                    :class="slotProps.data.highlight_jpm_members && recommendationRecordHasJpm(record) ? 'rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-900' : ''">
+                                                                    {{ formatApplicantName(record) }}
                                                                 </span>
-                                                                <span v-else class="text-amber-700">Not configured</span>
                                                             </td>
-                                                            <td class="px-3 py-3 text-sm font-semibold text-emerald-700">
-                                                                <span v-if="slotProps.data.projected_total_expense !== null">
-                                                                    {{ formatCurrency(slotProps.data.projected_total_expense) }}
-                                                                </span>
-                                                                <span v-else class="text-amber-700">Not configured</span>
+                                                            <td class="px-4 py-3 text-slate-600">{{
+                                                                record.program?.shortname || 'N/A' }}</td>
+                                                            <td class="px-4 py-3 text-slate-600">{{
+                                                                record.school?.shortname || record.school?.name || 'N/A'
+                                                                }}</td>
+                                                            <td class="px-4 py-3 text-slate-600">{{
+                                                                formatProjectedTerms(record.projected_term_count) }}
                                                             </td>
-                                                            <td class="px-3 py-3 text-sm text-slate-700">
-                                                                <div v-if="slotProps.data.projected_completion_year !== null"
-                                                                    class="font-semibold">
-                                                                    {{ slotProps.data.projected_completion_year }}
-                                                                </div>
-                                                                <div v-if="slotProps.data.projected_completion_academic_year"
-                                                                    class="text-xs text-gray-500">
-                                                                    AY {{ slotProps.data.projected_completion_academic_year }}
-                                                                </div>
-                                                                <div v-else-if="slotProps.data.projected_completion_year === null"
-                                                                    class="text-amber-700">
-                                                                    Not configured
-                                                                </div>
-                                                            </td>
-                                                            <td
-                                                                class="border-l border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700">
-                                                                {{ formatDate(slotProps.data.interviewed_at) }}
-                                                            </td>
-                                                            <td class="px-3 py-3 text-sm font-semibold text-slate-700 uppercase">
-                                                                {{ slotProps.data.interviewer?.name || 'N/A' }}
-                                                            </td>
+                                                            <td class="px-4 py-3 font-semibold text-emerald-700">{{
+                                                                formatCurrency(record.projected_total_expense) }}</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
                                             </div>
                                         </div>
-                                    </template>
-                                </DataTable>
-                            </Panel>
-                        </TabPanel>
-
-                        <TabPanel value="recommendation-lists">
-                            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
-                                <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
-                                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                                        <span>{{ filteredRecommendationLists.length }} saved transaction(s)</span>
-                                        <span v-if="deletedRecommendationLists.length > 0"
-                                            class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-                                            {{ filteredDeletedRecommendationLists.length }} deleted
-                                        </span>
                                     </div>
+                                </template>
+                            </DataTable>
+                        </Panel>
+
+                        <Panel v-if="deletedRecommendationLists.length > 0"
+                            class="mt-4 !rounded-4xl overflow-hidden shadow-sm">
+                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 short:mb-2 -mt-2">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-800">Soft-Deleted Lists</div>
+                                    <div class="text-xs text-slate-500">Restore a list or permanently remove a record
+                                        that is
+                                        already soft-deleted.</div>
                                 </div>
+                                <span class="text-sm font-semibold text-amber-700">
+                                    {{ filteredDeletedRecommendationLists.length }} deleted transaction(s)
+                                </span>
+                            </div>
 
-                                <div v-if="filteredRecommendationLists.length === 0" class="py-10 text-center text-gray-500">
-                                    No saved recommendation lists yet
-                                </div>
+                            <div v-if="filteredDeletedRecommendationLists.length === 0"
+                                class="py-8 text-center text-gray-500">
+                                No deleted recommendation lists match the current filters
+                            </div>
 
-                                <DataTable v-else :value="filteredRecommendationLists" dataKey="id"
-                                    v-model:expandedRows="recommendationListExpandedRows" showGridlines stripedRows scrollable
-                                    responsiveLayout="scroll" class="text-sm ios-interviewed-table ios-datatable-clean">
-                                    <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
-                                    <Column field="list_number" header="List No." sortable headerClass="min-w-[160px]"
-                                        bodyClass="min-w-[160px]">
-                                        <template #body="slotProps">
-                                            <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
-                                            <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
-                                            <div class="mt-2 flex flex-wrap items-center gap-2">
-                                                <span
-                                                    :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
-                                                    {{ getRecommendationListApprovalLabel(slotProps.data) }}
-                                                </span>
-                                                <span v-if="slotProps.data.approved_at" class="text-[10px] text-slate-500">
-                                                    {{ formatDateTime(slotProps.data.approved_at) }}
-                                                </span>
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Applicants" sortable field="record_count" headerClass="min-w-[110px]"
-                                        bodyClass="min-w-[110px]">
-                                        <template #body="slotProps">
-                                            <div class="font-semibold text-slate-800">{{ slotProps.data.record_count }}</div>
-                                            <div class="text-[11px] text-green-700 font-semibold">Recommended for Approval</div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Projected Grant" sortable field="total_projected_expense"
-                                        headerClass="min-w-[170px]" bodyClass="min-w-[170px]">
-                                        <template #body="slotProps">
-                                            <div class="font-semibold text-emerald-700">
-                                                {{ formatCurrency(slotProps.data.total_projected_expense) }}
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Budget Allocation" headerClass="min-w-[260px]" bodyClass="min-w-[260px]">
-                                        <template #body="slotProps">
-                                            <div v-if="slotProps.data.budget_allocation" class="leading-relaxed">
-                                                <div class="font-semibold text-slate-800">{{ formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
-                                                <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)" class="text-[11px] text-slate-500">
-                                                    {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation) }}
-                                                </div>
-                                            </div>
-                                            <div v-else class="text-xs leading-relaxed text-slate-500">
-                                                No saved budget allocation
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Prepared By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
-                                        <template #body="slotProps">
-                                            <div class="font-semibold text-slate-800">{{ slotProps.data.prepared_by || 'N/A' }}</div>
-                                            <div class="text-[11px] text-slate-500">{{ slotProps.data.prepared_by_position || 'Position not set' }}</div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Created" sortable field="created_at" headerClass="min-w-[170px]"
-                                        bodyClass="min-w-[170px]">
-                                        <template #body="slotProps">
-                                            <div class="font-semibold text-slate-800">{{ formatDateTime(slotProps.data.created_at) }}</div>
-                                            <div class="text-[11px] text-slate-500">{{ slotProps.data.creator?.name || 'Unknown user' }}</div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Actions" :style="{ width: '390px' }">
-                                        <template #body="slotProps">
-                                            <div class="flex flex-wrap gap-2">
-                                                <AppButton v-if="slotProps.data.is_approved" icon="rotate-ccw" label="Revert Approval"
-                                                    severity="warning" outlined rounded size="small"
-                                                    @click="revertRecommendationListApproval(slotProps.data)" />
-                                                <AppButton v-else icon="check-circle" label="Approve" severity="success"
-                                                    rounded size="small" @click="approveRecommendationList(slotProps.data)" />
-                                                <AppButton icon="pencil" label="Edit" severity="secondary" outlined rounded
-                                                    size="small" @click="openEditRecommendationListModal(slotProps.data)" />
-                                                <AppButton icon="printer" label="Print" severity="info" rounded size="small"
-                                                    @click="printSavedRecommendationList(slotProps.data)" />
-                                                <AppButton icon="trash" label="Delete" severity="danger" outlined rounded
-                                                    size="small" @click="deleteRecommendationList(slotProps.data)" />
-                                            </div>
-                                        </template>
-                                    </Column>
-
-                                    <template #expansion="slotProps">
-                                        <div class="grid gap-4 px-4 pb-4 xl:grid-cols-[280px,1fr]">
-                                            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                                                <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Transaction Summary</div>
-                                                <dl class="mt-3 space-y-3 text-sm">
-                                                    <div>
-                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Recommendation</dt>
-                                                        <dd class="mt-1 font-semibold text-green-700">Recommended for Approval</dd>
-                                                    </div>
-                                                    <div>
-                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">List Approval</dt>
-                                                        <dd class="mt-1">
-                                                            <span :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
-                                                                {{ getRecommendationListApprovalLabel(slotProps.data) }}
-                                                            </span>
-                                                        </dd>
-                                                        <dd class="text-xs text-slate-500">{{ formatRecommendationListApprovalMeta(slotProps.data) }}</dd>
-                                                    </div>
-                                                    <div>
-                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Prepared By</dt>
-                                                        <dd class="mt-1 font-semibold text-slate-800">{{ slotProps.data.prepared_by || 'N/A' }}</dd>
-                                                        <dd class="text-xs text-slate-500">{{ slotProps.data.prepared_by_position || 'Position not set' }}</dd>
-                                                    </div>
-                                                    <div>
-                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Approved By</dt>
-                                                        <dd class="mt-1 font-semibold text-slate-800">{{ slotProps.data.approved_by || 'N/A' }}</dd>
-                                                        <dd class="text-xs text-slate-500">{{ slotProps.data.approved_by_position || 'Position not set' }}</dd>
-                                                    </div>
-                                                    <div>
-                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">Budget Allocation</dt>
-                                                        <dd v-if="slotProps.data.budget_allocation" class="mt-1 leading-relaxed">
-                                                            <div class="font-semibold text-slate-800">{{ formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
-                                                            <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)" class="text-xs text-slate-500">
-                                                                {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation) }}
-                                                            </div>
-                                                        </dd>
-                                                        <dd v-else class="mt-1 text-xs leading-relaxed text-slate-500">No saved budget allocation</dd>
-                                                    </div>
-                                                    <div>
-                                                        <dt class="text-xs uppercase tracking-wide text-slate-500">JPM Highlight</dt>
-                                                        <dd class="mt-1 text-xs leading-relaxed" :class="slotProps.data.highlight_jpm_members ? 'font-semibold text-emerald-700' : 'text-slate-500'">
-                                                            {{ slotProps.data.highlight_jpm_members ? 'Enabled for printed applicant names' : 'Disabled' }}
-                                                        </dd>
-                                                    </div>
-                                                </dl>
-                                            </div>
-
-                                            <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white">
-                                                <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                                                    <div class="text-sm font-semibold text-slate-800">Saved Applicants Snapshot</div>
-                                                    <div class="text-xs text-slate-500">The printed report uses this stored selection.</div>
-                                                </div>
-                                                <div class="overflow-x-auto">
-                                                    <table class="min-w-full divide-y divide-slate-200 text-sm">
-                                                        <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                                                            <tr>
-                                                                <th class="px-4 py-3 text-left">Name</th>
-                                                                <th class="px-4 py-3 text-left">Program</th>
-                                                                <th class="px-4 py-3 text-left">School</th>
-                                                                <th class="px-4 py-3 text-left">Projected Terms</th>
-                                                                <th class="px-4 py-3 text-left">Projected Grant</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody class="divide-y divide-slate-100">
-                                                            <tr v-for="record in slotProps.data.records" :key="`recommendation-record-${slotProps.data.id}-${record.id}`">
-                                                                <td class="px-4 py-3 font-semibold text-slate-800">
-                                                                    <span class="inline-block"
-                                                                        :class="slotProps.data.highlight_jpm_members && recommendationRecordHasJpm(record) ? 'rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-900' : ''">
-                                                                        {{ formatApplicantName(record) }}
-                                                                    </span>
-                                                                </td>
-                                                                <td class="px-4 py-3 text-slate-600">{{ record.program?.shortname || 'N/A' }}</td>
-                                                                <td class="px-4 py-3 text-slate-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
-                                                                <td class="px-4 py-3 text-slate-600">{{ formatProjectedTerms(record.projected_term_count) }}</td>
-                                                                <td class="px-4 py-3 font-semibold text-emerald-700">{{ formatCurrency(record.projected_total_expense) }}</td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
+                            <DataTable v-else :value="filteredDeletedRecommendationLists" dataKey="id" showGridlines
+                                stripedRows scrollable responsiveLayout="scroll"
+                                class="text-sm ios-interviewed-table ios-datatable-clean">
+                                <Column field="list_number" header="List No." sortable headerClass="min-w-[170px]"
+                                    bodyClass="min-w-[170px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
+                                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                                            <span
+                                                :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
+                                                {{ getRecommendationListApprovalLabel(slotProps.data) }}
+                                            </span>
                                         </div>
                                     </template>
-                                </DataTable>
-                            </Panel>
-
-                            <Panel v-if="deletedRecommendationLists.length > 0"
-                                class="mt-4 !rounded-4xl overflow-hidden shadow-sm">
-                                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 short:mb-2 -mt-2">
-                                    <div>
-                                        <div class="text-sm font-semibold text-slate-800">Soft-Deleted Lists</div>
-                                        <div class="text-xs text-slate-500">Restore a list or permanently remove a record that is already soft-deleted.</div>
-                                    </div>
-                                    <span class="text-sm font-semibold text-amber-700">
-                                        {{ filteredDeletedRecommendationLists.length }} deleted transaction(s)
-                                    </span>
-                                </div>
-
-                                <div v-if="filteredDeletedRecommendationLists.length === 0"
-                                    class="py-8 text-center text-gray-500">
-                                    No deleted recommendation lists match the current filters
-                                </div>
-
-                                <DataTable v-else :value="filteredDeletedRecommendationLists" dataKey="id" showGridlines
-                                    stripedRows scrollable responsiveLayout="scroll"
-                                    class="text-sm ios-interviewed-table ios-datatable-clean">
-                                    <Column field="list_number" header="List No." sortable headerClass="min-w-[170px]"
-                                        bodyClass="min-w-[170px]">
-                                        <template #body="slotProps">
-                                            <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
-                                            <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
-                                            <div class="mt-2 flex flex-wrap items-center gap-2">
-                                                <span
-                                                    :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
-                                                    {{ getRecommendationListApprovalLabel(slotProps.data) }}
-                                                </span>
+                                </Column>
+                                <Column header="Applicants" sortable field="record_count" headerClass="min-w-[120px]"
+                                    bodyClass="min-w-[120px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-slate-800">{{ slotProps.data.record_count }}
+                                        </div>
+                                        <div class="text-[11px] text-slate-500">Stored snapshot</div>
+                                    </template>
+                                </Column>
+                                <Column header="Budget Allocation" headerClass="min-w-[260px]"
+                                    bodyClass="min-w-[260px]">
+                                    <template #body="slotProps">
+                                        <div v-if="slotProps.data.budget_allocation" class="leading-relaxed">
+                                            <div class="font-semibold text-slate-800">{{
+                                                formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
+                                            <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
+                                                class="text-[11px] text-slate-500">
+                                                {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation)
+                                                }}
                                             </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Applicants" sortable field="record_count" headerClass="min-w-[120px]"
-                                        bodyClass="min-w-[120px]">
-                                        <template #body="slotProps">
-                                            <div class="font-semibold text-slate-800">{{ slotProps.data.record_count }}</div>
-                                            <div class="text-[11px] text-slate-500">Stored snapshot</div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Budget Allocation" headerClass="min-w-[260px]" bodyClass="min-w-[260px]">
-                                        <template #body="slotProps">
-                                            <div v-if="slotProps.data.budget_allocation" class="leading-relaxed">
-                                                <div class="font-semibold text-slate-800">{{ formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
-                                                <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
-                                                    class="text-[11px] text-slate-500">
-                                                    {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation) }}
-                                                </div>
-                                            </div>
-                                            <div v-else class="text-xs leading-relaxed text-slate-500">
-                                                No saved budget allocation
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Deleted" sortable field="deleted_at" headerClass="min-w-[180px]"
-                                        bodyClass="min-w-[180px]">
-                                        <template #body="slotProps">
-                                            <div class="font-semibold text-slate-800">
-                                                {{ formatDateTime(slotProps.data.deleted_at) }}
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column header="Actions" :style="{ width: '320px' }">
-                                        <template #body="slotProps">
-                                            <div class="flex flex-wrap gap-2">
-                                                <AppButton icon="rotate-ccw" label="Restore" severity="warning" outlined rounded
-                                                    size="small" @click="restoreRecommendationList(slotProps.data)" />
-                                                <AppButton icon="trash" label="Delete Permanently" severity="danger" rounded
-                                                    size="small" @click="forceDeleteRecommendationList(slotProps.data)" />
-                                            </div>
-                                        </template>
-                                    </Column>
-                                </DataTable>
-                            </Panel>
-                        </TabPanel>
-                    </TabPanels>
-                </Tabs>
+                                        </div>
+                                        <div v-else class="text-xs leading-relaxed text-slate-500">
+                                            No saved budget allocation
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Deleted" sortable field="deleted_at" headerClass="min-w-[180px]"
+                                    bodyClass="min-w-[180px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-slate-800">
+                                            {{ formatDateTime(slotProps.data.deleted_at) }}
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Actions" :style="{ width: '320px' }">
+                                    <template #body="slotProps">
+                                        <div class="flex flex-wrap gap-2">
+                                            <AppButton icon="rotate-ccw" label="Restore" severity="warning" outlined
+                                                rounded size="small"
+                                                @click="restoreRecommendationList(slotProps.data)" />
+                                            <AppButton icon="trash" label="Delete Permanently" severity="danger" rounded
+                                                size="small" @click="forceDeleteRecommendationList(slotProps.data)" />
+                                        </div>
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </Panel>
+                    </TabPanel>
+                </TabPanels>
+            </Tabs>
         </div>
 
         <!-- Context Menu -->
@@ -660,8 +752,7 @@
 
         <!-- Generate Report Modal -->
         <CumulativeScholarListModal :show="showCumulativeScholarListModal"
-            @update:show="showCumulativeScholarListModal = $event"
-            :budget-allocations="props.budget_allocations" />
+            @update:show="showCumulativeScholarListModal = $event" :budget-allocations="props.budget_allocations" />
 
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event"
             :interviewed-applicants="filteredList" :budget-allocations="props.budget_allocations" />
@@ -671,8 +762,7 @@
             :selected-count="recommendationListModalSelectedCount" :budget-allocations="props.budget_allocations"
             :default-prepared-by="currentUser?.name || ''" :loading="isCreatingRecommendationList"
             :mode="recommendationListModalMode" :initial-data="editingRecommendationList"
-            :submit-intent="recommendationListSubmitIntent"
-            @submit="submitRecommendationList" />
+            :submit-intent="recommendationListSubmitIntent" @submit="submitRecommendationList" />
 
         <AssessmentViewModal v-model:show="showAssessmentDialog" :record="selectedRecord"
             :initial-mode="assessmentInitialMode" :can-manage="canManageActions" :can-revert="canManageActions"
@@ -2113,4 +2203,3 @@ onBeforeUnmount(() => {
     document.body.classList.remove('ios-admin-page');
 });
 </script>
-
