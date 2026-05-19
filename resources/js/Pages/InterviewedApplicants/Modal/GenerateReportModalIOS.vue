@@ -484,7 +484,8 @@ import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
 import InterviewedApplicantsTemplate from '../Pdf/InterviewedApplicantsTemplate.vue';
-import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
+import { buildInterviewedApplicantsPdfDoc } from '../Pdf/pdf-styles';
+import { renderVueTemplate } from '@/composables/usePdfPrint';
 
 const props = defineProps({
     show: Boolean,
@@ -990,13 +991,8 @@ function generateReport() {
         highlightJpmMembers: reportType.value === 'list' ? highlightJpmMembers.value : false,
     });
 
-    const { buildHtmlDoc } = usePdfPrint();
-    const generatedAt = moment().format('MMMM D, YYYY h:mm A');
     pdfPreviewTitle.value = reportTitle;
-    pdfPreviewHtml.value = buildHtmlDoc(bodyHtml, pdfPreviewTitle.value, ps, '', {
-        generatedAt,
-        showPageNumbers: true,
-    });
+    pdfPreviewHtml.value = buildInterviewedApplicantsPdfDoc(bodyHtml, pdfPreviewTitle.value, ps);
     showPdfPreview.value = true;
 }
 

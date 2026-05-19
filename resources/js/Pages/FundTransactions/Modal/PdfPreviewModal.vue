@@ -179,11 +179,29 @@ watch(() => props.show, (val) => {
 
 onMounted(() => {
     window.addEventListener('resize', fitToWidth);
+    window.addEventListener('message', onPagedMessage);
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', fitToWidth);
+    window.removeEventListener('message', onPagedMessage);
 });
+
+function onPagedMessage(event) {
+    if (event.source !== iframeEl.value?.contentWindow) {
+        return;
+    }
+
+    if (event.data?.type !== 'pagedjs:rendered') {
+        return;
+    }
+
+    const height = Number(event.data.height);
+
+    if (Number.isFinite(height) && height > 0) {
+        actualIframeH.value = height;
+    }
+}
 
 // ── Iframe load handler ────────────────────────────────────────────────
 const onIframeLoad = () => {

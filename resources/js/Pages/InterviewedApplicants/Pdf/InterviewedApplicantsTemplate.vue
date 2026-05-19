@@ -43,21 +43,21 @@
                     <table style="width:100%;border-collapse:collapse;font-size:9pt;table-layout:auto;">
                         <colgroup>
                             <col style="width:3%;" />
-                            <col style="width:13%;" />
-                            <col style="width:5%;" />
-                            <col style="width:10.5%;" />
-                            <col style="width:10%;" />
-                            <col style="width:4%;" />
-                            <col style="width:6%;" />
-                            <col style="width:6.5%;" />
-                            <col style="width:7.5%;" />
-                            <col style="width:3.5%;" />
-                            <col style="width:7%;" />
+                            <col style="width:auto;" />
                             <col style="width:4.5%;" />
-                            <col v-if="includeInterviewColumns" style="width:7%;" />
-                            <col v-if="includeInterviewColumns" style="width:5.5%;" />
-                            <col v-if="includeEndorsedBy" style="width:7%;" />
-                            <col :style="includeInterviewColumns ? 'width:auto;' : 'width:12%;'" />
+                            <col style="width:9.5%;" />
+                            <col style="width:9.5%;" />
+                            <col style="width:3.5%;" />
+                            <col style="width:5.5%;" />
+                            <col style="width:6%;" />
+                            <col :style="includeEndorsedBy ? 'width:8%;' : 'width:12%;'" />
+                            <col style="width:3.5%;" />
+                            <col style="width:6.5%;" />
+                            <col style="width:4%;" />
+                            <col v-if="includeInterviewColumns" style="width:6.5%;" />
+                            <col v-if="includeInterviewColumns" style="width:5%;" />
+                            <col v-if="includeEndorsedBy" style="width:6.5%;" />
+                            <col style="width:7%;" />
                         </colgroup>
                         <thead>
                             <tr>
@@ -73,7 +73,8 @@
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Grant</th>
                                 <th :style="TH" colspan="3">Projected</th>
                                 <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
-                                <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By</th>
+                                <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed
+                                    By</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
                             </tr>
                             <tr>
@@ -88,14 +89,18 @@
                             <tr v-for="(record, index) in group" :key="record.id">
                                 <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                                 <td :style="TD + 'font-weight:600;font-size:8pt;'">
-                                    <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record) }}</span>
+                                    <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
+                                        }}</span>
                                 </td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.program?.shortname || '—' }}</td>
-                                <td :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname || '—' }}</td>
-                                <td :style="TD + 'font-size:8pt;'">{{ record.course?.name || record.course?.shortname || '—' }}</td>
+                                <td :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname ||
+                                    '—' }}</td>
+                                <td :style="TD + 'font-size:8pt;'">{{ record.course?.name || record.course?.shortname ||
+                                    '—' }}</td>
                                 <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.year_level || '—' }}</td>
                                 <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.term || '—' }} </td>
-                                <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.academic_year || '—' }}</td>
+                                <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.academic_year || '—' }}
+                                </td>
                                 <td :style="TD">
                                     <div>{{ fmtGrantProvisionName(record.grant_provision_label ||
                                         record.grant_provision) }}</div>
@@ -107,11 +112,14 @@
                                 <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
                                 <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
                                 <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
-                                <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
-                                    fmtDate(record.interviewed_at) }}</td>
-                                <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;text-transform:uppercase;'">{{
-                                    record.interviewer?.name || '—' }}</td>
-                                <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{ record.endorsed_by || '—' }}</td>
+                                <td v-if="includeInterviewColumns"
+                                    :style="TD + 'text-align:center;white-space:nowrap;'">{{
+                                        fmtDate(record.interviewed_at) }}</td>
+                                <td v-if="includeInterviewColumns"
+                                    :style="TD + 'text-align:center;text-transform:uppercase;'">{{
+                                        record.interviewer?.name || '—' }}</td>
+                                <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
+                                    record.endorsed_by || '—' }}</td>
                                 <td :style="TD"></td>
                             </tr>
                         </tbody>
@@ -123,21 +131,20 @@
                 <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:6pt;table-layout:auto;">
                     <colgroup>
                         <col style="width:3%;" />
-                        <col style="width:14%;" />
-                        <col style="width:4%;" />
-                        <col style="width:12%;" />
+                        <col style="width:auto;" />
+                        <col style="width:4.5%;" />
                         <col style="width:10%;" />
+                        <col style="width:9%;" />
                         <col style="width:3.5%;" />
                         <col style="width:6%;" />
                         <col style="width:7.5%;" />
-                        <col style="width:4%;" />
-                        <col style="width:7%;" />
-                        <col style="width:5%;" />
-                        <col style="width:5.5%;" />
-                        <col v-if="includeInterviewColumns" style="width:8%;" />
-                        <col v-if="includeInterviewColumns" style="width:8.5%;" />
-                        <col v-if="includeEndorsedBy" style="width:7%;" />
-                        <col :style="includeInterviewColumns ? 'width:auto;' : 'width:12%;'" />
+                        <col style="width:3.5%;" />
+                        <col style="width:6.5%;" />
+                        <col style="width:4.5%;" />
+                        <col v-if="includeInterviewColumns" style="width:7%;" />
+                        <col v-if="includeInterviewColumns" style="width:7%;" />
+                        <col v-if="includeEndorsedBy" style="width:6.5%;" />
+                        <col :style="includeEndorsedBy ? 'width:8%;' : 'width:12%;'" />
                     </colgroup>
                     <thead>
                         <tr>
@@ -151,7 +158,8 @@
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">Grant</th>
                             <th :style="TH" colspan="3">Projected</th>
                             <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
-                            <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By</th>
+                            <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By
+                            </th>
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
                         </tr>
                         <tr>
@@ -167,7 +175,8 @@
                         <tr v-for="(record, index) in records" :key="record.id">
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                             <td :style="TD + 'font-weight:600;font-size:8pt;'">
-                                <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record) }}</span>
+                                <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
+                                    }}</span>
                             </td>
                             <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '—' }}</td>
                             <td :style="TD">{{ record.school?.name || record.school?.shortname || '—' }}</td>
@@ -190,10 +199,12 @@
                             <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                             <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                 fmtDate(record.interviewed_at)
-                            }}</td>
-                            <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
-                                || '—' }}</td>
-                            <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{ record.endorsed_by || '—' }}</td>
+                                }}</td>
+                            <td v-if="includeInterviewColumns"
+                                :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
+                                    || '—' }}</td>
+                            <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
+                                record.endorsed_by || '—' }}</td>
                             <td :style="TD"></td>
                         </tr>
                     </tbody>
@@ -252,39 +263,68 @@
         <div v-if="budgetAllocation" class="break-before no-break"
             style="padding-top:4pt;page-break-inside:avoid;break-inside:avoid-page;margin-top:40pt;padding-left:20pt;padding-right:20pt;">
             <div style="padding:8pt;font-size:8pt;line-height:1.45;">
-                <div class="bold" style="font-size:9pt;text-transform:uppercase;">Budget Allocation{{ approvedScholarsCalendarYearLabel ? ` for Calendar Year ${approvedScholarsCalendarYearLabel}` : ' for Current Calendar Year' }}</div>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12pt;">
+                    <div class="bold" style="font-size:9pt;text-transform:uppercase;">{{ budgetAllocationHeading }}</div>
+                    <p v-if="listNumber" class="t-9 bold" style="white-space:nowrap;flex-shrink:0;">List No. {{ listNumber }}</p>
+                </div>
 
                 <table style="width:100%;border-collapse:collapse;margin-top:6pt;font-size:8pt;">
                     <tbody>
                         <tr>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">Program</td>
+                            <td
+                                style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">
+                                Program</td>
                             <td colspan="3" style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;">
-                                {{ resolvedBudgetProgram }} · {{ budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A' }} · {{ budgetAllocation.fiscal_year ? `CY ${budgetAllocation.fiscal_year}` : 'CY N/A' }}
+                                {{ resolvedBudgetProgram }} · {{ budgetAllocation.rc_name || budgetAllocation.rc_code ||
+                                    'N/A'
+                                }} · {{ budgetAllocation.fiscal_year ? `CY ${budgetAllocation.fiscal_year}` : 'CY N/A'
+                                }}
                             </td>
                         </tr>
                         <tr>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Allocated Fund</td>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ fmtCurrency(budgetAllocation.total_allotment) }}</td>
-                            <td colspan="2" style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;font-weight:700;">No. of Scholars:</td>
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">
+                                Allocated
+                                Fund</td>
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{
+                                fmtCurrency(budgetAllocation.total_allotment) }}</td>
+                            <td colspan="2" style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;font-weight:700;">No. of
+                                Scholars:
+                            </td>
                         </tr>
 
                         <tr>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Running Balance</td>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ fmtCurrency(budgetAllocationRunningBalance) }}</td>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;text-indent:12pt;">Current no. for this request</td>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ totalScholars }}</td>
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">
+                                Running
+                                Balance</td>
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{
+                                fmtCurrency(budgetAllocationRunningBalance) }}</td>
+                            <td
+                                style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;text-indent:12pt;">
+                                Current no. for this request</td>
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ totalScholars }}
+                            </td>
                         </tr>
                         <tr>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">Total amount for this request</td>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono bold">{{ fmtCurrency(totalCurrentAcademicYearGrant) }}</td>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;text-indent:12pt;">
+                            <td
+                                style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;">
+                                Total amount for this request</td>
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono bold">{{
+                                fmtCurrency(totalCurrentAcademicYearGrant) }}</td>
+                            <td
+                                style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;width:24%;text-indent:12pt;">
                                 Cumulative no. to date{{ approvedScholarsScopeSuffix }}
                             </td>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{ approvedScholarsToDate }}</td>
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;" class="mono">{{
+                                approvedScholarsToDate }}
+                            </td>
                         </tr>
                         <tr>
-                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">Remaining balance after approval</td>
-                            <td colspan="3" :style="'border:0.5pt solid #d9d9d9;padding:5pt 6pt;font-weight:700;' + (budgetAllocationProjectedBalance < 0 ? 'color:#b91c1c;' : 'color:#166534;')" class="mono">
+                            <td style="border:0.5pt solid #d9d9d9;padding:5pt 6pt;background:#f8f8f8;font-weight:700;">
+                                Remaining
+                                balance after approval</td>
+                            <td colspan="3"
+                                :style="'border:0.5pt solid #d9d9d9;padding:5pt 6pt;font-weight:700;' + (budgetAllocationProjectedBalance < 0 ? 'color:#b91c1c;' : 'color:#166534;')"
+                                class="mono">
                                 {{ fmtCurrency(budgetAllocationProjectedBalance) }}
                             </td>
                         </tr>
@@ -296,26 +336,30 @@
                 </div>
             </div>
 
-            <div style="margin-top:50pt;display:flex;justify-content:space-between;font-size:8pt;">
-                <div style="flex:1;max-width:60%;margin-left:70pt;">
-                    <div style="font-weight:700;">Prepared by:</div>
-                    <div style="margin-top:30pt;text-align:center; width: 200px;">
-                        <div class="bold"
-                            style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">{{ resolvedPreparedBy }}</div>
-                        <div style="margin-top:4pt;">{{ resolvedPreparedByPosition }}</div>
-                        <div>{{ resolvedPreparedByOffice }}</div>
+            <div style="margin-top:14pt;font-size:8pt;">
+                <div style="display:flex;justify-content:space-between;">
+                    <div style="flex:1;max-width:60%;margin-left:70pt;">
+                        <div style="font-weight:700;">Prepared by:</div>
+                        <div style="margin-top:40pt;text-align:center; width: 200px;">
+                            <div class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
+                                {{
+                                    resolvedPreparedBy }}</div>
+                            <div style="margin-top:4pt;">{{ resolvedPreparedByPosition }}</div>
+                            <div>{{ resolvedPreparedByOffice }}</div>
+                        </div>
                     </div>
-                </div>
-                <div style="flex:1;max-width:35%;margin-left:auto;">
-                    <div style="font-weight:700;text-align:left;">Approved by:</div>
-                    <div style="margin-top:30pt;text-align:center; width: 200px;">
-                        <div class="bold"
-                            style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">{{ resolvedApprovedBy }}</div>
-                        <div style="margin-top:4pt;">{{ resolvedApprovedByPosition }}</div>
-                    </div>
+                    <div style="flex:1;max-width:35%;margin-left:auto;">
+                        <div style="font-weight:700;text-align:left;">Approved by:</div>
+                        <div style="margin-top:40pt;text-align:center; width: 200px;">
+                            <div class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
+                                {{
+                                    resolvedApprovedBy }}</div>
+                            <div style="margin-top:4pt;">{{ resolvedApprovedByPosition }}</div>
+                        </div>
 
-                    <div style="margin-top:30pt;text-align:center; width: 200px; border-top:1px solid #000;">
-                        Date
+                        <div style="margin-top:40pt;text-align:center; width: 200px; border-top:1px solid #000;">
+                            Date
+                        </div>
                     </div>
                 </div>
             </div>
@@ -325,8 +369,9 @@
             <div style="flex:1;max-width:60%;margin-left:70pt;">
                 <div style="font-weight:700;">Prepared by:</div>
                 <div style="margin-top:40pt;text-align:center; width: 200px;">
-                    <div class="bold"
-                        style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">{{ resolvedPreparedBy }}</div>
+                    <div class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
+                        {{
+                            resolvedPreparedBy }}</div>
                     <div style="margin-top:4pt;">{{ resolvedPreparedByPosition }}</div>
                     <div>{{ resolvedPreparedByOffice }}</div>
                 </div>
@@ -334,8 +379,9 @@
             <div style="flex:1;max-width:35%;margin-left:auto;">
                 <div style="font-weight:700;text-align:left;">Approved by:</div>
                 <div style="margin-top:40pt;text-align:center; width: 200px;">
-                    <div class="bold"
-                        style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">{{ resolvedApprovedBy }}</div>
+                    <div class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
+                        {{
+                            resolvedApprovedBy }}</div>
                     <div style="margin-top:4pt;">{{ resolvedApprovedByPosition }}</div>
                 </div>
 
@@ -344,6 +390,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </template>
 
@@ -699,6 +746,13 @@ const approvedScholarsCalendarYearLabel = computed(() => {
 
     return null;
 });
+const budgetAllocationHeading = computed(() => {
+    if (approvedScholarsCalendarYearLabel.value) {
+        return `Budget Allocation for Calendar Year ${approvedScholarsCalendarYearLabel.value}`;
+    }
+
+    return 'Budget Allocation for Current Calendar Year';
+});
 const approvedScholarsScopedToProgram = computed(() => {
     const scholars = Array.isArray(props.budgetAllocation?.approved_scholars)
         ? props.budgetAllocation.approved_scholars
@@ -724,9 +778,9 @@ const approvedScholarsScopeSuffix = computed(() => {
         parts.push(`CY ${approvedScholarsCalendarYearLabel.value}`);
     }
 
-    if (approvedScholarsProgramScopeLabel.value) {
-        parts.push(approvedScholarsProgramScopeLabel.value);
-    }
+    // if (approvedScholarsProgramScopeLabel.value) {
+    //     parts.push(approvedScholarsProgramScopeLabel.value);
+    // }
 
     return parts.length ? ` (${parts.join(' · ')})` : '';
 });

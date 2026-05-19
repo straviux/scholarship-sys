@@ -1,9 +1,10 @@
 import moment from 'moment';
 import * as XLSX from 'xlsx';
 
-import { renderVueTemplate, usePdfPrint } from '@/composables/usePdfPrint';
+import { renderVueTemplate } from '@/composables/usePdfPrint';
 import InterviewedApplicantsTemplate from './Pdf/InterviewedApplicantsTemplate.vue';
 import RecommendationListTemplate from './Pdf/RecommendationListTemplate.vue';
+import { buildInterviewedApplicantsPdfDoc } from './Pdf/pdf-styles';
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
 const DEFAULT_PREPARED_BY_POSITION = 'Program Manager';
@@ -91,22 +92,10 @@ export function printInterviewedApplicantsSelection({ records = [], preparedBy =
         reportTitle: 'Selected Interviewed Applicants Report',
     });
 
-    const { buildHtmlDoc } = usePdfPrint();
     const title = 'Selected Interviewed Applicants Report';
 
-    printWindow.document.write(buildHtmlDoc(bodyHtml, title, 'a4-landscape'));
+    printWindow.document.write(buildInterviewedApplicantsPdfDoc(bodyHtml, title, 'a4-landscape', true));
     printWindow.document.close();
-    printWindow.onload = () => {
-        printWindow.focus();
-        printWindow.print();
-    };
-
-    setTimeout(() => {
-        if (printWindow && !printWindow.closed) {
-            printWindow.focus();
-            printWindow.print();
-        }
-    }, 800);
 
     return true;
 }
@@ -140,24 +129,12 @@ export function printRecommendationList({ recommendationList = null } = {}) {
         listNumber: recommendationList?.list_number || '',
     });
 
-    const { buildHtmlDoc } = usePdfPrint();
     const title = recommendationList?.list_number
         ? `Recommendation List ${recommendationList.list_number}`
         : 'Recommendation List';
 
-    printWindow.document.write(buildHtmlDoc(bodyHtml, title, 'a4-landscape'));
+    printWindow.document.write(buildInterviewedApplicantsPdfDoc(bodyHtml, title, 'a4-landscape', true));
     printWindow.document.close();
-    printWindow.onload = () => {
-        printWindow.focus();
-        printWindow.print();
-    };
-
-    setTimeout(() => {
-        if (printWindow && !printWindow.closed) {
-            printWindow.focus();
-            printWindow.print();
-        }
-    }, 800);
 
     return true;
 }
