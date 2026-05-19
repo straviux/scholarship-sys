@@ -43,10 +43,6 @@ export function buildInterviewedApplicantsPdfDoc(
           var splitTables = document.querySelectorAll('table[data-split-from]');
 
           splitTables.forEach(function (table) {
-            if (table.querySelector(':scope > thead')) {
-              return;
-            }
-
             var ref = table.getAttribute('data-ref');
 
             if (!ref) {
@@ -57,6 +53,18 @@ export function buildInterviewedApplicantsPdfDoc(
             var original = originals[0];
 
             if (!original) {
+              return;
+            }
+
+            if (!table.querySelector(':scope > colgroup')) {
+              var originalColgroups = original.querySelectorAll(':scope > colgroup');
+
+              originalColgroups.forEach(function (colgroup) {
+                table.insertBefore(colgroup.cloneNode(true), table.firstChild);
+              });
+            }
+
+            if (table.querySelector(':scope > thead')) {
               return;
             }
 
