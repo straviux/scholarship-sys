@@ -43,7 +43,8 @@
                     <table style="width:100%;border-collapse:collapse;font-size:9pt;table-layout:auto;">
                         <colgroup>
                             <col style="width:3%;" />
-                            <col :style="includeEndorsedBy ? 'width:18%;' : (includeInterviewColumns ? 'width:10.25%;' : 'width:16%;')" />
+                            <col
+                                :style="includeEndorsedBy ? 'width:18%;' : (includeInterviewColumns ? 'width:10.25%;' : 'width:16%;')" />
                             <col style="width:4.5%;" />
                             <col style="width:9.5%;" />
                             <col style="width:9.5%;" />
@@ -57,7 +58,8 @@
                             <col v-if="includeInterviewColumns" style="width:6.5%;" />
                             <col v-if="includeInterviewColumns" style="width:5%;" />
                             <col v-if="includeEndorsedBy" style="width:6.5%;" />
-                            <col :style="includeEndorsedBy ? 'width:14%;' : (includeInterviewColumns ? 'width:10.25%;' : 'width:16%;')" />
+                            <col
+                                :style="includeEndorsedBy ? 'width:14%;' : (includeInterviewColumns ? 'width:10.25%;' : 'width:16%;')" />
                         </colgroup>
                         <thead>
                             <tr>
@@ -90,7 +92,7 @@
                                 <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                                 <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                     <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                        }}</span>
+                                    }}</span>
                                 </td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.program?.shortname || '—' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname ||
@@ -131,7 +133,8 @@
                 <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:6pt;table-layout:auto;">
                     <colgroup>
                         <col style="width:3%;" />
-                        <col :style="includeEndorsedBy ? 'width:20%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
+                        <col
+                            :style="includeEndorsedBy ? 'width:20%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
                         <col style="width:4.5%;" />
                         <col style="width:10%;" />
                         <col style="width:9%;" />
@@ -144,7 +147,8 @@
                         <col v-if="includeInterviewColumns" style="width:7%;" />
                         <col v-if="includeInterviewColumns" style="width:7%;" />
                         <col v-if="includeEndorsedBy" style="width:6.5%;" />
-                        <col :style="includeEndorsedBy ? 'width:16.5%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
+                        <col
+                            :style="includeEndorsedBy ? 'width:16.5%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
                     </colgroup>
                     <thead>
                         <tr>
@@ -176,7 +180,7 @@
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                             <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                 <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                    }}</span>
+                                }}</span>
                             </td>
                             <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '—' }}</td>
                             <td :style="TD">{{ record.school?.name || record.school?.shortname || '—' }}</td>
@@ -199,7 +203,7 @@
                             <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                             <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                 fmtDate(record.interviewed_at)
-                                }}</td>
+                            }}</td>
                             <td v-if="includeInterviewColumns"
                                 :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
                                     || '—' }}</td>
