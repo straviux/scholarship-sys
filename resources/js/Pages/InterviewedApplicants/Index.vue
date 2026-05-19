@@ -306,7 +306,7 @@
                                         <div class="text-xs leading-snug">
                                             {{ slotProps.data.grant_provision_label ||
                                                 getSystemOptionLabel('grant_provision',
-                                            slotProps.data.grant_provision, 'N/A') }}
+                                                    slotProps.data.grant_provision, 'N/A') }}
                                         </div>
                                     </template>
                                 </Column>
@@ -378,7 +378,7 @@
                                                         <td class="px-3 py-3 text-sm font-semibold text-slate-700">
                                                             <span v-if="slotProps.data.projected_term_count !== null">
                                                                 {{
-                                                                formatProjectedTerms(slotProps.data.projected_term_count)
+                                                                    formatProjectedTerms(slotProps.data.projected_term_count)
                                                                 }}
                                                             </span>
                                                             <span v-else class="text-amber-700">Not configured</span>
@@ -387,7 +387,7 @@
                                                             <span
                                                                 v-if="slotProps.data.projected_total_expense !== null">
                                                                 {{
-                                                                formatCurrency(slotProps.data.projected_total_expense)
+                                                                    formatCurrency(slotProps.data.projected_total_expense)
                                                                 }}
                                                             </span>
                                                             <span v-else class="text-amber-700">Not configured</span>
@@ -586,7 +586,7 @@
                                                         <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
                                                             class="text-xs text-slate-500">
                                                             {{
-                                                            formatBudgetAllocationDescription(slotProps.data.budget_allocation)
+                                                                formatBudgetAllocationDescription(slotProps.data.budget_allocation)
                                                             }}
                                                         </div>
                                                     </dd>
@@ -598,8 +598,8 @@
                                                         Highlight</dt>
                                                     <dd class="mt-1 text-xs leading-relaxed"
                                                         :class="slotProps.data.highlight_jpm_members ? 'font-semibold text-emerald-700' : 'text-slate-500'">
-                                                        {{ slotProps.data.highlight_jpm_members ? 'Enabled for printed
-                                                        applicant names' : 'Disabled' }}
+                                                        {{ slotProps.data.highlight_jpm_members ? `Enabled for printed
+                                                        applicant names` : 'Disabled' }}
                                                     </dd>
                                                 </div>
                                             </dl>
