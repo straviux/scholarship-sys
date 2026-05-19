@@ -468,11 +468,11 @@
                                     <Column header="Actions" :style="{ width: '390px' }">
                                         <template #body="slotProps">
                                             <div class="flex flex-wrap gap-2">
-                                                <AppButton icon="check-circle" :label="slotProps.data.is_approved ? 'Approved' : 'Approve'"
-                                                    severity="success"
-                                                    :outlined="slotProps.data.is_approved"
-                                                    rounded size="small" :disabled="slotProps.data.is_approved"
-                                                    @click="approveRecommendationList(slotProps.data)" />
+                                                <AppButton v-if="slotProps.data.is_approved" icon="rotate-ccw" label="Revert Approval"
+                                                    severity="warning" outlined rounded size="small"
+                                                    @click="revertRecommendationListApproval(slotProps.data)" />
+                                                <AppButton v-else icon="check-circle" label="Approve" severity="success"
+                                                    rounded size="small" @click="approveRecommendationList(slotProps.data)" />
                                                 <AppButton icon="pencil" label="Edit" severity="secondary" outlined rounded
                                                     size="small" @click="openEditRecommendationListModal(slotProps.data)" />
                                                 <AppButton icon="printer" label="Print" severity="info" rounded size="small"
@@ -1702,12 +1702,55 @@ const performApproveRecommendationList = async (recommendationList) => {
             ...recommendationListExpandedRows.value,
             [approvedRecommendationList.id]: true,
         };
+        refreshPage();
         toast.success(response.data?.message || 'Recommendation list approved successfully.');
     } catch (error) {
         console.error('Failed to approve recommendation list:', error);
 
         const message = error?.response?.data?.message
             || 'Failed to approve recommendation list.';
+
+        toast.error(message);
+    } finally {
+        isCreatingRecommendationList.value = false;
+    }
+};
+
+const performRevertRecommendationListApproval = async (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for approval revert.');
+        return;
+    }
+
+    isCreatingRecommendationList.value = true;
+
+    try {
+        const response = await axios.patch(
+            route('scholarship.recommendation-lists.revert-approval', recommendationList.id),
+        );
+
+        const revertedRecommendationList = response.data?.data;
+
+        if (!revertedRecommendationList?.id) {
+            throw new Error('Reverted recommendation list payload was not returned.');
+        }
+
+        upsertRecommendationList(revertedRecommendationList);
+        recommendationListExpandedRows.value = {
+            ...recommendationListExpandedRows.value,
+            [revertedRecommendationList.id]: true,
+        };
+        refreshPage();
+        toast.success(response.data?.message || 'Recommendation list approval reverted successfully.');
+    } catch (error) {
+        console.error('Failed to revert recommendation list approval:', error);
+
+        const message = error?.response?.data?.message
+            || 'Failed to revert recommendation list approval.';
 
         toast.error(message);
     } finally {
@@ -1741,6 +1784,35 @@ const approveRecommendationList = (recommendationList) => {
         rejectLabel: 'Cancel',
         accept: () => {
             void performApproveRecommendationList(recommendationList);
+        },
+    });
+};
+
+const revertRecommendationListApproval = (recommendationList) => {
+    if (isCreatingRecommendationList.value) {
+        return;
+    }
+
+    if (!recommendationList?.id) {
+        toast.error('Recommendation list is unavailable for approval revert.');
+        return;
+    }
+
+    if (!recommendationList.is_approved) {
+        toast.warn('Recommendation list is not approved.');
+        return;
+    }
+
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+
+    confirm.require({
+        message: `Revert approval for ${targetLabel}? This will remove the list approval stamp and restore affected applicants to their previous review status.`,
+        header: 'Revert Recommendation List Approval',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Revert Approval',
+        rejectLabel: 'Cancel',
+        accept: () => {
+            void performRevertRecommendationListApproval(recommendationList);
         },
     });
 };

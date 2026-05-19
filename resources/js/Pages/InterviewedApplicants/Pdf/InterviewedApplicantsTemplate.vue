@@ -20,8 +20,8 @@
             <p class="t-9" style="margin-top:3pt;">{{ today }}</p>
         </div>
 
-        <div v-if="listNumber" style="padding:4pt 0 2pt;text-align:left;">
-            <p class="t-9 bold">List No. {{ listNumber }}</p>
+        <div v-if="listNumber" style="padding:4pt 0 2pt;text-align:right;">
+            <p class="t-9 bold">Request No. {{ listNumber }}</p>
         </div>
 
         <div v-if="records.length === 0" class="center italic" style="padding:24pt;color:#888;font-size:10pt;">
@@ -53,11 +53,11 @@
                             <col :style="includeEndorsedBy ? 'width:8%;' : 'width:12%;'" />
                             <col style="width:3.5%;" />
                             <col style="width:6.5%;" />
-                            <col style="width:4%;" />
+                            <col style="width:4.5%;" />
                             <col v-if="includeInterviewColumns" style="width:6.5%;" />
                             <col v-if="includeInterviewColumns" style="width:5%;" />
                             <col v-if="includeEndorsedBy" style="width:6.5%;" />
-                            <col style="width:7%;" />
+                            <col style="width:6.5%;" />
                         </colgroup>
                         <thead>
                             <tr>
@@ -80,7 +80,7 @@
                             <tr>
                                 <th :style="TH">Terms</th>
                                 <th :style="TH">Grant</th>
-                                <th :style="TH">Completion</th>
+                                <th :style2="TH">Completion</th>
                                 <th v-if="includeInterviewColumns" :style="TH">Date</th>
                                 <th v-if="includeInterviewColumns" :style="TH">By</th>
                             </tr>
@@ -140,11 +140,11 @@
                         <col style="width:7.5%;" />
                         <col style="width:3.5%;" />
                         <col style="width:6.5%;" />
-                        <col style="width:4.5%;" />
+                        <col style="width:5%;" />
                         <col v-if="includeInterviewColumns" style="width:7%;" />
                         <col v-if="includeInterviewColumns" style="width:7%;" />
                         <col v-if="includeEndorsedBy" style="width:6.5%;" />
-                        <col :style="includeEndorsedBy ? 'width:8%;' : 'width:12%;'" />
+                        <col :style="includeEndorsedBy ? 'width:7.5%;' : 'width:11.5%;'" />
                     </colgroup>
                     <thead>
                         <tr>
@@ -266,7 +266,7 @@
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12pt;">
                     <div class="bold" style="font-size:9pt;text-transform:uppercase;">{{ budgetAllocationHeading }}
                     </div>
-                    <p v-if="listNumber" class="t-9 bold" style="white-space:nowrap;flex-shrink:0;">List No. {{
+                    <p v-if="listNumber" class="t-9 bold" style="white-space:nowrap;flex-shrink:0;">Request No. {{
                         listNumber }}
                     </p>
                 </div>

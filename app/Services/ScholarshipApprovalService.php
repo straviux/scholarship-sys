@@ -45,6 +45,38 @@ class ScholarshipApprovalService
         });
     }
 
+    public function revertApproval(ScholarshipRecord $record, User $user, array $data = [])
+    {
+        if (!in_array($record->unified_status, ['active', 'approved'], true)) {
+            throw new \InvalidArgumentException("Application with status '{$record->unified_status}' cannot have approval reverted");
+        }
+
+        DB::transaction(function () use ($record, $user, $data) {
+            $oldStatus = $record->unified_status;
+            $targetStatus = ScholarshipApprovalHistory::query()
+                ->where('scholarship_record_id', $record->id)
+                ->where('action', 'approved')
+                ->orderByDesc('performed_at')
+                ->orderByDesc('id')
+                ->value('previous_status') ?: 'interviewed';
+
+            $record->update([
+                'unified_status' => $targetStatus,
+                'date_approved' => null,
+            ]);
+
+            $this->createStatusHistory($record, 'approval_reverted', $oldStatus, $user, $data['remarks'] ?? null);
+
+            $this->academicRecordSyncService->syncScholarshipRecord($record->fresh());
+
+            Log::info('Scholarship approval reverted', [
+                'record_id' => $record->id,
+                'reverted_by' => $user->id,
+                'restored_status' => $targetStatus,
+            ]);
+        });
+    }
+
     public function decline(ScholarshipRecord $record, User $decliner, array $data)
     {
         $this->validateCanModify($record);

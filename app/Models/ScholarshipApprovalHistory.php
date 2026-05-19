@@ -45,6 +45,11 @@ class ScholarshipApprovalHistory extends Model
                 'color' => 'success',
                 'icon' => 'pi-check-circle'
             ],
+            'approval_reverted' => [
+                'label' => 'Approval Reverted',
+                'color' => 'warning',
+                'icon' => 'pi-undo'
+            ],
             'declined' => [
                 'label' => 'Declined',
                 'color' => 'danger',

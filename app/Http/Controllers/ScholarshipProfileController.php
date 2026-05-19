@@ -1217,9 +1217,70 @@ class ScholarshipProfileController extends Controller
             ], 422);
         }
 
-        $recommendationList->approved_by_user_id = Auth::id();
-        $recommendationList->approved_at = now();
-        $recommendationList->save();
+        $approver = Auth::user();
+
+        DB::transaction(function () use ($recommendationList, $approver) {
+            $approvedAt = now();
+            $approvalDate = $approvedAt->toDateString();
+            $selectedRecordIds = collect($recommendationList->selected_record_ids ?? [])
+                ->map(fn($recordId) => (int) $recordId)
+                ->filter()
+                ->unique()
+                ->values();
+
+            $records = ScholarshipRecord::query()
+                ->whereIn('id', $selectedRecordIds)
+                ->get()
+                ->keyBy('id');
+
+            $invalidRecordIds = [];
+            $approvalService = app(ScholarshipApprovalService::class);
+
+            foreach ($selectedRecordIds as $recordId) {
+                $record = $records->get($recordId);
+
+                if (!$record) {
+                    $invalidRecordIds[] = $recordId;
+                    continue;
+                }
+
+                if ($record->unified_status === 'active') {
+                    continue;
+                }
+
+                if (!in_array($record->unified_status, ['interviewed', 'approved'], true)) {
+                    $invalidRecordIds[] = $recordId;
+                    continue;
+                }
+
+                $approvalService->approve($record, $approver, [
+                    'date_approved' => $approvalDate,
+                    'program_id' => $record->program_id,
+                    'course_id' => $record->course_id,
+                    'school_id' => $record->school_id,
+                    'year_level' => $record->year_level,
+                    'term' => $record->term,
+                    'academic_year' => $record->academic_year,
+                    'grant_provision' => $record->grant_provision,
+                    'remarks' => sprintf('Approved via recommendation list %s.', $recommendationList->list_number),
+                ]);
+            }
+
+            if ($invalidRecordIds !== []) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'recommendation_list' => sprintf(
+                        'Recommendation list %s contains record(s) that cannot be approved: %s.',
+                        $recommendationList->list_number,
+                        implode(', ', $invalidRecordIds)
+                    ),
+                ]);
+            }
+
+            $recommendationList->approved_by_user_id = $approver?->id;
+            $recommendationList->approved_at = $approvedAt;
+            $recommendationList->save();
+        });
+
         $recommendationList->refresh()->load(['creator', 'approver']);
 
         Log::info('recommendation_list_approved', [
@@ -1227,11 +1288,95 @@ class ScholarshipProfileController extends Controller
             'list_number' => $recommendationList->list_number,
             'approved_by_user_id' => $recommendationList->approved_by_user_id,
             'approved_at' => $recommendationList->approved_at?->toIso8601String(),
+            'approved_record_ids' => $recommendationList->selected_record_ids ?? [],
         ]);
 
         return response()->json([
             'success' => true,
             'message' => sprintf('Recommendation list %s approved successfully.', $recommendationList->list_number),
+            'data' => $this->transformRecommendationList($recommendationList),
+        ]);
+    }
+
+    public function revertRecommendationListApproval(RecommendationList $recommendationList): JsonResponse
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to revert recommendation list approvals.');
+        }
+
+        if (!$recommendationList->approved_at) {
+            return response()->json([
+                'success' => false,
+                'message' => sprintf('Recommendation list %s is not approved.', $recommendationList->list_number),
+            ], 422);
+        }
+
+        $user = Auth::user();
+
+        DB::transaction(function () use ($recommendationList, $user) {
+            $selectedRecordIds = collect($recommendationList->selected_record_ids ?? [])
+                ->map(fn($recordId) => (int) $recordId)
+                ->filter()
+                ->unique()
+                ->values();
+
+            $records = ScholarshipRecord::query()
+                ->whereIn('id', $selectedRecordIds)
+                ->get()
+                ->keyBy('id');
+
+            $invalidRecordIds = [];
+            $approvalService = app(ScholarshipApprovalService::class);
+
+            foreach ($selectedRecordIds as $recordId) {
+                $record = $records->get($recordId);
+
+                if (!$record) {
+                    $invalidRecordIds[] = $recordId;
+                    continue;
+                }
+
+                if ($record->unified_status === 'interviewed' && $record->date_approved === null) {
+                    continue;
+                }
+
+                if (!in_array($record->unified_status, ['active', 'approved'], true)) {
+                    $invalidRecordIds[] = $recordId;
+                    continue;
+                }
+
+                $approvalService->revertApproval($record, $user, [
+                    'remarks' => sprintf('Approval reverted via recommendation list %s.', $recommendationList->list_number),
+                ]);
+            }
+
+            if ($invalidRecordIds !== []) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'recommendation_list' => sprintf(
+                        'Recommendation list %s contains record(s) that cannot have approval reverted: %s.',
+                        $recommendationList->list_number,
+                        implode(', ', $invalidRecordIds)
+                    ),
+                ]);
+            }
+
+            $recommendationList->approved_by_user_id = null;
+            $recommendationList->approved_at = null;
+            $recommendationList->save();
+        });
+
+        $recommendationList->refresh()->load(['creator', 'approver']);
+
+        Log::info('recommendation_list_approval_reverted', [
+            'id' => $recommendationList->id,
+            'list_number' => $recommendationList->list_number,
+            'reverted_by_user_id' => $user?->id,
+            'reverted_record_ids' => $recommendationList->selected_record_ids ?? [],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf('Recommendation list %s approval reverted successfully.', $recommendationList->list_number),
             'data' => $this->transformRecommendationList($recommendationList),
         ]);
     }
