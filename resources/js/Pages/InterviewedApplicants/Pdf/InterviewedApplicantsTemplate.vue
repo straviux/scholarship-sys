@@ -90,7 +90,7 @@
                                 <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                                 <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                     <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                        }}</span>
+                                    }}</span>
                                 </td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.program?.shortname || '—' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname ||
@@ -176,7 +176,7 @@
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                             <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                 <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                    }}</span>
+                                }}</span>
                             </td>
                             <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '—' }}</td>
                             <td :style="TD">{{ record.school?.name || record.school?.shortname || '—' }}</td>
@@ -199,7 +199,7 @@
                             <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                             <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                 fmtDate(record.interviewed_at)
-                                }}</td>
+                            }}</td>
                             <td v-if="includeInterviewColumns"
                                 :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
                                     || '—' }}</td>
@@ -264,8 +264,11 @@
             style="padding-top:4pt;page-break-inside:avoid;break-inside:avoid-page;margin-top:40pt;padding-left:20pt;padding-right:20pt;">
             <div style="padding:8pt;font-size:8pt;line-height:1.45;">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12pt;">
-                    <div class="bold" style="font-size:9pt;text-transform:uppercase;">{{ budgetAllocationHeading }}</div>
-                    <p v-if="listNumber" class="t-9 bold" style="white-space:nowrap;flex-shrink:0;">List No. {{ listNumber }}</p>
+                    <div class="bold" style="font-size:9pt;text-transform:uppercase;">{{ budgetAllocationHeading }}
+                    </div>
+                    <p v-if="listNumber" class="t-9 bold" style="white-space:nowrap;flex-shrink:0;">List No. {{
+                        listNumber }}
+                    </p>
                 </div>
 
                 <table style="width:100%;border-collapse:collapse;margin-top:6pt;font-size:8pt;">
@@ -341,7 +344,8 @@
                     <div style="flex:1;max-width:60%;margin-left:70pt;">
                         <div style="font-weight:700;">Prepared by:</div>
                         <div style="margin-top:40pt;text-align:center; width: 200px;">
-                            <div class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
+                            <div class="bold"
+                                style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
                                 {{
                                     resolvedPreparedBy }}</div>
                             <div style="margin-top:4pt;">{{ resolvedPreparedByPosition }}</div>
@@ -351,7 +355,8 @@
                     <div style="flex:1;max-width:35%;margin-left:auto;">
                         <div style="font-weight:700;text-align:left;">Approved by:</div>
                         <div style="margin-top:40pt;text-align:center; width: 200px;">
-                            <div class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
+                            <div class="bold"
+                                style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
                                 {{
                                     resolvedApprovedBy }}</div>
                             <div style="margin-top:4pt;">{{ resolvedApprovedByPosition }}</div>

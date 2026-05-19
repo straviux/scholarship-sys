@@ -1,17 +1,7 @@
 <template>
-    <IosModal
-        :visible="show"
-        width="520px"
-        :title="currentPageTitle"
-        :show-action="true"
-        :action-disabled="isPrimaryActionDisabled"
-        :action-icon="primaryActionIcon"
-        close-icon="x"
-        :icon-size="16"
-        @update:visible="val => emit('update:show', val)"
-        @close="handleLeadingAction"
-        @action="handlePrimaryAction"
-    >
+    <IosModal :visible="show" width="520px" :title="currentPageTitle" :show-action="true"
+        :action-disabled="isPrimaryActionDisabled" :action-icon="primaryActionIcon" close-icon="x" :icon-size="16"
+        @update:visible="val => emit('update:show', val)" @close="handleLeadingAction" @action="handlePrimaryAction">
         <template #header-left>
             <button class="ios-nav-btn ios-nav-cancel" @click="handleLeadingAction"
                 v-tooltip.bottom="leadingActionTooltip">
@@ -19,454 +9,457 @@
             </button>
         </template>
 
-                    <template v-if="isSetupPage">
-                    <!-- REPORT TYPE — iOS Segmented Control -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">Report Type</div>
-                        <div class="ios-segmented-control">
-                            <button :class="['ios-segment', reportType === 'list' && 'ios-segment-active']"
-                                @click="reportType = 'list'">
-                                <AppIcon name="list" :size="13" />
-                                Detailed List
+        <template v-if="isSetupPage">
+            <!-- REPORT TYPE — iOS Segmented Control -->
+            <div class="ios-section">
+                <div class="ios-section-label">Report Type</div>
+                <div class="ios-segmented-control">
+                    <button :class="['ios-segment', reportType === 'list' && 'ios-segment-active']"
+                        @click="reportType = 'list'">
+                        <AppIcon name="list" :size="13" />
+                        Detailed List
+                    </button>
+                    <button :class="['ios-segment', reportType === 'summary' && 'ios-segment-active']"
+                        @click="reportType = 'summary'">
+                        <AppIcon name="bar-chart-3" :size="13" />
+                        Summary
+                    </button>
+                </div>
+            </div>
+
+            <!-- FILTERS SECTION -->
+            <div class="ios-section">
+                <div class="ios-section-label">Filters</div>
+                <div class="ios-card">
+                    <!-- Recommendation -->
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="star-fill" :size="13" style="color: #FF9500;" />
+                            Recommendation
+                        </div>
+                        <div class="ios-row-control">
+                            <Select v-model="selectedRecommendation" :options="recommendationOptions"
+                                optionLabel="label" optionValue="value" placeholder="All" showClear
+                                class="ios-select" />
+                        </div>
+                    </div>
+
+                    <!-- Program -->
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
+                            Program
+                        </div>
+                        <div class="ios-row-control">
+                            <ProgramSelect v-model="selectedProgram" label="shortname" custom-placeholder="All"
+                                :ios-compact="true" class="ios-select" />
+                        </div>
+                    </div>
+
+                    <!-- School -->
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="building-2" :size="13" style="color: #34C759;" />
+                            School
+                        </div>
+                        <div class="ios-row-control">
+                            <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All"
+                                class="ios-select" :multiple="false" :ios-compact="true" />
+                        </div>
+                    </div>
+
+                    <!-- Course -->
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
+                            Course
+                        </div>
+                        <div class="ios-row-control">
+                            <CourseSelect v-model="selectedCourse" :scholarship-program-id="selectedProgram?.id"
+                                label="shortname" custom-placeholder="All" class="ios-select" :ios-compact="true" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATE RANGE -->
+            <div class="ios-section">
+                <div class="ios-section-label">Interview Date Range</div>
+                <div class="ios-card">
+                    <div class="ios-row ios-row-dates">
+                        <div class="ios-row-label">
+                            <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
+                            From
+                        </div>
+                        <div class="ios-row-control">
+                            <DatePicker v-model="dateFrom" placeholder="Any" showButtonBar dateFormat="M dd, yy"
+                                class="ios-datepicker" showIcon iconDisplay="input" />
+                        </div>
+                        <span class="ios-date-separator">—</span>
+                        <div class="ios-row-label">
+                            <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
+                            To
+                        </div>
+                        <div class="ios-row-control">
+                            <DatePicker v-model="dateTo" placeholder="Any" showButtonBar dateFormat="M dd, yy"
+                                class="ios-datepicker" showIcon iconDisplay="input" />
+                        </div>
+                    </div>
+                </div>
+                <div v-if="dateTo && dateFrom && isDateToInvalid" class="ios-section-footer ios-error">
+                    Date To must be after Date From
+                </div>
+            </div>
+
+            <!-- REPORT OPTIONS -->
+            <div class="ios-section">
+                <div class="ios-section-label">Options</div>
+                <div class="ios-card">
+                    <!-- Group By -->
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="objects-column" :size="13" style="color: #5856D6;" />
+                            Group By
+                        </div>
+                        <div class="ios-row-control">
+                            <Select v-model="groupBy" :options="groupByOptions" optionLabel="label" optionValue="value"
+                                class="ios-select" />
+                        </div>
+                    </div>
+
+                    <!-- Paper Size -->
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="file" :size="13" style="color: #8E8E93;" />
+                            Paper Size
+                        </div>
+                        <div class="ios-row-control">
+                            <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
+                                optionValue="value" class="ios-select" />
+                        </div>
+                    </div>
+
+                    <!-- Orientation -->
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="desktop" :size="13" style="color: #FF9500;" />
+                            Orientation
+                        </div>
+                        <div class="ios-row-control">
+                            <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
+                                optionValue="value" class="ios-select" />
+                        </div>
+                    </div>
+
+                    <div class="ios-row ios-row-last">
+                        <div class="ios-row-label">
+                            <AppIcon name="panel-right-open" :size="13" style="color: #34C759;" />
+                            Layout
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            Use landscape so all report columns stay on one row.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clear Filters Banner -->
+            <div v-if="activeFiltersCount > 0" class="ios-section">
+                <button class="ios-destructive-btn" @click="clearAllFilters">
+                    Clear All Filters ({{ activeFiltersCount }})
+                </button>
+            </div>
+
+            <!-- Bottom spacer -->
+            <div style="height: 24px;"></div>
+        </template>
+
+        <template v-else-if="isProfileSelectionPage">
+            <div class="ios-section">
+                <div class="ios-section-label">Search Profiles</div>
+                <div class="ios-card">
+                    <div class="ios-row ios-row-last">
+                        <div class="ios-row-label">
+                            <AppIcon name="search" :size="13" style="color: #007AFF;" />
+                            Search
+                        </div>
+                        <div class="ios-row-control">
+                            <InputText v-model="profileSearchQuery" class="ios-input"
+                                placeholder="Name, program, school, or course" maxlength="255" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ios-section">
+                <div class="ios-section-label">Profiles To Print</div>
+                <div class="ios-card">
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="users" :size="13" style="color: #007AFF;" />
+                            Selection
+                        </div>
+                        <div class="ios-row-control ios-selection-actions">
+                            <button class="ios-inline-btn" type="button" @click="selectAllFilteredProfiles"
+                                :disabled="visibleProfiles.length === 0">
+                                {{ selectAllButtonLabel }}
                             </button>
-                            <button :class="['ios-segment', reportType === 'summary' && 'ios-segment-active']"
-                                @click="reportType = 'summary'">
-                                <AppIcon name="bar-chart-3" :size="13" />
-                                Summary
+                            <button class="ios-inline-btn ios-inline-btn-secondary" type="button"
+                                @click="clearSelectedProfiles" :disabled="selectedDetailedRecords.length === 0">
+                                Clear
                             </button>
                         </div>
                     </div>
 
-                    <!-- FILTERS SECTION -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">Filters</div>
-                        <div class="ios-card">
-                            <!-- Recommendation -->
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="star-fill" :size="13" style="color: #FF9500;" />
-                                    Recommendation
-                                </div>
-                                <div class="ios-row-control">
-                                    <Select v-model="selectedRecommendation" :options="recommendationOptions"
-                                        optionLabel="label" optionValue="value" placeholder="All" showClear
-                                        class="ios-select" />
-                                </div>
-                            </div>
-
-                            <!-- Program -->
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
-                                    Program
-                                </div>
-                                <div class="ios-row-control">
-                                    <ProgramSelect v-model="selectedProgram" label="shortname" custom-placeholder="All"
-                                        :ios-compact="true"
-                                        class="ios-select" />
+                    <div v-if="visibleProfiles.length" class="ios-profile-picker">
+                        <label v-for="record in visibleProfiles" :key="record.id" class="ios-profile-option">
+                            <Checkbox v-model="selectedProfileIds" :value="record.id" />
+                            <div class="ios-profile-copy">
+                                <div class="ios-profile-name">{{ record.profile.last_name }}, {{
+                                    record.profile.first_name }}</div>
+                                <div class="ios-profile-meta">
+                                    {{ record.program?.shortname || 'N/A' }}
+                                    <template v-if="record.school?.shortname || record.school?.name">
+                                        · {{ record.school?.shortname || record.school?.name }}
+                                    </template>
+                                    <template v-if="record.course?.shortname || record.course?.name">
+                                        · {{ record.course?.shortname || record.course?.name }}
+                                    </template>
                                 </div>
                             </div>
-
-                            <!-- School -->
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="building-2" :size="13" style="color: #34C759;" />
-                                    School
-                                </div>
-                                <div class="ios-row-control">
-                                    <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All"
-                                        class="ios-select" :multiple="false" :ios-compact="true" />
-                                </div>
-                            </div>
-
-                            <!-- Course -->
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
-                                    Course
-                                </div>
-                                <div class="ios-row-control">
-                                    <CourseSelect v-model="selectedCourse" :scholarship-program-id="selectedProgram?.id"
-                                        label="shortname" custom-placeholder="All" class="ios-select"
-                                        :ios-compact="true" />
-                                </div>
-                            </div>
-                        </div>
+                        </label>
                     </div>
 
-                    <!-- DATE RANGE -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">Interview Date Range</div>
-                        <div class="ios-card">
-                            <div class="ios-row ios-row-dates">
-                                <div class="ios-row-label">
-                                    <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                    From
-                                </div>
-                                <div class="ios-row-control">
-                                    <DatePicker v-model="dateFrom" placeholder="Any" showButtonBar dateFormat="M dd, yy"
-                                        class="ios-datepicker" showIcon iconDisplay="input" />
-                                </div>
-                                <span class="ios-date-separator">—</span>
-                                <div class="ios-row-label">
-                                    <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                    To
-                                </div>
-                                <div class="ios-row-control">
-                                    <DatePicker v-model="dateTo" placeholder="Any" showButtonBar dateFormat="M dd, yy"
-                                        class="ios-datepicker" showIcon iconDisplay="input" />
-                                </div>
-                            </div>
-                        </div>
-                        <div v-if="dateTo && dateFrom && isDateToInvalid" class="ios-section-footer ios-error">
-                            Date To must be after Date From
-                        </div>
+                    <div v-else class="ios-profile-empty">
+                        {{ filteredApplicants.length === 0
+                            ? 'No interviewed applicants match the current filters.'
+                            : 'No interviewed applicants match the current search.' }}
                     </div>
-
-                    <!-- REPORT OPTIONS -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">Options</div>
-                        <div class="ios-card">
-                            <!-- Group By -->
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="objects-column" :size="13" style="color: #5856D6;" />
-                                    Group By
-                                </div>
-                                <div class="ios-row-control">
-                                    <Select v-model="groupBy" :options="groupByOptions" optionLabel="label"
-                                        optionValue="value" class="ios-select" />
-                                </div>
-                            </div>
-
-                            <!-- Paper Size -->
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="file" :size="13" style="color: #8E8E93;" />
-                                    Paper Size
-                                </div>
-                                <div class="ios-row-control">
-                                    <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
-                                        optionValue="value" class="ios-select" />
-                                </div>
-                            </div>
-
-                            <!-- Orientation -->
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="desktop" :size="13" style="color: #FF9500;" />
-                                    Orientation
-                                </div>
-                                <div class="ios-row-control">
-                                    <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
-                                        optionValue="value" class="ios-select" />
-                                </div>
-                            </div>
-
-                            <div class="ios-row ios-row-last">
-                                <div class="ios-row-label">
-                                    <AppIcon name="panel-right-open" :size="13" style="color: #34C759;" />
-                                    Layout
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Use landscape so all report columns stay on one row.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Clear Filters Banner -->
-                    <div v-if="activeFiltersCount > 0" class="ios-section">
-                        <button class="ios-destructive-btn" @click="clearAllFilters">
-                            Clear All Filters ({{ activeFiltersCount }})
-                        </button>
-                    </div>
-
-                    <!-- Bottom spacer -->
-                    <div style="height: 24px;"></div>
+                </div>
+                <div class="ios-section-footer">
+                    {{ selectedDetailedRecords.length }} of {{ filteredApplicants.length }} profile(s) selected.
+                    <template v-if="profileSearchQuery.trim()">
+                        Showing {{ visibleProfiles.length }} search result(s).
                     </template>
+                </div>
+            </div>
 
-                    <template v-else-if="isProfileSelectionPage">
-                        <div class="ios-section">
-                            <div class="ios-section-label">Search Profiles</div>
-                            <div class="ios-card">
-                                <div class="ios-row ios-row-last">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="search" :size="13" style="color: #007AFF;" />
-                                        Search
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="profileSearchQuery" class="ios-input"
-                                            placeholder="Name, program, school, or course" maxlength="255" />
-                                    </div>
-                                </div>
-                            </div>
+            <div style="height: 24px;"></div>
+        </template>
+
+        <template v-else>
+            <div class="ios-section">
+                <div class="ios-section-label">Report Details</div>
+                <div class="ios-card">
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="type-outline" :size="13" style="color: #007AFF;" />
+                            Report Title
                         </div>
+                        <div class="ios-row-control">
+                            <InputText v-model="reportTitleInput" class="ios-input"
+                                placeholder="INTERVIEWED APPLICANTS REPORT" maxlength="255" />
+                        </div>
+                    </div>
 
-                        <div class="ios-section">
-                            <div class="ios-section-label">Profiles To Print</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="users" :size="13" style="color: #007AFF;" />
-                                        Selection
-                                    </div>
-                                    <div class="ios-row-control ios-selection-actions">
-                                        <button class="ios-inline-btn" type="button" @click="selectAllFilteredProfiles"
-                                            :disabled="visibleProfiles.length === 0">
-                                            {{ selectAllButtonLabel }}
-                                        </button>
-                                        <button class="ios-inline-btn ios-inline-btn-secondary" type="button"
-                                            @click="clearSelectedProfiles" :disabled="selectedDetailedRecords.length === 0">
-                                            Clear
-                                        </button>
-                                    </div>
-                                </div>
+                    <div v-if="reportType === 'list'" class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="message-square" :size="13" style="color: #007AFF;" />
+                            Show Interview Columns
+                        </div>
+                        <div class="ios-row-control" style="display:flex;justify-content:flex-end;">
+                            <ToggleSwitch v-model="includeInterviewColumns" />
+                        </div>
+                    </div>
 
-                                <div v-if="visibleProfiles.length" class="ios-profile-picker">
-                                    <label v-for="record in visibleProfiles" :key="record.id" class="ios-profile-option">
-                                        <Checkbox v-model="selectedProfileIds" :value="record.id" />
-                                        <div class="ios-profile-copy">
-                                            <div class="ios-profile-name">{{ record.profile.last_name }}, {{
-                                                record.profile.first_name }}</div>
-                                            <div class="ios-profile-meta">
-                                                {{ record.program?.shortname || 'N/A' }}
-                                                <template v-if="record.school?.shortname || record.school?.name">
-                                                    · {{ record.school?.shortname || record.school?.name }}
-                                                </template>
-                                                <template v-if="record.course?.shortname || record.course?.name">
-                                                    · {{ record.course?.shortname || record.course?.name }}
-                                                </template>
-                                            </div>
+                    <div v-if="reportType === 'list'" class="ios-row ios-row-last">
+                        <div class="ios-row-label">
+                            <AppIcon name="users" :size="13" style="color: #16A34A;" />
+                            Highlight JPM Names
+                        </div>
+                        <div class="ios-row-control"
+                            style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
+                            <span class="text-[11px] text-slate-500">Mark JPM-related applicants in print</span>
+                            <ToggleSwitch v-model="highlightJpmMembers" />
+                        </div>
+                    </div>
+
+                    <div v-else class="ios-row ios-row-last">
+                        <div class="ios-row-label">
+                            <AppIcon name="file-text" :size="13" style="color: #8E8E93;" />
+                            Report Type
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            Summary report
+                        </div>
+                    </div>
+                </div>
+                <div class="ios-section-footer">
+                    Leave blank to use INTERVIEWED APPLICANTS REPORT.
+                </div>
+            </div>
+
+            <div class="ios-section">
+                <div class="ios-section-label">Signatories</div>
+                <div class="ios-card">
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="user" :size="13" style="color: #34C759;" />
+                            Prepared By
+                        </div>
+                        <div class="ios-row-control">
+                            <InputText v-model="preparedBy" class="ios-select" placeholder="Enter preparer name"
+                                maxlength="255" />
+                        </div>
+                    </div>
+
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="file" :size="13" style="color: #5856D6;" />
+                            Preparer Position
+                        </div>
+                        <div class="ios-row-control">
+                            <InputText v-model="preparedByPosition" class="ios-select"
+                                placeholder="Enter preparer position" maxlength="255" />
+                        </div>
+                    </div>
+
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="building-2" :size="13" style="color: #34C759;" />
+                            Preparer Office
+                        </div>
+                        <div class="ios-row-control">
+                            <InputText v-model="preparedByOffice" class="ios-select" placeholder="Enter preparer office"
+                                maxlength="255" />
+                        </div>
+                    </div>
+
+                    <div class="ios-row">
+                        <div class="ios-row-label">
+                            <AppIcon name="user" :size="13" style="color: #007AFF;" />
+                            Approved By
+                        </div>
+                        <div class="ios-row-control">
+                            <InputText v-model="approvedBy" class="ios-select" placeholder="Enter approver name"
+                                maxlength="255" />
+                        </div>
+                    </div>
+
+                    <div class="ios-row ios-row-last">
+                        <div class="ios-row-label">
+                            <AppIcon name="file" :size="13" style="color: #FF9500;" />
+                            Approver Position
+                        </div>
+                        <div class="ios-row-control">
+                            <InputText v-model="approvedByPosition" class="ios-select"
+                                placeholder="Enter approver position" maxlength="255" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ios-section">
+                <div class="ios-section-label">Budget Allocation</div>
+                <div class="ios-card">
+                    <div class="ios-row ios-row-last">
+                        <div class="ios-row-label">
+                            <AppIcon name="wallet" :size="13" style="color: #34C759;" />
+                            Allocation
+                        </div>
+                        <div class="ios-row-control">
+                            <Select v-model="selectedBudgetAllocationKey" :options="budgetAllocationOptions"
+                                optionLabel="label" optionValue="value"
+                                :placeholder="budgetAllocationOptions.length ? 'Select allocation' : 'No allocation available'"
+                                :disabled="budgetAllocationOptions.length === 0" appendTo="body" class="ios-select"
+                                showClear>
+                                <template #value="{ value, placeholder }">
+                                    <div v-if="findBudgetAllocationOption(value)" class="leading-tight">
+                                        <div class="font-medium text-slate-700">{{
+                                            findBudgetAllocationOption(value)?.label }}</div>
+                                        <div v-if="findBudgetAllocationOption(value)?.description"
+                                            class="text-[11px] text-slate-500">
+                                            {{ findBudgetAllocationOption(value)?.description }}
                                         </div>
-                                    </label>
-                                </div>
-
-                                <div v-else class="ios-profile-empty">
-                                    {{ filteredApplicants.length === 0
-                                        ? 'No interviewed applicants match the current filters.'
-                                        : 'No interviewed applicants match the current search.' }}
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                {{ selectedDetailedRecords.length }} of {{ filteredApplicants.length }} profile(s) selected.
-                                <template v-if="profileSearchQuery.trim()">
-                                    Showing {{ visibleProfiles.length }} search result(s).
+                                    </div>
+                                    <span v-else class="text-slate-400">{{ placeholder }}</span>
                                 </template>
-                            </div>
+                                <template #option="{ option }">
+                                    <div class="py-1 leading-tight">
+                                        <div class="font-medium text-slate-700">{{ option.label }}</div>
+                                        <div v-if="option.description" class="text-[11px] text-slate-500">
+                                            {{ option.description }}
+                                        </div>
+                                    </div>
+                                </template>
+                            </Select>
                         </div>
-
-                        <div style="height: 24px;"></div>
+                    </div>
+                </div>
+                <div class="ios-section-footer">
+                    <template v-if="selectedBudgetAllocation">
+                        {{ formatBudgetAllocationSelectionMessage(selectedBudgetAllocation) }}
                     </template>
-
+                    <template v-else-if="budgetAllocationOptions.length">
+                        Select the budget allocation where the Current AY Estimated Grant will be monitored.
+                    </template>
                     <template v-else>
-                        <div class="ios-section">
-                            <div class="ios-section-label">Report Details</div>
-                            <div class="ios-card">
-                                    <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="type-outline" :size="13" style="color: #007AFF;" />
-                                        Report Title
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="reportTitleInput" class="ios-input"
-                                            placeholder="INTERVIEWED APPLICANTS REPORT" maxlength="255" />
-                                    </div>
-                                </div>
-
-                                <div v-if="reportType === 'list'" class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="message-square" :size="13" style="color: #007AFF;" />
-                                        Show Interview Columns
-                                    </div>
-                                    <div class="ios-row-control" style="display:flex;justify-content:flex-end;">
-                                        <ToggleSwitch v-model="includeInterviewColumns" />
-                                    </div>
-                                </div>
-
-                                <div v-if="reportType === 'list'" class="ios-row ios-row-last">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="users" :size="13" style="color: #16A34A;" />
-                                        Highlight JPM Names
-                                    </div>
-                                    <div class="ios-row-control" style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
-                                        <span class="text-[11px] text-slate-500">Mark JPM-related applicants in print</span>
-                                        <ToggleSwitch v-model="highlightJpmMembers" />
-                                    </div>
-                                </div>
-
-                                <div v-else class="ios-row ios-row-last">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="file-text" :size="13" style="color: #8E8E93;" />
-                                        Report Type
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        Summary report
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Leave blank to use INTERVIEWED APPLICANTS REPORT.
-                            </div>
-                        </div>
-
-                        <div class="ios-section">
-                            <div class="ios-section-label">Signatories</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="user" :size="13" style="color: #34C759;" />
-                                        Prepared By
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="preparedBy" class="ios-select" placeholder="Enter preparer name"
-                                            maxlength="255" />
-                                    </div>
-                                </div>
-
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="file" :size="13" style="color: #5856D6;" />
-                                        Preparer Position
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="preparedByPosition" class="ios-select"
-                                            placeholder="Enter preparer position" maxlength="255" />
-                                    </div>
-                                </div>
-
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="building-2" :size="13" style="color: #34C759;" />
-                                        Preparer Office
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="preparedByOffice" class="ios-select"
-                                            placeholder="Enter preparer office" maxlength="255" />
-                                    </div>
-                                </div>
-
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="user" :size="13" style="color: #007AFF;" />
-                                        Approved By
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="approvedBy" class="ios-select"
-                                            placeholder="Enter approver name" maxlength="255" />
-                                    </div>
-                                </div>
-
-                                <div class="ios-row ios-row-last">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="file" :size="13" style="color: #FF9500;" />
-                                        Approver Position
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="approvedByPosition" class="ios-select"
-                                            placeholder="Enter approver position" maxlength="255" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="ios-section">
-                            <div class="ios-section-label">Budget Allocation</div>
-                            <div class="ios-card">
-                                <div class="ios-row ios-row-last">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="wallet" :size="13" style="color: #34C759;" />
-                                        Allocation
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="selectedBudgetAllocationKey" :options="budgetAllocationOptions"
-                                            optionLabel="label" optionValue="value"
-                                            :placeholder="budgetAllocationOptions.length ? 'Select allocation' : 'No allocation available'"
-                                            :disabled="budgetAllocationOptions.length === 0" appendTo="body" class="ios-select"
-                                                showClear>
-                                                <template #value="{ value, placeholder }">
-                                                    <div v-if="findBudgetAllocationOption(value)" class="leading-tight">
-                                                        <div class="font-medium text-slate-700">{{ findBudgetAllocationOption(value)?.label }}</div>
-                                                        <div v-if="findBudgetAllocationOption(value)?.description" class="text-[11px] text-slate-500">
-                                                            {{ findBudgetAllocationOption(value)?.description }}
-                                                        </div>
-                                                    </div>
-                                                    <span v-else class="text-slate-400">{{ placeholder }}</span>
-                                                </template>
-                                                <template #option="{ option }">
-                                                    <div class="py-1 leading-tight">
-                                                        <div class="font-medium text-slate-700">{{ option.label }}</div>
-                                                        <div v-if="option.description" class="text-[11px] text-slate-500">
-                                                            {{ option.description }}
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </Select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                <template v-if="selectedBudgetAllocation">
-                                        {{ formatBudgetAllocationSelectionMessage(selectedBudgetAllocation) }}
-                                </template>
-                                <template v-else-if="budgetAllocationOptions.length">
-                                    Select the budget allocation where the Current AY Estimated Grant will be monitored.
-                                </template>
-                                <template v-else>
-                                    No budget allocation is available for monitoring.
-                                </template>
-                            </div>
-                        </div>
-
-                        <div v-if="selectedBudgetAllocation" class="ios-section">
-                            <div class="ios-section-label">Cumulative Count Details</div>
-                            <div class="ios-card space-y-3">
-                                <div class="rounded-3xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                                    <div class="font-semibold text-slate-700">
-                                        {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative count.
-                                    </div>
-                                    <div class="mt-1">
-                                        This list follows the selected allocation's calendar year, regardless of program coverage or allocation window.
-                                    </div>
-                                </div>
-
-                                <InputText
-                                    v-model="cumulativeScholarSearchQuery"
-                                    class="w-full"
-                                    placeholder="Search cumulative scholars"
-                                />
-
-                                <div v-if="filteredCumulativeScholars.length" class="max-h-72 space-y-2 overflow-y-auto pr-1">
-                                    <div
-                                        v-for="scholar in filteredCumulativeScholars"
-                                        :key="scholar.profile_id"
-                                        class="rounded-3xl border border-slate-200 bg-white px-3 py-2"
-                                    >
-                                        <div class="text-sm font-semibold text-slate-800">{{ scholar.name }}</div>
-                                        <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
-                                            <span>Program: {{ scholar.program || 'N/A' }}</span>
-                                            <span>Approved: {{ formatDate(scholar.date_approved) }}</span>
-                                            <span>Status: {{ formatScholarStatus(scholar.status) }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div v-else class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
-                                    <template v-if="selectedBudgetAllocationApprovedCount">
-                                        No scholars match the current search.
-                                    </template>
-                                    <template v-else>
-                                        No approved scholars are currently counted for this calendar year.
-                                    </template>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Showing {{ filteredCumulativeScholars.length.toLocaleString() }} of {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }}.
-                            </div>
-                        </div>
-
-                        <div style="height: 24px;"></div>
+                        No budget allocation is available for monitoring.
                     </template>
+                </div>
+            </div>
+
+            <div v-if="selectedBudgetAllocation" class="ios-section">
+                <div class="ios-section-label">Cumulative Count Details</div>
+                <div class="ios-card space-y-3">
+                    <div class="rounded-3xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                        <div class="font-semibold text-slate-700">
+                            {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{
+                                selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative
+                            count.
+                        </div>
+                        <div class="mt-1">
+                            This list follows the selected allocation's calendar year, regardless of program coverage or
+                            allocation
+                            window.
+                        </div>
+                    </div>
+
+                    <InputText v-model="cumulativeScholarSearchQuery" class="w-full"
+                        placeholder="Search cumulative scholars" />
+
+                    <div v-if="filteredCumulativeScholars.length" class="max-h-72 space-y-2 overflow-y-auto pr-1">
+                        <div v-for="scholar in filteredCumulativeScholars" :key="scholar.profile_id"
+                            class="rounded-3xl border border-slate-200 bg-white px-3 py-2">
+                            <div class="text-sm font-semibold text-slate-800">{{ scholar.name }}</div>
+                            <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
+                                <span>Program: {{ scholar.program || 'N/A' }}</span>
+                                <span>Approved: {{ formatDate(scholar.date_approved) }}</span>
+                                <span>Status: {{ formatScholarStatus(scholar.status) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else
+                        class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+                        <template v-if="selectedBudgetAllocationApprovedCount">
+                            No scholars match the current search.
+                        </template>
+                        <template v-else>
+                            No approved scholars are currently counted for this calendar year.
+                        </template>
+                    </div>
+                </div>
+                <div class="ios-section-footer">
+                    Showing {{ filteredCumulativeScholars.length.toLocaleString() }} of {{
+                        selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{
+                        selectedBudgetAllocationApprovedCount !== 1
+                    ? 's' : '' }}.
+                </div>
+            </div>
+
+            <div style="height: 24px;"></div>
+        </template>
     </IosModal>
 
     <PdfPreviewModal v-model:show="showPdfPreview" :htmlDoc="pdfPreviewHtml" :title="pdfPreviewTitle"
@@ -1025,4 +1018,3 @@ function formatScholarStatus(status) {
 }
 
 </script>
-
