@@ -32,6 +32,7 @@
             <p v-if="isReimbursementVoucher" class="bold t-12" style="padding-top:2pt;">FOR REIMBURSEMENT
             </p>
             <p v-if="termAcademic" class="bold t-12" style="padding-top:2pt;">{{ termAcademic }}</p>
+            <p v-if="showMedCourseLine" class="bold t-12" style="padding-top:2pt;">{{ courseName }}</p>
         </div>
 
         <!-- TABLE -->
@@ -144,6 +145,40 @@ const schoolName = computed(() => {
 const courseName = computed(() =>
     props.voucher.course || props.scholarDetails?.[0]?.course_name || ''
 );
+
+const normalizeProgramToken = (value) => String(value ?? '').trim().toLowerCase();
+
+const matchesMedProgram = (value) => {
+    const normalizedValue = normalizeProgramToken(value);
+
+    return normalizedValue === 'med'
+        || normalizedValue.includes('medicine')
+        || normalizedValue.includes('medical');
+};
+
+const isMedProgram = computed(() => {
+    const candidates = [
+        props.voucher.program_shortname,
+        props.voucher.program_name,
+        props.voucher.program?.shortname,
+        props.voucher.program?.name,
+        props.voucher.program,
+        props.voucher.scholarship_program?.shortname,
+        props.voucher.scholarship_program?.name,
+        props.voucher.scholarshipProgram?.shortname,
+        props.voucher.scholarshipProgram?.name,
+        ...props.scholarDetails.flatMap((detail) => [
+            detail?.program_shortname,
+            detail?.program_name,
+            detail?.program?.shortname,
+            detail?.program?.name,
+        ]),
+    ];
+
+    return candidates.some(matchesMedProgram);
+});
+
+const showMedCourseLine = computed(() => isMedProgram.value && Boolean(String(courseName.value).trim()));
 
 /** Term + Academic Year combined */
 const termAcademic = computed(() => {

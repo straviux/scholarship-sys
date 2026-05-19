@@ -1443,18 +1443,25 @@ const countOpenAcademicTerms = (terms = []) => {
     return terms.filter((term) => OPEN_ACADEMIC_TERM_STATUSES.includes(normalizeAcademicTermStatus(term?.unified_status))).length;
 };
 
+const getAcademicLinkedRecords = (term) => {
+    const mappedRecords = Array.isArray(term?.record_maps)
+        ? term.record_maps
+            .map((recordMap) => recordMap?.scholarship_record || null)
+            .filter(Boolean)
+        : [];
+
+    if (mappedRecords.length > 0) {
+        return mappedRecords;
+    }
+
+    const fallbackRecord = term?.primary_record_map?.scholarship_record || null;
+
+    return fallbackRecord ? [fallbackRecord] : [];
+};
+
 const createAcademicDisplayRows = (terms = [], enrollmentId = null) => {
     return terms.flatMap((term) => {
-        const mappedRecords = Array.isArray(term?.record_maps)
-            ? term.record_maps
-                .map((recordMap) => recordMap?.scholarship_record || null)
-                .filter(Boolean)
-            : [];
-
-        const fallbackRecord = term?.primary_record_map?.scholarship_record || null;
-        const linkedRecords = mappedRecords.length > 0
-            ? mappedRecords
-            : (fallbackRecord ? [fallbackRecord] : []);
+        const linkedRecords = getAcademicLinkedRecords(term);
 
         if (linkedRecords.length === 0) {
             return [{
@@ -1532,37 +1539,66 @@ const buildLegacyAcademicEnrollmentGroups = (records = []) => {
 
 const supportsAcademicEnrollmentCrud = computed(() => Array.isArray(props.profile.academic_enrollments));
 
-const academicEnrollmentGroups = computed(() => {
-    const enrollments = Array.isArray(props.profile.academic_enrollments)
+const storedAcademicEnrollments = computed(() => {
+    return Array.isArray(props.profile.academic_enrollments)
         ? props.profile.academic_enrollments
         : [];
+});
 
-    if (enrollments.length > 0) {
-        return enrollments.map((enrollment) => ({
-            terms: Array.isArray(enrollment.terms)
-                ? enrollment.terms.map((term) => ({
-                    ...term,
-                    isGroupedTerm: true,
-                    enrollmentId: enrollment.id,
-                    legacyRecord: term.primary_record_map?.scholarship_record || null,
-                    attachments: term.primary_record_map?.scholarship_record?.attachments || [],
-                }))
-                : [],
-            displayTerms: createAcademicDisplayRows(enrollment.terms, enrollment.id),
-            id: enrollment.id,
-            isGroupedEnrollment: true,
-            program: enrollment.program || null,
-            school: enrollment.school || null,
-            course: enrollment.course || null,
-            graduation_date: enrollment.graduation_date || null,
-            graduation_remarks: enrollment.graduation_remarks || null,
-            is_graduated: Boolean(enrollment.is_graduated || enrollment.graduation_date),
-            openTermCount: countOpenAcademicTerms(enrollment.terms),
-            needsTermReview: countOpenAcademicTerms(enrollment.terms) > 1,
-        }));
+const mappedScholarshipRecordIds = computed(() => {
+    return new Set(
+        storedAcademicEnrollments.value.flatMap((enrollment) => {
+            const terms = Array.isArray(enrollment?.terms) ? enrollment.terms : [];
+
+            return terms.flatMap((term) => {
+                return getAcademicLinkedRecords(term)
+                    .map((record) => record?.id ?? null)
+                    .filter((recordId) => recordId !== null);
+            });
+        })
+    );
+});
+
+const unmappedScholarshipRecords = computed(() => {
+    if (storedAcademicEnrollments.value.length === 0) {
+        return scholarshipRecords.value;
     }
 
-    return buildLegacyAcademicEnrollmentGroups(scholarshipRecords.value);
+    return scholarshipRecords.value.filter((record) => !mappedScholarshipRecordIds.value.has(record.id));
+});
+
+const academicEnrollmentGroups = computed(() => {
+    const enrollments = storedAcademicEnrollments.value;
+
+    if (enrollments.length > 0) {
+        return [
+            ...enrollments.map((enrollment) => ({
+                terms: Array.isArray(enrollment.terms)
+                    ? enrollment.terms.map((term) => ({
+                        ...term,
+                        isGroupedTerm: true,
+                        enrollmentId: enrollment.id,
+                        legacyRecord: term.primary_record_map?.scholarship_record || null,
+                        attachments: term.primary_record_map?.scholarship_record?.attachments || [],
+                    }))
+                    : [],
+                displayTerms: createAcademicDisplayRows(enrollment.terms, enrollment.id),
+                id: enrollment.id,
+                isGroupedEnrollment: true,
+                program: enrollment.program || null,
+                school: enrollment.school || null,
+                course: enrollment.course || null,
+                graduation_date: enrollment.graduation_date || null,
+                graduation_remarks: enrollment.graduation_remarks || null,
+                is_graduated: Boolean(enrollment.is_graduated || enrollment.graduation_date),
+                openTermCount: countOpenAcademicTerms(enrollment.terms),
+                needsTermReview: countOpenAcademicTerms(enrollment.terms) > 1,
+            })),
+            ...buildLegacyAcademicEnrollmentGroups(unmappedScholarshipRecords.value),
+        ];
+    }
+
+    return buildLegacyAcademicEnrollmentGroups(unmappedScholarshipRecords.value);
 });
 
 const academicTermsNeedingReviewCount = computed(() => {

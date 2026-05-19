@@ -177,7 +177,13 @@ class ScholarshipApiController extends Controller
                     'program',
                     'school',
                     'course'
-                ])->first();
+                ])
+                ->orderByRaw('CASE 
+                    WHEN date_approved IS NOT NULL THEN date_approved
+                    WHEN date_filed IS NOT NULL THEN date_filed
+                    ELSE created_at
+                END DESC')
+                ->first();
 
             if (!$record) {
                 return response()->json([
@@ -210,6 +216,7 @@ class ScholarshipApiController extends Controller
                 'municipality' => $profile->municipality ?? null,
                 'barangay' => $profile->barangay ?? null,
                 'program_name' => $record->program?->name ?? null,
+                'program_shortname' => $record->program?->shortname ?? null,
                 'school_name' => $record->school?->name ?? null,
                 'course_name' => $record->course?->name ?? null,
                 'year_level' => $record->year_level ?? null,

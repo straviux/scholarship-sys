@@ -684,8 +684,16 @@ const deleteVoucher = (voucherId) => {
 
 // View voucher
 const viewVoucher = async (voucherId) => {
-    const voucher = vouchers.value.find(v => v.id === voucherId);
-    if (voucher) {
+    const fallbackVoucher = vouchers.value.find(v => v.id === voucherId) || null;
+
+    try {
+        const response = await axios.get(`/api/fund-transactions/${voucherId}`);
+        const voucher = response.data?.data || fallbackVoucher;
+
+        if (!voucher) {
+            return;
+        }
+
         selectedVoucher.value = voucher;
         viewModalTab.value = 'details';
         showViewDialog.value = true;
@@ -694,6 +702,27 @@ const viewVoucher = async (voucherId) => {
         await Promise.all([
             fetchScholarsDetails(voucher.scholar_ids || []),
             loadVoucherDocuments(voucher.id)
+        ]);
+    } catch (error) {
+        console.error('Error fetching voucher details:', error);
+
+        if (!fallbackVoucher) {
+            toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Failed to load voucher data',
+                life: 3000
+            });
+            return;
+        }
+
+        selectedVoucher.value = fallbackVoucher;
+        viewModalTab.value = 'details';
+        showViewDialog.value = true;
+
+        await Promise.all([
+            fetchScholarsDetails(fallbackVoucher.scholar_ids || []),
+            loadVoucherDocuments(fallbackVoucher.id)
         ]);
     }
 };
