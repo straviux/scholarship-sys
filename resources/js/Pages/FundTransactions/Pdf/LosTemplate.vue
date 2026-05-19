@@ -32,7 +32,7 @@
             <p v-if="isReimbursementVoucher" class="bold t-12" style="padding-top:2pt;">FOR REIMBURSEMENT
             </p>
             <p v-if="termAcademic" class="bold t-12" style="padding-top:2pt;">{{ termAcademic }}</p>
-            <p v-if="showMedCourseLine" class="bold t-12" style="padding-top:2pt;">{{ courseName }}</p>
+            <p v-if="showCourseLine" class="bold t-12" style="padding-top:2pt;">{{ courseName }}</p>
         </div>
 
         <!-- TABLE -->
@@ -146,39 +146,14 @@ const courseName = computed(() =>
     props.voucher.course || props.scholarDetails?.[0]?.course_name || ''
 );
 
-const normalizeProgramToken = (value) => String(value ?? '').trim().toLowerCase();
+const normalizeObrType = (value) => String(value ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_');
 
-const matchesMedProgram = (value) => {
-    const normalizedValue = normalizeProgramToken(value);
+const normalizedObrType = computed(() => normalizeObrType(props.voucher.obr_type));
 
-    return normalizedValue === 'med'
-        || normalizedValue.includes('medicine')
-        || normalizedValue.includes('medical');
-};
-
-const isMedProgram = computed(() => {
-    const candidates = [
-        props.voucher.program_shortname,
-        props.voucher.program_name,
-        props.voucher.program?.shortname,
-        props.voucher.program?.name,
-        props.voucher.program,
-        props.voucher.scholarship_program?.shortname,
-        props.voucher.scholarship_program?.name,
-        props.voucher.scholarshipProgram?.shortname,
-        props.voucher.scholarshipProgram?.name,
-        ...props.scholarDetails.flatMap((detail) => [
-            detail?.program_shortname,
-            detail?.program_name,
-            detail?.program?.shortname,
-            detail?.program?.name,
-        ]),
-    ];
-
-    return candidates.some(matchesMedProgram);
+const showCourseLine = computed(() => {
+    return normalizedObrType.value !== 'educational_financial_assistance'
+        && Boolean(String(courseName.value).trim());
 });
-
-const showMedCourseLine = computed(() => isMedProgram.value && Boolean(String(courseName.value).trim()));
 
 /** Term + Academic Year combined */
 const termAcademic = computed(() => {
@@ -188,9 +163,7 @@ const termAcademic = computed(() => {
     return term || ay || '';
 });
 
-const isReimbursementVoucher = computed(() =>
-    String(props.voucher.obr_type ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_') === 'reimbursement'
-);
+const isReimbursementVoucher = computed(() => normalizedObrType.value === 'reimbursement');
 
 /* ── scholar data ────────────────────────────────── */
 const scholarIds = computed(() =>
