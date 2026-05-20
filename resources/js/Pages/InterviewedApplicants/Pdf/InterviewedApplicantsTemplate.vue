@@ -92,7 +92,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(record, index) in group" :key="record.id">
+                            <tr v-for="(record, index) in group" :key="`${groupName}-${record.id ?? 'r'}-${index}`">
                                 <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                                 <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                     <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
@@ -110,7 +110,7 @@
                                 <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.academic_year || '' }}
                                 </td>
                                 <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
-                                <td :style="TD + 'text-align:right;'">{{ fmtRecordGrantAmount(record) }}</td>
+                                <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
                                 <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                                 <td v-if="includeInterviewColumns"
                                     :style="TD + 'text-align:center;white-space:nowrap;'">{{
@@ -175,7 +175,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(record, index) in records" :key="record.id">
+                        <tr v-for="(record, index) in records" :key="`${record.id ?? 'r'}-${index}`">
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                             <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                 <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
@@ -186,11 +186,12 @@
                             <td :style="TD">{{ record.school?.name || record.school?.shortname || '' }}</td>
                             <td :style="TD">{{ record.course?.name || record.course?.shortname || '' }}</td>
                             <td :style="TD + 'text-align:center;'">{{ record.year_level || '' }} </td>
-                            <td :style="TD + 'text-align:center;'">{{ record.term || '' }}
-                                <p>{{ record.academic_year || '' }}</p>
+                            <td :style="TD + 'text-align:center;line-height:1;'">
+                                <div>{{ record.term || '' }}</div>
+                                <div>{{ record.academic_year || '' }}</div>
                             </td>
                             <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ fmtRecordGrantAmount(record) }}</td>
+                            <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
                             <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                             <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                 fmtDate(record.interviewed_at)
@@ -419,8 +420,8 @@ const props = defineProps({
     showRemarks: { type: Boolean, default: false },
 });
 
-const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;line-height:1.15;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;';
-const TD = 'border:1px solid #000;padding:4px 3px;font-size:7px;line-height:1.2;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
+const TH = 'border:1px solid #000;padding:2px 2px;font-weight:700;font-size:7px;line-height:1.05;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;';
+const TD = 'border:1px solid #000;padding:3px 2px;font-size:7px;line-height:1.1;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
 const SUMMARY_HDR = 'background:#f0f0f0;font-weight:700;font-size:9pt;padding:5pt 8pt;text-transform:uppercase;border-bottom:0.5pt solid #ccc;';
 const SUMMARY_TH = 'border:0.5pt solid #d9d9d9;padding:4pt 6pt;font-weight:700;font-size:8pt;text-transform:uppercase;background:#f8f8f8;text-align:left;';
 const SUMMARY_TD = 'border:0.5pt solid #e5e5e5;padding:4pt 6pt;font-size:8pt;';
@@ -495,7 +496,7 @@ function applicantNameHighlightStyle(record) {
         return '';
     }
 
-    return 'display:inline-block;border:1px solid #16a34a;background:#ecfdf5;color:#166534;padding:1px 6px;border-radius:999px;font-weight:700;';
+    return 'color:#166534;font-weight:700;';
 }
 
 function scholarMatchesBudgetProgram(scholar) {
@@ -538,25 +539,29 @@ function fmtProjectedExpense(record) {
         : '';
 }
 
-function fmtRecordGrantAmount(record) {
-    const v = Number(record?.grant_amount);
-    return Number.isFinite(v) && v > 0 ? fmtCurrency(v) : '';
+function resolveGrantByProgram(record) {
+    const program = String(
+        record?.program?.shortname || record?.program?.name || record?.program || '',
+    ).toUpperCase();
+
+    return program.includes('MED') ? 70000 : 10000;
 }
 
 const perScholarGrantLabel = computed(() => {
-    const amounts = (props.records || [])
-        .map((r) => Number(r?.grant_amount))
-        .filter((n) => Number.isFinite(n) && n > 0);
+    const records = props.records || [];
 
-    if (amounts.length === 0) {
+    if (records.length === 0) {
         return '';
     }
 
-    const unique = Array.from(new Set(amounts)).sort((a, b) => a - b);
-    if (unique.length === 1) {
-        return fmtCurrency(unique[0]);
+    const hasMed = records.some((record) => resolveGrantByProgram(record) === 70000);
+    const hasOthers = records.some((record) => resolveGrantByProgram(record) === 10000);
+
+    if (hasMed && hasOthers) {
+        return `MED: ${fmtCurrency(70000)} | OTHERS: ${fmtCurrency(10000)}`;
     }
-    return `${fmtCurrency(unique[0])} – ${fmtCurrency(unique[unique.length - 1])}`;
+
+    return hasMed ? fmtCurrency(70000) : fmtCurrency(10000);
 });
 
 function fmtProjectedTerms(record) {

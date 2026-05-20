@@ -15,7 +15,7 @@ export const interviewedApplicantsPdfFooterCss = `
 table { -fs-table-paginate: paginate; }
 thead { display: table-header-group; }
 tfoot { display: table-footer-group; }
-tr, td, th { page-break-inside: avoid; break-inside: avoid; }
+tbody, tr, td, th { page-break-inside: auto; break-inside: auto; }
 `;
 
 export function buildInterviewedApplicantsPdfDoc(

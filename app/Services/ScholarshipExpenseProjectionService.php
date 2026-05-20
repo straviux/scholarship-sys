@@ -61,26 +61,22 @@ class ScholarshipExpenseProjectionService
             return $this->unconfiguredProjection($academicYear, 'Projection rate is not configured.');
         }
 
-        $projectedTotalExpense = match (Arr::get($rateConfig, 'mode')) {
-            'annual_cap' => $this->calculateAnnualCapProjection(
-                (float) Arr::get($rateConfig, 'annual_amount', 0),
-                $termsPerYear,
+        $termAmounts = $this->resolveTermAmounts($rateConfig, $termSystem, $termsPerYear);
+        if (!$termAmounts) {
+            return $this->unconfiguredProjection($academicYear, 'Projection rate terms are not configured.');
+        }
+
+        $projectedTotalExpense = round(
+            $this->calculateProjectionFromTermAmounts(
+                $termAmounts,
                 $currentTermOrdinal,
                 $totalYears,
                 $currentYearLevel,
             ),
-            'per_term' => (float) Arr::get($rateConfig, 'term_amount', 0) * $remainingTerms,
-            default => 0.0,
-        };
+            2,
+        );
 
-        $projectedTotalExpense = round($projectedTotalExpense, 2);
-
-        $rateMode = Arr::get($rateConfig, 'mode');
-        $termAmount = (float) Arr::get($rateConfig, 'term_amount', 0);
-        if ($termAmount <= 0 && $rateMode === 'annual_cap' && $termsPerYear > 0) {
-            $termAmount = (float) Arr::get($rateConfig, 'annual_amount', 0) / $termsPerYear;
-        }
-        $grantAmount = round($termAmount, 2);
+        $grantAmount = round($this->resolveCurrentTermAmount($termAmounts, $currentTermOrdinal), 2);
 
         return [
             'grant_amount' => $grantAmount,
@@ -107,21 +103,66 @@ class ScholarshipExpenseProjectionService
         ];
     }
 
-    private function calculateAnnualCapProjection(
-        float $annualAmount,
-        int $termsPerYear,
+    private function resolveTermAmounts(array $rateConfig, string $termSystem, int $termsPerYear): ?array
+    {
+        if ($termsPerYear < 1) {
+            return null;
+        }
+
+        $configuredTermAmounts = Arr::get($rateConfig, "term_amounts_by_system.{$termSystem}");
+        if (is_array($configuredTermAmounts) && !empty($configuredTermAmounts)) {
+            $termAmounts = [];
+
+            for ($ordinal = 1; $ordinal <= $termsPerYear; $ordinal++) {
+                $termAmounts[$ordinal] = max(
+                    (float) ($configuredTermAmounts[$ordinal] ?? $configuredTermAmounts[(string) $ordinal] ?? 0),
+                    0,
+                );
+            }
+
+            if (array_sum($termAmounts) > 0) {
+                return $termAmounts;
+            }
+        }
+
+        return match (Arr::get($rateConfig, 'mode')) {
+            'per_term' => (float) Arr::get($rateConfig, 'term_amount', 0) > 0
+                ? array_fill(1, $termsPerYear, (float) Arr::get($rateConfig, 'term_amount', 0))
+                : null,
+            'annual_cap' => (float) Arr::get($rateConfig, 'annual_amount', 0) > 0
+                ? array_fill(1, $termsPerYear, (float) Arr::get($rateConfig, 'annual_amount', 0) / $termsPerYear)
+                : null,
+            default => null,
+        };
+    }
+
+    private function calculateProjectionFromTermAmounts(
+        array $termAmounts,
         int $currentTermOrdinal,
         int $totalYears,
         int $currentYearLevel,
     ): float {
-        $currentYearTermsRemaining = max($termsPerYear - $currentTermOrdinal + 1, 0);
-        $currentYearProjection = $termsPerYear > 0
-            ? ($annualAmount / $termsPerYear) * $currentYearTermsRemaining
-            : 0.0;
+        $currentYearProjection = 0.0;
+        $termCount = count($termAmounts);
+
+        for ($ordinal = max($currentTermOrdinal, 1); $ordinal <= $termCount; $ordinal++) {
+            $currentYearProjection += (float) ($termAmounts[$ordinal] ?? 0);
+        }
 
         $futureYears = max($totalYears - $currentYearLevel, 0);
 
-        return $currentYearProjection + ($futureYears * $annualAmount);
+        return $currentYearProjection + ($futureYears * array_sum($termAmounts));
+    }
+
+    private function resolveCurrentTermAmount(array $termAmounts, int $currentTermOrdinal): float
+    {
+        if (isset($termAmounts[$currentTermOrdinal])) {
+            return (float) $termAmounts[$currentTermOrdinal];
+        }
+
+        $lastAmount = end($termAmounts);
+
+        return $lastAmount === false ? 0.0 : (float) $lastAmount;
     }
 
     private function resolveProgramRule(mixed $program, array $config): ?array
