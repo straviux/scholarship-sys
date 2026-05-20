@@ -1,272 +1,268 @@
 <template>
-    <IosModal
-        :visible="show"
-        width="540px"
-        :title="modalTitle"
-        :show-action="true"
-        :action-disabled="isSubmitDisabled || loading"
-        :loading="loading"
-        close-icon="x"
-        :icon-size="16"
-        @update:visible="value => emit('update:show', value)"
-        @close="close"
-        @action="submitForm"
-    >
-                    <div class="ios-section">
-                        <div class="ios-section-label">Selection</div>
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="users" :size="13" style="color: #007AFF;" />
-                                    Selected Applicants
-                                </div>
-                                <div class="text-sm font-semibold text-slate-700">{{ selectedCount }}</div>
-                            </div>
-                            <div class="ios-row ios-row-last">
-                                <div class="ios-row-label">
-                                    <AppIcon name="check-circle" :size="13" style="color: #16A34A;" />
-                                    Recommendation Status
-                                </div>
-                                <div class="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                                    Recommended for Approval
-                                </div>
-                            </div>
-                        </div>
+    <IosModal :visible="show" width="540px" :title="modalTitle" :show-action="true"
+        :action-disabled="isSubmitDisabled || loading" :loading="loading" close-icon="x" :icon-size="16"
+        @update:visible="value => emit('update:show', value)" @close="close" @action="submitForm">
+        <div class="ios-section">
+            <div class="ios-section-label">Selection</div>
+            <div class="ios-card">
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="users" :size="13" style="color: #007AFF;" />
+                        Selected Applicants
                     </div>
-
-                    <div class="ios-section">
-                        <div class="ios-section-label">Report Details</div>
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="file-text" :size="13" style="color: #8E8E93;" />
-                                    Report Title
-                                </div>
-                                <div class="ios-row-control">
-                                    <InputText v-model="form.report_title" class="ios-select"
-                                        placeholder="Recommendation list title" maxlength="255" />
-                                </div>
-                            </div>
-
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="calendar" :size="13" style="color: #0EA5E9;" />
-                                    Request Date
-                                </div>
-                                <div class="ios-row-control">
-                                    <DatePicker v-model="form.request_date" class="ios-select" showButtonBar showIcon
-                                        iconDisplay="input" dateFormat="M dd, yy" placeholder="Select request date" />
-                                </div>
-                            </div>
-
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
-                                    Program
-                                </div>
-                                <div class="ios-row-control">
-                                    <ProgramSelect v-model="form.budget_program" class="ios-select"
-                                        custom-placeholder="Select program" />
-                                </div>
-                            </div>
-
-                            <div v-if="budgetAllocationOptions.length" class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="wallet" :size="13" style="color: #F59E0B;" />
-                                    Budget Allocation
-                                </div>
-                                <div class="ios-row-control">
-                                    <Select v-model="selectedBudgetAllocation" :options="budgetAllocationOptions"
-                                        optionLabel="label" optionValue="value" class="ios-select"
-                                        placeholder="Select allocation" :invalid="showBudgetError">
-                                        <template #value="{ value, placeholder }">
-                                            <div v-if="value" class="leading-tight">
-                                                <div class="font-medium text-slate-700">{{ formatBudgetAllocationLabel(value) }}</div>
-                                                <div v-if="formatBudgetAllocationDescription(value)" class="text-[11px] text-slate-500">
-                                                    {{ formatBudgetAllocationDescription(value) }}
-                                                </div>
-                                            </div>
-                                            <span v-else class="text-slate-400">{{ placeholder }}</span>
-                                        </template>
-                                        <template #option="{ option }">
-                                            <div class="py-1 leading-tight">
-                                                <div class="font-medium text-slate-700">{{ option.label }}</div>
-                                                <div v-if="option.description" class="text-[11px] text-slate-500">
-                                                    {{ option.description }}
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="users" :size="13" style="color: #16A34A;" />
-                                    Highlight JPM Names
-                                </div>
-                                <div class="ios-row-control flex items-center justify-end gap-3">
-                                    <span class="text-xs text-slate-500">Mark JPM-related applicants in print</span>
-                                    <ToggleSwitch v-model="form.highlight_jpm_members" />
-                                </div>
-                            </div>
-
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="user-check" :size="13" style="color: #F59E0B;" />
-                                    Include Endorsed By
-                                </div>
-                                <div class="ios-row-control flex items-center justify-end gap-3">
-                                    <span class="text-xs text-slate-500">Show applicant endorsed-by column in print</span>
-                                    <ToggleSwitch v-model="form.include_endorsed_by" />
-                                </div>
-                            </div>
-
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="edit-3" :size="13" style="color: #6366F1;" />
-                                    Show Remarks
-                                </div>
-                                <div class="ios-row-control flex items-center justify-end gap-3">
-                                    <span class="text-xs text-slate-500">Fill remarks column (else leave blank)</span>
-                                    <ToggleSwitch v-model="form.show_remarks" />
-                                </div>
-                            </div>
-
-                            <div class="ios-row ios-row-last">
-                                <div class="ios-row-label">
-                                    <AppIcon name="panel-right-open" :size="13" style="color: #34C759;" />
-                                    Print Layout
-                                </div>
-                                <div class="text-xs text-slate-500">
-                                    Saved as A4 landscape using the interviewed applicants printable layout.
-                                </div>
-                            </div>
-                        </div>
-                        <div v-if="showBudgetFooter" class="ios-section-footer" :class="{ 'ios-error': showBudgetError }">
-                            {{ budgetFooterMessage }}
-                        </div>
+                    <div class="text-sm font-semibold text-slate-700">{{ selectedCount }}</div>
+                </div>
+                <div class="ios-row ios-row-last">
+                    <div class="ios-row-label">
+                        <AppIcon name="check-circle" :size="13" style="color: #16A34A;" />
+                        Recommendation Status
                     </div>
+                    <div class="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                        Recommended for Approval
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <div v-if="selectedBudgetAllocation" class="ios-section">
-                        <div class="ios-section-label">Cumulative Count Details</div>
-                        <div class="ios-card space-y-3">
-                            <div class="rounded-3xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                                <div class="font-semibold text-slate-700">
-                                    {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative count.
-                                </div>
-                                <div class="mt-1">
-                                    {{ cumulativeScopeDescription }}
-                                </div>
-                            </div>
+        <div class="ios-section">
+            <div class="ios-section-label">Report Details</div>
+            <div class="ios-card">
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="file-text" :size="13" style="color: #8E8E93;" />
+                        Report Title
+                    </div>
+                    <div class="ios-row-control">
+                        <InputText v-model="form.report_title" class="ios-select"
+                            placeholder="Recommendation list title" maxlength="255" />
+                    </div>
+                </div>
 
-                            <InputText
-                                v-model="cumulativeScholarSearchQuery"
-                                class="ios-select"
-                                placeholder="Search cumulative scholars"
-                            />
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="calendar" :size="13" style="color: #0EA5E9;" />
+                        Request Date
+                    </div>
+                    <div class="ios-row-control">
+                        <DatePicker v-model="form.request_date" class="ios-select" showButtonBar showIcon
+                            iconDisplay="input" dateFormat="M dd, yy" placeholder="Select request date" />
+                    </div>
+                </div>
 
-                            <div v-if="showCumulativeScholarMissingDetails" class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
-                                Detailed scholar rows are unavailable on this saved allocation. Re-select a current allocation to refresh the calendar-year-and-program cumulative list.
-                            </div>
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
+                        Program
+                    </div>
+                    <div class="ios-row-control">
+                        <ProgramSelect v-model="form.budget_program" class="ios-select"
+                            custom-placeholder="Select program" />
+                    </div>
+                </div>
 
-                            <div v-else-if="filteredCumulativeScholars.length" class="max-h-72 space-y-2 overflow-y-auto pr-1">
-                                <div
-                                    v-for="scholar in filteredCumulativeScholars"
-                                    :key="scholar.profile_id"
-                                    class="rounded-3xl border border-slate-200 bg-white px-3 py-2"
-                                >
-                                    <div class="text-sm font-semibold text-slate-800">{{ scholar.name }}</div>
-                                    <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
-                                        <span>Program: {{ scholar.program || 'N/A' }}</span>
-                                        <span>Approved: {{ formatDate(scholar.date_approved) }}</span>
-                                        <span>Status: {{ formatScholarStatus(scholar.status) }}</span>
+                <div v-if="budgetAllocationOptions.length" class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="wallet" :size="13" style="color: #F59E0B;" />
+                        Budget Allocation
+                    </div>
+                    <div class="ios-row-control">
+                        <Select v-model="selectedBudgetAllocation" :options="budgetAllocationOptions"
+                            optionLabel="label" optionValue="value" class="ios-select" placeholder="Select allocation"
+                            :invalid="showBudgetError">
+                            <template #value="{ value, placeholder }">
+                                <div v-if="value" class="leading-tight">
+                                    <div class="font-medium text-slate-700">{{ formatBudgetAllocationLabel(value) }}
+                                    </div>
+                                    <div v-if="formatBudgetAllocationDescription(value)"
+                                        class="text-[11px] text-slate-500">
+                                        {{ formatBudgetAllocationDescription(value) }}
                                     </div>
                                 </div>
-                            </div>
-
-                            <div v-else class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
-                                <template v-if="selectedBudgetAllocationApprovedCount">
-                                    No scholars match the current search.
-                                </template>
-                                <template v-else>
-                                    {{ emptyCumulativeScholarMessage }}
-                                </template>
-                            </div>
-                        </div>
-                        <div class="ios-section-footer">
-                            <template v-if="showCumulativeScholarMissingDetails">
-                                {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }} counted, but detailed rows are not available on this saved allocation.
+                                <span v-else class="text-slate-400">{{ placeholder }}</span>
                             </template>
-                            <template v-else>
-                                Showing {{ filteredCumulativeScholars.length.toLocaleString() }} of {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }}.
+                            <template #option="{ option }">
+                                <div class="py-1 leading-tight">
+                                    <div class="font-medium text-slate-700">{{ option.label }}</div>
+                                    <div v-if="option.description" class="text-[11px] text-slate-500">
+                                        {{ option.description }}
+                                    </div>
+                                </div>
                             </template>
+                        </Select>
+                    </div>
+                </div>
+
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="users" :size="13" style="color: #16A34A;" />
+                        Highlight JPM Names
+                    </div>
+                    <div class="ios-row-control flex items-center justify-end gap-3">
+                        <span class="text-xs text-slate-500">Mark JPM-related applicants in print</span>
+                        <ToggleSwitch v-model="form.highlight_jpm_members" />
+                    </div>
+                </div>
+
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="user-check" :size="13" style="color: #F59E0B;" />
+                        Include Endorsed By
+                    </div>
+                    <div class="ios-row-control flex items-center justify-end gap-3">
+                        <span class="text-xs text-slate-500">Show applicant endorsed-by column in print</span>
+                        <ToggleSwitch v-model="form.include_endorsed_by" />
+                    </div>
+                </div>
+
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="edit-3" :size="13" style="color: #6366F1;" />
+                        Show Remarks
+                    </div>
+                    <div class="ios-row-control flex items-center justify-end gap-3">
+                        <span class="text-xs text-slate-500">Fill remarks column (else leave blank)</span>
+                        <ToggleSwitch v-model="form.show_remarks" />
+                    </div>
+                </div>
+
+                <div class="ios-row ios-row-last">
+                    <div class="ios-row-label">
+                        <AppIcon name="panel-right-open" :size="13" style="color: #34C759;" />
+                        Print Layout
+                    </div>
+                    <div class="text-xs text-slate-500">
+                        Saved as A4 landscape using the interviewed applicants printable layout.
+                    </div>
+                </div>
+            </div>
+            <div v-if="showBudgetFooter" class="ios-section-footer" :class="{ 'ios-error': showBudgetError }">
+                {{ budgetFooterMessage }}
+            </div>
+        </div>
+
+        <div v-if="selectedBudgetAllocation" class="ios-section">
+            <div class="ios-section-label">Cumulative Count Details</div>
+            <div class="ios-card space-y-3">
+                <div class="rounded-3xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                    <div class="font-semibold text-slate-700">
+                        {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{
+                            selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative
+                        count.
+                    </div>
+                    <div class="mt-1">
+                        {{ cumulativeScopeDescription }}
+                    </div>
+                </div>
+
+                <InputText v-model="cumulativeScholarSearchQuery" class="ios-select"
+                    placeholder="Search cumulative scholars" />
+
+                <div v-if="showCumulativeScholarMissingDetails"
+                    class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+                    Detailed scholar rows are unavailable on this saved allocation. Re-select a current allocation to
+                    refresh
+                    the calendar-year-and-program cumulative list.
+                </div>
+
+                <div v-else-if="filteredCumulativeScholars.length" class="max-h-72 space-y-2 overflow-y-auto pr-1">
+                    <div v-for="scholar in filteredCumulativeScholars" :key="scholar.profile_id"
+                        class="rounded-3xl border border-slate-200 bg-white px-3 py-2">
+                        <div class="text-sm font-semibold text-slate-800">{{ scholar.name }}</div>
+                        <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
+                            <span>Program: {{ scholar.program || 'N/A' }}</span>
+                            <span>Approved: {{ formatDate(scholar.date_approved) }}</span>
+                            <span>Status: {{ formatScholarStatus(scholar.status) }}</span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="ios-section">
-                        <div class="ios-section-label">Prepared By</div>
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="user" :size="13" style="color: #34C759;" />
-                                    Name
-                                </div>
-                                <div class="ios-row-control">
-                                    <InputText v-model="form.prepared_by" class="ios-select"
-                                        placeholder="Prepared by" maxlength="255" />
-                                </div>
-                            </div>
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
-                                    Position
-                                </div>
-                                <div class="ios-row-control">
-                                    <InputText v-model="form.prepared_by_position" class="ios-select"
-                                        placeholder="Prepared by position" maxlength="255" />
-                                </div>
-                            </div>
-                            <div class="ios-row ios-row-last">
-                                <div class="ios-row-label">
-                                    <AppIcon name="building-2" :size="13" style="color: #007AFF;" />
-                                    Office
-                                </div>
-                                <div class="ios-row-control">
-                                    <InputText v-model="form.prepared_by_office" class="ios-select"
-                                        placeholder="Prepared by office" maxlength="255" />
-                                </div>
-                            </div>
-                        </div>
+                <div v-else
+                    class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+                    <template v-if="selectedBudgetAllocationApprovedCount">
+                        No scholars match the current search.
+                    </template>
+                    <template v-else>
+                        {{ emptyCumulativeScholarMessage }}
+                    </template>
+                </div>
+            </div>
+            <div class="ios-section-footer">
+                <template v-if="showCumulativeScholarMissingDetails">
+                    {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{
+                        selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }} counted, but detailed rows are not
+                    available on this saved allocation.
+                </template>
+                <template v-else>
+                    Showing {{ filteredCumulativeScholars.length.toLocaleString() }} of {{
+                        selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{
+                        selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }}.
+                </template>
+            </div>
+        </div>
+
+        <div class="ios-section">
+            <div class="ios-section-label">Prepared By</div>
+            <div class="ios-card">
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="user" :size="13" style="color: #34C759;" />
+                        Name
                     </div>
-
-                    <div class="ios-section">
-                        <div class="ios-section-label">Approved By</div>
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <div class="ios-row-label">
-                                    <AppIcon name="user-check" :size="13" style="color: #007AFF;" />
-                                    Name
-                                </div>
-                                <div class="ios-row-control">
-                                    <InputText v-model="form.approved_by" class="ios-select"
-                                        placeholder="Approved by" maxlength="255" />
-                                </div>
-                            </div>
-                            <div class="ios-row ios-row-last">
-                                <div class="ios-row-label">
-                                    <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
-                                    Position
-                                </div>
-                                <div class="ios-row-control">
-                                    <InputText v-model="form.approved_by_position" class="ios-select"
-                                        placeholder="Approved by position" maxlength="255" />
-                                </div>
-                            </div>
-                        </div>
+                    <div class="ios-row-control">
+                        <InputText v-model="form.prepared_by" class="ios-select" placeholder="Prepared by"
+                            maxlength="255" />
                     </div>
+                </div>
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
+                        Position
+                    </div>
+                    <div class="ios-row-control">
+                        <InputText v-model="form.prepared_by_position" class="ios-select"
+                            placeholder="Prepared by position" maxlength="255" />
+                    </div>
+                </div>
+                <div class="ios-row ios-row-last">
+                    <div class="ios-row-label">
+                        <AppIcon name="building-2" :size="13" style="color: #007AFF;" />
+                        Office
+                    </div>
+                    <div class="ios-row-control">
+                        <InputText v-model="form.prepared_by_office" class="ios-select" placeholder="Prepared by office"
+                            maxlength="255" />
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <div style="height: 24px;"></div>
+        <div class="ios-section">
+            <div class="ios-section-label">Approved By</div>
+            <div class="ios-card">
+                <div class="ios-row">
+                    <div class="ios-row-label">
+                        <AppIcon name="user-check" :size="13" style="color: #007AFF;" />
+                        Name
+                    </div>
+                    <div class="ios-row-control">
+                        <InputText v-model="form.approved_by" class="ios-select" placeholder="Approved by"
+                            maxlength="255" />
+                    </div>
+                </div>
+                <div class="ios-row ios-row-last">
+                    <div class="ios-row-label">
+                        <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
+                        Position
+                    </div>
+                    <div class="ios-row-control">
+                        <InputText v-model="form.approved_by_position" class="ios-select"
+                            placeholder="Approved by position" maxlength="255" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="height: 24px;"></div>
     </IosModal>
 </template>
 
@@ -833,4 +829,3 @@ function formatScholarStatus(status) {
         .replace(/\b\w/g, character => character.toUpperCase());
 }
 </script>
-
