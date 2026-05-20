@@ -46,6 +46,7 @@ class UpdateRecommendationListRequest extends FormRequest
             'budget_allocation.total_allotment' => ['nullable', 'numeric'],
             'budget_allocation.disbursed' => ['nullable', 'numeric'],
             'budget_allocation.remaining' => ['nullable', 'numeric'],
+            'budget_allocation.approved_scholars_current_ay_estimated_total' => ['nullable', 'numeric'],
             'budget_allocation.date_start' => ['nullable', 'date'],
             'budget_allocation.date_end' => ['nullable', 'date'],
             'budget_allocation.approved_scholars_to_date' => ['nullable', 'integer'],

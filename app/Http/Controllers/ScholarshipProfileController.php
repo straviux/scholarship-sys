@@ -1734,7 +1734,7 @@ class ScholarshipProfileController extends Controller
                 'program',
                 'profile:profile_id,first_name,last_name,middle_name,extension_name',
             ])
-            ->select('id', 'profile_id', 'program_id', 'course_id', 'date_approved', 'unified_status')
+            ->select('id', 'profile_id', 'program_id', 'course_id', 'term', 'grant_provision', 'date_approved', 'unified_status')
             ->whereNotNull('profile_id')
             ->whereNotNull('date_approved')
             ->whereIn('unified_status', self::ALLOCATION_COUNTED_SCHOLARSHIP_RECORD_STATUSES)
@@ -1750,10 +1750,13 @@ class ScholarshipProfileController extends Controller
                     ->all();
                 $calendarYear = $this->getInterviewedApplicantsBudgetAllocationCalendarYear($allocation);
 
-                $approvedScholars = $approvedScholarRecords
+                $approvedScholarRecordsForAllocation = $approvedScholarRecords
                     ->filter(fn(ScholarshipRecord $record) => $this->matchesInterviewedApplicantsCalendarYearProgramScholarRecord($record, $calendarYear, $programIds))
                     ->sortByDesc(fn(ScholarshipRecord $record) => $record->date_approved?->format('Y-m-d') ?? '')
                     ->unique('profile_id')
+                    ->values();
+
+                $approvedScholars = $approvedScholarRecordsForAllocation
                     ->map(function (ScholarshipRecord $record) use ($allocation) {
                         return [
                             'profile_id' => $record->profile_id,
@@ -1770,6 +1773,12 @@ class ScholarshipProfileController extends Controller
                     ->all();
 
                 $approvedScholarsToDate = count($approvedScholars);
+                $approvedScholarsCurrentAyEstimatedTotal = round(
+                    $approvedScholarRecordsForAllocation->sum(
+                        fn(ScholarshipRecord $record) => $this->estimateInterviewedApplicantsBudgetAllocationCurrentAyGrant($record)
+                    ),
+                    2,
+                );
 
                 return [
                     'key' => $allocation['key'],
@@ -1787,6 +1796,7 @@ class ScholarshipProfileController extends Controller
                     'total_allotment' => (float) ($allocation['allotment'] ?? 0),
                     'disbursed' => $disbursed,
                     'approved_scholars_to_date' => $approvedScholarsToDate,
+                    'approved_scholars_current_ay_estimated_total' => $approvedScholarsCurrentAyEstimatedTotal,
                     'approved_scholars' => $approvedScholars,
                     'date_start' => $allocation['date_start'] ?? null,
                     'date_end' => $allocation['date_end'] ?? null,
@@ -1800,6 +1810,104 @@ class ScholarshipProfileController extends Controller
                 ['fiscal_year', 'desc'],
             ])
             ->values()
+            ->all();
+    }
+
+    private function estimateInterviewedApplicantsBudgetAllocationCurrentAyGrant(ScholarshipRecord $record): float
+    {
+        $grantAmount = $this->resolveInterviewedApplicantsBudgetAllocationGrantAmount(
+            is_string($record->grant_provision) ? $record->grant_provision : null,
+            is_string($record->term) ? $record->term : null,
+        );
+
+        if ($grantAmount <= 0) {
+            return 0.0;
+        }
+
+        return round(
+            $grantAmount * $this->resolveInterviewedApplicantsBudgetAllocationGrantMultiplier(
+                is_string($record->term) ? $record->term : null,
+            ),
+            2,
+        );
+    }
+
+    private function resolveInterviewedApplicantsBudgetAllocationGrantAmount(?string $grantProvision, ?string $term): float
+    {
+        if (! filled($grantProvision)) {
+            return 0.0;
+        }
+
+        $amountMap = $this->getInterviewedApplicantsGrantProvisionAmountMap();
+        $amount = (float) ($amountMap[$grantProvision] ?? 0);
+
+        if ($amount <= 0) {
+            return 0.0;
+        }
+
+        return $this->isInterviewedApplicantsTrimesterGrantTerm($term)
+            ? ($amount * 2) / 3
+            : $amount;
+    }
+
+    private function resolveInterviewedApplicantsBudgetAllocationGrantMultiplier(?string $term): int
+    {
+        $normalizedTerm = strtoupper(trim((string) $term));
+
+        if ($normalizedTerm === '') {
+            return 0;
+        }
+
+        if (str_contains($normalizedTerm, '1ST TRIMESTER') || str_contains($normalizedTerm, 'FIRST TRIMESTER')) {
+            return 3;
+        }
+
+        if (str_contains($normalizedTerm, '2ND TRIMESTER') || str_contains($normalizedTerm, 'SECOND TRIMESTER')) {
+            return 2;
+        }
+
+        if (str_contains($normalizedTerm, '3RD TRIMESTER') || str_contains($normalizedTerm, 'THIRD TRIMESTER')) {
+            return 1;
+        }
+
+        if (str_contains($normalizedTerm, '1ST SEMESTER') || str_contains($normalizedTerm, 'FIRST SEMESTER')) {
+            return 2;
+        }
+
+        if (str_contains($normalizedTerm, '2ND SEMESTER') || str_contains($normalizedTerm, 'SECOND SEMESTER')) {
+            return 1;
+        }
+
+        return 1;
+    }
+
+    private function isInterviewedApplicantsTrimesterGrantTerm(?string $term): bool
+    {
+        $normalizedTerm = strtolower(trim((string) $term));
+
+        if ($normalizedTerm === '') {
+            return false;
+        }
+
+        return str_contains($normalizedTerm, 'trimester')
+            || str_contains($normalizedTerm, '3rd semester')
+            || str_contains($normalizedTerm, '3rd sem')
+            || str_contains($normalizedTerm, 'summer')
+            || str_contains($normalizedTerm, 'midyear');
+    }
+
+    private function getInterviewedApplicantsGrantProvisionAmountMap(): array
+    {
+        static $amountMap = null;
+
+        if (is_array($amountMap)) {
+            return $amountMap;
+        }
+
+        return $amountMap = SystemOption::query()
+            ->category('grant_provision')
+            ->pluck('amount', 'value')
+            ->map(fn($amount) => $amount === null ? 0.0 : (float) $amount)
             ->all();
     }
 

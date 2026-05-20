@@ -417,6 +417,7 @@ class RecommendationListService
             'total_allotment' => $this->normalizeDecimal($budgetAllocation['total_allotment'] ?? null),
             'disbursed' => $this->normalizeDecimal($budgetAllocation['disbursed'] ?? null),
             'remaining' => $this->normalizeDecimal($budgetAllocation['remaining'] ?? null),
+            'approved_scholars_current_ay_estimated_total' => $this->normalizeDecimal($budgetAllocation['approved_scholars_current_ay_estimated_total'] ?? null),
             'date_start' => $this->cleanString($budgetAllocation['date_start'] ?? null),
             'date_end' => $this->cleanString($budgetAllocation['date_end'] ?? null),
             'approved_scholars_to_date' => isset($budgetAllocation['approved_scholars_to_date'])

@@ -3,7 +3,7 @@ import { pagedjsPolyfillScript } from '@/utils/pagedjsPolyfill';
 
 export const interviewedApplicantsPdfFooterCss = `
 @page {
-  margin: 6mm 5mm 12mm 5mm;
+  margin: 4mm 5mm 12mm 5mm;
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-family: Arial, Helvetica, sans-serif;
@@ -12,10 +12,17 @@ export const interviewedApplicantsPdfFooterCss = `
   }
 }
 
+@page:first {
+  margin-top: 1mm;
+}
+
+body { margin: 0; padding: 0; }
+
 table { -fs-table-paginate: paginate; }
 thead { display: table-header-group; }
 tfoot { display: table-footer-group; }
-tbody, tr, td, th { page-break-inside: auto; break-inside: auto; }
+tbody { page-break-inside: auto; break-inside: auto; }
+tr, td, th { page-break-inside: avoid; break-inside: avoid-page; }
 `;
 
 export function buildInterviewedApplicantsPdfDoc(

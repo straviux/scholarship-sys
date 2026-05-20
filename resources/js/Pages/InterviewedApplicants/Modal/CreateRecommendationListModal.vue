@@ -451,6 +451,7 @@ function buildBudgetAllocationPayload(allocation) {
         total_allotment: allocation.total_allotment ?? null,
         disbursed: allocation.disbursed ?? null,
         remaining: allocation.remaining ?? null,
+        approved_scholars_current_ay_estimated_total: allocation.approved_scholars_current_ay_estimated_total ?? null,
         date_start: allocation.date_start ?? null,
         date_end: allocation.date_end ?? null,
         approved_scholars_to_date: allocation.approved_scholars_to_date ?? null,

@@ -1,5 +1,5 @@
 <template>
-    <div style="padding:10pt;">
+    <div style="padding:4pt 10pt 10pt;">
         <div
             style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1.5pt solid #000;padding:8pt 4pt;min-height:56pt;text-align:center;">
             <img src="/images/pgp-logo.svg" alt="PGP Logo"
@@ -13,14 +13,14 @@
             <p class="t-10">Puerto Princesa City, Palawan</p>
         </div>
 
-        <div class="center" style="padding:8pt 0 4pt;">
+        <div class="center" style="padding:4pt 0 2pt;">
             <p class="bold" style="font-size:13pt;">
                 {{ reportTitle }}
             </p>
             <p class="t-9" style="margin-top:3pt;">{{ today }}</p>
         </div>
 
-        <div v-if="listNumber" style="padding:4pt 0 2pt;text-align:right;">
+        <div v-if="listNumber" style="padding:2pt 0 1pt;text-align:right;">
             <p class="t-9 bold">Request No. {{ listNumber }}</p>
         </div>
 
@@ -30,7 +30,7 @@
 
         <template v-else-if="reportType === 'list'">
             <div v-if="records.length > 0"
-                style="display:flex;justify-content:flex-start;padding:4pt 0 2pt;font-size:8pt;font-weight:700;">
+                style="display:flex;justify-content:flex-start;padding:2pt 0 1pt;font-size:8pt;font-weight:700;">
                 Grant: {{ perScholarGrantLabel }}
             </div>
             <template v-if="groupBy !== 'none'">
@@ -120,8 +120,9 @@
                                         record.interviewer?.name || '' }}</td>
                                 <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
                                     record.endorsed_by || '' }}</td>
-                                <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks ||
-                                    record.remarks || '') : '' }}</td>
+                                <td :style="TD + 'font-size:7pt;'">
+                                    <div v-safe-html="resolveReportRemarksHtml(record)"></div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -129,83 +130,90 @@
             </template>
 
             <template v-else>
-                <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:6pt;table-layout:auto;">
-                    <colgroup>
-                        <col style="width:3%;" />
-                        <col
-                            :style="includeEndorsedBy ? 'width:20%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
-                        <col style="width:7.5%;" />
-                        <col style="width:4.5%;" />
-                        <col style="width:10%;" />
-                        <col style="width:9%;" />
-                        <col style="width:3.5%;" />
-                        <col style="width:6%;" />
-                        <col style="width:3.5%;" />
-                        <col style="width:6.5%;" />
-                        <col style="width:5%;" />
-                        <col v-if="includeInterviewColumns" style="width:7%;" />
-                        <col v-if="includeInterviewColumns" style="width:7%;" />
-                        <col v-if="includeEndorsedBy" style="width:6.5%;" />
-                        <col
-                            :style="includeEndorsedBy ? 'width:16.5%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">#</th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Name</th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Municipality</th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Program</th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">School</th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Course</th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Year</th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Agreement Start</th>
-                            <th :style="TH" colspan="3">Projected</th>
-                            <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
-                            <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By
-                            </th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
-                        </tr>
-                        <tr>
-                            <th :style="TH">Terms</th>
-                            <th :style="TH">Grant</th>
-                            <th :style="TH">Completion</th>
-                            <th v-if="includeInterviewColumns" :style="TH">Date</th>
-                            <th v-if="includeInterviewColumns" :style="TH">By</th>
+                <div v-for="(page, pageIndex) in paginatedRecords" :key="`records-page-${pageIndex}`"
+                    :class="{ 'break-before': pageIndex > 0 }">
+                    <table
+                        :style="'width:100%;border-collapse:collapse;font-size:9pt;table-layout:auto;' + (pageIndex === 0 ? 'margin-top:6pt;' : 'margin-top:0;')">
+                        <colgroup>
+                            <col style="width:3%;" />
+                            <col
+                                :style="includeEndorsedBy ? 'width:20%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
+                            <col style="width:7.5%;" />
+                            <col style="width:4.5%;" />
+                            <col style="width:10%;" />
+                            <col style="width:9%;" />
+                            <col style="width:3.5%;" />
+                            <col style="width:6%;" />
+                            <col style="width:3.5%;" />
+                            <col style="width:6.5%;" />
+                            <col style="width:5%;" />
+                            <col v-if="includeInterviewColumns" style="width:7%;" />
+                            <col v-if="includeInterviewColumns" style="width:7%;" />
+                            <col v-if="includeEndorsedBy" style="width:6.5%;" />
+                            <col
+                                :style="includeEndorsedBy ? 'width:16.5%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">#</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Name</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Municipality</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Program</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">School</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Course</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Year</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Agreement Start</th>
+                                <th :style="TH" colspan="3">Projected</th>
+                                <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
+                                <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By
+                                </th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
+                            </tr>
+                            <tr>
+                                <th :style="TH">Terms</th>
+                                <th :style="TH">Grant</th>
+                                <th :style="TH">Completion</th>
+                                <th v-if="includeInterviewColumns" :style="TH">Date</th>
+                                <th v-if="includeInterviewColumns" :style="TH">By</th>
 
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(record, index) in records" :key="`${record.id ?? 'r'}-${index}`">
-                            <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
-                            <td :style="TD + 'font-weight:600;font-size:8pt;'">
-                                <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                }}</span>
-                            </td>
-                            <td :style="TD + 'text-transform:uppercase;'">{{ record.profile?.municipality || '' }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '' }}</td>
-                            <td :style="TD">{{ record.school?.name || record.school?.shortname || '' }}</td>
-                            <td :style="TD">{{ record.course?.name || record.course?.shortname || '' }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ record.year_level || '' }} </td>
-                            <td :style="TD + 'text-align:center;line-height:1;'">
-                                <div>{{ record.term || '' }}</div>
-                                <div>{{ record.academic_year || '' }}</div>
-                            </td>
-                            <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
-                            <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
-                            <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
-                                fmtDate(record.interviewed_at)
-                            }}</td>
-                            <td v-if="includeInterviewColumns"
-                                :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
-                                    || '' }}</td>
-                            <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
-                                record.endorsed_by || '' }}</td>
-                            <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks ||
-                                record.remarks || '') : '' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(record, index) in page.records"
+                                :key="`${record.id ?? 'r'}-${page.startIndex + index}`">
+                                <td :style="TD + 'text-align:center;'">{{ page.startIndex + index + 1 }}</td>
+                                <td :style="TD + 'font-weight:600;font-size:8pt;'">
+                                    <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
+                                    }}</span>
+                                </td>
+                                <td :style="TD + 'text-transform:uppercase;'">{{ record.profile?.municipality || '' }}</td>
+                                <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '' }}</td>
+                                <td :style="TD">{{ record.school?.name || record.school?.shortname || '' }}</td>
+                                <td :style="TD">{{ record.course?.name || record.course?.shortname || '' }}</td>
+                                <td :style="TD + 'text-align:center;'">{{ record.year_level || '' }} </td>
+                                <td :style="TD + 'text-align:center;line-height:1;'">
+                                    <div>{{ record.term || '' }}</div>
+                                    <div>{{ record.academic_year || '' }}</div>
+                                </td>
+                                <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
+                                <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
+                                <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
+                                <td v-if="includeInterviewColumns"
+                                    :style="TD + 'text-align:center;white-space:nowrap;'">{{
+                                        fmtDate(record.interviewed_at)
+                                    }}</td>
+                                <td v-if="includeInterviewColumns"
+                                    :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
+                                        || '' }}</td>
+                                <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
+                                    record.endorsed_by || '' }}</td>
+                                <td :style="TD + 'font-size:7pt;'">
+                                    <div v-safe-html="resolveReportRemarksHtml(record)"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </template>
 
         </template>
@@ -425,6 +433,8 @@ const TD = 'border:1px solid #000;padding:3px 2px;font-size:7px;line-height:1.1;
 const SUMMARY_HDR = 'background:#f0f0f0;font-weight:700;font-size:9pt;padding:5pt 8pt;text-transform:uppercase;border-bottom:0.5pt solid #ccc;';
 const SUMMARY_TH = 'border:0.5pt solid #d9d9d9;padding:4pt 6pt;font-weight:700;font-size:8pt;text-transform:uppercase;background:#f8f8f8;text-align:left;';
 const SUMMARY_TD = 'border:0.5pt solid #e5e5e5;padding:4pt 6pt;font-size:8pt;';
+const FIRST_PAGE_ROW_LIMIT = 20;
+const CONTINUATION_PAGE_ROW_LIMIT = 30;
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
 const DEFAULT_PREPARED_BY_POSITION = 'Program Manager';
@@ -537,6 +547,14 @@ function fmtProjectedExpense(record) {
     return record?.projected_total_expense !== null && record?.projected_total_expense !== undefined
         ? fmtCurrency(record.projected_total_expense)
         : '';
+}
+
+function resolveReportRemarksHtml(record) {
+    if (!props.showRemarks) {
+        return '';
+    }
+
+    return String(record?.interview_remarks || record?.remarks || '').replace(/\n/g, '<br>');
 }
 
 function resolveGrantByProgram(record) {
@@ -728,6 +746,25 @@ function sumProjectedExpense(records) {
     return records.reduce((sum, record) => sum + Number(record?.projected_total_expense || 0), 0);
 }
 
+function paginateRecordsForPdf(records, firstPageSize = FIRST_PAGE_ROW_LIMIT, nextPageSize = CONTINUATION_PAGE_ROW_LIMIT) {
+    const pages = [];
+    const normalizedRecords = Array.isArray(records) ? records : [];
+    let startIndex = 0;
+    let pageSize = Math.max(1, Number(firstPageSize) || 1);
+
+    while (startIndex < normalizedRecords.length) {
+        pages.push({
+            startIndex,
+            records: normalizedRecords.slice(startIndex, startIndex + pageSize),
+        });
+
+        startIndex += pageSize;
+        pageSize = Math.max(1, Number(nextPageSize) || 1);
+    }
+
+    return pages;
+}
+
 const groupedData = computed(() => {
     const groups = {};
 
@@ -750,6 +787,7 @@ const groupedData = computed(() => {
 
     return groups;
 });
+const paginatedRecords = computed(() => paginateRecordsForPdf(props.records));
 
 const totalScholars = computed(() => props.records.length);
 const approvedScholarsCalendarYearLabel = computed(() => {
@@ -820,6 +858,9 @@ const approvedScholarsToDate = computed(() => {
     return Number(props.budgetAllocation?.approved_scholars_to_date ?? totalScholars.value) || 0;
 });
 const totalCurrentAcademicYearGrant = computed(() => sumCurrentAcademicYearEstimatedGrant(props.records));
+const approvedScholarsCurrentAcademicYearGrantTotal = computed(() => {
+    return Number(props.budgetAllocation?.approved_scholars_current_ay_estimated_total ?? 0) || 0;
+});
 const budgetAllocationRunningBalance = computed(() => {
     if (!props.budgetAllocation) {
         return 0;
@@ -828,7 +869,7 @@ const budgetAllocationRunningBalance = computed(() => {
     const allotment = Number(props.budgetAllocation.total_allotment ?? 0);
     const disbursed = Number(props.budgetAllocation.disbursed ?? 0);
 
-    return allotment - disbursed;
+    return allotment - disbursed - approvedScholarsCurrentAcademicYearGrantTotal.value;
 });
 const budgetAllocationProjectedBalance = computed(() => {
     if (!props.budgetAllocation) {
