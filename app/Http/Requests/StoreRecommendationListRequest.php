@@ -24,6 +24,7 @@ class StoreRecommendationListRequest extends FormRequest
             'budget_program' => ['nullable', 'string', 'max:255'],
             'highlight_jpm_members' => ['nullable', 'boolean'],
             'include_endorsed_by' => ['nullable', 'boolean'],
+            'show_remarks' => ['nullable', 'boolean'],
             'prepared_by' => ['nullable', 'string', 'max:255'],
             'prepared_by_position' => ['nullable', 'string', 'max:255'],
             'prepared_by_office' => ['nullable', 'string', 'max:255'],

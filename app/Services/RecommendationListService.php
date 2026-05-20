@@ -18,6 +18,71 @@ class RecommendationListService
         private ScholarshipExpenseProjectionService $expenseProjectionService,
     ) {}
 
+    public function rebuildSnapshot(RecommendationList $recommendationList): RecommendationList
+    {
+        $recordIds = collect($recommendationList->selected_record_ids ?? [])
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recordIds === []) {
+            return $recommendationList;
+        }
+
+        $records = ScholarshipRecord::query()
+            ->whereIn('id', $recordIds)
+            ->with([
+                'profile' => function ($query) {
+                    $query->select(
+                        'profile_id',
+                        'first_name',
+                        'last_name',
+                        'middle_name',
+                        'contact_no',
+                        'municipality',
+                        'is_jpm_member',
+                        'is_father_jpm',
+                        'is_mother_jpm',
+                        'is_guardian_jpm'
+                    );
+                },
+                'program' => function ($query) {
+                    $query->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname');
+                },
+                'course' => function ($query) {
+                    $query->select('courses.id', 'courses.name', 'courses.shortname');
+                },
+                'school' => function ($query) {
+                    $query->select('schools.id', 'schools.name', 'schools.shortname');
+                },
+                'interviewer',
+            ])
+            ->get();
+
+        // Apply projection so snapshot fields like projected_total_expense are filled.
+        $records = $records->map(function (ScholarshipRecord $record) {
+            foreach ($this->expenseProjectionService->projectForRecord($record) as $key => $value) {
+                $record->setAttribute($key, $value);
+            }
+            $record->setAttribute(
+                'grant_provision_label',
+                SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A')
+            );
+            return $record;
+        });
+
+        $snapshot = $records->map(fn(ScholarshipRecord $record) => $this->snapshotRecord($record))
+            ->values()
+            ->all();
+
+        $recommendationList->records_snapshot = $snapshot;
+        $recommendationList->save();
+
+        return $recommendationList->fresh();
+    }
+
     public function update(RecommendationList $recommendationList, array $data): RecommendationList
     {
         return DB::transaction(function () use ($recommendationList, $data) {
@@ -39,6 +104,7 @@ class RecommendationListService
                 'budget_allocation' => $budgetAllocation,
                 'highlight_jpm_members' => (bool) ($data['highlight_jpm_members'] ?? $recommendationList->highlight_jpm_members ?? false),
                 'include_endorsed_by' => (bool) ($data['include_endorsed_by'] ?? $recommendationList->include_endorsed_by ?? false),
+                'show_remarks' => (bool) ($data['show_remarks'] ?? $recommendationList->show_remarks ?? false),
                 'prepared_by' => $this->cleanString($data['prepared_by'] ?? null),
                 'prepared_by_position' => $this->cleanString($data['prepared_by_position'] ?? null),
                 'prepared_by_office' => $this->cleanString($data['prepared_by_office'] ?? null),
@@ -104,6 +170,7 @@ class RecommendationListService
                         'budget_allocation' => $budgetAllocation,
                         'highlight_jpm_members' => (bool) ($data['highlight_jpm_members'] ?? false),
                         'include_endorsed_by' => (bool) ($data['include_endorsed_by'] ?? false),
+                        'show_remarks' => (bool) ($data['show_remarks'] ?? false),
                         'prepared_by' => $this->cleanString($data['prepared_by'] ?? null),
                         'prepared_by_position' => $this->cleanString($data['prepared_by_position'] ?? null),
                         'prepared_by_office' => $this->cleanString($data['prepared_by_office'] ?? null),
@@ -155,6 +222,7 @@ class RecommendationListService
                         'last_name',
                         'middle_name',
                         'contact_no',
+                        'municipality',
                         'is_jpm_member',
                         'is_father_jpm',
                         'is_mother_jpm',
@@ -304,6 +372,8 @@ class RecommendationListService
             'grant_provision' => $record->grant_provision,
             'grant_provision_label' => $record->getAttribute('grant_provision_label'),
             'projected_term_count' => $record->getAttribute('projected_term_count'),
+            'grant_amount' => $record->getAttribute('grant_amount'),
+            'grant_amount_unit' => $record->getAttribute('grant_amount_unit'),
             'projected_total_expense' => $record->getAttribute('projected_total_expense'),
             'projected_completion_year' => $record->getAttribute('projected_completion_year'),
             'projected_completion_academic_year' => $record->getAttribute('projected_completion_academic_year'),

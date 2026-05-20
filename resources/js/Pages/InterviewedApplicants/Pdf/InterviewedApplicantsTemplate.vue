@@ -29,6 +29,10 @@
         </div>
 
         <template v-else-if="reportType === 'list'">
+            <div v-if="records.length > 0"
+                style="display:flex;justify-content:flex-start;padding:4pt 0 2pt;font-size:8pt;font-weight:700;">
+                Grant: {{ perScholarGrantLabel }}
+            </div>
             <template v-if="groupBy !== 'none'">
                 <div v-for="(group, groupName) in groupedData" :key="groupName" style="margin-bottom:14pt;">
                     <div
@@ -92,31 +96,32 @@
                                 <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                                 <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                     <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                        }}</span>
+                                    }}</span>
                                 </td>
-                                <td :style="TD + 'font-size:8pt;'">{{ record.profile?.municipality || '—' }}</td>
-                                <td :style="TD + 'font-size:8pt;'">{{ record.program?.shortname || '—' }}</td>
+                                <td :style="TD + 'font-size:8pt;text-transform:uppercase;'">{{
+                                    record.profile?.municipality || '' }}</td>
+                                <td :style="TD + 'font-size:8pt;'">{{ record.program?.shortname || '' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname ||
-                                    '—' }}</td>
+                                    '' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.course?.name || record.course?.shortname ||
-                                    '—' }}</td>
-                                <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.year_level || '—' }}</td>
-                                <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.term || '—' }} </td>
-                                <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.academic_year || '—' }}
+                                    '' }}</td>
+                                <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.year_level || '' }}</td>
+                                <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.term || '' }} </td>
+                                <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.academic_year || '' }}
                                 </td>
                                 <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
-                                <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
+                                <td :style="TD + 'text-align:right;'">{{ fmtRecordGrantAmount(record) }}</td>
                                 <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                                 <td v-if="includeInterviewColumns"
                                     :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                         fmtDate(record.interviewed_at) }}</td>
                                 <td v-if="includeInterviewColumns"
                                     :style="TD + 'text-align:center;text-transform:uppercase;'">{{
-                                        record.interviewer?.name || '—' }}</td>
+                                        record.interviewer?.name || '' }}</td>
                                 <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
-                                    record.endorsed_by || '—' }}</td>
+                                    record.endorsed_by || '' }}</td>
                                 <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks ||
-                                    record.remarks || '—') : '' }}</td>
+                                    record.remarks || '') : '' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -174,29 +179,29 @@
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                             <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                 <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                    }}</span>
+                                }}</span>
                             </td>
-                            <td :style="TD">{{ record.profile?.municipality || '—' }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '—' }}</td>
-                            <td :style="TD">{{ record.school?.name || record.school?.shortname || '—' }}</td>
-                            <td :style="TD">{{ record.course?.name || record.course?.shortname || '—' }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ record.year_level || '—' }} </td>
-                            <td :style="TD + 'text-align:center;'">{{ record.term || '—' }}
-                                <p>{{ record.academic_year || '—' }}</p>
+                            <td :style="TD + 'text-transform:uppercase;'">{{ record.profile?.municipality || '' }}</td>
+                            <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '' }}</td>
+                            <td :style="TD">{{ record.school?.name || record.school?.shortname || '' }}</td>
+                            <td :style="TD">{{ record.course?.name || record.course?.shortname || '' }}</td>
+                            <td :style="TD + 'text-align:center;'">{{ record.year_level || '' }} </td>
+                            <td :style="TD + 'text-align:center;'">{{ record.term || '' }}
+                                <p>{{ record.academic_year || '' }}</p>
                             </td>
                             <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
-                            <td :style="TD + 'text-align:center;'">{{ fmtProjectedExpense(record) }}</td>
+                            <td :style="TD + 'text-align:center;'">{{ fmtRecordGrantAmount(record) }}</td>
                             <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                             <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                 fmtDate(record.interviewed_at)
-                                }}</td>
+                            }}</td>
                             <td v-if="includeInterviewColumns"
                                 :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
-                                    || '—' }}</td>
+                                    || '' }}</td>
                             <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
-                                record.endorsed_by || '—' }}</td>
+                                record.endorsed_by || '' }}</td>
                             <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks ||
-                                record.remarks || '—') : '' }}</td>
+                                record.remarks || '') : '' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -463,11 +468,11 @@ function recStyle(value) {
 }
 
 function fmtDate(value) {
-    return value ? moment(value).format('MMM DD, YYYY') : '—';
+    return value ? moment(value).format('MMM DD, YYYY') : '';
 }
 
 function formatApplicantName(record) {
-    const lastName = record?.profile?.last_name || '—';
+    const lastName = record?.profile?.last_name || '';
     const firstName = record?.profile?.first_name || '';
     const middleInitial = record?.profile?.middle_name
         ? `${record.profile.middle_name.trim().charAt(0).toUpperCase()}.`
@@ -530,21 +535,42 @@ function fmtCurrency(value) {
 function fmtProjectedExpense(record) {
     return record?.projected_total_expense !== null && record?.projected_total_expense !== undefined
         ? fmtCurrency(record.projected_total_expense)
-        : 'Not configured';
+        : '';
 }
+
+function fmtRecordGrantAmount(record) {
+    const v = Number(record?.grant_amount);
+    return Number.isFinite(v) && v > 0 ? fmtCurrency(v) : '';
+}
+
+const perScholarGrantLabel = computed(() => {
+    const amounts = (props.records || [])
+        .map((r) => Number(r?.grant_amount))
+        .filter((n) => Number.isFinite(n) && n > 0);
+
+    if (amounts.length === 0) {
+        return '';
+    }
+
+    const unique = Array.from(new Set(amounts)).sort((a, b) => a - b);
+    if (unique.length === 1) {
+        return fmtCurrency(unique[0]);
+    }
+    return `${fmtCurrency(unique[0])} – ${fmtCurrency(unique[unique.length - 1])}`;
+});
 
 function fmtProjectedTerms(record) {
     const terms = Number(record?.projected_term_count);
 
     if (!Number.isFinite(terms)) {
-        return 'Not configured';
+        return '';
     }
 
     return `${terms}`;
 }
 
 function fmtCompletionYear(record) {
-    return record?.projected_completion_year ?? 'Not configured';
+    return record?.projected_completion_year ?? '';
 }
 
 function parseGrantProvision(value) {

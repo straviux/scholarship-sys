@@ -75,7 +75,16 @@ class ScholarshipExpenseProjectionService
 
         $projectedTotalExpense = round($projectedTotalExpense, 2);
 
+        $rateMode = Arr::get($rateConfig, 'mode');
+        $termAmount = (float) Arr::get($rateConfig, 'term_amount', 0);
+        if ($termAmount <= 0 && $rateMode === 'annual_cap' && $termsPerYear > 0) {
+            $termAmount = (float) Arr::get($rateConfig, 'annual_amount', 0) / $termsPerYear;
+        }
+        $grantAmount = round($termAmount, 2);
+
         return [
+            'grant_amount' => $grantAmount,
+            'grant_amount_unit' => 'per_term',
             'projected_total_expense' => $projectedTotalExpense,
             'projected_total_expense_formatted' => number_format($projectedTotalExpense, 2),
             'projected_term_count' => $remainingTerms,
@@ -264,6 +273,8 @@ class ScholarshipExpenseProjectionService
     private function unconfiguredProjection(?string $academicYear, string $reason): array
     {
         return [
+            'grant_amount' => null,
+            'grant_amount_unit' => null,
             'projected_total_expense' => null,
             'projected_total_expense_formatted' => null,
             'projected_term_count' => null,

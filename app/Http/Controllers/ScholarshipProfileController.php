@@ -1547,6 +1547,7 @@ class ScholarshipProfileController extends Controller
             'budget_allocation' => $budgetAllocation,
             'highlight_jpm_members' => (bool) $recommendationList->highlight_jpm_members,
             'include_endorsed_by' => (bool) $recommendationList->include_endorsed_by,
+            'show_remarks' => (bool) $recommendationList->show_remarks,
             'prepared_by' => $recommendationList->prepared_by,
             'prepared_by_position' => $recommendationList->prepared_by_position,
             'prepared_by_office' => $recommendationList->prepared_by_office,

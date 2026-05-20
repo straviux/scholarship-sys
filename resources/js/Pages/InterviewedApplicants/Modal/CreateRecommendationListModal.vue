@@ -122,6 +122,17 @@
                                 </div>
                             </div>
 
+                            <div class="ios-row">
+                                <div class="ios-row-label">
+                                    <AppIcon name="edit-3" :size="13" style="color: #6366F1;" />
+                                    Show Remarks
+                                </div>
+                                <div class="ios-row-control flex items-center justify-end gap-3">
+                                    <span class="text-xs text-slate-500">Fill remarks column (else leave blank)</span>
+                                    <ToggleSwitch v-model="form.show_remarks" />
+                                </div>
+                            </div>
+
                             <div class="ios-row ios-row-last">
                                 <div class="ios-row-label">
                                     <AppIcon name="panel-right-open" :size="13" style="color: #34C759;" />
@@ -312,6 +323,7 @@ const form = ref({
     budget_program: null,
     highlight_jpm_members: false,
     include_endorsed_by: false,
+    show_remarks: false,
     prepared_by: '',
     prepared_by_position: DEFAULT_PREPARED_BY_POSITION,
     prepared_by_office: DEFAULT_PREPARED_BY_OFFICE,
@@ -696,6 +708,7 @@ function resetForm() {
         budget_program: initialData?.budget_program ?? initialData?.budget_allocation?.program ?? null,
         highlight_jpm_members: Boolean(initialData?.highlight_jpm_members),
         include_endorsed_by: Boolean(initialData?.include_endorsed_by),
+        show_remarks: Boolean(initialData?.show_remarks),
         prepared_by: initialData?.prepared_by ?? (props.defaultPreparedBy?.trim() || DEFAULT_PREPARED_BY),
         prepared_by_position: initialData?.prepared_by_position ?? DEFAULT_PREPARED_BY_POSITION,
         prepared_by_office: initialData?.prepared_by_office ?? DEFAULT_PREPARED_BY_OFFICE,
@@ -741,6 +754,7 @@ function submitForm() {
         budget_program: normalizeBudgetProgram(form.value.budget_program),
         highlight_jpm_members: form.value.highlight_jpm_members,
         include_endorsed_by: form.value.include_endorsed_by,
+        show_remarks: form.value.show_remarks,
         prepared_by: form.value.prepared_by,
         prepared_by_position: form.value.prepared_by_position,
         prepared_by_office: form.value.prepared_by_office,
