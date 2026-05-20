@@ -92,7 +92,7 @@
                                 <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                                 <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                     <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                    }}</span>
+                                        }}</span>
                                 </td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.profile?.municipality || '—' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.program?.shortname || '—' }}</td>
@@ -115,7 +115,8 @@
                                         record.interviewer?.name || '—' }}</td>
                                 <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
                                     record.endorsed_by || '—' }}</td>
-                                <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks || record.remarks || '—') : '' }}</td>
+                                <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks ||
+                                    record.remarks || '—') : '' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -173,7 +174,7 @@
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                             <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                 <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                }}</span>
+                                    }}</span>
                             </td>
                             <td :style="TD">{{ record.profile?.municipality || '—' }}</td>
                             <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '—' }}</td>
@@ -188,13 +189,14 @@
                             <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                             <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                 fmtDate(record.interviewed_at)
-                            }}</td>
+                                }}</td>
                             <td v-if="includeInterviewColumns"
                                 :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
                                     || '—' }}</td>
                             <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
                                 record.endorsed_by || '—' }}</td>
-                            <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks || record.remarks || '—') : '' }}</td>
+                            <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks ||
+                                record.remarks || '—') : '' }}</td>
                         </tr>
                     </tbody>
                 </table>

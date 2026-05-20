@@ -466,7 +466,7 @@
                     Showing {{ filteredCumulativeScholars.length.toLocaleString() }} of {{
                         selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{
                         selectedBudgetAllocationApprovedCount !== 1
-                    ? 's' : '' }}.
+                            ? 's' : '' }}.
                 </div>
             </div>
 

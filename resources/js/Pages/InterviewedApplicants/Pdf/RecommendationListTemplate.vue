@@ -1,22 +1,10 @@
 <template>
-    <InterviewedApplicantsTemplate
-        :records="records"
-        report-type="list"
-        group-by="none"
-        :today="today"
-        :prepared-by="preparedBy"
-        :prepared-by-position="preparedByPosition"
-        :prepared-by-office="preparedByOffice"
-        :approved-by="approvedBy"
-        :approved-by-position="approvedByPosition"
-        :budget-program="budgetProgram"
-        :budget-allocation="budgetAllocation"
-        :highlight-jpm-members="highlightJpmMembers"
-        :include-endorsed-by="includeEndorsedBy"
-        :show-remarks="showRemarks"
-        :report-title="resolvedReportTitle"
-        :list-number="listNumber"
-        :include-interview-columns="false" />
+    <InterviewedApplicantsTemplate :records="records" report-type="list" group-by="none" :today="today"
+        :prepared-by="preparedBy" :prepared-by-position="preparedByPosition" :prepared-by-office="preparedByOffice"
+        :approved-by="approvedBy" :approved-by-position="approvedByPosition" :budget-program="budgetProgram"
+        :budget-allocation="budgetAllocation" :highlight-jpm-members="highlightJpmMembers"
+        :include-endorsed-by="includeEndorsedBy" :show-remarks="showRemarks" :report-title="resolvedReportTitle"
+        :list-number="listNumber" :include-interview-columns="false" />
 </template>
 
 <script setup>
