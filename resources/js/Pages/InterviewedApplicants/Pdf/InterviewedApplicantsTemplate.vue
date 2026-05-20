@@ -96,7 +96,7 @@
                                 <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                                 <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                     <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                        }}</span>
+                                    }}</span>
                                 </td>
                                 <td :style="TD + 'font-size:8pt;text-transform:uppercase;'">{{
                                     record.profile?.municipality || '' }}</td>
@@ -179,7 +179,7 @@
                             <td :style="TD + 'text-align:center;'">{{ index + 1 }}</td>
                             <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                 <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                    }}</span>
+                                }}</span>
                             </td>
                             <td :style="TD + 'text-transform:uppercase;'">{{ record.profile?.municipality || '' }}</td>
                             <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '' }}</td>
@@ -195,7 +195,7 @@
                             <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
                             <td v-if="includeInterviewColumns" :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                 fmtDate(record.interviewed_at)
-                                }}</td>
+                            }}</td>
                             <td v-if="includeInterviewColumns"
                                 :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
                                     || '' }}</td>
