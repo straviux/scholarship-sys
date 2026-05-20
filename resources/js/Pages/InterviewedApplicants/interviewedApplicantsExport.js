@@ -125,6 +125,7 @@ export function printRecommendationList({ recommendationList = null } = {}) {
         budgetAllocation: recommendationList?.budget_allocation || null,
         highlightJpmMembers: Boolean(recommendationList?.highlight_jpm_members),
         includeEndorsedBy: Boolean(recommendationList?.include_endorsed_by),
+        showRemarks: Boolean(recommendationList?.show_remarks),
         reportTitle: recommendationList?.report_title || 'RECOMMENDATION LIST FOR APPROVAL',
         listNumber: recommendationList?.list_number || '',
     });

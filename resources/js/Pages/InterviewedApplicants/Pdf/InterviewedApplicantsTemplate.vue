@@ -45,13 +45,13 @@
                             <col style="width:3%;" />
                             <col
                                 :style="includeEndorsedBy ? 'width:18%;' : (includeInterviewColumns ? 'width:10.25%;' : 'width:16%;')" />
+                            <col :style="includeEndorsedBy ? 'width:8%;' : 'width:12%;'" />
                             <col style="width:4.5%;" />
                             <col style="width:9.5%;" />
                             <col style="width:9.5%;" />
                             <col style="width:3.5%;" />
                             <col style="width:5.5%;" />
                             <col style="width:6%;" />
-                            <col :style="includeEndorsedBy ? 'width:8%;' : 'width:12%;'" />
                             <col style="width:3.5%;" />
                             <col style="width:6.5%;" />
                             <col style="width:4.5%;" />
@@ -65,6 +65,7 @@
                             <tr>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">#</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Name</th>
+                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Municipality</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Program</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">School</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Course</th>
@@ -72,7 +73,6 @@
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Agreement Start</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Academic Year
                                 </th>
-                                <th :style="TH + 'vertical-align:middle;'" rowspan="2">Grant</th>
                                 <th :style="TH" colspan="3">Projected</th>
                                 <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
                                 <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed
@@ -94,6 +94,7 @@
                                     <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
                                     }}</span>
                                 </td>
+                                <td :style="TD + 'font-size:8pt;'">{{ record.profile?.municipality || '—' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.program?.shortname || '—' }}</td>
                                 <td :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname ||
                                     '—' }}</td>
@@ -102,14 +103,6 @@
                                 <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.year_level || '—' }}</td>
                                 <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.term || '—' }} </td>
                                 <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.academic_year || '—' }}
-                                </td>
-                                <td :style="TD">
-                                    <div>{{ fmtGrantProvisionName(record.grant_provision_label ||
-                                        record.grant_provision) }}</div>
-                                    <div v-if="fmtGrantProvisionAmount(record)"
-                                        style="margin-top:2px;font-size:6px;line-height:1.1;">
-                                        {{ fmtGrantProvisionAmount(record) }}
-                                    </div>
                                 </td>
                                 <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
                                 <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
@@ -122,7 +115,7 @@
                                         record.interviewer?.name || '—' }}</td>
                                 <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
                                     record.endorsed_by || '—' }}</td>
-                                <td :style="TD"></td>
+                                <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks || record.remarks || '—') : '' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -135,12 +128,12 @@
                         <col style="width:3%;" />
                         <col
                             :style="includeEndorsedBy ? 'width:20%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
+                        <col style="width:7.5%;" />
                         <col style="width:4.5%;" />
                         <col style="width:10%;" />
                         <col style="width:9%;" />
                         <col style="width:3.5%;" />
                         <col style="width:6%;" />
-                        <col style="width:7.5%;" />
                         <col style="width:3.5%;" />
                         <col style="width:6.5%;" />
                         <col style="width:5%;" />
@@ -154,12 +147,12 @@
                         <tr>
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">#</th>
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">Name</th>
+                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Municipality</th>
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">Program</th>
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">School</th>
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">Course</th>
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">Year</th>
                             <th :style="TH + 'vertical-align:middle;'" rowspan="2">Agreement Start</th>
-                            <th :style="TH + 'vertical-align:middle;'" rowspan="2">Grant</th>
                             <th :style="TH" colspan="3">Projected</th>
                             <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
                             <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By
@@ -182,21 +175,13 @@
                                 <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
                                 }}</span>
                             </td>
+                            <td :style="TD">{{ record.profile?.municipality || '—' }}</td>
                             <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '—' }}</td>
                             <td :style="TD">{{ record.school?.name || record.school?.shortname || '—' }}</td>
                             <td :style="TD">{{ record.course?.name || record.course?.shortname || '—' }}</td>
                             <td :style="TD + 'text-align:center;'">{{ record.year_level || '—' }} </td>
                             <td :style="TD + 'text-align:center;'">{{ record.term || '—' }}
                                 <p>{{ record.academic_year || '—' }}</p>
-                            </td>
-                            <td :style="TD + 'text-align:center;'">
-                                <div style="font-size: 8px;">{{ fmtGrantProvisionName(record.grant_provision_label ||
-                                    record.grant_provision) }}
-                                </div>
-                                <div v-if="fmtGrantProvisionAmount(record)" class="mono"
-                                    style="margin-top:2px;font-size:7px;line-height:1.1; letter-spacing:0.35px;">
-                                    {{ fmtGrantProvisionAmount(record) }} / term
-                                </div>
                             </td>
                             <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
                             <td :style="TD + 'text-align:center;'">{{ fmtProjectedExpense(record) }}</td>
@@ -209,7 +194,7 @@
                                     || '—' }}</td>
                             <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
                                 record.endorsed_by || '—' }}</td>
-                            <td :style="TD"></td>
+                            <td :style="TD + 'font-size:7pt;'">{{ showRemarks ? (record.interview_remarks || record.remarks || '—') : '' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -424,6 +409,7 @@ const props = defineProps({
     includeInterviewColumns: { type: Boolean, default: true },
     includeEndorsedBy: { type: Boolean, default: false },
     highlightJpmMembers: { type: Boolean, default: false },
+    showRemarks: { type: Boolean, default: false },
 });
 
 const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;line-height:1.15;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;';

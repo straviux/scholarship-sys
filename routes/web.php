@@ -617,6 +617,33 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/api/system-updates/{systemUpdate}', [SystemUpdateController::class, 'destroy'])->middleware('check-roles:administrator|program_manager')->name('system-updates.destroy');
 });
 
+// ────────────────────────────────────────────────────────────────────
+// AI Assistant (separate login/layout, admin & program_manager only)
+// ────────────────────────────────────────────────────────────────────
+use App\Http\Controllers\AiAssistantController;
+
+Route::prefix('ai')->name('ai.')->group(function () {
+    Route::get('/login', [AiAssistantController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AiAssistantController::class, 'login'])
+        ->middleware('throttle:5,1');
+
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/chat', [AiAssistantController::class, 'showChat'])->name('chat');
+        Route::post('/logout', [AiAssistantController::class, 'logout'])->name('logout');
+
+        // Chat send — strict per-user rate limit (configured in AppServiceProvider)
+        Route::post('/chat', [AiAssistantController::class, 'sendMessage'])
+            ->middleware('throttle:ai-chat')->name('chat.send');
+
+        // Conversations
+        Route::get('/conversations', [AiAssistantController::class, 'listConversations'])->name('conversations.index');
+        Route::get('/conversations/{id}', [AiAssistantController::class, 'showConversation'])
+            ->whereNumber('id')->name('conversations.show');
+        Route::delete('/conversations/{id}', [AiAssistantController::class, 'deleteConversation'])
+            ->whereNumber('id')->name('conversations.destroy');
+    });
+});
+
 // Test route for debugging notifications
 Route::middleware(['auth'])->get('/test-notifications', function () {
     $user = request()->user();

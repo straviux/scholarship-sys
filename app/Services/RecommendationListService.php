@@ -273,6 +273,7 @@ class RecommendationListService
                 'last_name' => $record->profile?->last_name,
                 'middle_name' => $record->profile?->middle_name,
                 'contact_no' => $record->profile?->contact_no,
+                'municipality' => $record->profile?->municipality,
                 'is_jpm_member' => (bool) $record->profile?->is_jpm_member,
                 'is_father_jpm' => (bool) $record->profile?->is_father_jpm,
                 'is_mother_jpm' => (bool) $record->profile?->is_mother_jpm,
@@ -309,6 +310,8 @@ class RecommendationListService
             'interviewed_at' => $record->interviewed_at?->toDateTimeString(),
             'recommendation' => $record->recommendation,
             'endorsed_by' => $record->endorsed_by,
+            'remarks' => $record->remarks,
+            'interview_remarks' => $record->interview_remarks,
         ];
     }
 

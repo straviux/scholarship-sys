@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +32,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         JsonResource::withoutWrapping();
+
+        // Force HTTPS in production (so generated URLs / asset paths use https://)
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
+        // AI assistant per-user rate limit (10 messages / minute)
+        RateLimiter::for('ai-chat', function ($request) {
+            return Limit::perMinute(10)->by(optional($request->user())->id ?: $request->ip());
+        });
 
         // Automatically check permissions using Spatie Permission package
         Gate::before(function ($user, $ability) {

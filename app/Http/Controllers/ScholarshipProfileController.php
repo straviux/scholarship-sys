@@ -1115,6 +1115,7 @@ class ScholarshipProfileController extends Controller
                         'last_name',
                         'middle_name',
                         'contact_no',
+                        'municipality',
                         'is_jpm_member',
                         'is_father_jpm',
                         'is_mother_jpm',

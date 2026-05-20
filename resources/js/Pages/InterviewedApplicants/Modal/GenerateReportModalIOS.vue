@@ -272,7 +272,7 @@
                         </div>
                     </div>
 
-                    <div v-if="reportType === 'list'" class="ios-row ios-row-last">
+                    <div v-if="reportType === 'list'" class="ios-row">
                         <div class="ios-row-label">
                             <AppIcon name="users" :size="13" style="color: #16A34A;" />
                             Highlight JPM Names
@@ -281,6 +281,18 @@
                             style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
                             <span class="text-[11px] text-slate-500">Mark JPM-related applicants in print</span>
                             <ToggleSwitch v-model="highlightJpmMembers" />
+                        </div>
+                    </div>
+
+                    <div v-if="reportType === 'list'" class="ios-row ios-row-last">
+                        <div class="ios-row-label">
+                            <AppIcon name="edit-3" :size="13" style="color: #8E8E93;" />
+                            Show Remarks
+                        </div>
+                        <div class="ios-row-control"
+                            style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
+                            <span class="text-[11px] text-slate-500">Fill remarks column (else leave blank)</span>
+                            <ToggleSwitch v-model="showRemarks" />
                         </div>
                     </div>
 
@@ -525,6 +537,7 @@ const paperSize = ref('A4');
 const orientation = ref('landscape');
 const includeInterviewColumns = ref(true);
 const highlightJpmMembers = ref(false);
+const showRemarks = ref(false);
 
 // PDF Preview
 const showPdfPreview = ref(false);
@@ -903,6 +916,7 @@ watch(() => props.show, (value) => {
         approvedBy.value = DEFAULT_APPROVED_BY;
         approvedByPosition.value = DEFAULT_APPROVED_BY_POSITION;
         highlightJpmMembers.value = false;
+        showRemarks.value = false;
         selectedBudgetAllocationKey.value = props.budgetAllocations.length === 1
             ? props.budgetAllocations[0].key
             : null;
@@ -982,6 +996,7 @@ function generateReport() {
         reportTitle,
         includeInterviewColumns: includeInterviewColumns.value,
         highlightJpmMembers: reportType.value === 'list' ? highlightJpmMembers.value : false,
+        showRemarks: reportType.value === 'list' ? showRemarks.value : false,
     });
 
     pdfPreviewTitle.value = reportTitle;

@@ -35,4 +35,24 @@ return [
         ],
     ],
 
+    'openai' => [
+        'key'   => env('OPENAI_API_KEY', ''),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    ],
+
+    'ai' => [
+        // Provider: 'groq' (free) or 'openai'
+        'provider' => env('AI_PROVIDER', 'groq'),
+        'groq' => [
+            'key'      => env('GROQ_API_KEY', ''),
+            'model'    => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+            'base_url' => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
+        ],
+        'openai' => [
+            'key'      => env('OPENAI_API_KEY', ''),
+            'model'    => env('OPENAI_MODEL', 'gpt-4o-mini'),
+            'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+        ],
+    ],
+
 ];
