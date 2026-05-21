@@ -103,6 +103,16 @@ function groupProjectedExpense(group) {
     return sumProjectedExpense(flattenGroupRecords(group));
 }
 
+function buildGroupHeaderRows(...groups) {
+    return groups.filter(Boolean).map((group, index) => ({
+        key: group.key,
+        label: group.key,
+        count: group.count,
+        projectedText: includeProjectedExpense.value ? fmtCurrency(groupProjectedExpense(group)) : '',
+        level: index,
+    }));
+}
+
 const statusSummaryRows = computed(() => {
     const groupedRows = {};
 
@@ -178,49 +188,18 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
             <template v-else-if="reportType === 'list'">
                 <template v-if="grouped">
                     <div v-for="group in grouped" :key="group.key" style="margin-bottom:14pt;">
-                        <div
-                            style="display:flex;align-items:center;justify-content:space-between;border-bottom:1pt solid #000;padding:3pt 0;margin-bottom:4pt;">
-                            <span style="font-weight:700;font-size:10pt;">{{ group.key }}</span>
-                            <span style="font-size:8pt;color:#555;">
-                                {{ group.count }} record{{ group.count !== 1 ? 's' : '' }}
-                                <template v-if="includeProjectedExpense">
-                                    | {{ fmtCurrency(groupProjectedExpense(group)) }} projected
-                                </template>
-                            </span>
-                        </div>
-
                         <ProfileReportTable v-if="group.records" :records="group.records" :filters="filters"
-                            :options="options" />
+                            :options="options" :group-headers="buildGroupHeaderRows(group)" />
 
                         <template v-for="sub in group.subGroups || []" :key="`${group.key}-${sub.key}`">
-                            <div
-                                style="display:flex;align-items:center;justify-content:space-between;border-bottom:0.5pt solid #999;padding:3pt 0 3pt 12pt;margin:6pt 0 4pt;">
-                                <span style="font-weight:600;font-size:9pt;">{{ sub.key }}</span>
-                                <span style="font-size:8pt;color:#555;">
-                                    {{ sub.count }} record{{ sub.count !== 1 ? 's' : '' }}
-                                    <template v-if="includeProjectedExpense">
-                                        | {{ fmtCurrency(groupProjectedExpense(sub)) }} projected
-                                    </template>
-                                </span>
-                            </div>
-
                             <ProfileReportTable v-if="sub.records" :records="sub.records" :filters="filters"
-                                :options="options" />
+                                :options="options" :group-headers="buildGroupHeaderRows(group, sub)"
+                                style="margin-top:6pt;" />
 
                             <template v-for="ter in sub.subGroups || []" :key="`${group.key}-${sub.key}-${ter.key}`">
-                                <div
-                                    style="display:flex;align-items:center;justify-content:space-between;border-bottom:0.5pt solid #ccc;padding:2pt 0 2pt 24pt;margin:6pt 0 4pt;">
-                                    <span style="font-weight:600;font-size:8pt;">{{ ter.key }}</span>
-                                    <span style="font-size:8pt;color:#555;">
-                                        {{ ter.count }} record{{ ter.count !== 1 ? 's' : '' }}
-                                        <template v-if="includeProjectedExpense">
-                                            | {{ fmtCurrency(groupProjectedExpense(ter)) }} projected
-                                        </template>
-                                    </span>
-                                </div>
-
                                 <ProfileReportTable v-if="ter.records" :records="ter.records" :filters="filters"
-                                    :options="options" />
+                                    :options="options" :group-headers="buildGroupHeaderRows(group, sub, ter)"
+                                    style="margin-top:6pt;" />
                             </template>
                         </template>
                     </div>
@@ -268,7 +247,7 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
             </div>
 
             <!-- Breakdown Tables -->
-            <div style="display:flex;gap:12pt;">
+            <div v-if="reportType === 'summary'" style="display:flex;gap:12pt;">
                 <!-- By Status -->
                 <div v-if="showStatusSummary" style="flex:1;border:0.5pt solid #000;">
                     <div :style="SUMMARY_HDR">Breakdown by Status</div>

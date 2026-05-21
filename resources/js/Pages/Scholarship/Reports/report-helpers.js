@@ -30,20 +30,46 @@ export function isJpm(item) {
 }
 
 export function getReportStatus(item) {
-	return item.report_status || item.approval_status || item.unified_status || 'unknown';
+	return item.report_status || item.approval_status || item.unified_status || item.application_status || 'unknown';
+}
+
+const EMPTY_GROUP_LABELS = {
+	unified_status: 'No Status',
+	school: 'No School',
+	program: 'No Program',
+	course: 'No Course',
+	year_level: 'No Year Level',
+	municipality: 'No Municipality',
+	grant_provision: 'No Grant Provision',
+};
+
+function normalizeGroupDisplayValue(value, emptyLabel) {
+	if (value === null || value === undefined) {
+		return emptyLabel;
+	}
+
+	const normalizedValue = typeof value === 'string' ? value.trim() : value;
+
+	if (normalizedValue === '' || normalizedValue === '—') {
+		return emptyLabel;
+	}
+
+	return value;
 }
 
 export function getGroupValue(item, groupByField) {
 	const map = {
-		unified_status: () => formatStatus(item.approval_status || item.unified_status),
-		school: () => item.school_name || '—',
-		program: () => item.program_name || '—',
-		course: () => item.course_name || '—',
-		year_level: () => item.year_level || '—',
-		municipality: () => item.municipality || '—',
+		unified_status: () => formatStatus(item.approval_status || item.unified_status || item.application_status),
+		school: () => item.school_name,
+		program: () => item.program_name,
+		course: () => item.course_name,
+		year_level: () => item.year_level,
+		municipality: () => item.municipality,
 		grant_provision: () => formatGrantProvision(item.grant_provision),
 	};
-	return (map[groupByField] || (() => '—'))();
+
+	const rawValue = (map[groupByField] || (() => null))();
+	return normalizeGroupDisplayValue(rawValue, EMPTY_GROUP_LABELS[groupByField] || 'No Group');
 }
 
 export function formatStatus(status) {

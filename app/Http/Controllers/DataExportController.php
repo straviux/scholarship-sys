@@ -13,6 +13,7 @@ use App\Services\ScholarshipExpenseProjectionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class DataExportController extends Controller
@@ -102,6 +103,7 @@ class DataExportController extends Controller
         // Get scholarship records (existing scholars)
         $recordsQuery = ScholarshipRecord::with([
             'profile',
+            'profile.profileRequirements.requirement',
             'program',
             'school',
             'course',
@@ -308,7 +310,12 @@ class DataExportController extends Controller
         });
 
         // Get applicants (waiting list) - use the same queue map from profiles
-        $applicantsQuery = ScholarshipProfile::with(['scholarshipGrant.program', 'scholarshipGrant.school', 'scholarshipGrant.course'])
+        $applicantsQuery = ScholarshipProfile::with([
+            'profileRequirements.requirement',
+            'scholarshipGrant.program',
+            'scholarshipGrant.school',
+            'scholarshipGrant.course',
+        ])
             ->whereHas('scholarshipGrant', function ($q) {
                 $q->where('unified_status', 'pending');
             });
@@ -356,6 +363,7 @@ class DataExportController extends Controller
                 'address' => $profile->address,
                 'municipality' => $profile->municipality,
                 'barangay' => $profile->barangay,
+                'indigenous_group' => $profile->indigenous_group,
                 'program_name' => $programName !== 'no_program' ? $programName : null,
                 'school_name' => $schoolName !== 'no_school' ? $schoolName : null,
                 'course_name' => $courseName !== 'no_course' ? $courseName : null,
@@ -364,9 +372,14 @@ class DataExportController extends Controller
                 'grant_provision' => $grant?->grant_provision ?? '-',
                 'yakap_category' => $grant?->yakap_category ?? 'yakap-capitol',
                 'yakap_location' => $grant?->yakap_location,
+                'submitted_requirements' => $this->extractSubmittedRequirementLabels($profile),
+                'report_status' => 'pending',
+                'approval_status' => 'pending',
+                'unified_status' => 'pending',
                 'date_filed' => $profile->date_filed,
                 'date_approved' => $grant?->date_approved,
                 'date_applied' => $grant?->date_filed,
+                'report_date' => $profile->date_filed,
                 'application_status' => $grant?->unified_status ?? 'pending',
                 'jpm_remarks' => $profile->jpm_remarks,
             ];
@@ -424,6 +437,7 @@ class DataExportController extends Controller
         $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
         $historyQuery = ScholarshipApprovalHistory::with([
             'scholarshipRecord.profile',
+            'scholarshipRecord.profile.profileRequirements.requirement',
             'scholarshipRecord.program',
             'scholarshipRecord.school',
             'scholarshipRecord.course',
@@ -599,6 +613,7 @@ class DataExportController extends Controller
             'address' => $profile?->address,
             'municipality' => $profile?->municipality,
             'barangay' => $profile?->barangay,
+            'indigenous_group' => $profile?->indigenous_group,
             'program_name' => $record->program?->shortname ?? $record->program?->name,
             'school_name' => $record->school?->name ?? $record->school?->shortname,
             'course_name' => $record->course?->name ?? $record->course?->shortname,
@@ -609,6 +624,7 @@ class DataExportController extends Controller
             'grant_provision_label' => $record->grant_provision_label ?? SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A'),
             'yakap_category' => $record->yakap_category ?? 'yakap-capitol',
             'yakap_location' => $record->yakap_location,
+            'submitted_requirements' => $this->extractSubmittedRequirementLabels($profile),
             'projected_total_expense' => $record->projected_total_expense,
             'projected_total_expense_formatted' => $record->projected_total_expense_formatted,
             'projected_term_count' => $record->projected_term_count,
@@ -628,6 +644,45 @@ class DataExportController extends Controller
             'decline_reason' => in_array($reportStatus, ['denied', 'denied_history'], true) ? $remarks : null,
             'report_date' => $this->resolveReportDate($reportStatus, $record, $historyContext, $latestApprovalHistory?->performed_at, $latestDeclineHistory?->performed_at),
         ];
+    }
+
+    private function extractSubmittedRequirementLabels(?ScholarshipProfile $profile): array
+    {
+        if (!$profile || !$profile->relationLoaded('profileRequirements')) {
+            return [];
+        }
+
+        return $profile->profileRequirements
+            ->filter(fn($submission) => filled($submission->file_path) || filled($submission->file_name))
+            ->map(function ($submission) {
+                $requirementName = trim((string) ($submission->requirement?->name ?? ''));
+                $fileName = trim((string) ($submission->file_name ?? ''));
+                $candidate = $requirementName !== '' ? $requirementName : $fileName;
+
+                if ($candidate === '') {
+                    return null;
+                }
+
+                $normalized = (string) Str::of($candidate)->lower()->squish();
+
+                if (preg_match('/\bsolo\s+parent\b/', $normalized)) {
+                    return 'Solo Parent';
+                }
+
+                if (preg_match('/\bpwd\b/', $normalized) || str_contains($normalized, 'person with disability')) {
+                    return 'PWD';
+                }
+
+                if (preg_match('/\bendorsement\b/', $normalized) || preg_match('/\bothers?\b/', $normalized)) {
+                    return 'Others';
+                }
+
+                return null;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function findLatestHistoryByAction(ScholarshipRecord $record, string $action): ?ScholarshipApprovalHistory

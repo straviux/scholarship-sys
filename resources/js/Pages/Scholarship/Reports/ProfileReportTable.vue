@@ -6,22 +6,35 @@ const props = defineProps({
     records: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
     options: { type: Object, default: () => ({}) },
+    groupHeaders: { type: Array, default: () => [] },
 });
 
 const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;line-height:1.15;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;vertical-align:middle;';
 const TD = 'border:1px solid #000;padding:3px 3px;font-size:7px;line-height:1.2;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
+const GROUP_HEADER_CELL_BASE = 'border:1px solid #000;text-align:left;vertical-align:middle;';
+
+const groupHeaderRows = computed(() => (Array.isArray(props.groupHeaders) ? props.groupHeaders : [])
+    .filter(Boolean)
+    .map((header, index) => ({
+        ...header,
+        level: Number.isInteger(header?.level) ? header.level : index,
+        rowKey: header?.rowKey || `${index}-${header?.key || header?.label || 'group'}`,
+    })));
 
 const selectedStatus = computed(() => props.options?.selectedStatus ?? null);
 const showSequenceNumbers = computed(() => props.options?.showSequenceNumbers !== false);
-const useInlinePendingSequence = computed(() => showSequenceNumbers.value && selectedStatus.value === 'pending');
-const includeGrantProvision = computed(() => props.options?.includeGrantProvision !== false);
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
-const includeRemarks = computed(() => props.options?.includeRemarks !== false);
+const activeGroupFields = computed(() => new Set([
+    props.options?.groupBy,
+    props.options?.groupBySecondary,
+    props.options?.groupByTertiary,
+].filter(value => value && value !== 'none')));
 const hiddenColumns = computed(() => ({
-    program: !!props.filters?.Program,
-    school: !!props.filters?.School,
-    course: !!props.filters?.Course,
-    year_level: !!props.filters?.['Year Level'],
+    program: !!props.filters?.Program || activeGroupFields.value.has('program'),
+    school: !!props.filters?.School || activeGroupFields.value.has('school'),
+    course: !!props.filters?.Course || activeGroupFields.value.has('course'),
+    year_level: !!props.filters?.['Year Level'] || activeGroupFields.value.has('year_level'),
+    report_status: activeGroupFields.value.has('unified_status'),
 }));
 
 const projectedColumns = computed(() => {
@@ -39,36 +52,34 @@ const projectedColumns = computed(() => {
 const singleColumns = computed(() => {
     const columns = [];
 
-    if (showSequenceNumbers.value && !useInlinePendingSequence.value) {
-        columns.push({ key: 'sequence', label: '#', width: '3%', align: 'center' });
+    if (showSequenceNumbers.value) {
+        columns.push({ key: 'sequence', label: '#', width: '2%', align: 'center' });
     }
 
-    columns.push({ key: 'name', label: 'Name', width: '14%' });
+    columns.push({ key: 'name', label: 'Name', width: '12%' });
+    columns.push({ key: 'address_location', label: 'Address', width: '8%' });
 
     if (!hiddenColumns.value.program) {
-        columns.push({ key: 'program_name', label: 'Program', width: '6%', align: 'center' });
+        columns.push({ key: 'program_name', label: 'Program', width: '5%', align: 'center' });
     }
 
     if (!hiddenColumns.value.school) {
-        columns.push({ key: 'school_name', label: 'School', width: '11%' });
+        columns.push({ key: 'school_name', label: 'School', width: '9%' });
     }
 
     if (!hiddenColumns.value.course) {
-        columns.push({ key: 'course_name', label: 'Course', width: '12%' });
+        columns.push({ key: 'course_name', label: 'Course', width: '10%' });
     }
 
     if (!hiddenColumns.value.year_level) {
-        columns.push({ key: 'year_level', label: 'Year', width: '4%', align: 'center' });
+        columns.push({ key: 'year_level', label: 'Year Level', width: '4%', align: 'center' });
     }
 
-    columns.push({ key: 'term_academic_year', label: 'Term / Academic Year', width: '8%', align: 'center' });
+    columns.push({ key: 'term_academic_year', label: 'Term / Academic Year', width: '7%', align: 'center' });
+    columns.push({ key: 'remarks_summary', label: 'Remarks', width: '10%' });
 
-    if (includeGrantProvision.value) {
-        columns.push({ key: 'grant', label: 'Grant', width: '9%' });
-    }
-
-    if (selectedStatus.value === null) {
-        columns.push({ key: 'report_status', label: 'Status', width: '7%', align: 'center' });
+    if (selectedStatus.value === null && !hiddenColumns.value.report_status) {
+        columns.push({ key: 'report_status', label: 'Status', width: '6%', align: 'center' });
     }
 
     return columns;
@@ -80,7 +91,7 @@ const detailConfig = computed(() => {
             return {
                 label: 'Application',
                 columns: [
-                    { key: 'date_filed', label: 'Date Filed', width: '7%', align: 'center' },
+                    { key: 'date_filed', label: 'Date Filed', width: '5%', align: 'center' },
                 ],
             };
         case 'interviewed':
@@ -113,7 +124,6 @@ const detailConfig = computed(() => {
                 label: 'Denied',
                 columns: [
                     { key: 'date_denied', label: 'Date', width: '7%', align: 'center' },
-                    ...(includeRemarks.value ? [{ key: 'decline_reason', label: 'Reason / Remarks', width: '12%' }] : []),
                 ],
             };
         case null:
@@ -133,11 +143,17 @@ const detailConfig = computed(() => {
     }
 });
 
+const leadingSingleColumns = computed(() => singleColumns.value.filter(column => column.key !== 'remarks_summary'));
+const trailingSingleColumns = computed(() => singleColumns.value.filter(column => column.key === 'remarks_summary'));
+const inlineDetailColumns = computed(() => selectedStatus.value === 'pending' ? detailConfig.value.columns : []);
+const groupedDetailColumns = computed(() => selectedStatus.value === 'pending' ? [] : detailConfig.value.columns);
 const allColumns = computed(() => [
-    ...singleColumns.value,
+    ...leadingSingleColumns.value,
     ...projectedColumns.value,
     ...detailConfig.value.columns,
+    ...trailingSingleColumns.value,
 ]);
+const hasSubHeaderRow = computed(() => projectedColumns.value.length > 0 || groupedDetailColumns.value.length > 0);
 
 function parseGrantProvision(value) {
     if (!value) {
@@ -220,20 +236,123 @@ function upper(value) {
     return value ? value.toString().toUpperCase() : '—';
 }
 
+function formatAddress(record) {
+    const parts = [record?.barangay, record?.municipality]
+        .map(value => value?.toString().trim())
+        .filter(Boolean);
+
+    return parts.length ? parts.join(', ') : '—';
+}
+
+function normalizeRequirementLabel(label) {
+    const text = String(label || '').trim();
+
+    if (!text) {
+        return '';
+    }
+
+    const normalized = text.toLowerCase();
+
+    if (/\bsolo\s+parent\b/.test(normalized)) {
+        return 'Solo Parent';
+    }
+
+    if (/\bpwd\b/.test(normalized) || /person with disability/.test(normalized)) {
+        return 'PWD';
+    }
+
+    if (/\bendorsement\b/.test(normalized) || /\bothers?\b/.test(normalized)) {
+        return 'Others';
+    }
+
+    return '';
+}
+
+function formatSubmittedRequirements(record) {
+    const requirements = Array.isArray(record?.submitted_requirements)
+        ? record.submitted_requirements
+        : [];
+
+    const normalizedRequirements = requirements
+        .map(normalizeRequirementLabel)
+        .filter(Boolean);
+
+    if (String(record?.indigenous_group || '').trim()) {
+        normalizedRequirements.push('Indigenous Group');
+    }
+
+    return [...new Set(normalizedRequirements)];
+}
+
+function formatRemarks(record) {
+    const textRemarks = [...new Set([
+        record?.decline_reason,
+        record?.remarks,
+    ].map(value => String(value || '').trim()).filter(Boolean))];
+    const requirementLabels = formatSubmittedRequirements(record);
+    const sections = [];
+
+    if (textRemarks.length) {
+        sections.push(textRemarks.join('\n'));
+    }
+
+    if (requirementLabels.length) {
+        sections.push(`Requirements: ${requirementLabels.join(', ')}`);
+    }
+
+    return sections.join('\n');
+}
+
 function valueStyle(column) {
     const align = column.align ? `text-align:${column.align};` : '';
     const emphasis = column.key === 'name' ? 'font-weight:600;' : '';
+    const nameSize = column.key === 'name' ? 'font-size:8px;line-height:1.25;' : '';
     const nowrap = ['date_filed', 'date_approved', 'date_denied', 'interviewed_at', 'report_date'].includes(column.key)
         ? 'white-space:nowrap;'
         : '';
+    const uppercase = column.key === 'address_location' ? 'text-transform:uppercase;' : '';
+    const multiline = column.key === 'remarks_summary' ? 'white-space:pre-line;' : '';
 
-    return `${TD}${align}${emphasis}${nowrap}`;
+    return `${TD}${align}${emphasis}${nameSize}${nowrap}${uppercase}${multiline}`;
+}
+
+function groupHeaderCellStyle(level = 0) {
+    switch (level) {
+        case 1:
+            return `${GROUP_HEADER_CELL_BASE}padding:3px 6px 3px 16px;font-weight:600;font-size:8px;background:#ececec;`;
+        case 2:
+            return `${GROUP_HEADER_CELL_BASE}padding:2px 6px 2px 28px;font-weight:600;font-size:8px;background:#f5f5f5;`;
+        default:
+            return `${GROUP_HEADER_CELL_BASE}padding:4px 6px;font-weight:700;font-size:9px;background:#ddd;`;
+    }
+}
+
+function groupHeaderMetaStyle(level = 0) {
+    const fontWeight = level === 0 ? '600' : '500';
+    return `font-size:7px;color:#555;font-weight:${fontWeight};text-transform:none;white-space:nowrap;`;
+}
+
+function formatGroupHeaderSummary(header) {
+    const count = Number(header?.count);
+    const parts = [];
+
+    if (Number.isFinite(count)) {
+        parts.push(`${count} record${count !== 1 ? 's' : ''}`);
+    }
+
+    if (header?.projectedText) {
+        parts.push(`${header.projectedText} projected`);
+    }
+
+    return parts.join(' | ');
 }
 
 function cellValue(record, column) {
     switch (column.key) {
         case 'name':
             return formatName(record);
+        case 'address_location':
+            return formatAddress(record);
         case 'program_name':
         case 'school_name':
         case 'course_name':
@@ -262,6 +381,8 @@ function cellValue(record, column) {
             return record.previous_status ? formatStatus(record.previous_status) : '—';
         case 'decline_reason':
             return record.decline_reason || record.remarks || '—';
+        case 'remarks_summary':
+            return formatRemarks(record);
         default:
             return record[column.key] || '—';
     }
@@ -274,34 +395,47 @@ function cellValue(record, column) {
             <col v-for="column in allColumns" :key="column.key" :style="`width:${column.width};`" />
         </colgroup>
         <thead>
+            <tr v-for="header in groupHeaderRows" :key="header.rowKey">
+                <th :colspan="allColumns.length" :style="groupHeaderCellStyle(header.level)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <span>{{ header.label }}</span>
+                        <span v-if="formatGroupHeaderSummary(header)" :style="groupHeaderMetaStyle(header.level)">
+                            {{ formatGroupHeaderSummary(header) }}
+                        </span>
+                    </div>
+                </th>
+            </tr>
             <tr>
-                <th v-for="column in singleColumns" :key="`top-${column.key}`" :style="TH" rowspan="2">
+                <th v-for="column in leadingSingleColumns" :key="`top-${column.key}`" :style="TH"
+                    :rowspan="hasSubHeaderRow ? 2 : 1">
+                    {{ column.label }}
+                </th>
+                <th v-for="column in inlineDetailColumns" :key="`top-detail-${column.key}`" :style="TH"
+                    :rowspan="hasSubHeaderRow ? 2 : 1">
                     {{ column.label }}
                 </th>
                 <th v-if="projectedColumns.length" :style="TH" :colspan="projectedColumns.length">Projected</th>
-                <th :style="TH" :colspan="detailConfig.columns.length">{{ detailConfig.label }}</th>
+                <th v-if="groupedDetailColumns.length" :style="TH" :colspan="groupedDetailColumns.length">{{
+                    detailConfig.label }}</th>
+                <th v-for="column in trailingSingleColumns" :key="`top-trailing-${column.key}`" :style="TH"
+                    :rowspan="hasSubHeaderRow ? 2 : 1">
+                    {{ column.label }}
+                </th>
             </tr>
-            <tr>
+            <tr v-if="hasSubHeaderRow">
                 <th v-for="column in projectedColumns" :key="`projected-${column.key}`" :style="TH">
                     {{ column.label }}
                 </th>
-                <th v-for="column in detailConfig.columns" :key="`detail-${column.key}`" :style="TH">
+                <th v-for="column in groupedDetailColumns" :key="`detail-${column.key}`" :style="TH">
                     {{ column.label }}
                 </th>
             </tr>
         </thead>
         <tbody>
             <tr v-for="(record, index) in records" :key="record.id || `${record.profile_id}-${index}`">
-                <td v-for="column in singleColumns" :key="`single-${column.key}-${index}`" :style="valueStyle(column)">
+                <td v-for="column in leadingSingleColumns" :key="`single-${column.key}-${index}`" :style="valueStyle(column)">
                     <template v-if="column.key === 'sequence'">
                         {{ index + 1 }}
-                    </template>
-                    <template v-else-if="column.key === 'grant'">
-                        <div>{{ fmtGrantProvisionName(record) }}</div>
-                        <div v-if="fmtGrantProvisionAmount(record)"
-                            style="margin-top:2px;font-size:6px;line-height:1.1;">
-                            {{ fmtGrantProvisionAmount(record) }}
-                        </div>
                     </template>
                     <template v-else-if="column.key === 'term_academic_year'">
                         <div>{{ record.term || '—' }}</div>
@@ -309,13 +443,12 @@ function cellValue(record, column) {
                             {{ record.academic_year || '—' }}
                         </div>
                     </template>
+                    <template v-else-if="column.key === 'remarks_summary'">
+                        <span style="white-space: pre-line;">{{ cellValue(record, column) }}</span>
+                    </template>
                     <template v-else>
                         <span v-if="column.key !== 'report_status'">{{ cellValue(record, column) }}</span>
                         <strong v-else>{{ cellValue(record, column) }}</strong>
-                        <div v-if="column.key === 'name' && useInlinePendingSequence"
-                            style="margin-top:2px;font-size:6px;line-height:1.1;font-weight:500;">
-                            {{ index + 1 }}
-                        </div>
                     </template>
                 </td>
                 <td v-for="column in projectedColumns" :key="`projected-${column.key}-${index}`"
@@ -326,6 +459,10 @@ function cellValue(record, column) {
                     :style="valueStyle(column)">
                     <span v-if="column.key !== 'decline_reason'">{{ cellValue(record, column) }}</span>
                     <span v-else style="white-space: pre-line;">{{ cellValue(record, column) }}</span>
+                </td>
+                <td v-for="column in trailingSingleColumns" :key="`single-trailing-${column.key}-${index}`"
+                    :style="valueStyle(column)">
+                    <span style="white-space: pre-line;">{{ cellValue(record, column) }}</span>
                 </td>
             </tr>
         </tbody>

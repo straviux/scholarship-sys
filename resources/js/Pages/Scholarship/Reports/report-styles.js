@@ -50,20 +50,24 @@ body {
   font-size: 9pt;
   color: #000;
   background: #fff;
-  padding: 8mm 10mm;
+  padding: 0;
   line-height: 1.4;
   counter-reset: page;
 }
 
 @page {
   size: {{PAGE_SIZE}};
-  margin: 10mm 10mm 14mm 10mm;
+  margin: 3mm 10mm 7mm 10mm;
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-family: Arial, Helvetica, sans-serif;
     font-size: 7pt;
     color: #888;
   }
+}
+
+@page:first {
+  margin: 10mm 10mm 14mm 10mm;
 }
 
 @media print {
@@ -76,7 +80,8 @@ body {
 table { -fs-table-paginate: paginate; }
 thead { display: table-header-group; }
 tfoot { display: table-footer-group; }
-tr, td, th { page-break-inside: avoid; break-inside: avoid; }
+tbody { page-break-inside: auto; break-inside: auto; }
+tr, td, th { page-break-inside: avoid; break-inside: avoid-page; }
 
 /* ── Report Header ─────────────────────────── */
 .report-header {

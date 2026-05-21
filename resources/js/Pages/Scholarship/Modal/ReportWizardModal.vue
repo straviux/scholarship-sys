@@ -587,6 +587,7 @@ const defaultReportTitle = computed(() => getProfileReportTitle(selectedStatus.v
 const resolvedReportTitle = computed(() => customReportTitle.value?.trim() || defaultReportTitle.value);
 
 const paperConfig = computed(() => getReportPaperConfig(paperSize.value, orientation.value));
+const SCHOLARSHIP_REPORT_PAGED_JS_ENABLED = false;
 const iframeWidth = computed(() => paperConfig.value.widthPx);
 const iframePagedHeight = ref(null); // set by postMessage from Paged.js after render
 const iframeHeight = computed(() => iframePagedHeight.value ?? paperConfig.value.heightPx);
@@ -686,9 +687,11 @@ async function generateReport() {
         let records = [];
         if (Array.isArray(response.data)) {
             records = response.data;
-        } else if (response.data?.scholars) {
+        } else if (selectedStatus.value === 'pending' && Array.isArray(response.data?.applicants)) {
+            records = response.data.applicants;
+        } else if (Array.isArray(response.data?.scholars)) {
             records = response.data.scholars;
-        } else if (response.data?.applicants) {
+        } else if (Array.isArray(response.data?.applicants)) {
             records = response.data.applicants;
         } else if (response.data?.data) {
             records = response.data.data;
@@ -763,7 +766,82 @@ function getReportTitle() {
     return resolvedReportTitle.value;
 }
 
+function getReportLifecycleScript() {
+    const lines = [
+        'function finalizeRender() {',
+        '  try {',
+        "    var splitTables = document.querySelectorAll('table[data-split-from]');",
+        '',
+        '    splitTables.forEach(function (table) {',
+        "      var ref = table.getAttribute('data-ref');",
+        '',
+        '      if (!ref) {',
+        '        return;',
+        '      }',
+        '',
+        "      var originals = document.querySelectorAll('table[data-ref=\"' + ref + '\"]:not([data-split-from])');",
+        '      var original = originals[0];',
+        '',
+        '      if (!original) {',
+        '        return;',
+        '      }',
+        '',
+        "      if (!table.querySelector(':scope > colgroup')) {",
+        "        var originalColgroups = original.querySelectorAll(':scope > colgroup');",
+        '',
+        '        originalColgroups.forEach(function (colgroup) {',
+        '          table.insertBefore(colgroup.cloneNode(true), table.firstChild);',
+        '        });',
+        '      }',
+        '',
+        "      if (table.querySelector(':scope > thead')) {",
+        '        return;',
+        '      }',
+        '',
+        "      var originalHead = original.querySelector(':scope > thead');",
+        '',
+        '      if (!originalHead) {',
+        '        return;',
+        '      }',
+        '',
+        '      table.insertBefore(originalHead.cloneNode(true), table.firstChild);',
+        '    });',
+        '  } catch (error) {',
+        "    console.warn('Scholarship report split table normalization failed', error);",
+        '  }',
+        '',
+        "  var pages = document.querySelector('.pagedjs_pages');",
+        '  var h = pages ? pages.scrollHeight + 48 : document.documentElement.scrollHeight;',
+        "  window.parent.postMessage({ type: 'pagedjs:rendered', height: h }, '*');",
+        "  document.body.style.visibility = 'visible';",
+        "  if (document.body.getAttribute('data-auto-print') === '1') {",
+        '    window.print();',
+        '  }',
+        '}',
+    ];
+
+    if (SCHOLARSHIP_REPORT_PAGED_JS_ENABLED) {
+        lines.push("window.PagedPolyfill.on('rendered', finalizeRender);");
+    } else {
+        lines.push('var scheduleFinalize = function () {');
+        lines.push('  window.requestAnimationFrame(finalizeRender);');
+        lines.push('};');
+        lines.push("if (document.readyState === 'complete') {");
+        lines.push('  scheduleFinalize();');
+        lines.push('} else {');
+        lines.push("  window.addEventListener('load', scheduleFinalize, { once: true });");
+        lines.push('}');
+    }
+
+    return lines.join('\n');
+}
+
 function buildReportDoc(bodyHtml, title, paperSettings) {
+    const pagedJsScriptTag = SCHOLARSHIP_REPORT_PAGED_JS_ENABLED
+        ? `\n    <script>${pagedjsPolyfillScript}<\/script>`
+        : '';
+    const lifecycleScript = getReportLifecycleScript();
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -773,17 +851,9 @@ function buildReportDoc(bodyHtml, title, paperSettings) {
     body { visibility: hidden; margin: 0; padding: 0; }
     ${getReportCss(paperSettings)}
   </style>
-    <script>${pagedjsPolyfillScript}<\/script>
+${pagedJsScriptTag}
   <script>
-    window.PagedPolyfill.on('rendered', function () {
-      var pages = document.querySelector('.pagedjs_pages');
-      var h = pages ? pages.scrollHeight + 48 : document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'pagedjs:rendered', height: h }, '*');
-      document.body.style.visibility = 'visible';
-      if (document.body.getAttribute('data-auto-print') === '1') {
-        window.print();
-      }
-    });
+${lifecycleScript}
   <\/script>
 </head>
 <body>${bodyHtml}</body>
