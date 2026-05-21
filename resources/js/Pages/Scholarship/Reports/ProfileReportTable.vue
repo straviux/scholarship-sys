@@ -433,7 +433,8 @@ function cellValue(record, column) {
         </thead>
         <tbody>
             <tr v-for="(record, index) in records" :key="record.id || `${record.profile_id}-${index}`">
-                <td v-for="column in leadingSingleColumns" :key="`single-${column.key}-${index}`" :style="valueStyle(column)">
+                <td v-for="column in leadingSingleColumns" :key="`single-${column.key}-${index}`"
+                    :style="valueStyle(column)">
                     <template v-if="column.key === 'sequence'">
                         {{ index + 1 }}
                     </template>

@@ -256,7 +256,9 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                             <tr>
                                 <th :style="SUMMARY_TH">Status</th>
                                 <th :style="SUMMARY_TH + 'text-align:right;width:18%;'">Records</th>
-                                <th v-if="includeProjectedExpense" :style="SUMMARY_TH + 'text-align:right;width:32%;'">Projected</th>
+                                <th v-if="includeProjectedExpense" :style="SUMMARY_TH + 'text-align:right;width:32%;'">
+                                    Projected
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -265,7 +267,8 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                 <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{
                                     row.count.toLocaleString() }}
                                 </td>
-                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;'">{{ fmtCurrency(row.projected) }}</td>
+                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;'">{{
+                                    fmtCurrency(row.projected) }}</td>
                             </tr>
                         </tbody>
                         <tfoot>
@@ -273,8 +276,9 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                 <td :style="SUMMARY_TD + 'font-weight:700;background:#f0f0f0;'">TOTAL</td>
                                 <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
                                     records.length.toLocaleString() }}</td>
-                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
-                                    fmtCurrency(totalProjectedExpense) }}</td>
+                                <td v-if="includeProjectedExpense"
+                                    :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
+                                        fmtCurrency(totalProjectedExpense) }}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -288,7 +292,9 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                             <tr>
                                 <th :style="SUMMARY_TH">{{ summaryGroupColumnLabel }}</th>
                                 <th :style="SUMMARY_TH + 'text-align:right;width:18%;'">Records</th>
-                                <th v-if="includeProjectedExpense" :style="SUMMARY_TH + 'text-align:right;width:32%;'">Projected</th>
+                                <th v-if="includeProjectedExpense" :style="SUMMARY_TH + 'text-align:right;width:32%;'">
+                                    Projected
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -297,7 +303,8 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                 <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;'">{{
                                     row.count.toLocaleString() }}
                                 </td>
-                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;'">{{ fmtCurrency(row.projected) }}</td>
+                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;'">{{
+                                    fmtCurrency(row.projected) }}</td>
                             </tr>
                         </tbody>
                         <tfoot>
@@ -305,8 +312,9 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                 <td :style="SUMMARY_TD + 'font-weight:700;background:#f0f0f0;'">TOTAL</td>
                                 <td :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
                                     records.length.toLocaleString() }}</td>
-                                <td v-if="includeProjectedExpense" :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
-                                    fmtCurrency(totalProjectedExpense) }}</td>
+                                <td v-if="includeProjectedExpense"
+                                    :style="SUMMARY_TD + 'text-align:right;font-weight:700;background:#f0f0f0;'">{{
+                                        fmtCurrency(totalProjectedExpense) }}</td>
                             </tr>
                         </tfoot>
                     </table>

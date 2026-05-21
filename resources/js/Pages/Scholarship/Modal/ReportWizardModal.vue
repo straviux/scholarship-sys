@@ -32,321 +32,318 @@
         </div>
 
         <div class="report-wizard-content">
-                    <!-- STEP 1: Report Type & Status -->
-                    <div v-show="step === 1">
-                        <div class="ios-section">
-                            <div class="ios-section-label">Report Type</div>
-                            <div class="ios-segmented-control">
-                                <button :class="['ios-segment', reportType === 'list' && 'ios-segment-active']"
-                                    @click="reportType = 'list'">
-                                    <AppIcon name="list" :size="13" />
-                                    Detailed List
-                                </button>
-                                <button :class="['ios-segment', reportType === 'summary' && 'ios-segment-active']"
-                                    @click="reportType = 'summary'">
-                                    <AppIcon name="bar-chart-3" :size="13" />
-                                    Summary
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="ios-section">
-                            <div class="ios-section-label">Status</div>
-                            <div class="ios-card">
-                                <div v-for="(opt, idx) in statusChoices" :key="opt.value"
-                                    :class="['ios-row', 'ios-row-selectable', selectedStatus === opt.value && 'ios-row-selected']"
-                                    @click="selectedStatus = opt.value">
-                                    <div class="ios-row-label">
-                                        <span v-if="opt.color" class="status-dot"
-                                            :style="{ background: opt.color }"></span>
-                                        <AppIcon v-else name="list" :size="13" style="color: #8E8E93;" />
-                                        {{ opt.label }}
-                                    </div>
-                                    <AppIcon v-if="selectedStatus === opt.value" name="check" :size="13"
-                                        style="color: #007AFF;" />
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Choose a status, or "All Statuses" for a comprehensive report.
-                            </div>
-                        </div>
+            <!-- STEP 1: Report Type & Status -->
+            <div v-show="step === 1">
+                <div class="ios-section">
+                    <div class="ios-section-label">Report Type</div>
+                    <div class="ios-segmented-control">
+                        <button :class="['ios-segment', reportType === 'list' && 'ios-segment-active']"
+                            @click="reportType = 'list'">
+                            <AppIcon name="list" :size="13" />
+                            Detailed List
+                        </button>
+                        <button :class="['ios-segment', reportType === 'summary' && 'ios-segment-active']"
+                            @click="reportType = 'summary'">
+                            <AppIcon name="bar-chart-3" :size="13" />
+                            Summary
+                        </button>
                     </div>
-
-                    <!-- STEP 2: Filters -->
-                    <div v-show="step === 2">
-                        <div class="ios-section">
-                            <div class="ios-section-label">Filters</div>
-                            <div class="ios-card">
-                                <!-- Program -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
-                                        Program
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <ProgramSelect v-model="selectedProgram" label="shortname"
-                                            custom-placeholder="All" class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- School -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="building-2" :size="13" style="color: #34C759;" />
-                                        School
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <SchoolSelect v-model="selectedSchool" label="shortname"
-                                            custom-placeholder="All" class="ios-select" :multiple="true" />
-                                    </div>
-                                </div>
-
-                                <!-- Course -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
-                                        Course
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <CourseSelect v-model="selectedCourses"
-                                            :scholarship-program-id="selectedProgram?.id" label="shortname"
-                                            custom-placeholder="All" :multiple="true" class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- Municipality -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="map-pin" :size="13" style="color: #FF2D55;" />
-                                        Municipality
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <MunicipalitySelect v-model="selectedMunicipality" custom-placeholder="All"
-                                            class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- Year Level -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="sort-numeric-up" :size="13" style="color: #5856D6;" />
-                                        Year Level
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <YearLevelSelect v-model="selectedYearLevel" custom-placeholder="All"
-                                            class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- Grant Provision -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="wallet" :size="13" style="color: #FF9500;" />
-                                        Grant Provision
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="selectedGrantProvision" :options="grantProvisionOptions"
-                                            optionLabel="label" optionValue="value" placeholder="All" showClear
-                                            class="ios-select" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Date Range -->
-                        <div class="ios-section">
-                            <div class="ios-section-label">Date Range</div>
-                            <div class="ios-card">
-                                <div class="ios-row ios-row-dates">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                        From
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <DatePicker v-model="dateFrom" placeholder="Select date" showButtonBar
-                                            dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
-                                    </div>
-                                    <span class="ios-date-separator">—</span>
-                                    <div class="ios-row-label">
-                                        <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                        To
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <DatePicker v-model="dateTo" placeholder="Select date" showButtonBar
-                                            dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div v-if="isDateToInvalid" class="ios-section-footer ios-error">
-                                Date To must be after Date From
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- STEP 3: Options -->
-                    <div v-show="step === 3">
-                        <div class="ios-section">
-                            <div class="ios-section-label">Title</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="type" :size="13" style="color: #007AFF;" />
-                                        Report Title
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="customReportTitle" class="ios-select"
-                                            :placeholder="defaultReportTitle" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Leave blank to use {{ defaultReportTitle }}.
-                            </div>
-                        </div>
-
-                        <div class="ios-section">
-                            <div class="ios-section-label">Layout</div>
-                            <div class="ios-card">
-                                <!-- Paper Size -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="file" :size="13" style="color: #8E8E93;" />
-                                        Paper Size
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
-                                            optionValue="value" class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- Orientation -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="desktop" :size="13" style="color: #FF9500;" />
-                                        Orientation
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
-                                            optionValue="value" class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="user" :size="13" style="color: #34C759;" />
-                                        Prepared By
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="preparedBy" class="ios-select" placeholder="Optional" />
-                                    </div>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
-                                        Designation
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="preparedByTitle" class="ios-select" placeholder="Optional" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Leave both fields blank to omit the prepared-by section.
-                            </div>
-                        </div>
-
-                        <div class="ios-section">
-                            <div class="ios-section-label">Signatory</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="user-check" :size="13" style="color: #007AFF;" />
-                                        Noted By
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="signatoryName" class="ios-select" placeholder="Optional" />
-                                    </div>
-                                </div>
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
-                                        Designation
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <InputText v-model="signatoryTitle" class="ios-select" placeholder="Optional" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer">
-                                Leave both fields blank to omit the noted-by section.
-                            </div>
-                        </div>
-
-                        <div class="ios-section">
-                            <div class="ios-section-label">{{ reportType === 'summary' ? 'Summary Grouping' : 'Grouping'
-                                }}</div>
-                            <div class="ios-card">
-                                <!-- Group By -->
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="objects-column" :size="13" style="color: #5856D6;" />
-                                        Group By
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="groupBy" :options="groupByOptions" optionLabel="label"
-                                            optionValue="value" class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- Sub-Group By -->
-                                <div class="ios-row" v-if="reportType === 'list' && groupBy && groupBy !== 'none'">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="objects-column" :size="13" style="color: #8E8E93;" />
-                                        Sub-Group
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="groupBySecondary" :options="secondaryGroupByOptions"
-                                            optionLabel="label" optionValue="value" placeholder="None" showClear
-                                            class="ios-select" />
-                                    </div>
-                                </div>
-
-                                <!-- Tertiary Group By -->
-                                <div class="ios-row"
-                                    v-if="reportType === 'list' && groupBySecondary && groupBySecondary !== 'none'">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="objects-column" :size="13" style="color: #C7C7CC;" />
-                                        3rd Group
-                                    </div>
-                                    <div class="ios-row-control">
-                                        <Select v-model="groupByTertiary" :options="tertiaryGroupByOptions"
-                                            optionLabel="label" optionValue="value" placeholder="None" showClear
-                                            class="ios-select" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ios-section-footer" v-if="reportType === 'summary'">
-                                Summary mode uses the selected group for the breakdown table on the report summary page.
-                            </div>
-                        </div>
-
-                        <div class="ios-section">
-                            <div class="ios-section-label">Options</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <div class="ios-row-label">
-                                        <AppIcon name="wallet" :size="13" style="color: #34C759;" />
-                                        Include Projected Expense
-                                    </div>
-                                    <div class="ios-row-control" style="justify-content: flex-end;">
-                                        <InputSwitch v-model="includeProjectedExpense" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="height: 24px;"></div>
                 </div>
+
+                <div class="ios-section">
+                    <div class="ios-section-label">Status</div>
+                    <div class="ios-card">
+                        <div v-for="(opt, idx) in statusChoices" :key="opt.value"
+                            :class="['ios-row', 'ios-row-selectable', selectedStatus === opt.value && 'ios-row-selected']"
+                            @click="selectedStatus = opt.value">
+                            <div class="ios-row-label">
+                                <span v-if="opt.color" class="status-dot" :style="{ background: opt.color }"></span>
+                                <AppIcon v-else name="list" :size="13" style="color: #8E8E93;" />
+                                {{ opt.label }}
+                            </div>
+                            <AppIcon v-if="selectedStatus === opt.value" name="check" :size="13"
+                                style="color: #007AFF;" />
+                        </div>
+                    </div>
+                    <div class="ios-section-footer">
+                        Choose a status, or "All Statuses" for a comprehensive report.
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Filters -->
+            <div v-show="step === 2">
+                <div class="ios-section">
+                    <div class="ios-section-label">Filters</div>
+                    <div class="ios-card">
+                        <!-- Program -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
+                                Program
+                            </div>
+                            <div class="ios-row-control">
+                                <ProgramSelect v-model="selectedProgram" label="shortname" custom-placeholder="All"
+                                    class="ios-select" />
+                            </div>
+                        </div>
+
+                        <!-- School -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="building-2" :size="13" style="color: #34C759;" />
+                                School
+                            </div>
+                            <div class="ios-row-control">
+                                <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All"
+                                    class="ios-select" :multiple="true" />
+                            </div>
+                        </div>
+
+                        <!-- Course -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
+                                Course
+                            </div>
+                            <div class="ios-row-control">
+                                <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedProgram?.id"
+                                    label="shortname" custom-placeholder="All" :multiple="true" class="ios-select" />
+                            </div>
+                        </div>
+
+                        <!-- Municipality -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="map-pin" :size="13" style="color: #FF2D55;" />
+                                Municipality
+                            </div>
+                            <div class="ios-row-control">
+                                <MunicipalitySelect v-model="selectedMunicipality" custom-placeholder="All"
+                                    class="ios-select" />
+                            </div>
+                        </div>
+
+                        <!-- Year Level -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="sort-numeric-up" :size="13" style="color: #5856D6;" />
+                                Year Level
+                            </div>
+                            <div class="ios-row-control">
+                                <YearLevelSelect v-model="selectedYearLevel" custom-placeholder="All"
+                                    class="ios-select" />
+                            </div>
+                        </div>
+
+                        <!-- Grant Provision -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="wallet" :size="13" style="color: #FF9500;" />
+                                Grant Provision
+                            </div>
+                            <div class="ios-row-control">
+                                <Select v-model="selectedGrantProvision" :options="grantProvisionOptions"
+                                    optionLabel="label" optionValue="value" placeholder="All" showClear
+                                    class="ios-select" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Range -->
+                <div class="ios-section">
+                    <div class="ios-section-label">Date Range</div>
+                    <div class="ios-card">
+                        <div class="ios-row ios-row-dates">
+                            <div class="ios-row-label">
+                                <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
+                                From
+                            </div>
+                            <div class="ios-row-control">
+                                <DatePicker v-model="dateFrom" placeholder="Select date" showButtonBar
+                                    dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
+                            </div>
+                            <span class="ios-date-separator">—</span>
+                            <div class="ios-row-label">
+                                <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
+                                To
+                            </div>
+                            <div class="ios-row-control">
+                                <DatePicker v-model="dateTo" placeholder="Select date" showButtonBar
+                                    dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="isDateToInvalid" class="ios-section-footer ios-error">
+                        Date To must be after Date From
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Options -->
+            <div v-show="step === 3">
+                <div class="ios-section">
+                    <div class="ios-section-label">Title</div>
+                    <div class="ios-card">
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="type" :size="13" style="color: #007AFF;" />
+                                Report Title
+                            </div>
+                            <div class="ios-row-control">
+                                <InputText v-model="customReportTitle" class="ios-select"
+                                    :placeholder="defaultReportTitle" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ios-section-footer">
+                        Leave blank to use {{ defaultReportTitle }}.
+                    </div>
+                </div>
+
+                <div class="ios-section">
+                    <div class="ios-section-label">Layout</div>
+                    <div class="ios-card">
+                        <!-- Paper Size -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="file" :size="13" style="color: #8E8E93;" />
+                                Paper Size
+                            </div>
+                            <div class="ios-row-control">
+                                <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
+                                    optionValue="value" class="ios-select" />
+                            </div>
+                        </div>
+
+                        <!-- Orientation -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="desktop" :size="13" style="color: #FF9500;" />
+                                Orientation
+                            </div>
+                            <div class="ios-row-control">
+                                <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
+                                    optionValue="value" class="ios-select" />
+                            </div>
+                        </div>
+
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="user" :size="13" style="color: #34C759;" />
+                                Prepared By
+                            </div>
+                            <div class="ios-row-control">
+                                <InputText v-model="preparedBy" class="ios-select" placeholder="Optional" />
+                            </div>
+                        </div>
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
+                                Designation
+                            </div>
+                            <div class="ios-row-control">
+                                <InputText v-model="preparedByTitle" class="ios-select" placeholder="Optional" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ios-section-footer">
+                        Leave both fields blank to omit the prepared-by section.
+                    </div>
+                </div>
+
+                <div class="ios-section">
+                    <div class="ios-section-label">Signatory</div>
+                    <div class="ios-card">
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="user-check" :size="13" style="color: #007AFF;" />
+                                Noted By
+                            </div>
+                            <div class="ios-row-control">
+                                <InputText v-model="signatoryName" class="ios-select" placeholder="Optional" />
+                            </div>
+                        </div>
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
+                                Designation
+                            </div>
+                            <div class="ios-row-control">
+                                <InputText v-model="signatoryTitle" class="ios-select" placeholder="Optional" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ios-section-footer">
+                        Leave both fields blank to omit the noted-by section.
+                    </div>
+                </div>
+
+                <div class="ios-section">
+                    <div class="ios-section-label">{{ reportType === 'summary' ? 'Summary Grouping' : 'Grouping'
+                    }}</div>
+                    <div class="ios-card">
+                        <!-- Group By -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="objects-column" :size="13" style="color: #5856D6;" />
+                                Group By
+                            </div>
+                            <div class="ios-row-control">
+                                <Select v-model="groupBy" :options="groupByOptions" optionLabel="label"
+                                    optionValue="value" class="ios-select" />
+                            </div>
+                        </div>
+
+                        <!-- Sub-Group By -->
+                        <div class="ios-row" v-if="reportType === 'list' && groupBy && groupBy !== 'none'">
+                            <div class="ios-row-label">
+                                <AppIcon name="objects-column" :size="13" style="color: #8E8E93;" />
+                                Sub-Group
+                            </div>
+                            <div class="ios-row-control">
+                                <Select v-model="groupBySecondary" :options="secondaryGroupByOptions"
+                                    optionLabel="label" optionValue="value" placeholder="None" showClear
+                                    class="ios-select" />
+                            </div>
+                        </div>
+
+                        <!-- Tertiary Group By -->
+                        <div class="ios-row"
+                            v-if="reportType === 'list' && groupBySecondary && groupBySecondary !== 'none'">
+                            <div class="ios-row-label">
+                                <AppIcon name="objects-column" :size="13" style="color: #C7C7CC;" />
+                                3rd Group
+                            </div>
+                            <div class="ios-row-control">
+                                <Select v-model="groupByTertiary" :options="tertiaryGroupByOptions" optionLabel="label"
+                                    optionValue="value" placeholder="None" showClear class="ios-select" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ios-section-footer" v-if="reportType === 'summary'">
+                        Summary mode uses the selected group for the breakdown table on the report summary page.
+                    </div>
+                </div>
+
+                <div class="ios-section">
+                    <div class="ios-section-label">Options</div>
+                    <div class="ios-card">
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="wallet" :size="13" style="color: #34C759;" />
+                                Include Projected Expense
+                            </div>
+                            <div class="ios-row-control" style="justify-content: flex-end;">
+                                <InputSwitch v-model="includeProjectedExpense" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="height: 24px;"></div>
+        </div>
 
         <!-- Sticky Footer -->
         <div v-if="activeFiltersCount > 0" class="ios-footer">
@@ -389,7 +386,7 @@
                     <AppIcon name="minus" :size="10" />
                 </button>
                 <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
-                }}%</span>
+                    }}%</span>
                 <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
                     class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
                     :disabled="zoomLevel >= 200">
