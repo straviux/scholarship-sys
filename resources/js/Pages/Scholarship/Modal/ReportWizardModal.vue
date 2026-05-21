@@ -339,6 +339,20 @@
                                 <InputSwitch v-model="includeProjectedExpense" />
                             </div>
                         </div>
+
+                        <div v-if="reportType === 'list' && canEnableJpmHighlighting" class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="user" :size="13" style="color: #16A34A;" />
+                                Highlight JPM Members
+                            </div>
+                            <div class="ios-row-control" style="justify-content: flex-end;">
+                                <InputSwitch v-model="enableJpmHighlighting" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="reportType === 'list' && canEnableJpmHighlighting" class="ios-section-footer">
+                        JPM-tagged members are highlighted with a green row background in detailed list reports.
                     </div>
                 </div>
             </div>

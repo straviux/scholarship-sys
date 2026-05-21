@@ -268,8 +268,9 @@ tr, td, th { page-break-inside: avoid; break-inside: avoid-page; }
 }
 
 /* ── JPM Highlight ─────────────────────────── */
-.jpm-row {
-  background: #ecfdf5 !important;
+.jpm-row,
+.jpm-row td {
+  color: #15803d !important;
 }
 
 /* ── Status Badges (for All Status report) ── */

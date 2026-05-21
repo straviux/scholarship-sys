@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { formatDate, formatName, formatStatus, getReportStatus } from './report-helpers';
+import { formatDate, formatName, formatStatus, getReportStatus, isJpm } from './report-helpers';
 
 const props = defineProps({
     records: { type: Array, default: () => [] },
@@ -22,6 +22,7 @@ const groupHeaderRows = computed(() => (Array.isArray(props.groupHeaders) ? prop
     })));
 
 const selectedStatus = computed(() => props.options?.selectedStatus ?? null);
+const highlightJpmMembers = computed(() => props.options?.enableJpmHighlighting === true);
 const showSequenceNumbers = computed(() => props.options?.showSequenceNumbers !== false);
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
 const activeGroupFields = computed(() => new Set([
@@ -347,6 +348,10 @@ function formatGroupHeaderSummary(header) {
     return parts.join(' | ');
 }
 
+function shouldHighlightRecord(record) {
+    return highlightJpmMembers.value && isJpm(record);
+}
+
 function cellValue(record, column) {
     switch (column.key) {
         case 'name':
@@ -432,7 +437,8 @@ function cellValue(record, column) {
             </tr>
         </thead>
         <tbody>
-            <tr v-for="(record, index) in records" :key="record.id || `${record.profile_id}-${index}`">
+            <tr v-for="(record, index) in records" :key="record.id || `${record.profile_id}-${index}`"
+                :class="{ 'jpm-row': shouldHighlightRecord(record) }">
                 <td v-for="column in leadingSingleColumns" :key="`single-${column.key}-${index}`"
                     :style="valueStyle(column)">
                     <template v-if="column.key === 'sequence'">
