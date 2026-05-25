@@ -677,7 +677,7 @@ async function generateReport() {
     try {
         // Build query params
         const params = {};
-        if (selectedStatus.value) params.status = selectedStatus.value;
+        if (selectedStatus.value) params.unified_status = selectedStatus.value;
         if (selectedProgram.value?.id) params.program = selectedProgram.value.id;
         if (Array.isArray(selectedSchool.value) && selectedSchool.value.length > 0) {
             params.school = selectedSchool.value.map(s => s.shortname).join(',');
@@ -685,26 +685,23 @@ async function generateReport() {
             params.school = selectedSchool.value.shortname;
         }
         if (selectedCourses.value?.length > 0) {
-            params.course = selectedCourses.value.map(c => c.name).join(',');
+            params.courses = selectedCourses.value.map(c => c.name).join(',');
         }
         if (selectedMunicipality.value?.name) params.municipality = selectedMunicipality.value.name;
         if (selectedYearLevel.value?.value) params.year_level = selectedYearLevel.value.value;
         if (selectedGrantProvision.value) params.grant_provision = selectedGrantProvision.value;
         if (dateFrom.value) params.date_from = moment(dateFrom.value).format('YYYY-MM-DD');
         if (dateTo.value) params.date_to = moment(dateTo.value).format('YYYY-MM-DD');
+        if (enableJpmHighlighting.value) params.enable_jpm_highlighting = 1;
+        if (jpmFilter.value === 'jpm_only') params.show_jpm_only = 1;
+        if (jpmFilter.value === 'hide_jpm') params.hide_jpm = 1;
 
         // Fetch data
-        const response = await axios.get(route('data-export.download'), { params });
+        const response = await axios.get(route('profile.generateReport'), { params });
         let records = [];
         if (Array.isArray(response.data)) {
             records = response.data;
-        } else if (selectedStatus.value === 'pending' && Array.isArray(response.data?.applicants)) {
-            records = response.data.applicants;
-        } else if (Array.isArray(response.data?.scholars)) {
-            records = response.data.scholars;
-        } else if (Array.isArray(response.data?.applicants)) {
-            records = response.data.applicants;
-        } else if (response.data?.data) {
+        } else if (Array.isArray(response.data?.data)) {
             records = response.data.data;
         }
 

@@ -526,7 +526,12 @@ class ScholarshipProfileController extends Controller
     public function generateReport(Request $request)
     {
 
-        $query = ScholarshipProfile::with(['createdBy', 'scholarshipGrant']);
+        $query = ScholarshipProfile::with([
+            'createdBy',
+            'profileRequirements.requirement',
+            'scholarshipGrant',
+            'scholarshipGrant.interviewer',
+        ]);
 
         // Filter by unified_status parameter
         if ($request->filled('unified_status')) {
@@ -633,6 +638,16 @@ class ScholarshipProfileController extends Controller
         }
 
         $profiles = $query->get();
+        $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
+        $reportRows = $profiles->map(function (ScholarshipProfile $profile) use ($request, $expenseProjectionService) {
+            $record = $this->resolveReportScholarshipRecord($profile, $request);
+
+            if ($record) {
+                $record = $this->attachExpenseProjection($record, $expenseProjectionService);
+            }
+
+            return $this->transformProfileForReport($profile, $record);
+        })->values();
 
         $reportType = $request->input('report_type', 'list');
         $filters = [
@@ -652,34 +667,30 @@ class ScholarshipProfileController extends Controller
             // Generate summary based on filtered results
             // Only exclude summary if filter has single value (not multiple selections)
             $summary = [
-                'total' => $profiles->count(),
+                'total' => $reportRows->count(),
             ];
 
             // Program summary: exclude only if single program selected
             if (!$request->filled('program')) {
-                $summary['by_program'] = $profiles->groupBy(function ($p) {
-                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->program) ? $grant->program->name : 'no_program';
+                $summary['by_program'] = $reportRows->groupBy(function ($row) {
+                    return $row['program_name'] ?: 'no_program';
                 })->map(fn($group) => $group->count());
             }
 
             // School summary: always include (even if schools are filtered, show breakdown of selected schools)
-            $summary['by_school'] = $profiles->groupBy(function ($p) {
-                $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                return ($grant && $grant->school) ? $grant->school->name : 'no_school';
+            $summary['by_school'] = $reportRows->groupBy(function ($row) {
+                return $row['school_name'] ?: 'no_school';
             })->map(fn($group) => $group->count());
 
             // Course summary: always include (even if courses are filtered, show breakdown of selected courses)
-            $summary['by_course'] = $profiles->groupBy(function ($p) {
-                $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                return ($grant && $grant->course) ? $grant->course->name : 'no_course';
+            $summary['by_course'] = $reportRows->groupBy(function ($row) {
+                return $row['course_name'] ?: 'no_course';
             })->map(fn($group) => $group->count());
 
             // Year level summary: exclude only if single year level selected
             if (!$request->filled('year_level')) {
-                $summary['by_year_level'] = $profiles->groupBy(function ($p) {
-                    $grant = is_iterable($p->scholarshipGrant) ? $p->scholarshipGrant->first() : $p->scholarshipGrant;
-                    return ($grant && $grant->year_level) ? $grant->year_level : 'no_year_level';
+                $summary['by_year_level'] = $reportRows->groupBy(function ($row) {
+                    return $row['year_level'] ?: 'no_year_level';
                 })->map(fn($group) => $group->count());
             }
 
@@ -708,12 +719,210 @@ class ScholarshipProfileController extends Controller
             return response()->json([
                 'success' => true,
                 'type' => 'list',
-                'count' => $profiles->count(),
-                'data' => $profiles,
+                'count' => $reportRows->count(),
+                'data' => $reportRows,
                 'parameters' => $filters,
                 'canViewJpm' => $canViewJpm,
             ]);
         }
+    }
+
+    private function resolveReportScholarshipRecord(ScholarshipProfile $profile, Request $request): ?ScholarshipRecord
+    {
+        $records = $profile->relationLoaded('scholarshipGrant')
+            ? $profile->scholarshipGrant->filter(fn($record) => $record instanceof ScholarshipRecord)
+            : collect();
+
+        if ($records->isEmpty()) {
+            return null;
+        }
+
+        $matchingRecords = $records->filter(
+            fn(ScholarshipRecord $record) => $this->scholarshipRecordMatchesReportFilters($record, $request)
+        );
+
+        return $this->sortReportScholarshipRecords($matchingRecords->isNotEmpty() ? $matchingRecords : $records)->first();
+    }
+
+    private function scholarshipRecordMatchesReportFilters(ScholarshipRecord $record, Request $request): bool
+    {
+        if ($request->filled('unified_status')) {
+            $statuses = is_array($request->unified_status)
+                ? $request->unified_status
+                : explode(',', $request->unified_status);
+
+            $statuses = array_values(array_unique(array_filter(array_merge(
+                array_map('trim', $statuses),
+                in_array('active', array_map('trim', $statuses), true) ? ['approved'] : []
+            ))));
+
+            if (!in_array((string) $record->unified_status, $statuses, true)) {
+                return false;
+            }
+        }
+
+        if ($request->filled('program') && (string) $record->program_id !== (string) $request->program) {
+            return false;
+        }
+
+        if ($request->filled('school')) {
+            $schools = array_values(array_filter(array_map('trim', explode(',', (string) $request->school))));
+
+            if (!$this->matchesAnyReportTerms([
+                $record->school?->shortname,
+                $record->school?->name,
+            ], $schools)) {
+                return false;
+            }
+        }
+
+        if ($request->filled('course')) {
+            $courseFilter = trim((string) $request->course);
+
+            if (is_numeric($courseFilter)) {
+                if ((string) $record->course_id !== $courseFilter) {
+                    return false;
+                }
+            } elseif (!$this->matchesAnyReportTerms([
+                $record->course?->shortname,
+                $record->course?->name,
+            ], [$courseFilter])) {
+                return false;
+            }
+        }
+
+        if ($request->filled('courses')) {
+            $courses = array_values(array_filter(array_map('trim', explode(',', (string) $request->courses))));
+
+            if (!$this->matchesAnyReportTerms([
+                $record->course?->shortname,
+                $record->course?->name,
+            ], $courses)) {
+                return false;
+            }
+        }
+
+        if ($request->filled('year_level')) {
+            $yearLevel = trim((string) $request->year_level);
+            $recordYearLevel = trim((string) ($record->year_level ?? ''));
+
+            if ($recordYearLevel === '' || !str_contains(mb_strtolower($recordYearLevel), mb_strtolower($yearLevel))) {
+                return false;
+            }
+        }
+
+        if ($request->filled('grant_provision') && (string) $record->grant_provision !== (string) $request->grant_provision) {
+            return false;
+        }
+
+        if ($request->filled('yakap_category') && (string) $record->yakap_category !== (string) $request->yakap_category) {
+            return false;
+        }
+
+        $dateFiled = $record->date_filed?->format('Y-m-d');
+
+        if ($request->filled('date_from') && (!$dateFiled || $dateFiled < (string) $request->date_from)) {
+            return false;
+        }
+
+        if ($request->filled('date_to') && (!$dateFiled || $dateFiled > (string) $request->date_to)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function matchesAnyReportTerms(array $values, array $terms): bool
+    {
+        $normalizedValues = collect($values)
+            ->map(fn($value) => trim((string) ($value ?? '')))
+            ->filter()
+            ->map(fn($value) => mb_strtolower($value))
+            ->values();
+
+        if ($normalizedValues->isEmpty()) {
+            return false;
+        }
+
+        foreach ($terms as $term) {
+            $normalizedTerm = mb_strtolower(trim((string) $term));
+
+            if ($normalizedTerm === '') {
+                continue;
+            }
+
+            if ($normalizedValues->contains(fn($value) => str_contains($value, $normalizedTerm))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function sortReportScholarshipRecords($records)
+    {
+        return $records->sortByDesc(function (ScholarshipRecord $record) {
+            return $record->date_approved?->format('Y-m-d H:i:s')
+                ?? $record->date_filed?->format('Y-m-d H:i:s')
+                ?? $record->created_at?->format('Y-m-d H:i:s')
+                ?? '';
+        })->values();
+    }
+
+    private function transformProfileForReport(ScholarshipProfile $profile, ?ScholarshipRecord $record): array
+    {
+        $reportStatus = (string) ($record?->unified_status ?? 'unknown');
+        $reportDate = $record?->date_approved ?? $record?->date_filed ?? $profile->date_filed;
+
+        return [
+            'id' => $record?->id ?? $profile->profile_id,
+            'profile_id' => $profile->profile_id,
+            'scholarship_record_id' => $record?->id,
+            'report_status' => $reportStatus,
+            'approval_status' => $reportStatus,
+            'unified_status' => $reportStatus,
+            'full_name' => trim(($profile->first_name ?? '') . ' ' . ($profile->last_name ?? '')),
+            'first_name' => $profile->first_name,
+            'middle_name' => $profile->middle_name,
+            'last_name' => $profile->last_name,
+            'extension_name' => $profile->extension_name,
+            'is_jpm_member' => (bool) $profile->is_jpm_member,
+            'is_father_jpm' => (bool) $profile->is_father_jpm,
+            'is_mother_jpm' => (bool) $profile->is_mother_jpm,
+            'is_guardian_jpm' => (bool) $profile->is_guardian_jpm,
+            'birthdate' => $profile->birthdate,
+            'gender' => $profile->gender,
+            'contact_no' => $profile->contact_no,
+            'email' => $profile->email,
+            'address' => $profile->address,
+            'municipality' => $profile->municipality,
+            'barangay' => $profile->barangay,
+            'remarks' => $record?->remarks ?? $profile->remarks,
+            'decline_reason' => $reportStatus === 'denied' ? ($record?->remarks ?? $profile->remarks) : null,
+            'program_name' => $record?->program?->shortname ?? $record?->program?->name,
+            'school_name' => $record?->school?->name ?? $record?->school?->shortname,
+            'course_name' => $record?->course?->name ?? $record?->course?->shortname,
+            'year_level' => $record?->year_level,
+            'term' => $record?->term,
+            'academic_year' => $record?->academic_year,
+            'grant_provision' => $record?->grant_provision ?? '-',
+            'grant_provision_label' => $record?->grant_provision_label ?? SystemOption::formatGrantProvisionLabel($record?->grant_provision, 'N/A'),
+            'yakap_category' => $record?->yakap_category ?? 'yakap-capitol',
+            'yakap_location' => $record?->yakap_location,
+            'projected_total_expense' => $record?->getAttribute('projected_total_expense'),
+            'projected_total_expense_formatted' => $record?->getAttribute('projected_total_expense_formatted'),
+            'projected_term_count' => $record?->getAttribute('projected_term_count'),
+            'projected_completion_year' => $record?->getAttribute('projected_completion_year'),
+            'interviewed_at' => $record?->interviewed_at,
+            'interviewer_name' => $record?->interviewer?->name,
+            'endorsed_by' => $record?->endorsed_by,
+            'date_filed' => $record?->date_filed ?? $profile->date_filed,
+            'date_applied' => $record?->date_filed ?? $profile->date_filed,
+            'date_approved' => $record?->date_approved,
+            'date_denied' => $reportStatus === 'denied' ? $reportDate : null,
+            'report_date' => $reportDate,
+            'jpm_remarks' => $profile->jpm_remarks,
+        ];
     }
 
     /**
