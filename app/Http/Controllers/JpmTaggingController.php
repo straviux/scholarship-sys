@@ -42,8 +42,7 @@ class JpmTaggingController extends Controller
         JpmStatusUpdateRequest $request,
         ScholarshipProfile $profile,
         JpmTaggingService $jpmTaggingService
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         $jpmTaggingService->updateProfile($profile, $request->validated());
 
         return redirect()->back()->with('success', 'JPM data updated successfully.');

@@ -5,7 +5,7 @@
             icon="download" eyebrow="Admin Utilities">
             <template #meta>
                 <span>{{ summary ? `${summary.total_records} records ready` : 'Preview the dataset before export'
-                    }}</span>
+                }}</span>
             </template>
 
             <section class="ios-section">
@@ -31,7 +31,8 @@
                                 </div>
                             </div>
 
-                            <div v-if="canImportJpmCsv" class="mb-6 short:mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+                            <div v-if="canImportJpmCsv"
+                                class="mb-6 short:mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
                                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div class="max-w-2xl">
                                         <h3 class="text-lg font-medium text-gray-900">Import JPM CSV</h3>
@@ -50,7 +51,8 @@
                                         </div>
                                     </div>
 
-                                    <div class="w-full max-w-md rounded-lg border border-emerald-100 bg-white p-4 shadow-sm">
+                                    <div
+                                        class="w-full max-w-md rounded-lg border border-emerald-100 bg-white p-4 shadow-sm">
                                         <label for="jpm_csv_file" class="block text-sm font-medium text-gray-700 mb-2">
                                             CSV File
                                         </label>
@@ -61,7 +63,8 @@
                                             Accepts `.csv` files with the exact header names shown above.
                                         </p>
 
-                                        <div v-if="selectedCsvFileName" class="mt-3 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                                        <div v-if="selectedCsvFileName"
+                                            class="mt-3 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700">
                                             Selected: <span class="font-medium">{{ selectedCsvFileName }}</span>
                                         </div>
 
@@ -70,35 +73,41 @@
                                                 :disabled="!selectedCsvFileName || importingJpmCsv"
                                                 @click="clearCsvSelection" />
                                             <AppButton label="Import JPM CSV" icon="upload" :loading="importingJpmCsv"
-                                                :disabled="!selectedCsvFileName"
-                                                @click="importJpmCsv" />
+                                                :disabled="!selectedCsvFileName" @click="importJpmCsv" />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div v-if="jpmImportSummary" class="mt-4 rounded-lg border border-emerald-200 bg-white p-4">
+                                <div v-if="jpmImportSummary"
+                                    class="mt-4 rounded-lg border border-emerald-200 bg-white p-4">
                                     <h4 class="text-sm font-medium text-gray-700 mb-3">Last Import Summary</h4>
                                     <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
                                         <div class="rounded-lg bg-gray-50 p-3">
                                             <div class="text-xs uppercase tracking-wide text-gray-500">Processed</div>
-                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{ jpmImportSummary.processed_rows }}</div>
+                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{
+                                                jpmImportSummary.processed_rows }}</div>
                                         </div>
                                         <div class="rounded-lg bg-gray-50 p-3">
                                             <div class="text-xs uppercase tracking-wide text-gray-500">Matched</div>
-                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{ jpmImportSummary.matched_profiles }}</div>
+                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{
+                                                jpmImportSummary.matched_profiles }}</div>
                                         </div>
                                         <div class="rounded-lg bg-gray-50 p-3">
                                             <div class="text-xs uppercase tracking-wide text-gray-500">Updated</div>
-                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{ jpmImportSummary.updated_profiles }}</div>
+                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{
+                                                jpmImportSummary.updated_profiles }}</div>
                                         </div>
                                         <div class="rounded-lg bg-gray-50 p-3">
                                             <div class="text-xs uppercase tracking-wide text-gray-500">Missing IDs</div>
-                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{ jpmImportSummary.missing_profiles }}</div>
+                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{
+                                                jpmImportSummary.missing_profiles }}</div>
                                         </div>
                                     </div>
 
-                                    <div v-if="jpmImportSummary.missing_unique_ids?.length" class="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                                        Missing unique IDs: {{ formatMissingUniqueIds(jpmImportSummary.missing_unique_ids) }}
+                                    <div v-if="jpmImportSummary.missing_unique_ids?.length"
+                                        class="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        Missing unique IDs: {{
+                                            formatMissingUniqueIds(jpmImportSummary.missing_unique_ids) }}
                                     </div>
                                 </div>
                             </div>

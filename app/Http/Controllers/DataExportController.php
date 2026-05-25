@@ -916,7 +916,7 @@ class DataExportController extends Controller
             }
 
             $normalizedHeader = array_map(
-                fn ($column) => $this->normalizeJpmImportColumnName($column),
+                fn($column) => $this->normalizeJpmImportColumnName($column),
                 $header
             );
 
@@ -944,7 +944,7 @@ class DataExportController extends Controller
             while (($row = fgetcsv($handle)) !== false) {
                 $rowNumber++;
                 $row = array_map(
-                    fn ($value) => $this->normalizeJpmImportValue($value),
+                    fn($value) => $this->normalizeJpmImportValue($value),
                     $row
                 );
 
