@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ImportJpmCsvRequest;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipApprovalHistory;
 use App\Models\ScholarshipRecord;
@@ -9,20 +10,42 @@ use App\Models\ScholarshipProgram;
 use App\Models\Course;
 use App\Models\School;
 use App\Models\SystemOption;
+use App\Services\JpmTaggingService;
 use App\Services\ScholarshipExpenseProjectionService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class DataExportController extends Controller
 {
+    private const JPM_IMPORT_REQUIRED_COLUMNS = [
+        'unique_id',
+        'is_jpm_member',
+        'is_father_jpm',
+        'is_mother_jpm',
+        'is_guardian_jpm',
+        'jpm_remarks',
+    ];
+
+    private const JPM_IMPORT_BOOLEAN_COLUMNS = [
+        'is_jpm_member',
+        'is_father_jpm',
+        'is_mother_jpm',
+        'is_guardian_jpm',
+    ];
+
     /**
      * Display the data export page
      */
     public function index()
     {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+
         // Get available scholarship programs for filter
         $programs = ScholarshipProgram::select('id', 'name')
             ->orderBy('name')
@@ -36,6 +59,57 @@ class DataExportController extends Controller
         return Inertia::render('Admin/DataExport/Index', [
             'programs' => $programs,
             'schools' => $schools,
+            'canImportJpmCsv' => $user?->hasPermission('jpm.manage') ?? false,
+        ]);
+    }
+
+    /**
+     * Import JPM tags from CSV and update matching scholarship profiles by unique ID.
+     */
+    public function importJpmCsv(ImportJpmCsvRequest $request, JpmTaggingService $jpmTaggingService)
+    {
+        $rows = $this->parseJpmImportCsv($request->file('csv_file'));
+        $updatedProfiles = 0;
+        $unchangedProfiles = 0;
+        $missingUniqueIds = [];
+
+        DB::transaction(function () use ($rows, $jpmTaggingService, &$updatedProfiles, &$unchangedProfiles, &$missingUniqueIds) {
+            foreach ($rows as $row) {
+                $profile = ScholarshipProfile::where('unique_id', $row['unique_id'])->first();
+
+                if (!$profile) {
+                    $missingUniqueIds[] = $row['unique_id'];
+                    continue;
+                }
+
+                $result = $jpmTaggingService->updateProfile($profile, [
+                    'is_jpm_member' => $row['is_jpm_member'],
+                    'is_father_jpm' => $row['is_father_jpm'],
+                    'is_mother_jpm' => $row['is_mother_jpm'],
+                    'is_guardian_jpm' => $row['is_guardian_jpm'],
+                    'jpm_remarks' => $row['jpm_remarks'],
+                ], true);
+
+                if ($result['updated']) {
+                    $updatedProfiles++;
+                } else {
+                    $unchangedProfiles++;
+                }
+            }
+        });
+
+        $missingUniqueIds = array_values(array_unique($missingUniqueIds));
+
+        return response()->json([
+            'message' => 'JPM CSV import completed successfully.',
+            'summary' => [
+                'processed_rows' => count($rows),
+                'matched_profiles' => count($rows) - count($missingUniqueIds),
+                'updated_profiles' => $updatedProfiles,
+                'unchanged_profiles' => $unchangedProfiles,
+                'missing_profiles' => count($missingUniqueIds),
+                'missing_unique_ids' => $missingUniqueIds,
+            ],
         ]);
     }
 
@@ -811,6 +885,179 @@ class DataExportController extends Controller
                 ->pluck('count', 'unified_status'),
             'filters' => $validated,
         ]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function parseJpmImportCsv(?UploadedFile $csvFile): array
+    {
+        if (!$csvFile) {
+            throw ValidationException::withMessages([
+                'csv_file' => ['A CSV file is required.'],
+            ]);
+        }
+
+        $handle = fopen($csvFile->getRealPath(), 'rb');
+
+        if ($handle === false) {
+            throw ValidationException::withMessages([
+                'csv_file' => ['Unable to read the uploaded CSV file.'],
+            ]);
+        }
+
+        try {
+            $header = fgetcsv($handle);
+
+            if ($header === false) {
+                throw ValidationException::withMessages([
+                    'csv_file' => ['The uploaded CSV file is empty.'],
+                ]);
+            }
+
+            $normalizedHeader = array_map(
+                fn ($column) => $this->normalizeJpmImportColumnName($column),
+                $header
+            );
+
+            $missingColumns = array_values(array_diff(self::JPM_IMPORT_REQUIRED_COLUMNS, $normalizedHeader));
+
+            if ($missingColumns !== []) {
+                throw ValidationException::withMessages([
+                    'csv_file' => [
+                        'Missing required CSV columns: ' . implode(', ', $missingColumns) . '.',
+                    ],
+                ]);
+            }
+
+            $columnIndexes = [];
+            foreach ($normalizedHeader as $index => $columnName) {
+                if (in_array($columnName, self::JPM_IMPORT_REQUIRED_COLUMNS, true) && !array_key_exists($columnName, $columnIndexes)) {
+                    $columnIndexes[$columnName] = $index;
+                }
+            }
+
+            $rows = [];
+            $errors = [];
+            $rowNumber = 1;
+
+            while (($row = fgetcsv($handle)) !== false) {
+                $rowNumber++;
+                $row = array_map(
+                    fn ($value) => $this->normalizeJpmImportValue($value),
+                    $row
+                );
+
+                if ($this->isJpmImportRowEmpty($row)) {
+                    continue;
+                }
+
+                $uniqueId = trim((string) ($row[$columnIndexes['unique_id']] ?? ''));
+
+                if ($uniqueId === '') {
+                    $errors[] = "Row {$rowNumber}: unique_id is required.";
+                    continue;
+                }
+
+                $parsedRow = [
+                    'unique_id' => $uniqueId,
+                ];
+
+                foreach (self::JPM_IMPORT_BOOLEAN_COLUMNS as $columnName) {
+                    $parsedBoolean = $this->parseJpmImportBooleanValue($row[$columnIndexes[$columnName]] ?? null);
+
+                    if ($parsedBoolean === null) {
+                        $errors[] = "Row {$rowNumber}: {$columnName} must be one of 1, 0, true, false, yes, or no.";
+                        continue 2;
+                    }
+
+                    $parsedRow[$columnName] = $parsedBoolean;
+                }
+
+                $remarks = trim((string) ($row[$columnIndexes['jpm_remarks']] ?? ''));
+
+                if (mb_strlen($remarks) > 255) {
+                    $errors[] = "Row {$rowNumber}: jpm_remarks may not be greater than 255 characters.";
+                    continue;
+                }
+
+                $parsedRow['jpm_remarks'] = $remarks !== '' ? $remarks : null;
+                $rows[] = $parsedRow;
+            }
+
+            if ($errors !== []) {
+                throw ValidationException::withMessages([
+                    'csv_file' => $errors,
+                ]);
+            }
+
+            return $rows;
+        } finally {
+            fclose($handle);
+        }
+    }
+
+    private function normalizeJpmImportColumnName(mixed $columnName): string
+    {
+        $columnName = str_replace("\xEF\xBB\xBF", '', $this->normalizeJpmImportValue($columnName));
+
+        return Str::of($columnName)
+            ->trim()
+            ->lower()
+            ->replace(' ', '_')
+            ->value();
+    }
+
+    private function normalizeJpmImportValue(mixed $value): string
+    {
+        $value = str_replace("\0", '', (string) ($value ?? ''));
+
+        if ($value === '' || mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+
+        $detectedEncoding = mb_detect_encoding(
+            $value,
+            ['Windows-1252', 'ISO-8859-1', 'ISO-8859-15'],
+            true
+        );
+
+        if ($detectedEncoding !== false) {
+            return mb_convert_encoding($value, 'UTF-8', $detectedEncoding);
+        }
+
+        $converted = @iconv('Windows-1252', 'UTF-8//IGNORE', $value);
+
+        return $converted !== false ? $converted : mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+    }
+
+    /**
+     * @param  array<int, mixed>  $row
+     */
+    private function isJpmImportRowEmpty(array $row): bool
+    {
+        foreach ($row as $value) {
+            if (trim((string) $value) !== '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function parseJpmImportBooleanValue(mixed $value): ?bool
+    {
+        $normalized = Str::lower(trim((string) $value));
+
+        if (in_array($normalized, ['1', 'true', 'yes', 'y', 'on'], true)) {
+            return true;
+        }
+
+        if (in_array($normalized, ['0', 'false', 'no', 'n', 'off', ''], true)) {
+            return false;
+        }
+
+        return null;
     }
 
     /**

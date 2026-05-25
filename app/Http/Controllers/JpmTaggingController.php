@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JpmStatusUpdateRequest;
 use App\Models\ScholarshipProfile;
-use App\Services\ActivityLogService;
+use App\Services\JpmTaggingService;
 use App\Services\ScholarshipProfileListingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -38,62 +38,13 @@ class JpmTaggingController extends Controller
         ]);
     }
 
-    public function update(JpmStatusUpdateRequest $request, ScholarshipProfile $profile): RedirectResponse
+    public function update(
+        JpmStatusUpdateRequest $request,
+        ScholarshipProfile $profile,
+        JpmTaggingService $jpmTaggingService
+    ): RedirectResponse
     {
-        $validated = $request->validated();
-        $booleanFields = [
-            'is_jpm_member',
-            'is_father_jpm',
-            'is_mother_jpm',
-            'is_guardian_jpm',
-            'is_not_jpm',
-            'is_unrenewed_jpm',
-        ];
-        $changes = [];
-
-        foreach ($booleanFields as $field) {
-            if ($request->has($field)) {
-                $validated[$field] = $request->boolean($field);
-            }
-        }
-
-        if (($validated['is_not_jpm'] ?? false) === true) {
-            $validated['is_jpm_member'] = false;
-            $validated['is_father_jpm'] = false;
-            $validated['is_mother_jpm'] = false;
-            $validated['is_guardian_jpm'] = false;
-            $validated['is_unrenewed_jpm'] = false;
-        } elseif (($validated['is_jpm_member'] ?? false)
-            || ($validated['is_father_jpm'] ?? false)
-            || ($validated['is_mother_jpm'] ?? false)
-            || ($validated['is_guardian_jpm'] ?? false)
-            || ($validated['is_unrenewed_jpm'] ?? false)
-        ) {
-            $validated['is_not_jpm'] = false;
-        }
-
-        foreach ($validated as $field => $newValue) {
-            $oldValue = $profile->{$field};
-
-            if ($oldValue !== $newValue) {
-                $changes[$field] = [
-                    'old' => $oldValue,
-                    'new' => $newValue,
-                ];
-            }
-
-            $profile->{$field} = $newValue;
-        }
-
-        if ($profile->isDirty()) {
-            $profile->save();
-
-            ActivityLogService::logJpmTagging(
-                profileId: $profile->profile_id,
-                changes: $changes,
-                remarks: strip_tags((string) ($validated['jpm_remarks'] ?? '')) ?: null,
-            );
-        }
+        $jpmTaggingService->updateProfile($profile, $request->validated());
 
         return redirect()->back()->with('success', 'JPM data updated successfully.');
     }

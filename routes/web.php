@@ -675,6 +675,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/data-export', [\App\Http\Controllers\DataExportController::class, 'index'])->name('data-export.index');
     Route::get('/admin/data-export/summary', [\App\Http\Controllers\DataExportController::class, 'getExportSummary'])->name('data-export.summary');
     Route::get('/admin/data-export/download', [\App\Http\Controllers\DataExportController::class, 'exportToJson'])->name('data-export.download');
+    Route::post('/admin/data-export/import-jpm-csv', [\App\Http\Controllers\DataExportController::class, 'importJpmCsv'])
+        ->middleware('check.permission:jpm.manage')
+        ->name('data-export.import-jpm-csv');
 });
 
 // Return of Service (ROS) Routes - Batch-first approach

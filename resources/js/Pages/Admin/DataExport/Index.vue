@@ -1,5 +1,5 @@
 <template>
-    <AdminLayout title="Data Export">
+    <AdminLayout>
         <AdminPageShell title="Data Export"
             description="Preview and export scholarship records, related profiles, requirements, and approval history into a portable JSON package."
             icon="download" eyebrow="Admin Utilities">
@@ -27,6 +27,78 @@
                                             requirements,
                                             approval history, and disbursements.
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="canImportJpmCsv" class="mb-6 short:mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+                                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                    <div class="max-w-2xl">
+                                        <h3 class="text-lg font-medium text-gray-900">Import JPM CSV</h3>
+                                        <p class="mt-1 text-sm text-gray-600">
+                                            Upload a CSV to update scholarship profile JPM tags by
+                                            <span class="font-semibold text-gray-900">unique_id</span>.
+                                            If all four JPM member columns are false or blank, the matched profile is
+                                            automatically tagged as
+                                            <span class="font-semibold text-gray-900">is_not_jpm</span>.
+                                        </p>
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            <span v-for="column in expectedJpmColumns" :key="column"
+                                                class="inline-flex items-center rounded-full bg-white px-3 py-1 font-mono text-xs text-gray-700 ring-1 ring-emerald-200">
+                                                {{ column }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="w-full max-w-md rounded-lg border border-emerald-100 bg-white p-4 shadow-sm">
+                                        <label for="jpm_csv_file" class="block text-sm font-medium text-gray-700 mb-2">
+                                            CSV File
+                                        </label>
+                                        <input id="jpm_csv_file" ref="csvFileInput" type="file" accept=".csv,text/csv"
+                                            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-emerald-700"
+                                            @change="handleCsvFileChange" />
+                                        <p class="mt-2 text-xs text-gray-500">
+                                            Accepts `.csv` files with the exact header names shown above.
+                                        </p>
+
+                                        <div v-if="selectedCsvFileName" class="mt-3 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                                            Selected: <span class="font-medium">{{ selectedCsvFileName }}</span>
+                                        </div>
+
+                                        <div class="mt-4 flex justify-end gap-3">
+                                            <Button label="Clear File" severity="secondary" outlined
+                                                :disabled="!selectedCsvFileName || importingJpmCsv"
+                                                @click="clearCsvSelection" />
+                                            <AppButton label="Import JPM CSV" icon="upload" :loading="importingJpmCsv"
+                                                :disabled="!selectedCsvFileName"
+                                                @click="importJpmCsv" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div v-if="jpmImportSummary" class="mt-4 rounded-lg border border-emerald-200 bg-white p-4">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-3">Last Import Summary</h4>
+                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+                                        <div class="rounded-lg bg-gray-50 p-3">
+                                            <div class="text-xs uppercase tracking-wide text-gray-500">Processed</div>
+                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{ jpmImportSummary.processed_rows }}</div>
+                                        </div>
+                                        <div class="rounded-lg bg-gray-50 p-3">
+                                            <div class="text-xs uppercase tracking-wide text-gray-500">Matched</div>
+                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{ jpmImportSummary.matched_profiles }}</div>
+                                        </div>
+                                        <div class="rounded-lg bg-gray-50 p-3">
+                                            <div class="text-xs uppercase tracking-wide text-gray-500">Updated</div>
+                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{ jpmImportSummary.updated_profiles }}</div>
+                                        </div>
+                                        <div class="rounded-lg bg-gray-50 p-3">
+                                            <div class="text-xs uppercase tracking-wide text-gray-500">Missing IDs</div>
+                                            <div class="mt-1 text-2xl font-semibold text-gray-900">{{ jpmImportSummary.missing_profiles }}</div>
+                                        </div>
+                                    </div>
+
+                                    <div v-if="jpmImportSummary.missing_unique_ids?.length" class="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                        Missing unique IDs: {{ formatMissingUniqueIds(jpmImportSummary.missing_unique_ids) }}
                                     </div>
                                 </div>
                             </div>
@@ -183,7 +255,17 @@ import { toast } from '@/utils/toast';
 const props = defineProps({
     programs: Array,
     schools: Array,
+    canImportJpmCsv: Boolean,
 });
+
+const expectedJpmColumns = [
+    'unique_id',
+    'is_jpm_member',
+    'is_father_jpm',
+    'is_mother_jpm',
+    'is_guardian_jpm',
+    'jpm_remarks',
+];
 
 const filters = ref({
     program_id: null,
@@ -196,6 +278,11 @@ const filters = ref({
 const summary = ref(null);
 const loading = ref(false);
 const exporting = ref(false);
+const csvFileInput = ref(null);
+const selectedCsvFile = ref(null);
+const selectedCsvFileName = ref('');
+const importingJpmCsv = ref(false);
+const jpmImportSummary = ref(null);
 
 const hasActiveFilters = computed(() => {
     return filters.value.program_id || filters.value.school_id || filters.value.status || filters.value.date_from || filters.value.date_to;
@@ -220,6 +307,73 @@ const clearFilters = () => {
         date_to: null,
     };
     summary.value = null;
+};
+
+const handleCsvFileChange = (event) => {
+    const [file] = event.target.files || [];
+    selectedCsvFile.value = file || null;
+    selectedCsvFileName.value = file?.name || '';
+};
+
+const clearCsvSelection = () => {
+    selectedCsvFile.value = null;
+    selectedCsvFileName.value = '';
+
+    if (csvFileInput.value) {
+        csvFileInput.value.value = '';
+    }
+};
+
+const formatImportError = (error) => {
+    const csvErrors = error.response?.data?.errors?.csv_file;
+
+    if (Array.isArray(csvErrors) && csvErrors.length > 0) {
+        return csvErrors[0];
+    }
+
+    return error.response?.data?.message || 'Failed to import JPM CSV';
+};
+
+const formatMissingUniqueIds = (missingUniqueIds) => {
+    if (!Array.isArray(missingUniqueIds) || missingUniqueIds.length === 0) {
+        return '';
+    }
+
+    const preview = missingUniqueIds.slice(0, 10).join(', ');
+
+    if (missingUniqueIds.length <= 10) {
+        return preview;
+    }
+
+    return `${preview}, and ${missingUniqueIds.length - 10} more`;
+};
+
+const importJpmCsv = async () => {
+    if (!selectedCsvFile.value) {
+        toast.error('Select a CSV file first');
+        return;
+    }
+
+    importingJpmCsv.value = true;
+
+    try {
+        const formData = new FormData();
+        formData.append('csv_file', selectedCsvFile.value);
+
+        const response = await axios.post('/admin/data-export/import-jpm-csv', formData, {
+            headers: {
+                Accept: 'application/json',
+            },
+        });
+
+        jpmImportSummary.value = response.data.summary;
+        toast.success(response.data.message || 'JPM CSV import completed successfully');
+        clearCsvSelection();
+    } catch (error) {
+        toast.error(formatImportError(error));
+    } finally {
+        importingJpmCsv.value = false;
+    }
 };
 
 const loadSummary = async () => {
