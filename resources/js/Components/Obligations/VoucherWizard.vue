@@ -360,6 +360,47 @@ const formatScholarNameForPayee = (scholar, useMiddleInitial = false) => {
     return parts.filter(Boolean).join(' ');
 };
 
+const normalizePayeeNameForMatch = (value) => {
+    return String(value ?? '')
+        .replace(/\s*&\s*CO\.\s*$/i, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+};
+
+const resolveScholarPayeeIdForEdit = (data) => {
+    const directPayeeId = normalizeId(data?.payee_id);
+
+    if (!voucherData.scholars.length) {
+        return directPayeeId;
+    }
+
+    const matchedByProfileId = voucherData.scholars.find((scholar) => idsEqual(scholar.profile_id, directPayeeId));
+    if (matchedByProfileId) {
+        return normalizeId(matchedByProfileId.profile_id);
+    }
+
+    const matchedByScholarRecordId = voucherData.scholars.find((scholar) => idsEqual(scholar.scholarship_record_id, directPayeeId));
+    if (matchedByScholarRecordId) {
+        return normalizeId(matchedByScholarRecordId.profile_id);
+    }
+
+    const normalizedPayeeName = normalizePayeeNameForMatch(data?.payee_name);
+    if (normalizedPayeeName) {
+        const useMiddleInitial = normalizeObrTypeValue(data?.obr_type) === 'reimbursement';
+        const matchedByName = voucherData.scholars.find((scholar) => {
+            const scholarName = normalizePayeeNameForMatch(formatScholarNameForPayee(scholar, useMiddleInitial));
+            return scholarName === normalizedPayeeName;
+        });
+
+        if (matchedByName) {
+            return normalizeId(matchedByName.profile_id);
+        }
+    }
+
+    return directPayeeId || normalizeId(voucherData.scholars[0]?.profile_id);
+};
+
 const payeeOptions = computed(() => {
     return voucherData.scholars.map((s) => ({
         ...s,
@@ -504,7 +545,9 @@ const loadEditData = async () => {
         voucherData.transaction_id = data.transaction_id || data.number || '';
 
         voucherData.obligations.payee_type = data.payee_type || 'scholar';
-        voucherData.obligations.payee_id = data.payee_type === 'scholar' ? normalizeId(data.payee_id) : (data.payee_id || '');
+        voucherData.obligations.payee_id = data.payee_type === 'scholar'
+            ? resolveScholarPayeeIdForEdit(data)
+            : (data.payee_id || '');
         voucherData.obligations.payee_name = data.payee_name || '';
 
         if (voucherData.obligations.payee_type === 'school' && !voucherData.obligations.payee_id && voucherData.obligations.payee_name) {
@@ -1587,11 +1630,10 @@ const wizardModalStyle = computed(() => ({
                         </div>
                     </div>
 
-                    <div
-                        class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-start bg-white border border-[#e5e5ea] rounded-2xl p-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-start ">
 
                         <!-- Column 2: Responsibility Center, Particulars, Account Code, Amount -->
-                        <div class="space-y-4">
+                        <div class="space-y-4 bg-white border border-[#e5e5ea] rounded-2xl p-4">
                             <!-- Responsibility Center -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Responsibility
@@ -1611,13 +1653,13 @@ const wizardModalStyle = computed(() => ({
                                     <template #option="{ option }">
                                         <div class="flex flex-col gap-0.5 py-1">
                                             <div class="flex items-start justify-between gap-3">
-                                                <span class="font-medium text-gray-900">{{ option.name }}</span>
+                                                <span class="font-medium ">{{ option.name }}</span>
                                                 <span v-if="formatParticularAllotment(option)"
-                                                    class="shrink-0 text-xs font-medium text-emerald-700">
+                                                    class="shrink-0 text-xs font-medium text-emerald-500">
                                                     {{ formatParticularAllotment(option) }}
                                                 </span>
                                             </div>
-                                            <p v-if="formatParticularDescription(option)" class="text-xs text-gray-500">
+                                            <p v-if="formatParticularDescription(option)" class="text-xs">
                                                 {{ formatParticularDescription(option) }}
                                             </p>
                                             <p v-if="formatParticularPrograms(option)" class="text-xs text-gray-400">
@@ -1659,7 +1701,7 @@ const wizardModalStyle = computed(() => ({
                                 <div class="flex items-center justify-between gap-3 mb-2">
                                     <label class="text-xs font-medium text-gray-900">Selected Scholars ({{
                                         voucherData.scholars.length
-                                    }})</label>
+                                        }})</label>
                                     <div class="flex items-center gap-2 shrink-0">
                                         <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
                                         <label for="applyToAll"
@@ -1680,7 +1722,7 @@ const wizardModalStyle = computed(() => ({
                                         <div class="flex items-center flex-1">
                                             <AppIcon name="check" class="text-green-600 mr-3" :size="12" />
                                             <span class="font-medium text-sm">{{ formatScholarFullName(scholar)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span class="text-gray-600 text-xs">PHP</span>
@@ -1694,7 +1736,7 @@ const wizardModalStyle = computed(() => ({
                                     <span class="font-semibold text-sm text-blue-900">Total Amount:</span>
                                     <span class="text-base font-bold text-blue-600">{{
                                         formatCurrency(totalAmount)
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -1928,7 +1970,7 @@ const wizardModalStyle = computed(() => ({
                                         <span>{{ formatScholarFullName(scholar) }}</span>
                                         <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                             || 0)
-                                        }}</span>
+                                            }}</span>
                                     </li>
                                 </ol>
                                 <div

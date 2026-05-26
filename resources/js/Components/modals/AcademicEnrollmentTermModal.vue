@@ -20,14 +20,14 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="ios-form-group">
                     <label class="ios-label">Academic Year <span v-if="isOptionalTerm"
-                            class="text-xs text-gray-500 dark:text-gray-400">{{ isTechVocProgram ? '(Optional for
-                            Tech - Voc)' : '(Optional for G12)' }}</span><span v-else>*</span></label>
+                            class="text-xs text-gray-500 dark:text-gray-400">{{ isTechVocProgram ? `(Optional for
+                            Tech - Voc)` : '(Optional for G12)' }}</span><span v-else>*</span></label>
                     <AcademicYearSelect v-model="form.academic_year" />
                 </div>
                 <div class="ios-form-group">
                     <label class="ios-label">Term <span v-if="isOptionalTerm"
-                            class="text-xs text-gray-500 dark:text-gray-400">{{ isTechVocProgram ? '(Optional for
-                            Tech - Voc)' : '(Optional for G12)' }}</span><span v-else>*</span></label>
+                            class="text-xs text-gray-500 dark:text-gray-400">{{ isTechVocProgram ? `(Optional for
+                            Tech - Voc)` : '(Optional for G12)' }}</span><span v-else>*</span></label>
                     <TermSelect v-model="form.term" />
                 </div>
             </div>
