@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Schema;
 
 class AcademicEnrollmentTermService
 {
-    public function __construct(private readonly AcademicRecordSyncService $academicRecordSyncService)
-    {
-    }
+    public function __construct(private readonly AcademicRecordSyncService $academicRecordSyncService) {}
 
     public function create(AcademicEnrollment $enrollment, array $data): AcademicEnrollmentTerm
     {
