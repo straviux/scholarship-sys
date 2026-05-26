@@ -1701,7 +1701,7 @@ const wizardModalStyle = computed(() => ({
                                 <div class="flex items-center justify-between gap-3 mb-2">
                                     <label class="text-xs font-medium text-gray-900">Selected Scholars ({{
                                         voucherData.scholars.length
-                                        }})</label>
+                                    }})</label>
                                     <div class="flex items-center gap-2 shrink-0">
                                         <Checkbox id="applyToAll" v-model="applyToAllChecked" :binary="true" />
                                         <label for="applyToAll"
@@ -1722,7 +1722,7 @@ const wizardModalStyle = computed(() => ({
                                         <div class="flex items-center flex-1">
                                             <AppIcon name="check" class="text-green-600 mr-3" :size="12" />
                                             <span class="font-medium text-sm">{{ formatScholarFullName(scholar)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span class="text-gray-600 text-xs">PHP</span>
@@ -1736,7 +1736,7 @@ const wizardModalStyle = computed(() => ({
                                     <span class="font-semibold text-sm text-blue-900">Total Amount:</span>
                                     <span class="text-base font-bold text-blue-600">{{
                                         formatCurrency(totalAmount)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
 
@@ -1970,7 +1970,7 @@ const wizardModalStyle = computed(() => ({
                                         <span>{{ formatScholarFullName(scholar) }}</span>
                                         <span class="font-semibold">{{ formatCurrency(scholar.individualAmount
                                             || 0)
-                                            }}</span>
+                                        }}</span>
                                     </li>
                                 </ol>
                                 <div
