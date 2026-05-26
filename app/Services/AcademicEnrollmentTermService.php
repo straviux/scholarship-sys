@@ -259,6 +259,22 @@ class AcademicEnrollmentTermService
             $record->term = $data['term'];
         }
 
+        if (array_key_exists('no_of_hours', $data)) {
+            $record->no_of_hours = $data['no_of_hours'];
+        }
+
+        if (array_key_exists('no_of_days', $data)) {
+            $record->no_of_days = $data['no_of_days'];
+        }
+
+        if (array_key_exists('start_date', $data)) {
+            $record->start_date = $data['start_date'];
+        }
+
+        if (array_key_exists('end_date', $data)) {
+            $record->end_date = $data['end_date'];
+        }
+
         if (array_key_exists('date_filed', $data)) {
             $record->date_filed = $data['date_filed'];
         } elseif ($isNewRecord) {

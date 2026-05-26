@@ -23,6 +23,7 @@ use App\Models\School;
 use App\Models\User;
 use App\Services\ScholarshipApprovalService;
 use App\Services\LegacyAcademicTermReviewService;
+use App\Services\AcademicRecordSyncService;
 use App\Services\ScholarshipProfileListingService;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ActivityLogService;
@@ -968,8 +969,32 @@ class ScholarshipProfileController extends Controller
     /**
      * Display a specific scholar profile
      */
-    public function show($profileId)
+    public function show(AcademicRecordSyncService $academicRecordSyncService, $profileId)
     {
+        if (
+            Schema::hasTable('academic_enrollments')
+            && Schema::hasTable('academic_enrollment_terms')
+            && Schema::hasTable('academic_enrollment_term_record_maps')
+        ) {
+            $unmappedRecordIds = ScholarshipRecord::query()
+                ->where('profile_id', $profileId)
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('academic_enrollment_term_record_maps as maps')
+                        ->whereColumn('maps.scholarship_record_id', 'scholarship_records.id');
+                })
+                ->pluck('id');
+
+            if ($unmappedRecordIds->isNotEmpty()) {
+                ScholarshipRecord::query()
+                    ->whereIn('id', $unmappedRecordIds)
+                    ->get()
+                    ->each(function (ScholarshipRecord $record) use ($academicRecordSyncService) {
+                        $academicRecordSyncService->syncScholarshipRecord($record);
+                    });
+            }
+        }
+
         $with = [
             'scholarshipGrant' => function ($q) {
                 $q->with(['program', 'course', 'school', 'attachments', 'approvalHistory.performedBy'])

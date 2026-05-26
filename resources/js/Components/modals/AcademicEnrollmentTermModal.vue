@@ -50,6 +50,28 @@
                 </div>
             </div>
 
+            <div v-if="isTechVocProgram" class="grid grid-cols-2 gap-4">
+                <div class="ios-form-group">
+                    <label class="ios-label">No. of Hours</label>
+                    <InputNumber v-model="form.no_of_hours" :useGrouping="false" :min="1" fluid />
+                </div>
+                <div class="ios-form-group">
+                    <label class="ios-label">No. of Days</label>
+                    <InputNumber v-model="form.no_of_days" :useGrouping="false" :min="1" fluid />
+                </div>
+            </div>
+
+            <div v-if="isTechVocProgram" class="grid grid-cols-2 gap-4">
+                <div class="ios-form-group">
+                    <label class="ios-label">Start Date</label>
+                    <DatePicker v-model="form.start_date" dateFormat="yy-mm-dd" showIcon fluid />
+                </div>
+                <div class="ios-form-group">
+                    <label class="ios-label">End Date</label>
+                    <DatePicker v-model="form.end_date" dateFormat="yy-mm-dd" showIcon fluid />
+                </div>
+            </div>
+
             <div class="ios-form-group">
                 <label class="ios-label">Grant Provision</label>
                 <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
@@ -112,6 +134,10 @@ function getDefaultForm() {
         year_level: null,
         academic_year: null,
         term: null,
+        no_of_hours: null,
+        no_of_days: null,
+        start_date: null,
+        end_date: null,
         date_filed: null,
         date_approved: null,
         unified_status: 'pending',
@@ -205,11 +231,27 @@ const normalizeEditorHtml = (value) => {
     return getEditorTextContent(html) ? html : null;
 };
 
+const resolveTechVocRecord = (term) => {
+    if (!term || typeof term !== 'object') {
+        return null;
+    }
+
+    return term.primary_record_map?.scholarship_record
+        ?? term.legacyRecord
+        ?? null;
+};
+
 const fillForm = (term) => {
+    const techVocRecord = resolveTechVocRecord(term);
+
     form.value = {
         year_level: term?.year_level ?? null,
         academic_year: term?.academic_year ?? null,
         term: term?.term ?? null,
+        no_of_hours: techVocRecord?.no_of_hours ?? null,
+        no_of_days: techVocRecord?.no_of_days ?? null,
+        start_date: techVocRecord?.start_date ? new Date(techVocRecord.start_date) : null,
+        end_date: techVocRecord?.end_date ? new Date(techVocRecord.end_date) : null,
         date_filed: term?.date_filed ? new Date(term.date_filed) : null,
         date_approved: term?.date_approved ? new Date(term.date_approved) : null,
         unified_status: term?.unified_status ?? 'pending',
@@ -283,6 +325,10 @@ const submitTerm = async () => {
             year_level: yearLevel,
             academic_year: academicYear,
             term: termValue,
+            no_of_hours: isTechVocProgram.value ? form.value.no_of_hours ?? null : null,
+            no_of_days: isTechVocProgram.value ? form.value.no_of_days ?? null : null,
+            start_date: isTechVocProgram.value ? formatDateForApi(form.value.start_date) : null,
+            end_date: isTechVocProgram.value ? formatDateForApi(form.value.end_date) : null,
             date_filed: formatDateForApi(form.value.date_filed),
             date_approved: formatDateForApi(form.value.date_approved),
             unified_status: normalizeOptionValue(form.value.unified_status) ?? 'pending',

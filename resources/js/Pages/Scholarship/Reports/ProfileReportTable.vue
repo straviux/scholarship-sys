@@ -304,10 +304,26 @@ function formatRemarks(record) {
     return sections.join('\n');
 }
 
+function formatSafeHtml(value) {
+    return String(value ?? '')
+        .replace(/\r\n/g, '\n')
+        .replace(/&nbsp;|&#160;|&ensp;|&emsp;|\u00a0/gi, ' ')
+        .replace(/<\s*(p|div)(?:\s[^>]*)?>/gi, '')
+        .replace(/<\s*\/(p|div)\s*>/gi, '<br>')
+        .replace(/<\s*li(?:\s[^>]*)?>/gi, '&bull; ')
+        .replace(/<\s*\/li\s*>/gi, '<br>')
+        .replace(/<br\s*\/?>/gi, '<br>')
+        .replace(/\n/g, '<br>')
+        .replace(/(<br>\s*){3,}/gi, '<br><br>')
+        .replace(/^(?:\s*<br>)+/i, '')
+        .replace(/(?:<br>\s*)+$/i, '')
+        .trim();
+}
+
 function valueStyle(column) {
     const align = column.align ? `text-align:${column.align};` : '';
     const emphasis = column.key === 'name' ? 'font-weight:600;' : '';
-    const nameSize = column.key === 'name' ? 'font-size:8px;line-height:1.25;' : '';
+    const nameSize = column.key === 'name' ? 'font-size:10px;line-height:1.3;' : '';
     const nowrap = ['date_filed', 'date_approved', 'date_denied', 'interviewed_at', 'report_date'].includes(column.key)
         ? 'white-space:nowrap;'
         : '';
@@ -451,7 +467,7 @@ function cellValue(record, column) {
                         </div>
                     </template>
                     <template v-else-if="column.key === 'remarks_summary'">
-                        <span style="white-space: pre-line;">{{ cellValue(record, column) }}</span>
+                        <span v-safe-html="formatSafeHtml(cellValue(record, column))"></span>
                     </template>
                     <template v-else>
                         <span v-if="column.key !== 'report_status'">{{ cellValue(record, column) }}</span>
@@ -465,11 +481,11 @@ function cellValue(record, column) {
                 <td v-for="column in detailConfig.columns" :key="`detail-${column.key}-${index}`"
                     :style="valueStyle(column)">
                     <span v-if="column.key !== 'decline_reason'">{{ cellValue(record, column) }}</span>
-                    <span v-else style="white-space: pre-line;">{{ cellValue(record, column) }}</span>
+                    <span v-else v-safe-html="formatSafeHtml(cellValue(record, column))"></span>
                 </td>
                 <td v-for="column in trailingSingleColumns" :key="`single-trailing-${column.key}-${index}`"
                     :style="valueStyle(column)">
-                    <span style="white-space: pre-line;">{{ cellValue(record, column) }}</span>
+                    <span v-safe-html="formatSafeHtml(cellValue(record, column))"></span>
                 </td>
             </tr>
         </tbody>

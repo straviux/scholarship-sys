@@ -516,6 +516,10 @@
                                                     bodyClass="min-w-[50px]" v-if="hasAcademicTermActionsPermission">
                                                     <template #body="slotProps">
                                                         <div class="flex gap-1">
+                                                            <AppButton v-if="canEditAcademicTermRow(slotProps.data)"
+                                                                icon="pencil" text severity="secondary"
+                                                                v-tooltip.top="getAcademicTermEditTooltip(slotProps.data)"
+                                                                @click="openEditTermModal(slotProps.data)" />
                                                             <AppButton v-if="canOpenAcademicTermActions(slotProps.data)"
                                                                 icon="ellipsis-vertical" text severity="secondary"
                                                                 v-tooltip.top="'Open Actions'"
@@ -1603,12 +1607,26 @@ const academicTermsNeedingReviewCount = computed(() => {
 
 const academicTermsNeedReview = computed(() => academicTermsNeedingReviewCount.value > 0);
 
+const normalizeAcademicEntityId = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    const numericValue = Number(value);
+
+    return Number.isInteger(numericValue) && numericValue > 0 ? numericValue : null;
+};
+
 const canManageAcademicEnrollment = (enrollment) => {
-    return supportsAcademicEnrollmentCrud.value && Boolean(enrollment?.isGroupedEnrollment && typeof enrollment?.id === 'number');
+    return supportsAcademicEnrollmentCrud.value
+        && Boolean(enrollment?.isGroupedEnrollment)
+        && normalizeAcademicEntityId(enrollment?.id) !== null;
 };
 
 const canManageAcademicTerm = (term) => {
-    return supportsAcademicEnrollmentCrud.value && Boolean(term?.isGroupedTerm && typeof term?.id === 'number');
+    return supportsAcademicEnrollmentCrud.value
+        && Boolean(term?.isGroupedTerm)
+        && normalizeAcademicEntityId(term?.id) !== null;
 };
 
 const canCreateAcademicEnrollment = computed(() => supportsAcademicEnrollmentCrud.value && hasPermission('scholarships.create'));
@@ -1634,6 +1652,15 @@ const canManageAcademicEnrollmentActions = (enrollment) => {
 
 const canOpenAcademicTermActions = (term) => {
     return (canManageAcademicTerm(term) || canManageLegacyAcademicRecord(term)) && hasAcademicTermActionsPermission.value;
+};
+
+const canEditAcademicTermRow = (term) => {
+    return (canManageAcademicTerm(term) && canEditAcademicTermDetails.value)
+        || (canManageLegacyAcademicRecord(term) && canEditLegacyAcademicRecordDetails.value);
+};
+
+const getAcademicTermEditTooltip = (term) => {
+    return canManageLegacyAcademicRecord(term) ? 'Edit record' : 'Edit term';
 };
 
 const isCompletedAcademicTerm = (term) => {
@@ -2142,7 +2169,10 @@ const openEditTermModal = (term) => {
 
         termModalMode.value = 'edit';
         editingTerm.value = term;
-        activeEnrollmentForTerm.value = academicEnrollmentGroups.value.find((enrollment) => enrollment.id === term.enrollmentId) || null;
+        const normalizedEnrollmentId = normalizeAcademicEntityId(term.enrollmentId);
+        activeEnrollmentForTerm.value = academicEnrollmentGroups.value.find((enrollment) => {
+            return normalizeAcademicEntityId(enrollment.id) === normalizedEnrollmentId;
+        }) || null;
         showTermModal.value = true;
         return;
     }
