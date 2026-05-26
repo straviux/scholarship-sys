@@ -4,8 +4,9 @@
         width="min(900px, 92vw)"
         :title="attachment?.file_name || ''"
         title-class="ios-nav-title--truncate"
+        :draggable="!isMaximized"
         :modal-class="{ 'ios-modal-maximized': isMaximized }"
-        :modal-content-style="{ height: '85vh' }"
+        :modal-content-style="attachmentModalContentStyle"
         body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
         @update:visible="val => emit('update:visible', val)"
         @close="close"
@@ -75,7 +76,7 @@
 
 <script setup>
 import IosModal from '@/Components/ui/IosModal.vue';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
     visible: { type: Boolean, default: false },
@@ -85,6 +86,20 @@ const props = defineProps({
 const emit = defineEmits(['update:visible']);
 
 const isMaximized = ref(false);
+
+const attachmentModalContentStyle = computed(() => {
+    return isMaximized.value
+        ? {
+            width: '100vw',
+            maxWidth: '100vw',
+            height: '100vh',
+            maxHeight: '100vh',
+            borderRadius: '0',
+        }
+        : {
+            height: '85vh',
+        };
+});
 
 const imageZoom = ref(1);
 const imagePosition = ref({ x: 0, y: 0 });

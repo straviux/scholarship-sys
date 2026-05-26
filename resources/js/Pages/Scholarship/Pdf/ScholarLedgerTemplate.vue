@@ -261,13 +261,17 @@ const normalizeYearLevel = (value) => {
 };
 
 const rosMonthsForEntry = (entry) => {
-    const explicitMonths = parseInt(entry?.ros_months);
+    const hasExplicitRosMonths = Object.prototype.hasOwnProperty.call(entry ?? {}, 'ros_months');
+    const rawRosMonths = typeof entry?.ros_months === 'string'
+        ? entry.ros_months.trim()
+        : entry?.ros_months;
+    const explicitMonths = parseInt(rawRosMonths, 10);
 
     if (!isNaN(explicitMonths) && explicitMonths > 0) {
         return explicitMonths;
     }
 
-    if (entry?.ros_months === '') {
+    if (hasExplicitRosMonths && (rawRosMonths === '' || rawRosMonths === null || rawRosMonths === undefined || rawRosMonths === '-' || rawRosMonths === '—')) {
         return 0;
     }
 
