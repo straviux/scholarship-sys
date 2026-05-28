@@ -1080,6 +1080,9 @@ class ScholarshipProfileController extends Controller
         $ledger = ScholarLedger::updateOrCreate(
             ['profile_id' => $profile->profile_id],
             [
+                'scholarship_coverage' => filled($validated['scholarship_coverage'] ?? null)
+                    ? trim((string) $validated['scholarship_coverage'])
+                    : null,
                 'other_assistance' => filled($validated['other_assistance'] ?? null)
                     ? trim((string) $validated['other_assistance'])
                     : null,

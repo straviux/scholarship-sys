@@ -12,6 +12,7 @@ class ScholarLedger extends Model
 
     protected $fillable = [
         'profile_id',
+        'scholarship_coverage',
         'other_assistance',
         'licensure_examination_result',
         'entries',

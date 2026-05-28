@@ -51,7 +51,11 @@
                         </tr>
                         <tr>
                             <td :style="LBL">SCHOLARSHIP COVERAGE</td>
-                            <td :style="VAL">{{ coverageStr }}</td>
+                            <td :style="VAL_HTML">
+                                <div v-if="scholarshipCoverageHtml" v-html="scholarshipCoverageHtml"
+                                    style="line-height: 1.4;"></div>
+                                <span v-else>{{ coverageStr }}</span>
+                            </td>
                         </tr>
                         <tr>
                             <td :style="LBL">OTHER ASSISTANCE</td>
@@ -188,12 +192,19 @@
 
 <script setup>
 import { computed } from 'vue';
+import {
+    buildScholarshipCoverageText,
+    calculateLedgerRosTotalMonths,
+    formatLedgerRosYearsLabel,
+    resolveLedgerEntryRosMonths,
+} from '@/Pages/Scholarship/scholarLedgerUtils';
 
 const props = defineProps({
     profile: { type: Object, required: true },
     preparedBy: { type: String, default: '' },
     preparedByDesignation: { type: String, default: '' },
     today: { type: String, default: '' },
+    scholarshipCoverage: { type: String, default: '' },
     otherAssistance: { type: String, default: '' },
     licensureExaminationResult: { type: String, default: '' },
     ledgerEntries: { type: Array, default: () => [] },
@@ -243,13 +254,6 @@ const formatDate = (d) => {
     return `${mm}/${dd}/${yyyy}`;
 };
 
-// 4-month terms: anything explicitly trimester OR the 3rd semester (summer/midyear)
-const is4MonthTerm = (semester) => {
-    if (typeof semester !== 'string') return false;
-    const s = semester.toLowerCase();
-    return s.includes('trimester') || s.includes('3rd semester') || s.includes('3rd sem');
-};
-
 const normalizeYearLevel = (value) => {
     const normalized = upper(value).replace(/\s+/g, ' ').trim();
 
@@ -261,21 +265,7 @@ const normalizeYearLevel = (value) => {
 };
 
 const rosMonthsForEntry = (entry) => {
-    const hasExplicitRosMonths = Object.prototype.hasOwnProperty.call(entry ?? {}, 'ros_months');
-    const rawRosMonths = typeof entry?.ros_months === 'string'
-        ? entry.ros_months.trim()
-        : entry?.ros_months;
-    const explicitMonths = parseInt(rawRosMonths, 10);
-
-    if (!isNaN(explicitMonths) && explicitMonths > 0) {
-        return explicitMonths;
-    }
-
-    if (hasExplicitRosMonths && (rawRosMonths === '' || rawRosMonths === null || rawRosMonths === undefined || rawRosMonths === '-' || rawRosMonths === '—')) {
-        return 0;
-    }
-
-    return is4MonthTerm(entry?.semester) ? 4 : 6;
+    return resolveLedgerEntryRosMonths(entry);
 };
 
 const resolvedRosLabel = (entry) => {
@@ -338,6 +328,10 @@ const latestCourseName = computed(() =>
 
 const latestSchoolName = computed(() =>
     latestRecord.value?.school_name ?? latestRecord.value?.school?.name ?? '—'
+);
+
+const scholarshipCoverageHtml = computed(() =>
+    getRichTextTextContent(props.scholarshipCoverage) ? props.scholarshipCoverage : ''
 );
 
 const otherAssistanceHtml = computed(() =>
@@ -444,46 +438,14 @@ const grandTotal = computed(() =>
 
 /* ── ROS total ───────────────────────────────────────────── */
 const totalRosYrs = computed(() => {
-    const seen = new Set();
-    let totalMonths = 0;
-    normalizedLedgerEntries.value.forEach((entry) => {
-        const dedupeKey = `${entry.year_level ?? ''}|${entry.semester ?? ''}|${entry.academic_year ?? ''}`;
-        if (!seen.has(dedupeKey)) {
-            seen.add(dedupeKey);
-            totalMonths += rosMonthsForEntry(entry);
-        }
-    });
-    const yrs = totalMonths / 12;
-    if (yrs <= 0) return '—';
-    if (yrs === Math.floor(yrs)) return `${Math.floor(yrs)} YRS`;
-    return `${yrs.toFixed(1)} YRS`;
+    return formatLedgerRosYearsLabel(calculateLedgerRosTotalMonths(normalizedLedgerEntries.value, {
+        excludeFinancialAssistance: true,
+    }));
 });
 
 /* ── coverage string ─────────────────────────────────────── */
 const coverageStr = computed(() => {
-    const entries = sortedLedgerEntries.value;
-    if (!entries.length) return 'N/A';
-
-    const seen = new Set();
-    let totalMonths = 0;
-    entries.forEach((entry) => {
-        const dedupeKey = `${entry.year_level ?? ''}|${entry.semester ?? ''}|${entry.academic_year ?? ''}`;
-        if (!seen.has(dedupeKey)) {
-            seen.add(dedupeKey);
-            totalMonths += rosMonthsForEntry(entry);
-        }
-    });
-
-    const yrs = totalMonths / 12;
-    const yrsStr = yrs <= 0 ? '' : yrs === Math.floor(yrs)
-        ? ` (${Math.floor(yrs)} YRS)` : ` (${yrs.toFixed(1)} YRS)`;
-
-    const first = entries[0];
-    return [
-        first?.year_level ?? '',
-        upper(first?.semester ?? ''),
-        first?.academic_year ?? '',
-    ].filter(Boolean).join(', ') + yrsStr;
+    return buildScholarshipCoverageText(sortedLedgerEntries.value);
 });
 </script>
 

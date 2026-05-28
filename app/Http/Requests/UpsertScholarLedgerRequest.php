@@ -22,6 +22,7 @@ class UpsertScholarLedgerRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'scholarship_coverage' => ['nullable', 'string', 'max:1000'],
             'other_assistance' => ['nullable', 'string', 'max:1000'],
             'licensure_examination_result' => ['nullable', 'string', 'max:1000'],
             'entries' => ['nullable', 'array'],
