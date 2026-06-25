@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import moment from 'moment';
-import { formatName, formatStatus, getGroupValue, getProfileReportTitle, getReportStatus, groupRecords } from './report-helpers';
+import { formatName, formatStatus, getGroupValue, getPriorityReportSortBucket, getProfileReportTitle, getReportStatus, groupRecords } from './report-helpers';
 import ProfileReportTable from './ProfileReportTable.vue';
 
 const props = defineProps({
@@ -10,6 +10,11 @@ const props = defineProps({
     reportType: { type: String, default: 'list' },
     options: { type: Object, default: () => ({}) },
     generatedAt: { type: String, default: '' },
+    showAddress: { type: Boolean, default: true },
+    showProgram: { type: Boolean, default: true },
+    showSchool: { type: Boolean, default: true },
+    showCourse: { type: Boolean, default: true },
+    showRemarks: { type: Boolean, default: false },
 });
 
 const SUMMARY_HDR = 'background:#f0f0f0;font-weight:700;font-size:9pt;padding:5pt 8pt;text-transform:uppercase;border-bottom:0.5pt solid #ccc;';
@@ -26,12 +31,71 @@ const SUMMARY_GROUP_LABELS = {
 };
 
 const selectedStatus = computed(() => props.options?.selectedStatus ?? null);
-const sortedRecords = computed(() => [...props.records].sort((left, right) =>
-    formatName(left).localeCompare(formatName(right), undefined, {
+const sortBy = computed(() => props.options?.sortBy ?? 'default');
+const highlightJpmMembers = computed(() => props.options?.enableJpmHighlighting === true);
+const showAddress = computed(() => props.options?.showAddress !== false);
+const showProgram = computed(() => props.options?.showProgram !== false);
+const showSchool = computed(() => props.options?.showSchool !== false);
+const showCourse = computed(() => props.options?.showCourse !== false);
+const showRemarks = computed(() => props.options?.showRemarks === true);
+
+function resolveDateValue(record, fields) {
+    for (const field of fields) {
+        if (record?.[field]) {
+            return record[field];
+        }
+    }
+
+    return 0;
+}
+
+function compareByDate(left, right, fields, direction = 'asc') {
+    const dateA = new Date(resolveDateValue(left, fields)).getTime();
+    const dateB = new Date(resolveDateValue(right, fields)).getTime();
+    const timestampA = Number.isFinite(dateA) ? dateA : 0;
+    const timestampB = Number.isFinite(dateB) ? dateB : 0;
+    const result = timestampA - timestampB;
+
+    return direction === 'desc' ? -result : result;
+}
+
+function compareByName(left, right) {
+    return formatName(left).localeCompare(formatName(right), undefined, {
         sensitivity: 'base',
         numeric: true,
-    })
-));
+    });
+}
+
+function compareRecords(left, right, sortOption) {
+    switch (sortOption) {
+        case 'date_filed_asc':
+            return compareByDate(left, right, ['date_filed', 'date_applied', 'created_at'], 'asc');
+        case 'date_filed_desc':
+            return compareByDate(left, right, ['date_filed', 'date_applied', 'created_at'], 'desc');
+        case 'date_approved_asc':
+            return compareByDate(left, right, ['date_approved', 'approved_at', 'created_at'], 'asc');
+        case 'date_approved_desc':
+            return compareByDate(left, right, ['date_approved', 'approved_at', 'created_at'], 'desc');
+        default:
+            return compareByName(left, right);
+    }
+}
+
+const sortedRecords = computed(() => {
+    const records = [...props.records];
+    const sortOption = sortBy.value;
+
+    return records.sort((left, right) => {
+        const priorityResult = getPriorityReportSortBucket(left, highlightJpmMembers.value)
+            - getPriorityReportSortBucket(right, highlightJpmMembers.value);
+
+        if (priorityResult !== 0) {
+            return priorityResult;
+        }
+
+        return compareRecords(left, right, sortOption) || compareByName(left, right);
+    });
+});
 const grouped = computed(() => props.reportType === 'list'
     ? groupRecords(sortedRecords.value, props.options?.groupBy, props.options?.groupBySecondary, props.options?.groupByTertiary)
     : null);
@@ -166,8 +230,8 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                     style="position:absolute;right:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
                 <p style="font-weight:700;font-size:11pt;">Republic of the Philippines</p>
                 <p style="font-weight:700;font-size:11pt;">Provincial Government of Palawan</p>
-                <p style="font-size:10pt;">Akbay sa Mag-aaral Yaman ng kinabukasan</p>
-                <p style="font-size:10pt;">(Programang Pang-Edukasyon para sa Palaweño)</p>
+                <p style="font-size:10pt;">Yakap sa Edukasyon</p>
+                <p style="font-size:10pt;">Scholarship Program</p>
                 <p style="font-size:10pt;">Puerto Princesa City, Palawan</p>
             </div>
 
@@ -189,24 +253,30 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                 <template v-if="grouped">
                     <div v-for="group in grouped" :key="group.key" style="margin-bottom:14pt;">
                         <ProfileReportTable v-if="group.records" :records="group.records" :filters="filters"
-                            :options="options" :group-headers="buildGroupHeaderRows(group)" />
+                            :options="options" :group-headers="buildGroupHeaderRows(group)" :show-address="showAddress"
+                            :show-program="showProgram" :show-school="showSchool" :show-course="showCourse"
+                            :show-remarks="showRemarks" />
 
                         <template v-for="sub in group.subGroups || []" :key="`${group.key}-${sub.key}`">
                             <ProfileReportTable v-if="sub.records" :records="sub.records" :filters="filters"
                                 :options="options" :group-headers="buildGroupHeaderRows(group, sub)"
-                                style="margin-top:6pt;" />
+                                :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
+                                :show-course="showCourse" :show-remarks="showRemarks" style="margin-top:6pt;" />
 
                             <template v-for="ter in sub.subGroups || []" :key="`${group.key}-${sub.key}-${ter.key}`">
                                 <ProfileReportTable v-if="ter.records" :records="ter.records" :filters="filters"
                                     :options="options" :group-headers="buildGroupHeaderRows(group, sub, ter)"
-                                    style="margin-top:6pt;" />
+                                    :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
+                                    :show-course="showCourse" :show-remarks="showRemarks" style="margin-top:6pt;" />
                             </template>
                         </template>
                     </div>
                 </template>
 
                 <template v-else>
-                    <ProfileReportTable :records="sortedRecords" :filters="filters" :options="options" />
+                    <ProfileReportTable :records="sortedRecords" :filters="filters" :options="options"
+                        :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
+                        :show-course="showCourse" :show-remarks="showRemarks" />
                 </template>
             </template>
 

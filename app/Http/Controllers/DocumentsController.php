@@ -170,13 +170,15 @@ class DocumentsController extends Controller
             abort(403, 'User does not have the right permissions');
         }
 
-        if (!$document->file_path || !Storage::disk('public')->exists($document->file_path)) {
+        $filePath = storage_path('app/public/' . $document->file_path);
+
+        if (!file_exists($filePath)) {
             return back()->withErrors(['file' => 'File not found.']);
         }
 
         // Increment download count
         $document->incrementDownloadCount();
 
-        return Storage::disk('public')->download($document->file_path, $document->file_name);
+        return response()->download($filePath, $document->file_name);
     }
 }

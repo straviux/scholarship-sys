@@ -18,8 +18,8 @@
                 style="position:absolute;left:22%;top:50%;transform:translateY(-50%);width:54pt;height:auto;" />
             <p class="bold t-12">GENERAL PAYROLL</p>
             <p class="t-11">PROVINCIAL GOVERNMENT OF PALAWAN</p>
-            <p class="bold t-11">AKBAY SA MAG-AARAL YAMAN NG KINABUKASAN</p>
-            <p class="t-10">(PROGRAMANG PANG-EDUKASYON PARA SA PALAWEÑO)</p>
+            <p class="bold t-11">YAKAP SA EDUKASYON</p>
+            <p class="t-10">SCHOLARSHIP PROGRAM</p>
         </div>
 
         <!-- Explanation row -->

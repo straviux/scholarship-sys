@@ -83,8 +83,8 @@
                                 Program
                             </div>
                             <div class="ios-row-control">
-                                <ProgramSelect v-model="selectedProgram" label="shortname" custom-placeholder="All"
-                                    class="ios-select" />
+                                <ProgramSelect v-model="selectedPrograms" label="shortname" custom-placeholder="All"
+                                    class="ios-select" :multiple="true" />
                             </div>
                         </div>
 
@@ -95,7 +95,7 @@
                                 School
                             </div>
                             <div class="ios-row-control">
-                                <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All"
+                                <SchoolSelect v-model="selectedSchools" label="shortname" custom-placeholder="All"
                                     class="ios-select" :multiple="true" />
                             </div>
                         </div>
@@ -107,8 +107,9 @@
                                 Course
                             </div>
                             <div class="ios-row-control">
-                                <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedProgram?.id"
-                                    label="shortname" custom-placeholder="All" :multiple="true" class="ios-select" />
+                                <CourseSelect v-model="selectedCourses"
+                                    :scholarship-program-id="selectedPrograms?.[0]?.id" label="shortname"
+                                    custom-placeholder="All" :multiple="true" class="ios-select" />
                             </div>
                         </div>
 
@@ -119,8 +120,8 @@
                                 Municipality
                             </div>
                             <div class="ios-row-control">
-                                <MunicipalitySelect v-model="selectedMunicipality" custom-placeholder="All"
-                                    class="ios-select" />
+                                <MunicipalitySelect v-model="selectedMunicipalities" custom-placeholder="All"
+                                    class="ios-select" :multiple="true" />
                             </div>
                         </div>
 
@@ -131,8 +132,8 @@
                                 Year Level
                             </div>
                             <div class="ios-row-control">
-                                <YearLevelSelect v-model="selectedYearLevel" custom-placeholder="All"
-                                    class="ios-select" />
+                                <YearLevelSelect v-model="selectedYearLevels" custom-placeholder="All"
+                                    class="ios-select" :multiple="true" />
                             </div>
                         </div>
 
@@ -143,9 +144,9 @@
                                 Grant Provision
                             </div>
                             <div class="ios-row-control">
-                                <Select v-model="selectedGrantProvision" :options="grantProvisionOptions"
+                                <Select v-model="selectedGrantProvisions" :options="grantProvisionOptions"
                                     optionLabel="label" optionValue="value" placeholder="All" showClear
-                                    class="ios-select" />
+                                    class="ios-select" :multiple="true" />
                             </div>
                         </div>
                     </div>
@@ -282,7 +283,7 @@
 
                 <div class="ios-section">
                     <div class="ios-section-label">{{ reportType === 'summary' ? 'Summary Grouping' : 'Grouping'
-                    }}</div>
+                        }}</div>
                     <div class="ios-card">
                         <!-- Group By -->
                         <div class="ios-row">
@@ -349,10 +350,80 @@
                                 <InputSwitch v-model="enableJpmHighlighting" />
                             </div>
                         </div>
+
+                        <!-- Sort By -->
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="arrow-up-down" :size="13" style="color: #5856D6;" />
+                                Sort By
+                            </div>
+                            <div class="ios-row-control">
+                                <Select v-model="sortBy" :options="sortByOptions" optionLabel="label"
+                                    optionValue="value" class="ios-select" />
+                            </div>
+                        </div>
                     </div>
 
                     <div v-if="reportType === 'list' && canEnableJpmHighlighting" class="ios-section-footer">
                         JPM-tagged members are highlighted with a green row background in detailed list reports.
+                    </div>
+                </div>
+
+                <div class="ios-section">
+                    <div class="ios-section-label">Show/Hide Fields</div>
+                    <div class="ios-card">
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="map-pin" :size="13" style="color: #FF2D55;" />
+                                Address
+                            </div>
+                            <div class="ios-row-control" style="justify-content: flex-end;">
+                                <InputSwitch v-model="showAddress" />
+                            </div>
+                        </div>
+
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
+                                Program
+                            </div>
+                            <div class="ios-row-control" style="justify-content: flex-end;">
+                                <InputSwitch v-model="showProgram" />
+                            </div>
+                        </div>
+
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="building-2" :size="13" style="color: #34C759;" />
+                                School
+                            </div>
+                            <div class="ios-row-control" style="justify-content: flex-end;">
+                                <InputSwitch v-model="showSchool" />
+                            </div>
+                        </div>
+
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
+                                Course
+                            </div>
+                            <div class="ios-row-control" style="justify-content: flex-end;">
+                                <InputSwitch v-model="showCourse" />
+                            </div>
+                        </div>
+
+                        <div class="ios-row">
+                            <div class="ios-row-label">
+                                <AppIcon name="message-square" :size="13" style="color: #FF9500;" />
+                                Remarks
+                            </div>
+                            <div class="ios-row-control" style="justify-content: flex-end;">
+                                <InputSwitch v-model="showRemarks" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ios-section-footer">
+                        Toggle individual fields to show or hide them from the report.
                     </div>
                 </div>
             </div>
@@ -400,7 +471,7 @@
                     <AppIcon name="minus" :size="10" />
                 </button>
                 <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
-                    }}%</span>
+                }}%</span>
                 <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
                     class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
                     :disabled="zoomLevel >= 200">
@@ -469,12 +540,12 @@ const selectedStatus = ref(null); // null = All
 // Step 2
 const dateFrom = ref(null);
 const dateTo = ref(null);
-const selectedProgram = ref(null);
-const selectedSchool = ref(null);
+const selectedPrograms = ref([]);
+const selectedSchools = ref([]);
 const selectedCourses = ref([]);
-const selectedMunicipality = ref(null);
-const selectedYearLevel = ref(null);
-const selectedGrantProvision = ref(null);
+const selectedMunicipalities = ref([]);
+const selectedYearLevels = ref([]);
+const selectedGrantProvisions = ref([]);
 
 // Step 3
 const paperSize = ref('A4');
@@ -492,6 +563,12 @@ const includeGrantProvision = ref(true);
 const includeProjectedExpense = ref(true);
 const enableJpmHighlighting = ref(false);
 const jpmFilter = ref('all');
+const sortBy = ref('default');
+const showAddress = ref(true);
+const showProgram = ref(true);
+const showSchool = ref(true);
+const showCourse = ref(true);
+const showRemarks = ref(false);
 
 // ─── Composables ───
 const page = usePage();
@@ -528,10 +605,7 @@ const statusChoices = computed(() => {
 
 // ─── Options ───
 const _grantProvisionRaw = useSystemOptions('grant_provision');
-const grantProvisionOptions = computed(() => [
-    { label: 'All Provisions', value: null },
-    ..._grantProvisionRaw.value,
-]);
+const grantProvisionOptions = computed(() => _grantProvisionRaw.value);
 
 const groupByOptions = [
     { label: 'No Grouping', value: 'none' },
@@ -561,6 +635,14 @@ const jpmFilterOptions = [
     { label: 'Hide JPM', value: 'hide_jpm' },
 ];
 
+const sortByOptions = [
+    { label: 'Default Order', value: 'default' },
+    { label: 'Date Filed (Oldest First)', value: 'date_filed_asc' },
+    { label: 'Date Filed (Newest First)', value: 'date_filed_desc' },
+    { label: 'Date Approved (Oldest First)', value: 'date_approved_asc' },
+    { label: 'Date Approved (Newest First)', value: 'date_approved_desc' },
+];
+
 const secondaryGroupByOptions = computed(() =>
     groupByOptions.filter(o => o.value !== 'none' && o.value !== groupBy.value)
 );
@@ -585,12 +667,12 @@ const isDateToInvalid = computed(() => {
 const activeFiltersCount = computed(() => {
     let count = 0;
     if (dateFrom.value || dateTo.value) count++;
-    if (selectedProgram.value) count++;
-    if (Array.isArray(selectedSchool.value) ? selectedSchool.value.length > 0 : selectedSchool.value) count++;
+    if (selectedPrograms.value?.length > 0) count++;
+    if (selectedSchools.value?.length > 0) count++;
     if (selectedCourses.value?.length > 0) count++;
-    if (selectedMunicipality.value) count++;
-    if (selectedYearLevel.value) count++;
-    if (selectedGrantProvision.value) count++;
+    if (selectedMunicipalities.value?.length > 0) count++;
+    if (selectedYearLevels.value?.length > 0) count++;
+    if (selectedGrantProvisions.value?.length > 0) count++;
     return count;
 });
 
@@ -662,12 +744,12 @@ function close() {
 function clearAllFilters() {
     dateFrom.value = null;
     dateTo.value = null;
-    selectedProgram.value = null;
-    selectedSchool.value = [];
+    selectedPrograms.value = [];
+    selectedSchools.value = [];
     selectedCourses.value = [];
-    selectedMunicipality.value = null;
-    selectedYearLevel.value = null;
-    selectedGrantProvision.value = null;
+    selectedMunicipalities.value = [];
+    selectedYearLevels.value = [];
+    selectedGrantProvisions.value = [];
 }
 
 async function generateReport() {
@@ -678,18 +760,24 @@ async function generateReport() {
         // Build query params
         const params = {};
         if (selectedStatus.value) params.unified_status = selectedStatus.value;
-        if (selectedProgram.value?.id) params.program = selectedProgram.value.id;
-        if (Array.isArray(selectedSchool.value) && selectedSchool.value.length > 0) {
-            params.school = selectedSchool.value.map(s => s.shortname).join(',');
-        } else if (selectedSchool.value?.shortname) {
-            params.school = selectedSchool.value.shortname;
+        if (selectedPrograms.value?.length > 0) {
+            params.program = selectedPrograms.value.map(p => p.id).join(',');
+        }
+        if (selectedSchools.value?.length > 0) {
+            params.school = selectedSchools.value.map(s => s.shortname).join(',');
         }
         if (selectedCourses.value?.length > 0) {
             params.courses = selectedCourses.value.map(c => c.name).join(',');
         }
-        if (selectedMunicipality.value?.name) params.municipality = selectedMunicipality.value.name;
-        if (selectedYearLevel.value?.value) params.year_level = selectedYearLevel.value.value;
-        if (selectedGrantProvision.value) params.grant_provision = selectedGrantProvision.value;
+        if (selectedMunicipalities.value?.length > 0) {
+            params.municipality = selectedMunicipalities.value.map(m => m.name).join(',');
+        }
+        if (selectedYearLevels.value?.length > 0) {
+            params.year_level = selectedYearLevels.value.map(y => y.value).join(',');
+        }
+        if (selectedGrantProvisions.value?.length > 0) {
+            params.grant_provision = selectedGrantProvisions.value.join(',');
+        }
         if (dateFrom.value) params.date_from = moment(dateFrom.value).format('YYYY-MM-DD');
         if (dateTo.value) params.date_to = moment(dateTo.value).format('YYYY-MM-DD');
         if (enableJpmHighlighting.value) params.enable_jpm_highlighting = 1;
@@ -729,6 +817,12 @@ async function generateReport() {
                 preparedByTitle: preparedByTitle.value?.trim() || '',
                 signatoryName: signatoryName.value?.trim() || '',
                 signatoryTitle: signatoryTitle.value?.trim() || '',
+                sortBy: sortBy.value,
+                showAddress: showAddress.value,
+                showProgram: showProgram.value,
+                showSchool: showSchool.value,
+                showCourse: showCourse.value,
+                showRemarks: showRemarks.value,
             },
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
         };
@@ -755,16 +849,24 @@ function buildFilterSummary() {
     const summary = {};
     const statusChoice = statusChoices.value.find(s => s.value === selectedStatus.value);
     if (statusChoice) summary.Status = statusChoice.label;
-    if (selectedProgram.value) summary.Program = selectedProgram.value.shortname || selectedProgram.value.name;
-    if (Array.isArray(selectedSchool.value) && selectedSchool.value.length > 0) {
-        summary.School = selectedSchool.value.map(s => s.shortname || s.name).join(', ');
+    if (selectedPrograms.value?.length > 0) {
+        summary.Program = selectedPrograms.value.map(p => p.shortname || p.name).join(', ');
+    }
+    if (selectedSchools.value?.length > 0) {
+        summary.School = selectedSchools.value.map(s => s.shortname || s.name).join(', ');
     }
     if (selectedCourses.value?.length > 0) {
         summary.Course = selectedCourses.value.map(c => c.shortname || c.name).join(', ');
     }
-    if (selectedMunicipality.value) summary.Municipality = selectedMunicipality.value.name;
-    if (selectedYearLevel.value) summary['Year Level'] = selectedYearLevel.value.value;
-    if (selectedGrantProvision.value) summary['Grant Provision'] = selectedGrantProvision.value;
+    if (selectedMunicipalities.value?.length > 0) {
+        summary.Municipality = selectedMunicipalities.value.map(m => m.name).join(', ');
+    }
+    if (selectedYearLevels.value?.length > 0) {
+        summary['Year Level'] = selectedYearLevels.value.map(y => y.value).join(', ');
+    }
+    if (selectedGrantProvisions.value?.length > 0) {
+        summary['Grant Provision'] = selectedGrantProvisions.value.join(', ');
+    }
     if (dateFrom.value) summary['Date From'] = moment(dateFrom.value).format('MMM DD, YYYY');
     if (dateTo.value) summary['Date To'] = moment(dateTo.value).format('MMM DD, YYYY');
     return summary;
@@ -889,12 +991,20 @@ watch(groupBySecondary, v => { if (v === 'none' || v === groupByTertiary.value) 
 // Reset step when modal opens
 watch(() => props.show, v => {
     if (v) {
-        step.value = 1;
-        customReportTitle.value = '';
-        preparedBy.value = '';
-        preparedByTitle.value = '';
-        signatoryName.value = '';
-        signatoryTitle.value = '';
+        nextTick(() => {
+            step.value = 1;
+            customReportTitle.value = '';
+            preparedBy.value = '';
+            preparedByTitle.value = '';
+            signatoryName.value = '';
+            signatoryTitle.value = '';
+            sortBy.value = 'default';
+            showAddress.value = true;
+            showProgram.value = true;
+            showSchool.value = true;
+            showCourse.value = true;
+            showRemarks.value = false;
+        });
     } else {
         resetPreviewState();
     }

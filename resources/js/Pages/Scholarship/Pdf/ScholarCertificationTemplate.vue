@@ -17,8 +17,8 @@
             <p style="font-size:11.5pt;font-weight:400;">Republic of the Philippines</p>
             <p style="font-size:11.5pt;font-weight:400;">Provincial Government of Palawan</p>
             <p style="font-size:11.5pt;font-weight:400;">OFFICE OF THE GOVERNOR</p>
-            <p style="font-size:11.5pt;font-weight:700;">AKBAY SA MAG-AARAL YAMAN NG KINABUKASAN</p>
-            <p style="font-size:11.5pt;font-weight:400;">(Programang Pang-Edukasyon Para sa Palawenyo)</p>
+            <p style="font-size:11.5pt;font-weight:700;">Yakap sa Edukasyon</p>
+            <p style="font-size:11.5pt;font-weight:400;">Scholarship Program</p>
         </div>
 
         <!-- ── Document Title ──────────────────────────────── -->
@@ -84,7 +84,7 @@
         <div style="margin-top:72pt;text-align:center;">
             <p style="font-weight:700;font-size:11pt;text-decoration: underline;">NUR-AINA S. IBRAHIM</p>
             <p style="font-size:11pt;">Program Manager</p>
-            <p style="font-size:11pt;margin-top: -6pt;">Akbay sa Mag-Aaral Yaman ng Kinabukasan</p>
+            <p style="font-size:11pt;margin-top: -6pt;">Yakap sa Edukasyon</p>
         </div>
 
     </div>

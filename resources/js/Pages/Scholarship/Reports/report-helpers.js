@@ -29,6 +29,73 @@ export function isJpm(item) {
 	return item.is_jpm_member || item.is_father_jpm || item.is_mother_jpm || item.is_guardian_jpm;
 }
 
+export function normalizeRequirementLabel(label) {
+	const text = String(label || '').trim();
+
+	if (!text) {
+		return '';
+	}
+
+	const normalized = text.toLowerCase();
+
+	if (/\bsolo\s+parents?\b/.test(normalized)) {
+		return 'Solo Parent';
+	}
+
+	if (/\bpwd\b/.test(normalized) || /persons?\s+with\s+disabilit(?:y|ies)/.test(normalized)) {
+		return 'PWD';
+	}
+
+	if (/\bendorsement\b/.test(normalized) || /\bothers?\b/.test(normalized)) {
+		return 'Others';
+	}
+
+	return '';
+}
+
+export function formatSubmittedRequirements(record) {
+	const requirements = Array.isArray(record?.submitted_requirements)
+		? record.submitted_requirements
+		: [];
+
+	const normalizedRequirements = requirements
+		.map(normalizeRequirementLabel)
+		.filter(Boolean);
+
+	if (String(record?.indigenous_group || '').trim()) {
+		normalizedRequirements.push('Indigenous Group');
+	}
+
+	return [...new Set(normalizedRequirements)];
+}
+
+export function hasPriorityRequirement(record) {
+	return formatSubmittedRequirements(record).some(label => ['Solo Parent', 'PWD'].includes(label));
+}
+
+export function hasReportRemarks(record) {
+	return [
+		record?.decline_reason,
+		record?.remarks,
+	].some(value => String(value || '').trim() !== '');
+}
+
+export function getPriorityReportSortBucket(record, highlightJpmMembers = false) {
+	if (highlightJpmMembers && isJpm(record)) {
+		return 0;
+	}
+
+	if (hasPriorityRequirement(record)) {
+		return 1;
+	}
+
+	if (hasReportRemarks(record)) {
+		return 2;
+	}
+
+	return 3;
+}
+
 export function getReportStatus(item) {
 	return item.report_status || item.approval_status || item.unified_status || item.application_status || 'unknown';
 }

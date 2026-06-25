@@ -13,8 +13,8 @@
                 style="position:absolute;left:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
             <p style="font-size:11px;font-weight:400;">Republic of the Philippines</p>
             <p style="font-size:11px;font-weight:400;">Provincial Government of Palawan</p>
-            <p style="font-size:13px;font-weight:700;">Akbay sa Mag-aaral Yaman ng Kinabukasan</p>
-            <p style="font-style:italic;font-size:11px;">(Programang Pang-Edukasyon para sa Palawenyo)</p>
+            <p style="font-size:13px;font-weight:700;">Yakap sa Edukasyon</p>
+            <p style="font-style:italic;font-size:11px;">Scholarship Program</p>
         </div>
 
         <!-- ── Document Title ──────────────────────────────── -->
@@ -265,6 +265,10 @@ const normalizeYearLevel = (value) => {
 };
 
 const rosMonthsForEntry = (entry) => {
+    // If ros_months is blank/null/undefined, return 0 instead of letting utility default to 6
+    if (!entry?.ros_months) {
+        return 0;
+    }
     return resolveLedgerEntryRosMonths(entry);
 };
 
@@ -437,9 +441,25 @@ const grandTotal = computed(() =>
 );
 
 /* ── ROS total ───────────────────────────────────────────── */
+const allLedgerEntriesWithReview = computed(() => {
+    // Collect all entries from yearGroupedRows including REVIEW
+    // Exclude placeholder rows and entries with invalid/zero ROS months
+    const entries = [];
+    yearGroupedRows.value.forEach((yg) => {
+        yg.termList.forEach((term) => {
+            term.rows.forEach((row) => {
+                if (!isReviewPlaceholderRow(row) && rosMonthsForEntry(row) > 0) {
+                    entries.push(row);
+                }
+            });
+        });
+    });
+    return entries;
+});
+
 const totalRosYrs = computed(() => {
-    return formatLedgerRosYearsLabel(calculateLedgerRosTotalMonths(normalizedLedgerEntries.value, {
-        excludeFinancialAssistance: true,
+    return formatLedgerRosYearsLabel(calculateLedgerRosTotalMonths(allLedgerEntriesWithReview.value, {
+        excludeFinancialAssistance: false,
     }));
 });
 

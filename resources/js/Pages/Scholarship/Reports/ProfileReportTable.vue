@@ -1,12 +1,17 @@
 <script setup>
 import { computed } from 'vue';
-import { formatDate, formatName, formatStatus, getReportStatus, isJpm } from './report-helpers';
+import { formatDate, formatName, formatStatus, formatSubmittedRequirements, getReportStatus, isJpm } from './report-helpers';
 
 const props = defineProps({
     records: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
     options: { type: Object, default: () => ({}) },
     groupHeaders: { type: Array, default: () => [] },
+    showAddress: { type: Boolean, default: true },
+    showProgram: { type: Boolean, default: true },
+    showSchool: { type: Boolean, default: true },
+    showCourse: { type: Boolean, default: true },
+    showRemarks: { type: Boolean, default: false },
 });
 
 const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;line-height:1.15;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;vertical-align:middle;';
@@ -31,9 +36,11 @@ const activeGroupFields = computed(() => new Set([
     props.options?.groupByTertiary,
 ].filter(value => value && value !== 'none')));
 const hiddenColumns = computed(() => ({
-    program: !!props.filters?.Program || activeGroupFields.value.has('program'),
-    school: !!props.filters?.School || activeGroupFields.value.has('school'),
-    course: !!props.filters?.Course || activeGroupFields.value.has('course'),
+    address: !props.showAddress,
+    program: !props.showProgram || !!props.filters?.Program || activeGroupFields.value.has('program'),
+    school: !props.showSchool || !!props.filters?.School || activeGroupFields.value.has('school'),
+    course: !props.showCourse || !!props.filters?.Course || activeGroupFields.value.has('course'),
+    remarks: !props.showRemarks,
     year_level: !!props.filters?.['Year Level'] || activeGroupFields.value.has('year_level'),
     report_status: activeGroupFields.value.has('unified_status'),
 }));
@@ -58,7 +65,10 @@ const singleColumns = computed(() => {
     }
 
     columns.push({ key: 'name', label: 'Name', width: '12%' });
-    columns.push({ key: 'address_location', label: 'Address', width: '8%' });
+
+    if (!hiddenColumns.value.address) {
+        columns.push({ key: 'address_location', label: 'Address', width: '8%' });
+    }
 
     if (!hiddenColumns.value.program) {
         columns.push({ key: 'program_name', label: 'Program', width: '5%', align: 'center' });
@@ -77,7 +87,10 @@ const singleColumns = computed(() => {
     }
 
     columns.push({ key: 'term_academic_year', label: 'Term / Academic Year', width: '7%', align: 'center' });
-    columns.push({ key: 'remarks_summary', label: 'Remarks', width: '10%' });
+
+    if (!hiddenColumns.value.remarks) {
+        columns.push({ key: 'remarks_summary', label: 'Remarks', width: '10%' });
+    }
 
     if (selectedStatus.value === null && !hiddenColumns.value.report_status) {
         columns.push({ key: 'report_status', label: 'Status', width: '6%', align: 'center' });
@@ -243,46 +256,6 @@ function formatAddress(record) {
         .filter(Boolean);
 
     return parts.length ? parts.join(', ') : '—';
-}
-
-function normalizeRequirementLabel(label) {
-    const text = String(label || '').trim();
-
-    if (!text) {
-        return '';
-    }
-
-    const normalized = text.toLowerCase();
-
-    if (/\bsolo\s+parent\b/.test(normalized)) {
-        return 'Solo Parent';
-    }
-
-    if (/\bpwd\b/.test(normalized) || /person with disability/.test(normalized)) {
-        return 'PWD';
-    }
-
-    if (/\bendorsement\b/.test(normalized) || /\bothers?\b/.test(normalized)) {
-        return 'Others';
-    }
-
-    return '';
-}
-
-function formatSubmittedRequirements(record) {
-    const requirements = Array.isArray(record?.submitted_requirements)
-        ? record.submitted_requirements
-        : [];
-
-    const normalizedRequirements = requirements
-        .map(normalizeRequirementLabel)
-        .filter(Boolean);
-
-    if (String(record?.indigenous_group || '').trim()) {
-        normalizedRequirements.push('Indigenous Group');
-    }
-
-    return [...new Set(normalizedRequirements)];
 }
 
 function formatRemarks(record) {

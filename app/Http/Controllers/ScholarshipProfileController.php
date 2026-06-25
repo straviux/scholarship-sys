@@ -551,12 +551,18 @@ class ScholarshipProfileController extends Controller
         }
 
         if ($request->filled('program')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('program_id', $request->program);
+            $programIds = array_map('trim', explode(',', $request->program));
+            $query->whereHas('scholarshipGrant', function ($q) use ($programIds) {
+                $q->whereIn('program_id', $programIds);
             });
         }
         if ($request->filled('municipality')) {
-            $query->where('municipality', 'like', '%' . $request->municipality . '%');
+            $municipalities = array_map('trim', explode(',', $request->municipality));
+            $query->where(function ($q) use ($municipalities) {
+                foreach ($municipalities as $municipality) {
+                    $q->orWhere('municipality', 'like', '%' . $municipality . '%');
+                }
+            });
         }
 
         // Filter by school under scholarshipGrant relation
@@ -591,9 +597,13 @@ class ScholarshipProfileController extends Controller
             });
         }
         if ($request->filled('year_level')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('year_level', 'like', '%' . $request->year_level . '%')
-                    ->whereNotNull('year_level');
+            $yearLevels = array_map('trim', explode(',', $request->year_level));
+            $query->whereHas('scholarshipGrant', function ($q) use ($yearLevels) {
+                $q->where(function ($subQuery) use ($yearLevels) {
+                    foreach ($yearLevels as $yearLevel) {
+                        $subQuery->orWhere('year_level', 'like', '%' . $yearLevel . '%');
+                    }
+                })->whereNotNull('year_level');
             });
         }
 
@@ -601,6 +611,14 @@ class ScholarshipProfileController extends Controller
         if ($request->filled('yakap_category')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
                 $q->where('yakap_category', $request->yakap_category);
+            });
+        }
+
+        // Filter by grant_provision under scholarshipGrant relation
+        if ($request->filled('grant_provision')) {
+            $grantProvisions = array_map('trim', explode(',', $request->grant_provision));
+            $query->whereHas('scholarshipGrant', function ($q) use ($grantProvisions) {
+                $q->whereIn('grant_provision', $grantProvisions);
             });
         }
 
@@ -762,8 +780,11 @@ class ScholarshipProfileController extends Controller
             }
         }
 
-        if ($request->filled('program') && (string) $record->program_id !== (string) $request->program) {
-            return false;
+        if ($request->filled('program')) {
+            $programIds = array_map('trim', explode(',', (string) $request->program));
+            if (!in_array((string) $record->program_id, $programIds, true)) {
+                return false;
+            }
         }
 
         if ($request->filled('school')) {
@@ -804,16 +825,19 @@ class ScholarshipProfileController extends Controller
         }
 
         if ($request->filled('year_level')) {
-            $yearLevel = trim((string) $request->year_level);
+            $yearLevels = array_values(array_filter(array_map('trim', explode(',', (string) $request->year_level))));
             $recordYearLevel = trim((string) ($record->year_level ?? ''));
 
-            if ($recordYearLevel === '' || !str_contains(mb_strtolower($recordYearLevel), mb_strtolower($yearLevel))) {
+            if ($recordYearLevel === '' || !$this->matchesAnyReportTerms([$recordYearLevel], $yearLevels)) {
                 return false;
             }
         }
 
-        if ($request->filled('grant_provision') && (string) $record->grant_provision !== (string) $request->grant_provision) {
-            return false;
+        if ($request->filled('grant_provision')) {
+            $grantProvisions = array_values(array_filter(array_map('trim', explode(',', (string) $request->grant_provision))));
+            if (!in_array((string) $record->grant_provision, $grantProvisions, true)) {
+                return false;
+            }
         }
 
         if ($request->filled('yakap_category') && (string) $record->yakap_category !== (string) $request->yakap_category) {
@@ -893,11 +917,13 @@ class ScholarshipProfileController extends Controller
             'is_guardian_jpm' => (bool) $profile->is_guardian_jpm,
             'birthdate' => $profile->birthdate,
             'gender' => $profile->gender,
+            'indigenous_group' => $profile->indigenous_group,
             'contact_no' => $profile->contact_no,
             'email' => $profile->email,
             'address' => $profile->address,
             'municipality' => $profile->municipality,
             'barangay' => $profile->barangay,
+            'submitted_requirements' => $this->profileSubmittedRequirementNames($profile),
             'remarks' => $record?->remarks ?? $profile->remarks,
             'decline_reason' => $reportStatus === 'denied' ? ($record?->remarks ?? $profile->remarks) : null,
             'program_name' => $record?->program?->shortname ?? $record?->program?->name,
@@ -924,6 +950,19 @@ class ScholarshipProfileController extends Controller
             'report_date' => $reportDate,
             'jpm_remarks' => $profile->jpm_remarks,
         ];
+    }
+
+    private function profileSubmittedRequirementNames(ScholarshipProfile $profile): array
+    {
+        if (!$profile->relationLoaded('profileRequirements')) {
+            return [];
+        }
+
+        return $profile->profileRequirements
+            ->map(fn($profileRequirement) => $profileRequirement->requirement?->name)
+            ->filter(fn($name) => trim((string) $name) !== '')
+            ->values()
+            ->all();
     }
 
     /**

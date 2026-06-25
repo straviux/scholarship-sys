@@ -21,14 +21,14 @@
             <p class="t-12">Republic of the Philippines</p>
             <p class="t-11">Provincial Government of Palawan</p>
             <p class="t-11">OFFICE OF THE GOVERNOR</p>
-            <p class="bold t-11">AKBAY SA MAG-AARAL YAMAN NG KINABUKASAN</p>
-            <p class="t-10">(PROGRAMANG PANG-EDUKASYON PARA SA PALAWEÑO)</p>
+            <p class="bold t-11">YAKAP SA EDUKASYON</p>
+            <p class="t-10">SCHOLARSHIP PROGRAM</p>
         </div>
 
         <!-- School / Title / Term / Course -->
         <div style="padding:14pt 0 0 0;text-align:center;">
             <p v-if="schoolName" class="bold t-12">{{ schoolName }}</p>
-            <p class="bold t-12" style="padding-top:4pt;">LIST OF SCHOLARS</p>
+            <p class="bold t-12" style="padding-top:4pt;">LIST OF SCHOLAR/S</p>
             <p v-if="isReimbursementVoucher" class="bold t-12" style="padding-top:2pt;">FOR REIMBURSEMENT
             </p>
             <p v-if="termAcademic" class="bold t-12" style="padding-top:2pt;">{{ termAcademic }}</p>
@@ -107,7 +107,7 @@
             <div style="text-align:center;">
                 <p class="bold t-12 underline">NUR-AINA S. IBRAHIM</p>
                 <p class="t-11" style="margin-top:2pt;">Program Manager</p>
-                <p class="t-11">Akbay sa Mag-Aaral Yaman ng Kinabukasan</p>
+                <p class="t-11">Yakap sa Edukasyon</p>
             </div>
         </div>
 

@@ -13,8 +13,8 @@
                 style="position:absolute;left:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
             <p class="bold t-11">Republic of the Philippines</p>
             <p class="bold t-11">Provincial Government of Palawan</p>
-            <p class="t-10">Akbay sa Mag-aaral Yaman ng kinabukasan</p>
-            <p class="t-10">(Programang Pang-Edukasyon para sa Palaweño)</p>
+            <p class="t-10">Yakap sa Edukasyon</p>
+            <p class="t-10">Scholarship Program</p>
             <p class="t-10">Puerto Princesa City, Palawan</p>
         </div>
 
