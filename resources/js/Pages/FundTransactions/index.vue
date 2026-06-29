@@ -14,6 +14,7 @@ import QrCodeModal from '@/Pages/FundTransactions/Modal/QrCodeModal.vue';
 import TrackingHistoryModal from '@/Pages/FundTransactions/Modal/TrackingHistoryModal.vue';
 import ObrTrackingModal from '@/Pages/FundTransactions/Modal/ObrTrackingModal.vue';
 import RecordsSelect from '@/Components/selects/RecordsSelect.vue';
+import FilterPage from '@/Components/Filters/FilterPage.vue';
 import axios from 'axios';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
 import { useSystemOptions, getSystemOptionLabel } from '@/composables/useSystemOptions';
@@ -208,6 +209,50 @@ const disbursementTypeFilterOptions = [
     { label: 'Disbursement Voucher', value: 'disbursements' },
     { label: 'Payroll', value: 'payroll' },
 ];
+
+// FilterPage component configuration
+const filterConfig = computed(() => [
+    {
+        key: 'obr_status',
+        options: statusFilterOptions.value,
+        placeholder: 'OBR Status',
+        class: 'w-40',
+    },
+    {
+        key: 'obr_no_mode',
+        options: obrNoFilterOptions,
+        placeholder: 'OBR No.',
+        class: 'w-44',
+    },
+    {
+        key: 'obr_type',
+        options: obrTypeFilterOptions.value,
+        placeholder: 'OBR Type',
+        class: 'w-44',
+    },
+    {
+        key: 'disbursement_type',
+        options: disbursementTypeFilterOptions,
+        placeholder: 'DV Type',
+        class: 'w-44',
+    },
+]);
+
+const onFilterChange = (filters) => {
+    statusFilter.value = filters.obr_status || '';
+    obrNoFilter.value = filters.obr_no_mode || '';
+    obrTypeFilter.value = normalizeObrTypeValue(filters.obr_type || '');
+    disbursementTypeFilter.value = filters.disbursement_type || '';
+};
+
+const clearAllFilters = () => {
+    statusFilter.value = '';
+    obrNoFilter.value = '';
+    obrTypeFilter.value = '';
+    disbursementTypeFilter.value = '';
+    searchQuery.value = '';
+    userFilter.value = 'all';
+};
 
 const handleCreateVoucher = () => {
     editingId.value = null;
@@ -1153,6 +1198,18 @@ const isPayeeSchool = (voucher) => {
         voucher?.payee_name?.toLowerCase().includes('school');
 };
 
+// Get scholar name from cache by profile ID
+const getScholarNameFromCache = (profileId) => {
+    if (!profileId) return '';
+    const scholar = scholarsCache.value.get(profileId);
+    if (scholar) {
+        return `${scholar.first_name} ${scholar.last_name}`;
+    }
+    // Fetch it asynchronously if not cached
+    fetchAndCacheScholarDetails([profileId]);
+    return '';
+};
+
 // Get first scholar name from cache (for table display)
 const getFirstScholarNameFromCache = (voucher) => {
     if (!voucher?.scholar_ids || voucher.scholar_ids.length === 0) {
@@ -1470,7 +1527,7 @@ onMounted(() => {
             </Toolbar>
 
             <!-- List/Summary Section -->
-            <Panel class="!rounded-4xl overflow-hidden mt-8">
+            <Panel class="!rounded-4xl mt-8">
                 <!-- Info Bar -->
                 <div
                     class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
@@ -1491,43 +1548,17 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- Record Filter + Dropdowns Row -->
-                <div class="flex flex-wrap gap-3 items-center mb-4">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="userFilter" name="userFilter" value="all" inputId="uf-all" />
-                        <span class="text-sm text-gray-700 dark:text-gray-300">All Records</span>
-                        <Badge :value="totalRecordsCount" severity="secondary" />
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <RadioButton v-model="userFilter" name="userFilter" value="my-records" inputId="uf-my" />
-                        <span class="text-sm text-gray-700 dark:text-gray-300">My Records</span>
-                        <Badge :value="myRecordsCount" severity="secondary" />
-                    </label>
-
-                    <span class="text-gray-300 dark:text-gray-600 mx-1">|</span>
-
-                    <Select v-model="statusFilter" :options="statusFilterOptions" optionLabel="label"
-                        optionValue="value" placeholder="OBR Status" size="small" class="w-40" showClear />
-                    <Select v-model="obrNoFilter" :options="obrNoFilterOptions" optionLabel="label" optionValue="value"
-                        placeholder="OBR No." size="small" class="w-44" showClear />
-                    <Select v-model="obrTypeFilter" :options="obrTypeFilterOptions" optionLabel="label"
-                        optionValue="value" placeholder="OBR Type" size="small" class="w-44" showClear />
-                    <Select v-model="disbursementTypeFilter" :options="disbursementTypeFilterOptions"
-                        optionLabel="label" optionValue="value" placeholder="DV Type" size="small" class="w-44"
-                        showClear />
-
-                    <AppButton
-                        v-if="statusFilter || obrNoFilter || obrTypeFilter || disbursementTypeFilter || searchQuery || userFilter !== 'all'"
-                        icon="funnel-x" severity="danger" text rounded
-                        @click="statusFilter = null; obrNoFilter = null; obrTypeFilter = null; disbursementTypeFilter = null; searchQuery = ''; userFilter = 'all'"
-                        v-tooltip.bottom="'Clear all filters'" />
-
-                    <div class="ml-auto flex items-center gap-2">
-                        <RecordsSelect v-model="perPage" size="small" class="w-auto" />
-                        <span class="text-sm text-gray-600 dark:text-gray-400">/ <strong>{{ filteredTotal
-                        }}</strong></span>
-                    </div>
-                </div>
+                <!-- Filter Page Component -->
+                <FilterPage :filters="filterConfig" :show-record-filter="true" :show-per-page="true"
+                    :total-records-count="totalRecordsCount" :my-records-count="myRecordsCount"
+                    :filtered-total="filteredTotal" :model-value="{
+                        obr_status: statusFilter,
+                        obr_no_mode: obrNoFilter,
+                        obr_type: obrTypeFilter,
+                        disbursement_type: disbursementTypeFilter,
+                    }" :user-filter="userFilter" :per-page="perPage" @update:model-value="onFilterChange"
+                    @update:user-filter="(val) => { userFilter = val; }" @update:per-page="(val) => { perPage = val; }"
+                    @clear="clearAllFilters" class="flex flex-wrap gap-3 items-center mb-4" />
 
                 <!-- Context Menu -->
                 <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
@@ -1544,7 +1575,8 @@ onMounted(() => {
                 <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="vouchers" stripedRows
                     showGridlines responsiveLayout="scroll" :loading="loading"
                     :emptyMessage="filteredTotal === 0 ? 'No vouchers created yet. Click Create Fund Transaction to get started.' : 'No vouchers match your search.'"
-                    :scrollable="true" scrollHeight="600px" @row-contextmenu="onRowContextMenu" contextMenu
+                    :scrollable="true" scrollHeight="600px" tableStyle="min-width: 100%"
+                    @row-contextmenu="onRowContextMenu" contextMenu
                     v-model:contextMenuSelection="selectedContextVoucher" lazy paginator :rows="perPage"
                     :totalRecords="filteredTotal" :first="(currentPage - 1) * perPage"
                     :rowsPerPageOptions="[10, 15, 25, 50]" class="ft-table ios-datatable-rounded"
@@ -1559,14 +1591,30 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column header="Payee" :headerStyle="{ minWidth: '200px' }" :bodyStyle="{ minWidth: '200px' }">
+                    <Column header="Payee" :headerStyle="{ minWidth: '300px' }" :bodyStyle="{ minWidth: '300px' }">
                         <template #body="slotProps">
                             <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{
                                 slotProps.data.payee_name }}</div>
-                            <div v-if="isPayeeSchool(slotProps.data)"
-                                class="text-xs font-medium italic text-gray-600 dark:text-gray-400 mt-1">
-                                {{ getFirstScholarNameFromCache(slotProps.data) || '---' }}
-                            </div>
+                        </template>
+                    </Column>
+
+                    <Column header="Scholar/s" :headerStyle="{ minWidth: '220px' }" :bodyStyle="{ minWidth: '220px' }">
+                        <template #body="slotProps">
+                            <template v-if="slotProps.data.scholar_ids && slotProps.data.scholar_ids.length > 0">
+                                <div class="flex flex-col gap-0.5 max-h-[80px] overflow-y-auto">
+                                    <div v-for="(scholar, sIdx) in slotProps.data.scholar_ids" :key="sIdx"
+                                        class="text-xs text-gray-700 dark:text-gray-300 truncate">
+                                        <span v-if="typeof scholar === 'object' && scholar?.profile_id">
+                                            {{ getScholarNameFromCache(scholar.profile_id) || `Scholar
+                                            #${scholar.profile_id}` }}
+                                        </span>
+                                        <span v-else>
+                                            {{ getScholarNameFromCache(scholar) || `Scholar #${scholar}` }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+                            <span v-else class="text-xs text-gray-400 dark:text-gray-500">—</span>
                         </template>
                     </Column>
 
@@ -1594,6 +1642,15 @@ onMounted(() => {
                                 :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(slotProps.data.obr_status)]">
                                 {{ slotProps.data.obr_status || 'On Process' }}
                             </span>
+                        </template>
+                    </Column>
+
+                    <Column header="Remarks" :headerStyle="{ minWidth: '300px' }" :bodyStyle="{ minWidth: '300px' }">
+                        <template #body="slotProps">
+                            <div v-if="slotProps.data.remarks" v-safe-html="slotProps.data.remarks"
+                                class="text-xs text-gray-700 dark:text-gray-300 line-clamp-3 max-w-[300px]">
+                            </div>
+                            <span v-else class="text-xs text-gray-400 dark:text-gray-500">—</span>
                         </template>
                     </Column>
 

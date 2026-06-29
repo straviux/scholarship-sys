@@ -97,6 +97,14 @@ watch(
     }
 );
 
+// Fetch municipalities on mount
+onMounted(() => {
+    fetchMunicipalities().catch(err => {
+        console.error('Failed to fetch municipalities:', err);
+        loading.value = false;
+    });
+});
+
 // Local value for v-model
 const localValue = ref(resolveMunicipalityValue(props.modelValue));
 
@@ -132,7 +140,7 @@ const selectPt = computed(() => {
 });
 
 
-onMounted(fetchMunicipalities);</script>
+</script>
 
 <template>
     <!-- Use MultiSelect when multiple is true -->

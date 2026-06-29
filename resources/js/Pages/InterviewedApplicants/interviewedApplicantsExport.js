@@ -83,12 +83,20 @@ export function printInterviewedApplicantsSelection({ records = [], preparedBy =
         return false;
     }
 
-    const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
+        const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
         records: normalizedRecords,
         reportType: 'list',
         groupBy: 'none',
         today: moment().format('MMMM D, YYYY'),
-        preparedBy,
+        preparedBy: '',
+        preparedByPosition: '',
+        preparedByOffice: '',
+        approvedBy: '',
+        approvedByPosition: '',
+        includeProjectedColumns: false,
+        includeInterviewColumns: true,
+        includeEndorsedBy: false,
+        showRemarks: false,
         reportTitle: 'Selected Interviewed Applicants Report',
     });
 
@@ -150,22 +158,19 @@ export function exportInterviewedApplicantsExcel({ records = [] } = {}) {
         [`Generated: ${generatedAt}`],
         [`Total Records: ${normalizedRecords.length}`],
         [],
-        [
+                [
             '#',
             'Name',
             'Program',
             'School',
             'Course',
-            'Year',
+            'Year Level',
             'Term',
             'Academic Year',
             'Grant Provision',
-            'Projected Terms',
-            'Projected Expense',
-            'Completion Year',
+            'Recommendation',
             'Interview Date',
             'Interviewed By',
-            'Endorsed By',
         ],
         ...normalizedRecords.map((record, index) => [
             index + 1,
@@ -177,12 +182,9 @@ export function exportInterviewedApplicantsExcel({ records = [] } = {}) {
             record?.term || '—',
             record?.academic_year || '—',
             formatGrantProvision(record?.grant_provision_label || record?.grant_provision),
-            formatProjectedTerms(record?.projected_term_count),
-            formatProjectedExpense(record?.projected_total_expense),
-            record?.projected_completion_year ?? 'Not configured',
+            record?.recommendation || '—',
             formatDate(record?.interviewed_at),
             record?.interviewer?.name || '—',
-            record?.endorsed_by || '—',
         ]),
     ];
 
@@ -193,16 +195,13 @@ export function exportInterviewedApplicantsExcel({ records = [] } = {}) {
         { wch: 12 },
         { wch: 20 },
         { wch: 24 },
-        { wch: 8 },
         { wch: 10 },
+        { wch: 12 },
         { wch: 14 },
         { wch: 22 },
-        { wch: 14 },
-        { wch: 18 },
+        { wch: 22 },
         { wch: 16 },
-        { wch: 16 },
-        { wch: 20 },
-        { wch: 20 },
+        { wch: 22 },
     ];
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Interviewed Applicants');

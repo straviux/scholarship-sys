@@ -68,7 +68,7 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Date of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ formatDate(profile.date_of_birth)
-                                        }}</p>
+                                            }}</p>
                                     </div>
 
                                     <div>
@@ -100,14 +100,14 @@
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Place of
                                             Birth</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.place_of_birth || 'N/A'
-                                        }}</p>
+                                            }}</p>
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Indigenous
                                             Group</label>
                                         <p class="text-gray-900 dark:text-gray-100">{{ profile.indigenous_group || 'N/A'
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                 </div>
 
@@ -393,7 +393,7 @@
                                             <DataTable class="academic-terms-table show-profile-table"
                                                 v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
                                                 :value="enrollment.displayTerms || enrollment.terms" showGridlines
-                                                contextMenu scrollable tableStyle="min-width: 74rem"
+                                                contextMenu scrollable tableStyle="min-width: 88rem"
                                                 rowGroupMode="rowspan" :groupRowsBy="['academic_year', 'year_level']"
                                                 @rowContextmenu="(event) => openAcademicTermContextMenu(event.originalEvent, event.data)">
                                                 <Column field="academic_year" header="Academic Year"
@@ -417,8 +417,8 @@
                                                     </template>
                                                 </Column>
 
-                                                <Column header="Semester" headerClass="min-w-[160px]"
-                                                    bodyClass="min-w-[160px]">
+                                                <Column header="Semester" headerClass="min-w-[140px]"
+                                                    bodyClass="min-w-[140px]">
                                                     <template #body="slotProps">
                                                         <div class="space-y-1">
                                                             <span class="text-sm text-gray-700 dark:text-gray-300">
@@ -479,8 +479,8 @@
                                                     </template>
                                                 </Column>
 
-                                                <Column header="Remarks" headerClass="min-w-[220px]"
-                                                    bodyClass="min-w-[220px]">
+                                                <Column header="Remarks" headerClass="min-w-[350px]"
+                                                    bodyClass="min-w-[350px]">
                                                     <template #body="slotProps">
                                                         <div v-if="slotProps.data.remarks"
                                                             v-safe-html="slotProps.data.remarks"
@@ -580,7 +580,7 @@
                                                         class="text-blue-600 dark:text-blue-400"></i>
                                                     <span class="font-medium">{{
                                                         slotProps.data.attachment_name
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -679,7 +679,7 @@
                                                         <h5 class="font-semibold text-gray-900 dark:text-gray-100">
                                                             Status: <span class="text-blue-600 dark:text-blue-400">{{
                                                                 timeline.new_status
-                                                                }}</span>
+                                                            }}</span>
                                                         </h5>
                                                         <p class="text-sm text-gray-600 dark:text-gray-400">
                                                             {{

@@ -29,7 +29,7 @@
         </div>
 
         <template v-else-if="reportType === 'list'">
-            <div v-if="records.length > 0"
+            <div v-if="records.length > 0 && includeProjectedColumns"
                 style="display:flex;justify-content:flex-start;padding:2pt 0 1pt;font-size:8pt;font-weight:700;">
                 Grant: {{ perScholarGrantLabel }}
             </div>
@@ -56,9 +56,9 @@
                             <col style="width:3.5%;" />
                             <col style="width:5.5%;" />
                             <col style="width:6%;" />
-                            <col style="width:3.5%;" />
-                            <col style="width:6.5%;" />
-                            <col style="width:4.5%;" />
+                            <col v-if="includeProjectedColumns" style="width:3.5%;" />
+                            <col v-if="includeProjectedColumns" style="width:6.5%;" />
+                            <col v-if="includeProjectedColumns" style="width:4.5%;" />
                             <col v-if="includeInterviewColumns" style="width:6.5%;" />
                             <col v-if="includeInterviewColumns" style="width:5%;" />
                             <col v-if="includeEndorsedBy" style="width:6.5%;" />
@@ -77,16 +77,16 @@
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Agreement Start</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Academic Year
                                 </th>
-                                <th :style="TH" colspan="3">Projected</th>
+                                <th v-if="includeProjectedColumns" :style="TH" colspan="3">Projected</th>
                                 <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
                                 <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed
                                     By</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
                             </tr>
                             <tr>
-                                <th :style="TH">Terms</th>
-                                <th :style="TH">Grant</th>
-                                <th :style2="TH">Completion</th>
+                                <th v-if="includeProjectedColumns" :style="TH">Terms</th>
+                                <th v-if="includeProjectedColumns" :style="TH">Grant</th>
+                                <th v-if="includeProjectedColumns" :style2="TH">Completion</th>
                                 <th v-if="includeInterviewColumns" :style="TH">Date</th>
                                 <th v-if="includeInterviewColumns" :style="TH">By</th>
                             </tr>
@@ -109,9 +109,12 @@
                                 <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.term || '' }} </td>
                                 <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.academic_year || '' }}
                                 </td>
-                                <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
-                                <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
-                                <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
+                                <td v-if="includeProjectedColumns" :style="TD + 'text-align:center;'">{{
+                                    fmtProjectedTerms(record) }}</td>
+                                <td v-if="includeProjectedColumns" :style="TD + 'text-align:right;'">{{
+                                    fmtProjectedExpense(record) }}</td>
+                                <td v-if="includeProjectedColumns" :style="TD + 'text-align:center;'">{{
+                                    fmtCompletionYear(record) }}</td>
                                 <td v-if="includeInterviewColumns"
                                     :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                         fmtDate(record.interviewed_at) }}</td>
@@ -144,9 +147,9 @@
                             <col style="width:9%;" />
                             <col style="width:3.5%;" />
                             <col style="width:6%;" />
-                            <col style="width:3.5%;" />
-                            <col style="width:6.5%;" />
-                            <col style="width:5%;" />
+                            <col v-if="includeProjectedColumns" style="width:3.5%;" />
+                            <col v-if="includeProjectedColumns" style="width:6.5%;" />
+                            <col v-if="includeProjectedColumns" style="width:5%;" />
                             <col v-if="includeInterviewColumns" style="width:7%;" />
                             <col v-if="includeInterviewColumns" style="width:7%;" />
                             <col v-if="includeEndorsedBy" style="width:6.5%;" />
@@ -163,16 +166,17 @@
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Course</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Year</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Agreement Start</th>
-                                <th :style="TH" colspan="3">Projected</th>
+                                <th v-if="includeProjectedColumns" :style="TH" colspan="3">Projected</th>
                                 <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
-                                <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed By
+                                <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed
+                                    By
                                 </th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
                             </tr>
                             <tr>
-                                <th :style="TH">Terms</th>
-                                <th :style="TH">Grant</th>
-                                <th :style="TH">Completion</th>
+                                <th v-if="includeProjectedColumns" :style="TH">Terms</th>
+                                <th v-if="includeProjectedColumns" :style="TH">Grant</th>
+                                <th v-if="includeProjectedColumns" :style="TH">Completion</th>
                                 <th v-if="includeInterviewColumns" :style="TH">Date</th>
                                 <th v-if="includeInterviewColumns" :style="TH">By</th>
 
@@ -184,9 +188,10 @@
                                 <td :style="TD + 'text-align:center;'">{{ page.startIndex + index + 1 }}</td>
                                 <td :style="TD + 'font-weight:600;font-size:8pt;'">
                                     <span :style="applicantNameHighlightStyle(record)">{{ formatApplicantName(record)
-                                    }}</span>
+                                        }}</span>
                                 </td>
-                                <td :style="TD + 'text-transform:uppercase;'">{{ record.profile?.municipality || '' }}</td>
+                                <td :style="TD + 'text-transform:uppercase;'">{{ record.profile?.municipality || '' }}
+                                </td>
                                 <td :style="TD + 'text-align:center;'">{{ record.program?.shortname || '' }}</td>
                                 <td :style="TD">{{ record.school?.name || record.school?.shortname || '' }}</td>
                                 <td :style="TD">{{ record.course?.name || record.course?.shortname || '' }}</td>
@@ -195,15 +200,19 @@
                                     <div>{{ record.term || '' }}</div>
                                     <div>{{ record.academic_year || '' }}</div>
                                 </td>
-                                <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
-                                <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
-                                <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
+                                <td v-if="includeProjectedColumns" :style="TD + 'text-align:center;'">{{
+                                    fmtProjectedTerms(record) }}</td>
+                                <td v-if="includeProjectedColumns" :style="TD + 'text-align:right;'">{{
+                                    fmtProjectedExpense(record) }}</td>
+                                <td v-if="includeProjectedColumns" :style="TD + 'text-align:center;'">{{
+                                    fmtCompletionYear(record) }}</td>
                                 <td v-if="includeInterviewColumns"
                                     :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                         fmtDate(record.interviewed_at)
                                     }}</td>
                                 <td v-if="includeInterviewColumns"
-                                    :style="TD + 'text-align:center;text-transform:uppercase;'">{{ record.interviewer?.name
+                                    :style="TD + 'text-align:center;text-transform:uppercase;'">{{
+                                        record.interviewer?.name
                                         || '' }}</td>
                                 <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
                                     record.endorsed_by || '' }}</td>
@@ -375,7 +384,8 @@
             </div>
         </div>
 
-        <div v-else style="margin-top:14pt;display:flex;justify-content:space-between;font-size:8pt;">
+        <div v-else-if="showSignatories"
+            style="margin-top:14pt;display:flex;justify-content:space-between;font-size:8pt;">
             <div style="flex:1;max-width:60%;margin-left:70pt;">
                 <div style="font-weight:700;">Prepared by:</div>
                 <div style="margin-top:40pt;text-align:center; width: 200px;">
@@ -424,6 +434,7 @@ const props = defineProps({
     listNumber: { type: String, default: '' },
     includeInterviewColumns: { type: Boolean, default: true },
     includeEndorsedBy: { type: Boolean, default: false },
+    includeProjectedColumns: { type: Boolean, default: true },
     highlightJpmMembers: { type: Boolean, default: false },
     showRemarks: { type: Boolean, default: false },
 });
@@ -447,6 +458,7 @@ const resolvedPreparedByPosition = computed(() => props.preparedByPosition?.trim
 const resolvedPreparedByOffice = computed(() => props.preparedByOffice?.trim() || DEFAULT_PREPARED_BY_OFFICE);
 const resolvedApprovedBy = computed(() => props.approvedBy?.trim() || DEFAULT_APPROVED_BY);
 const resolvedApprovedByPosition = computed(() => props.approvedByPosition?.trim() || DEFAULT_APPROVED_BY_POSITION);
+const showSignatories = computed(() => Boolean(props.preparedBy?.trim()));
 const resolvedBudgetProgram = computed(() => props.budgetProgram?.trim() || props.budgetAllocation?.program || 'N/A');
 const explicitBudgetProgramLabel = computed(() => props.budgetProgram?.trim() || '');
 const budgetProgramFilterId = computed(() => {

@@ -11,7 +11,8 @@ const props = defineProps({
     showProgram: { type: Boolean, default: true },
     showSchool: { type: Boolean, default: true },
     showCourse: { type: Boolean, default: true },
-    showRemarks: { type: Boolean, default: false },
+    showRemarks: { type: Boolean, default: true },
+    showRequirements: { type: Boolean, default: false },
 });
 
 const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;line-height:1.15;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;vertical-align:middle;';
@@ -40,7 +41,7 @@ const hiddenColumns = computed(() => ({
     program: !props.showProgram || !!props.filters?.Program || activeGroupFields.value.has('program'),
     school: !props.showSchool || !!props.filters?.School || activeGroupFields.value.has('school'),
     course: !props.showCourse || !!props.filters?.Course || activeGroupFields.value.has('course'),
-    remarks: !props.showRemarks,
+    remarks: false, // always show the remarks column
     year_level: !!props.filters?.['Year Level'] || activeGroupFields.value.has('year_level'),
     report_status: activeGroupFields.value.has('unified_status'),
 }));
@@ -259,19 +260,25 @@ function formatAddress(record) {
 }
 
 function formatRemarks(record) {
-    const textRemarks = [...new Set([
-        record?.decline_reason,
-        record?.remarks,
-    ].map(value => String(value || '').trim()).filter(Boolean))];
-    const requirementLabels = formatSubmittedRequirements(record);
+    const showRemarksText = props.showRemarks;
+    const showRequirementsText = props.showRequirements;
     const sections = [];
 
-    if (textRemarks.length) {
-        sections.push(textRemarks.join('\n'));
+    if (showRemarksText) {
+        const textRemarks = [...new Set([
+            record?.decline_reason,
+            record?.remarks,
+        ].map(value => String(value || '').trim()).filter(Boolean))];
+        if (textRemarks.length) {
+            sections.push(textRemarks.join('\n'));
+        }
     }
 
-    if (requirementLabels.length) {
-        sections.push(`Requirements: ${requirementLabels.join(', ')}`);
+    if (showRequirementsText) {
+        const requirementLabels = formatSubmittedRequirements(record);
+        if (requirementLabels.length) {
+            sections.push(`Requirements: ${requirementLabels.join(', ')}`);
+        }
     }
 
     return sections.join('\n');

@@ -1433,11 +1433,35 @@ class ScholarshipProfileController extends Controller
         }
 
         // Sort by interview date (newest first)
-        $reviewed = $query->orderBy('interviewed_at', 'desc')->get()
+        $query->orderBy('interviewed_at', 'desc');
+
+        // --- Server-side Pagination ---
+        $perPage = (int) $request->input('per_page', 50);
+        $perPage = max(10, min(200, $perPage)); // clamp between 10 and 200
+
+        $page = (int) $request->input('page', 1);
+        $page = max(1, $page);
+
+        $total = $query->count();
+        $lastPage = (int) ceil($total / $perPage);
+        $page = min($page, max(1, $lastPage));
+
+        $records = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get()
             ->map(fn(ScholarshipRecord $record) => $this->attachExpenseProjection($record, $expenseProjectionService));
 
         return Inertia::render('InterviewedApplicants/Index', [
-            'interviewed_applicants' => $reviewed,
+            'interviewed_applicants' => $records,
+            'interviewed_applicants_pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => $lastPage,
+                'from' => $total > 0 ? (($page - 1) * $perPage) + 1 : 0,
+                'to' => min($total, $page * $perPage),
+            ],
+            'interviewed_applicants_filters' => $request->only(['recommendation', 'name', 'program']),
             'decline_reasons' => config('scholarship.decline_reasons'),
             'interviewers' => User::query()->select('id', 'name')->orderBy('name')->get(),
             'budget_allocations' => $this->getInterviewedApplicantsBudgetAllocations(),

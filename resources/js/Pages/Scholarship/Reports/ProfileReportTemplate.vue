@@ -14,7 +14,8 @@ const props = defineProps({
     showProgram: { type: Boolean, default: true },
     showSchool: { type: Boolean, default: true },
     showCourse: { type: Boolean, default: true },
-    showRemarks: { type: Boolean, default: false },
+    showRemarks: { type: Boolean, default: true },
+    showRequirements: { type: Boolean, default: false },
 });
 
 const SUMMARY_HDR = 'background:#f0f0f0;font-weight:700;font-size:9pt;padding:5pt 8pt;text-transform:uppercase;border-bottom:0.5pt solid #ccc;';
@@ -37,7 +38,8 @@ const showAddress = computed(() => props.options?.showAddress !== false);
 const showProgram = computed(() => props.options?.showProgram !== false);
 const showSchool = computed(() => props.options?.showSchool !== false);
 const showCourse = computed(() => props.options?.showCourse !== false);
-const showRemarks = computed(() => props.options?.showRemarks === true);
+const showRemarks = computed(() => props.options?.showRemarks !== false);
+const showRequirements = computed(() => props.options?.showRequirements === true);
 
 function resolveDateValue(record, fields) {
     for (const field of fields) {
@@ -255,19 +257,21 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                         <ProfileReportTable v-if="group.records" :records="group.records" :filters="filters"
                             :options="options" :group-headers="buildGroupHeaderRows(group)" :show-address="showAddress"
                             :show-program="showProgram" :show-school="showSchool" :show-course="showCourse"
-                            :show-remarks="showRemarks" />
+                            :show-remarks="showRemarks" :show-requirements="showRequirements" />
 
                         <template v-for="sub in group.subGroups || []" :key="`${group.key}-${sub.key}`">
                             <ProfileReportTable v-if="sub.records" :records="sub.records" :filters="filters"
                                 :options="options" :group-headers="buildGroupHeaderRows(group, sub)"
                                 :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
-                                :show-course="showCourse" :show-remarks="showRemarks" style="margin-top:6pt;" />
+                                :show-course="showCourse" :show-remarks="showRemarks"
+                                :show-requirements="showRequirements" style="margin-top:6pt;" />
 
                             <template v-for="ter in sub.subGroups || []" :key="`${group.key}-${sub.key}-${ter.key}`">
                                 <ProfileReportTable v-if="ter.records" :records="ter.records" :filters="filters"
                                     :options="options" :group-headers="buildGroupHeaderRows(group, sub, ter)"
                                     :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
-                                    :show-course="showCourse" :show-remarks="showRemarks" style="margin-top:6pt;" />
+                                    :show-course="showCourse" :show-remarks="showRemarks"
+                                    :show-requirements="showRequirements" style="margin-top:6pt;" />
                             </template>
                         </template>
                     </div>
@@ -276,7 +280,7 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                 <template v-else>
                     <ProfileReportTable :records="sortedRecords" :filters="filters" :options="options"
                         :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
-                        :show-course="showCourse" :show-remarks="showRemarks" />
+                        :show-course="showCourse" :show-remarks="showRemarks" :show-requirements="showRequirements" />
                 </template>
             </template>
 

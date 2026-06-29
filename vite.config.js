@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		optimizeDeps: {
-			include: ['primevue/divider'],
+			include: ['primevue/divider', 'primevue/paginator'],
 		},
 		build: {
 			ssrManifest: false,

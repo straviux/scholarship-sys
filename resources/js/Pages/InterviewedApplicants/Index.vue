@@ -225,6 +225,21 @@
                                     recommendation list.
                                 </div>
                             </div>
+                            <!-- Paginator (top) -->
+                            <div class="flex items-center justify-between px-2 py-2 border-b border-slate-100">
+                                <span class="text-xs text-gray-400">
+                                    {{ props.interviewed_applicants_pagination.from || 0 }}&ndash;{{
+                                        props.interviewed_applicants_pagination.to || 0 }} of {{
+                                        props.interviewed_applicants_pagination.total || 0 }}
+                                </span>
+                                <Paginator
+                                    :first="(props.interviewed_applicants_pagination.current_page - 1) * props.interviewed_applicants_pagination.per_page"
+                                    :rows="props.interviewed_applicants_pagination.per_page"
+                                    :totalRecords="props.interviewed_applicants_pagination.total"
+                                    :rowsPerPageOptions="[10, 20, 50, 100, 200]" @page="onPageChange"
+                                    template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                    class="!p-0 text-xs [&_.p-paginator-page]:!min-w-[1.75rem] [&_.p-paginator-page]:!h-[1.75rem] [&_.p-paginator-page]:!text-xs [&_.p-paginator-element]:!text-xs [&_.p-paginator-element]:!min-w-[1.75rem] [&_.p-paginator-element]:!h-[1.75rem] [&_.p-paginator-rpp-dropdown]:!text-xs [&_.p-paginator-current]:!text-xs" />
+                            </div>
 
                             <div v-if="filteredList.length === 0" class="text-center py-8 text-gray-500">
                                 No interviewed applicants found
@@ -239,15 +254,15 @@
                                 <Column :exportable="false" headerClass="w-12" bodyClass="w-12">
                                     <template #header>
                                         <div class="flex justify-center">
-                                            <Checkbox :modelValue="allSelectableFilteredRowsSelected" binary
-                                                :indeterminate="someSelectableFilteredRowsSelected"
-                                                :disabled="selectableFilteredRows.length === 0"
+                                            <Checkbox :modelValue="allFilteredRowsSelected" binary
+                                                :indeterminate="someFilteredRowsSelected"
+                                                :disabled="filteredList.length === 0"
                                                 @update:modelValue="toggleSelectAllFilteredRows" />
                                         </div>
                                     </template>
                                     <template #body="slotProps">
                                         <div class="flex justify-center"
-                                            v-tooltip.top="slotProps.data.is_in_recommendation_list ? 'Already included in a recommendation list' : 'Select applicant'">
+                                            v-tooltip.top="slotProps.data.is_in_recommendation_list ? 'Already included in a recommendation list (still selectable for export)' : 'Select applicant'">
                                             <Checkbox :modelValue="isRowSelected(slotProps.data)" binary
                                                 :disabled="!isRowSelectable(slotProps.data)"
                                                 @update:modelValue="(checked) => toggleRowSelection(slotProps.data, checked)" />
@@ -258,17 +273,20 @@
                                 <Column field="profile.last_name" header="Name" sortable>
                                     <template #body="slotProps">
                                         <div class="font-medium">
-                                            {{ slotProps.data.profile.last_name }}, {{ slotProps.data.profile.first_name
+                                            {{ slotProps.data.profile.last_name }}, {{
+                                                slotProps.data.profile.first_name
                                             }}
                                         </div>
-                                        <div class="text-[11px] mono text-gray-500">{{ slotProps.data.profile.contact_no
-                                            }}</div>
+                                        <div class="text-[11px] mono text-gray-500">{{
+                                            slotProps.data.profile.contact_no
+                                        }}</div>
 
                                     </template>
                                 </Column>
                                 <Column field="program.shortname" header="Program" sortable>
                                     <template #body="slotProps">
-                                        <span class="text-xs"> {{ slotProps.data.program?.shortname || 'N/A' }}</span>
+                                        <span class="text-xs"> {{ slotProps.data.program?.shortname || 'N/A'
+                                        }}</span>
                                     </template>
                                 </Column>
                                 <Column field="school.shortname" header="School" sortable>
@@ -279,8 +297,9 @@
                                 </Column>
                                 <Column field="course.shortname" header="Course" sortable>
                                     <template #body="slotProps">
-                                        <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name || 'N/A'
-                                            }}</span>
+                                        <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name ||
+                                            'N/A'
+                                        }}</span>
                                     </template>
                                 </Column>
                                 <Column header="Year Level" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
@@ -381,7 +400,8 @@
                                                                     formatProjectedTerms(slotProps.data.projected_term_count)
                                                                 }}
                                                             </span>
-                                                            <span v-else class="text-amber-700">Not configured</span>
+                                                            <span v-else class="text-amber-700">Not
+                                                                configured</span>
                                                         </td>
                                                         <td class="px-3 py-3 text-sm font-semibold text-emerald-700">
                                                             <span
@@ -390,7 +410,8 @@
                                                                     formatCurrency(slotProps.data.projected_total_expense)
                                                                 }}
                                                             </span>
-                                                            <span v-else class="text-amber-700">Not configured</span>
+                                                            <span v-else class="text-amber-700">Not
+                                                                configured</span>
                                                         </td>
                                                         <td class="px-3 py-3 text-sm text-slate-700">
                                                             <div v-if="slotProps.data.projected_completion_year !== null"
@@ -399,7 +420,8 @@
                                                             </div>
                                                             <div v-if="slotProps.data.projected_completion_academic_year"
                                                                 class="text-xs text-gray-500">
-                                                                AY {{ slotProps.data.projected_completion_academic_year
+                                                                AY {{
+                                                                    slotProps.data.projected_completion_academic_year
                                                                 }}
                                                             </div>
                                                             <div v-else-if="slotProps.data.projected_completion_year === null"
@@ -422,6 +444,22 @@
                                     </div>
                                 </template>
                             </DataTable>
+
+                            <!-- Paginator (bottom) -->
+                            <div class="flex items-center justify-between px-2 py-2 border-t border-slate-100">
+                                <span class="text-xs text-gray-400">
+                                    {{ props.interviewed_applicants_pagination.from || 0 }}&ndash;{{
+                                        props.interviewed_applicants_pagination.to || 0 }} of {{
+                                        props.interviewed_applicants_pagination.total || 0 }}
+                                </span>
+                                <Paginator
+                                    :first="(props.interviewed_applicants_pagination.current_page - 1) * props.interviewed_applicants_pagination.per_page"
+                                    :rows="props.interviewed_applicants_pagination.per_page"
+                                    :totalRecords="props.interviewed_applicants_pagination.total"
+                                    :rowsPerPageOptions="[10, 20, 50, 100, 200]" @page="onPageChange"
+                                    template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                    class="!p-0 text-xs [&_.p-paginator-page]:!min-w-[1.75rem] [&_.p-paginator-page]:!h-[1.75rem] [&_.p-paginator-page]:!text-xs [&_.p-paginator-element]:!text-xs [&_.p-paginator-element]:!min-w-[1.75rem] [&_.p-paginator-element]:!h-[1.75rem] [&_.p-paginator-rpp-dropdown]:!text-xs [&_.p-paginator-current]:!text-xs" />
+                            </div>
                         </Panel>
                     </TabPanel>
 
@@ -796,12 +834,32 @@ import {
     printInterviewedApplicantsSelection,
     printRecommendationList,
 } from './interviewedApplicantsExport';
+import Paginator from 'primevue/paginator';
 
 const { hasRole } = usePermission();
 const page = usePage();
 
 const props = defineProps({
     interviewed_applicants: Array,
+    interviewed_applicants_pagination: {
+        type: Object,
+        default: () => ({
+            current_page: 1,
+            per_page: 50,
+            total: 0,
+            last_page: 1,
+            from: 0,
+            to: 0,
+        }),
+    },
+    interviewed_applicants_filters: {
+        type: Object,
+        default: () => ({
+            recommendation: null,
+            name: '',
+            program: null,
+        }),
+    },
     budget_allocations: {
         type: Array,
         default: () => [],
@@ -823,6 +881,7 @@ const props = defineProps({
 
 const recommendationListReloadProps = [
     'interviewed_applicants',
+    'interviewed_applicants_pagination',
     'budget_allocations',
     'recommendation_lists',
     'deleted_recommendation_lists',
@@ -1062,18 +1121,14 @@ const recommendationListModalSelectedCount = computed(() => {
 
 const selectedRowIds = computed(() => new Set(selectedRows.value.map((record) => Number(record.id))));
 
-const selectableFilteredRows = computed(() => {
-    return filteredList.value.filter((record) => !record.is_in_recommendation_list);
+const allFilteredRowsSelected = computed(() => {
+    return filteredList.value.length > 0
+        && filteredList.value.every((record) => selectedRowIds.value.has(Number(record.id)));
 });
 
-const allSelectableFilteredRowsSelected = computed(() => {
-    return selectableFilteredRows.value.length > 0
-        && selectableFilteredRows.value.every((record) => selectedRowIds.value.has(Number(record.id)));
-});
-
-const someSelectableFilteredRowsSelected = computed(() => {
-    return !allSelectableFilteredRowsSelected.value
-        && selectableFilteredRows.value.some((record) => selectedRowIds.value.has(Number(record.id)));
+const someFilteredRowsSelected = computed(() => {
+    return !allFilteredRowsSelected.value
+        && filteredList.value.some((record) => selectedRowIds.value.has(Number(record.id)));
 });
 
 const filterRecommendationLists = (listSource) => {
@@ -1189,7 +1244,7 @@ const openAssessmentDialog = (record, mode = 'view') => {
 const stats = computed(() => {
     const all = props.interviewed_applicants || [];
     return {
-        total: all.length,
+        total: props.interviewed_applicants_pagination?.total ?? all.length,
         recommended: all.filter(r => r.recommendation === 'recommended').length,
         furtherEval: all.filter(r => r.recommendation === 'further_evaluation').length,
         notRecommended: all.filter(r => r.recommendation === 'not_recommended').length,
@@ -1271,7 +1326,7 @@ const openContextMenu = (event, record) => {
     contextMenu.value.show(event);
 };
 
-const isRowSelectable = (record) => !record?.is_in_recommendation_list;
+const isRowSelectable = (record) => true;
 
 const isRowSelected = (record) => selectedRowIds.value.has(Number(record?.id));
 
@@ -1294,12 +1349,10 @@ const toggleRowSelection = (record, checked) => {
 };
 
 const toggleSelectAllFilteredRows = (checked) => {
-    const selectableIds = new Set(selectableFilteredRows.value.map((record) => Number(record.id)));
-
     if (checked) {
         const selectedById = new Map(selectedRows.value.map((record) => [Number(record.id), record]));
 
-        selectableFilteredRows.value.forEach((record) => {
+        filteredList.value.forEach((record) => {
             selectedById.set(Number(record.id), record);
         });
 
@@ -1307,7 +1360,7 @@ const toggleSelectAllFilteredRows = (checked) => {
         return;
     }
 
-    selectedRows.value = selectedRows.value.filter((record) => !selectableIds.has(Number(record.id)));
+    selectedRows.value = [];
 };
 
 const syncSelectedRows = () => {
@@ -1317,8 +1370,67 @@ const syncSelectedRows = () => {
 
     selectedRows.value = selectedRows.value
         .map((record) => currentRecordsById.get(Number(record.id)))
-        .filter((record) => Boolean(record) && isRowSelectable(record));
+        .filter((record) => Boolean(record));
 };
+
+// --- Pagination ---
+const currentPage = ref(props.interviewed_applicants_pagination?.current_page ?? 1);
+const perPage = ref(props.interviewed_applicants_pagination?.per_page ?? 50);
+
+const fetchPage = (page, perPageValue) => {
+    const params = {};
+
+    if (page && page !== currentPage.value) {
+        params.page = page;
+    }
+    if (perPageValue && perPageValue !== perPage.value) {
+        params.per_page = perPageValue;
+    }
+
+    // Pass current filters
+    if (filters.value.recommendation) {
+        params.recommendation = filters.value.recommendation;
+    }
+    if (filters.value.name?.trim()) {
+        params.name = filters.value.name.trim();
+    }
+    if (filters.value.program) {
+        const programId = typeof filters.value.program === 'object'
+            ? filters.value.program?.id
+            : filters.value.program;
+        if (programId) {
+            params.program = programId;
+        }
+    }
+
+    router.get(route('scholarship.interviewed-applicants'), params, {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['interviewed_applicants', 'interviewed_applicants_pagination', 'interviewed_applicants_filters'],
+        onSuccess: () => {
+            if (page) currentPage.value = page;
+            if (perPageValue) perPage.value = perPageValue;
+        },
+    });
+};
+
+const onPageChange = (event) => {
+    fetchPage(event.page + 1, event.rows);
+};
+
+let filterTimeout = null;
+
+const onFilterChange = () => {
+    if (filterTimeout) clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+        currentPage.value = 1;
+        fetchPage(1, perPage.value);
+    }, 400);
+};
+
+watch(() => filters.value.recommendation, onFilterChange);
+watch(() => filters.value.name, onFilterChange);
+watch(() => filters.value.program, onFilterChange);
 
 // Methods
 const onAssessmentUpdated = (changes) => {
@@ -1373,11 +1485,15 @@ const clearInterviewedFilters = () => {
     filters.value.name = '';
     filters.value.program = null;
     filters.value.listStatus = null;
+    currentPage.value = 1;
+    fetchPage(1, perPage.value);
 };
 
 const presetRecommendationCreationFilters = () => {
     filters.value.recommendation = 'recommended';
     filters.value.listStatus = 'available';
+    currentPage.value = 1;
+    fetchPage(1, perPage.value);
 };
 
 const handleRecommendationListModalVisibility = (value) => {
