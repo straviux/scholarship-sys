@@ -64,7 +64,7 @@ class ScholarshipProfile extends Model
         'priority_level',
         'priority_reason',
         'priority_assigned_at',
-        'priority_assigned_by'
+        'priority_assigned_by',
     ];
 
     protected $casts = [

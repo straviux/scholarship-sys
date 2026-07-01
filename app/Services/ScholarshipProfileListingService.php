@@ -322,6 +322,12 @@ class ScholarshipProfileListingService
             $profile->has_contract = $contractCount > 0;
             $profile->has_voucher = $voucherCount > 0;
 
+            // Derive is_endorsed from the latest scholarship record's unified_status
+            $profile->is_endorsed = $latestRecord && $latestRecord->unified_status === 'endorsed';
+            $profile->endorsement_details = $latestRecord && $latestRecord->unified_status === 'endorsed'
+                ? $latestRecord->remarks
+                : null;
+
             return $profile;
         });
     }
@@ -345,26 +351,26 @@ class ScholarshipProfileListingService
                 $memberQuery->where(function ($q) {
                     $q->where('is_jpm_member', false)->orWhereNull('is_jpm_member');
                 })
+                    ->where(function ($q) {
+                        $q->where('is_father_jpm', false)->orWhereNull('is_father_jpm');
+                    })
+                    ->where(function ($q) {
+                        $q->where('is_mother_jpm', false)->orWhereNull('is_mother_jpm');
+                    })
+                    ->where(function ($q) {
+                        $q->where('is_guardian_jpm', false)->orWhereNull('is_guardian_jpm');
+                    });
+            })
                 ->where(function ($q) {
-                    $q->where('is_father_jpm', false)->orWhereNull('is_father_jpm');
+                    $q->where('is_not_jpm', false)->orWhereNull('is_not_jpm');
                 })
                 ->where(function ($q) {
-                    $q->where('is_mother_jpm', false)->orWhereNull('is_mother_jpm');
+                    $q->where('is_unrenewed_jpm', false)->orWhereNull('is_unrenewed_jpm');
                 })
-                ->where(function ($q) {
-                    $q->where('is_guardian_jpm', false)->orWhereNull('is_guardian_jpm');
+                ->where(function ($remarksQuery) {
+                    $remarksQuery->whereNull('jpm_remarks')
+                        ->orWhereRaw("TRIM(jpm_remarks) = ''");
                 });
-            })
-            ->where(function ($q) {
-                $q->where('is_not_jpm', false)->orWhereNull('is_not_jpm');
-            })
-            ->where(function ($q) {
-                $q->where('is_unrenewed_jpm', false)->orWhereNull('is_unrenewed_jpm');
-            })
-            ->where(function ($remarksQuery) {
-                $remarksQuery->whereNull('jpm_remarks')
-                    ->orWhereRaw("TRIM(jpm_remarks) = ''");
-            });
         });
     }
 

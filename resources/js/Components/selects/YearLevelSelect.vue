@@ -79,19 +79,41 @@ const resolveYearLevelValue = (value) => {
     return resolveSingleYearLevel(value);
 };
 
+const isSameYearLevelSelection = (left, right) => {
+    if (Array.isArray(left) || Array.isArray(right)) {
+        if (!Array.isArray(left) || !Array.isArray(right)) {
+            return false;
+        }
+
+        if (left.length !== right.length) {
+            return false;
+        }
+
+        return left.every((entry, index) => entry === right[index]);
+    }
+
+    return left === right;
+};
+
 // Local value for v-model
 const localValue = ref(resolveYearLevelValue(props.modelValue));
 
 watch(
     () => props.modelValue,
     () => {
-        localValue.value = resolveYearLevelValue(props.modelValue);
+        const resolvedValue = resolveYearLevelValue(props.modelValue);
+
+        if (!isSameYearLevelSelection(localValue.value, resolvedValue)) {
+            localValue.value = resolvedValue;
+        }
     },
     { immediate: true, deep: true }
 );
 
 watch(localValue, (val) => {
-    emit('update:modelValue', val);
+    if (!isSameYearLevelSelection(val, props.modelValue)) {
+        emit('update:modelValue', val);
+    }
 }, { deep: true });
 
 const selectPt = computed(() => {
@@ -115,7 +137,23 @@ const selectPt = computed(() => {
 </script>
 
 <template>
-    <Select v-model="localValue" :options="year_levels" filter autoFilterFocus :showClear="showClear" optionLabel="label"
+    <MultiSelect v-if="multiple" v-model="localValue" :options="year_levels" filter :showClear="showClear"
+        optionLabel="label" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
+        :selectedItemsLabel="'{0} year levels selected'" showSelectAll :size="iosCompact ? 'small' : undefined"
+        :pt="selectPt">
+        <template #option="slotProps">
+            <div class="flex items-start uppercase">
+                <div>{{ slotProps.option.label }}</div>
+            </div>
+        </template>
+        <template #chip="slotProps">
+            <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
+                {{ slotProps.value.label }}
+            </div>
+        </template>
+    </MultiSelect>
+
+    <Select v-else v-model="localValue" :options="year_levels" filter autoFilterFocus :showClear="showClear" optionLabel="label"
         :placeholder="customPlaceholder" class="w-full" :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">
             <div v-if="slotProps.value" class="flex items-start uppercase">

@@ -75,6 +75,14 @@ export const useScholarshipStatus = () => {
 			textColor: '#7F1D1D',
 			description: 'Scholarship suspended',
 		},
+		endorsed: {
+			label: 'Endorsed',
+			severity: 'secondary',
+			color: '#7C3AED',
+			bgColor: '#EDE9FE',
+			textColor: '#5B21B6',
+			description: 'Endorsed to another scholarship',
+		},
 		unknown: {
 			label: 'Unknown',
 			severity: 'secondary',
@@ -153,6 +161,7 @@ export const useScholarshipStatus = () => {
 			'withdrawn',
 			'loa',
 			'suspended',
+			'endorsed',
 			'unknown',
 		];
 

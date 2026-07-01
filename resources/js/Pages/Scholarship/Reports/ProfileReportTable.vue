@@ -8,6 +8,8 @@ const props = defineProps({
     options: { type: Object, default: () => ({}) },
     groupHeaders: { type: Array, default: () => [] },
     showAddress: { type: Boolean, default: true },
+    showContactNumber: { type: Boolean, default: false },
+    showDateFiled: { type: Boolean, default: true },
     showProgram: { type: Boolean, default: true },
     showSchool: { type: Boolean, default: true },
     showCourse: { type: Boolean, default: true },
@@ -38,6 +40,8 @@ const activeGroupFields = computed(() => new Set([
 ].filter(value => value && value !== 'none')));
 const hiddenColumns = computed(() => ({
     address: !props.showAddress,
+    contact_number: !props.showContactNumber,
+    date_filed: !props.showDateFiled,
     program: !props.showProgram || !!props.filters?.Program || activeGroupFields.value.has('program'),
     school: !props.showSchool || !!props.filters?.School || activeGroupFields.value.has('school'),
     course: !props.showCourse || !!props.filters?.Course || activeGroupFields.value.has('course'),
@@ -65,7 +69,11 @@ const singleColumns = computed(() => {
         columns.push({ key: 'sequence', label: '#', width: '2%', align: 'center' });
     }
 
-    columns.push({ key: 'name', label: 'Name', width: '12%' });
+    columns.push({ key: 'name', label: 'Name', width: props.showContactNumber ? '10%' : '12%' });
+
+    if (!hiddenColumns.value.contact_number) {
+        columns.push({ key: 'contact_number', label: 'Contact Number', width: '7%', align: 'center' });
+    }
 
     if (!hiddenColumns.value.address) {
         columns.push({ key: 'address_location', label: 'Address', width: '8%' });
@@ -105,7 +113,7 @@ const detailConfig = computed(() => {
         case 'pending':
             return {
                 label: 'Application',
-                columns: [
+                columns: hiddenColumns.value.date_filed ? [] : [
                     { key: 'date_filed', label: 'Date Filed', width: '5%', align: 'center' },
                 ],
             };
@@ -303,8 +311,8 @@ function formatSafeHtml(value) {
 function valueStyle(column) {
     const align = column.align ? `text-align:${column.align};` : '';
     const emphasis = column.key === 'name' ? 'font-weight:600;' : '';
-    const nameSize = column.key === 'name' ? 'font-size:10px;line-height:1.3;' : '';
-    const nowrap = ['date_filed', 'date_approved', 'date_denied', 'interviewed_at', 'report_date'].includes(column.key)
+    const nameSize = (column.key !== 'sequence' && column.key !== 'remarks_summary') ? 'font-size:10px;line-height:1.3;' : '';
+    const nowrap = ['contact_number', 'date_filed', 'date_approved', 'date_denied', 'interviewed_at', 'report_date'].includes(column.key)
         ? 'white-space:nowrap;'
         : '';
     const uppercase = column.key === 'address_location' ? 'text-transform:uppercase;' : '';
@@ -352,6 +360,8 @@ function cellValue(record, column) {
     switch (column.key) {
         case 'name':
             return formatName(record);
+        case 'contact_number':
+            return record?.contact_no || 'â€”';
         case 'address_location':
             return formatAddress(record);
         case 'program_name':

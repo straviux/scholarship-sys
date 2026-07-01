@@ -5,11 +5,18 @@
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 
 export function formatName(item) {
-	const parts = [item.last_name, item.first_name, item.middle_name].filter(Boolean);
-	if (item.extension_name) parts.push(item.extension_name);
-	return parts.length
-		? parts.join(', ').toUpperCase()
-		: item.full_name
+	const lastName = String(item?.last_name || '').trim();
+	const givenName = [item?.first_name, item?.middle_name, item?.extension_name].filter(Boolean).join(' ').trim();
+
+	if (lastName && givenName) {
+		return `${lastName}, ${givenName}`.toUpperCase();
+	}
+
+	if (lastName || givenName) {
+		return (lastName || givenName).toUpperCase();
+	}
+
+	return item?.full_name
 		? item.full_name.toUpperCase()
 		: '—';
 }
@@ -150,6 +157,7 @@ export function formatStatus(status) {
 		withdrawn: 'Withdrawn',
 		loa: 'Leave of Absence',
 		suspended: 'Suspended',
+		endorsed: 'Endorsed',
 	};
 	return map[status] || status || '—';
 }
@@ -168,6 +176,7 @@ export function getProfileReportLabel(status) {
 		withdrawn: 'WITHDRAWN SCHOLARS',
 		loa: 'LEAVE OF ABSENCE',
 		suspended: 'SUSPENDED SCHOLARS',
+		endorsed: 'ENDORSED',
 	};
 
 	return map[status] || formatStatus(status)?.toUpperCase() || 'SCHOLARSHIP PROFILES';

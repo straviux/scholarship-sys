@@ -32,6 +32,9 @@
                         <AppButton icon="print" @click="showReportWizard = true" severity="secondary"
                             v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.view')" rounded
                             outlined />
+                        <AppButton icon="star" @click="showEndorseModal = true" severity="info"
+                            v-tooltip.bottom="'Endorse Profiles'" v-if="hasPermission('applicants.edit')" rounded
+                            outlined />
                     </div>
                 </template>
             </Toolbar>
@@ -156,9 +159,8 @@
                             size="small" />
                     </div>
                     <div class="flex flex-col">
-                        <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses"
-                            size="small" :scholarship-program-id="filter.program?.id"
-                            :load-all-when-no-program="true" />
+                        <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
+                            :scholarship-program-id="filter.program?.id" :load-all-when-no-program="true" />
                     </div>
                     <div class="flex flex-col">
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
@@ -231,6 +233,11 @@
                                                 class="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-800 dark:bg-sky-900/35 dark:text-sky-200"
                                                 v-tooltip.bottom="slotProps.data.ros_start_date ? `ROS ongoing since ${formatDate(slotProps.data.ros_start_date)}` : 'ROS ongoing'">
                                                 ROS Ongoing
+                                            </span>
+                                            <span v-if="slotProps.data.is_endorsed"
+                                                class="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-800 dark:bg-violet-900/35 dark:text-violet-200"
+                                                v-tooltip.bottom="slotProps.data.endorsement_details || 'Endorsed to another scholarship'">
+                                                Endorsed
                                             </span>
                                             <Badge v-if="slotProps.data.needs_legacy_term_review" value="Needs Review"
                                                 severity="warn" size="small"
@@ -412,7 +419,7 @@
                                     <Column header="Year" headerClass="min-w-[80px]" bodyClass="min-w-[80px]">
                                         <template #body="r">
                                             <span class="text-xs">{{ r.data.year_level ? r.data.year_level + ' yr' : '—'
-                                                }}</span>
+                                            }}</span>
                                         </template>
                                     </Column>
                                     <Column header="Academic Year" headerClass="min-w-[110px]"
@@ -633,14 +640,16 @@
                 </div>
 
                 <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-white/10">
-                    <AppButton label="Close" icon="times" severity="secondary"
-                        @click="showProfileDialog = false" />
+                    <AppButton label="Close" icon="times" severity="secondary" @click="showProfileDialog = false" />
                 </div>
             </div>
         </IosModal>
 
         <!-- Generate Report Modal -->
         <ReportWizardModal :show="showReportWizard" @update:show="showReportWizard = $event" />
+
+        <!-- Endorse Modal -->
+        <EndorseModal :show="showEndorseModal" @update:show="showEndorseModal = $event" @endorsed="onEndorsed" />
 
         <!-- Grant Provision Update Dialog -->
         <IosModal :visible="showGrantProvisionDialog" title="Update Grant Provision" width="calc(100vw - 2rem)"
@@ -666,8 +675,7 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <AppButton label="Cancel" severity="secondary" outlined
-                    @click="showGrantProvisionDialog = false" />
+                <AppButton label="Cancel" severity="secondary" outlined @click="showGrantProvisionDialog = false" />
                 <AppButton label="Update" icon="check" severity="info" @click="updateGrantProvision"
                     :loading="grantProvisionForm.processing" :disabled="!grantProvisionForm.scholarship_record_id" />
             </div>
@@ -741,6 +749,7 @@ import IosModal from '@/Components/ui/IosModal.vue';
 // Modal Components
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import ReportWizardModal from './Modal/ReportWizardModal.vue';
+import EndorseModal from './Modal/EndorseModal.vue';
 
 // Props
 const props = defineProps({
@@ -953,6 +962,7 @@ const selectedProfile = ref(null);
 // Modal states
 const showReportModal = ref(false);
 const showReportWizard = ref(false);
+const showEndorseModal = ref(false);
 
 const showAddActiveModal = ref(false);
 const addRecordPopover = ref();
@@ -1197,6 +1207,15 @@ const confirmDeleteProfile = (profile) => {
     showDeleteConfirmDialog.value = true;
 };
 
+// ─── Endorse handler ───
+const onEndorsed = (result) => {
+    // Refresh the profiles table to reflect endorsement changes
+    refreshData();
+    if (result?.message) {
+        // Use toast if available, otherwise we just refresh
+    }
+};
+
 const deleteProfile = async () => {
     if (!profileToDelete.value) return;
 
@@ -1324,4 +1343,3 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
 });
 </script>
-

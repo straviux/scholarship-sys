@@ -11,6 +11,8 @@ const props = defineProps({
     options: { type: Object, default: () => ({}) },
     generatedAt: { type: String, default: '' },
     showAddress: { type: Boolean, default: true },
+    showContactNumber: { type: Boolean, default: false },
+    showDateFiled: { type: Boolean, default: true },
     showProgram: { type: Boolean, default: true },
     showSchool: { type: Boolean, default: true },
     showCourse: { type: Boolean, default: true },
@@ -35,6 +37,8 @@ const selectedStatus = computed(() => props.options?.selectedStatus ?? null);
 const sortBy = computed(() => props.options?.sortBy ?? 'default');
 const highlightJpmMembers = computed(() => props.options?.enableJpmHighlighting === true);
 const showAddress = computed(() => props.options?.showAddress !== false);
+const showContactNumber = computed(() => props.options?.showContactNumber === true);
+const showDateFiled = computed(() => props.options?.showDateFiled !== false);
 const showProgram = computed(() => props.options?.showProgram !== false);
 const showSchool = computed(() => props.options?.showSchool !== false);
 const showCourse = computed(() => props.options?.showCourse !== false);
@@ -256,21 +260,24 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                     <div v-for="group in grouped" :key="group.key" style="margin-bottom:14pt;">
                         <ProfileReportTable v-if="group.records" :records="group.records" :filters="filters"
                             :options="options" :group-headers="buildGroupHeaderRows(group)" :show-address="showAddress"
+                            :show-contact-number="showContactNumber" :show-date-filed="showDateFiled"
                             :show-program="showProgram" :show-school="showSchool" :show-course="showCourse"
                             :show-remarks="showRemarks" :show-requirements="showRequirements" />
 
                         <template v-for="sub in group.subGroups || []" :key="`${group.key}-${sub.key}`">
                             <ProfileReportTable v-if="sub.records" :records="sub.records" :filters="filters"
                                 :options="options" :group-headers="buildGroupHeaderRows(group, sub)"
-                                :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
+                                :show-address="showAddress" :show-contact-number="showContactNumber"
+                                :show-date-filed="showDateFiled" :show-program="showProgram" :show-school="showSchool"
                                 :show-course="showCourse" :show-remarks="showRemarks"
                                 :show-requirements="showRequirements" style="margin-top:6pt;" />
 
                             <template v-for="ter in sub.subGroups || []" :key="`${group.key}-${sub.key}-${ter.key}`">
                                 <ProfileReportTable v-if="ter.records" :records="ter.records" :filters="filters"
                                     :options="options" :group-headers="buildGroupHeaderRows(group, sub, ter)"
-                                    :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
-                                    :show-course="showCourse" :show-remarks="showRemarks"
+                                    :show-address="showAddress" :show-contact-number="showContactNumber"
+                                    :show-date-filed="showDateFiled" :show-program="showProgram"
+                                    :show-school="showSchool" :show-course="showCourse" :show-remarks="showRemarks"
                                     :show-requirements="showRequirements" style="margin-top:6pt;" />
                             </template>
                         </template>
@@ -279,7 +286,8 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
 
                 <template v-else>
                     <ProfileReportTable :records="sortedRecords" :filters="filters" :options="options"
-                        :show-address="showAddress" :show-program="showProgram" :show-school="showSchool"
+                        :show-address="showAddress" :show-contact-number="showContactNumber"
+                        :show-date-filed="showDateFiled" :show-program="showProgram" :show-school="showSchool"
                         :show-course="showCourse" :show-remarks="showRemarks" :show-requirements="showRequirements" />
                 </template>
             </template>

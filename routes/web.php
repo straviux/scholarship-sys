@@ -19,6 +19,7 @@ use App\Http\Controllers\ScholarshipProfileController;
 use App\Http\Controllers\ScholarController;
 use App\Http\Controllers\ApplicantController;
 use App\Http\Controllers\JpmTaggingController;
+use App\Http\Controllers\EndorseController;
 use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
 use App\Http\Controllers\SystemOptionController;
@@ -245,6 +246,19 @@ Route::middleware(['auth'])->controller(JpmTaggingController::class)->group(func
     Route::put('/jpm-tagging/{profile}', 'update')
         ->middleware('check.permission:jpm.manage')
         ->name('jpm-tagging.update');
+});
+
+// ENDORSE ROUTES
+Route::middleware(['auth'])->controller(EndorseController::class)->group(function () {
+    Route::post('/endorse', 'endorse')
+        ->middleware('check.permission:applicants.edit')
+        ->name('endorse.store');
+    Route::post('/endorse/unendorse', 'unendorse')
+        ->middleware('check.permission:applicants.edit')
+        ->name('endorse.unendorse');
+    Route::get('/endorse/preview', 'preview')
+        ->middleware('check.permission:applicants.view')
+        ->name('endorse.preview');
 });
 
 // APPLICANT ROUTES - Accessible to all authenticated users

@@ -72,6 +72,22 @@ const resolveMunicipalityValue = (value) => {
     return resolveSingleMunicipality(value);
 };
 
+const isSameMunicipalitySelection = (left, right) => {
+    if (Array.isArray(left) || Array.isArray(right)) {
+        if (!Array.isArray(left) || !Array.isArray(right)) {
+            return false;
+        }
+
+        if (left.length !== right.length) {
+            return false;
+        }
+
+        return left.every((entry, index) => entry === right[index]);
+    }
+
+    return left === right;
+};
+
 // Use cached data composable for municipalities
 const { data: cachedMunicipalities, loading: cacheLoading, fetchData: fetchMunicipalities } = useCachedData(
     'municipalities',
@@ -111,13 +127,19 @@ const localValue = ref(resolveMunicipalityValue(props.modelValue));
 watch(
     [() => props.modelValue, () => municipalities.value],
     () => {
-        localValue.value = resolveMunicipalityValue(props.modelValue);
+        const resolvedValue = resolveMunicipalityValue(props.modelValue);
+
+        if (!isSameMunicipalitySelection(localValue.value, resolvedValue)) {
+            localValue.value = resolvedValue;
+        }
     },
     { immediate: true, deep: true }
 );
 
 watch(localValue, (val) => {
-    emit('update:modelValue', val);
+    if (!isSameMunicipalitySelection(val, props.modelValue)) {
+        emit('update:modelValue', val);
+    }
 }, { deep: true });
 
 const selectPt = computed(() => {

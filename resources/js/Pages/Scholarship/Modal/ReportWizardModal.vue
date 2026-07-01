@@ -1,444 +1,276 @@
 <template>
-    <IosModal :visible="show" width="520px" body-style="padding: 0;" @update:visible="handleWizardVisibleUpdate">
+    <IosModal :visible="show" width="760px" max-width="92vw" body-style="padding: 0;"
+        @update:visible="handleWizardVisibleUpdate">
         <template #header-left>
             <button class="ios-nav-btn ios-nav-cancel" @click="handleWizardBack">
-                <AppIcon :name="step > 1 ? 'chevron-left' : 'x'" :size="16" />
+                <AppIcon name="x" :size="16" />
             </button>
         </template>
 
         <template #title>
-            <span class="ios-nav-title">
-                {{ stepTitles[step - 1] }}
-            </span>
+            <span class="ios-nav-title">Report Wizard</span>
         </template>
 
         <template #header-right>
-            <button v-if="step < 3" class="ios-nav-btn ios-nav-action" @click="handleWizardAdvance"
-                :disabled="!canProceed">
-                <AppIcon name="chevron-right" :size="16" />
-            </button>
-            <button v-else class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="generating"
+            <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="generating"
                 v-tooltip.bottom="'Generate Report'">
                 <AppIcon v-if="generating" name="spinner" :size="16" class="animate-spin" />
                 <template v-else>Generate</template>
             </button>
         </template>
 
-        <!-- Step Indicator -->
-        <div class="step-indicator">
-            <div v-for="s in 3" :key="s"
-                :class="['step-dot', s === step && 'step-dot-active', s < step && 'step-dot-done']">
-            </div>
-        </div>
-
-        <div class="report-wizard-content">
-            <!-- STEP 1: Report Type & Status -->
-            <div v-show="step === 1">
-                <div class="ios-section">
-                    <div class="ios-section-label">Report Type</div>
-                    <div class="ios-segmented-control">
-                        <button :class="['ios-segment', reportType === 'list' && 'ios-segment-active']"
-                            @click="reportType = 'list'">
-                            <AppIcon name="list" :size="13" />
-                            Detailed List
-                        </button>
-                        <button :class="['ios-segment', reportType === 'summary' && 'ios-segment-active']"
-                            @click="reportType = 'summary'">
-                            <AppIcon name="bar-chart-3" :size="13" />
-                            Summary
-                        </button>
+        <div class="report-wizard-body">
+            <!-- ═══ SECTION 1: REPORT TYPE & STATUS ═══ -->
+            <div class="rw-section" :class="{ 'rw-section-collapsed': collapsed.section1 }">
+                <div class="rw-section-header" @click="toggleSection('section1')">
+                    <div class="rw-section-step">1</div>
+                    <div class="rw-section-title">
+                        <span class="rw-section-label">Report Type & Status</span>
+                        <span class="rw-section-summary">{{ selectedStatus ? statusLabel : 'All Statuses' }} · {{
+                            reportType ===
+                                'list' ? 'Detailed List' : 'Summary' }}</span>
                     </div>
+                    <AppIcon :name="collapsed.section1 ? 'chevron-down' : 'chevron-up'" :size="14"
+                        class="rw-section-chevron" />
                 </div>
+                <div v-show="!collapsed.section1" class="rw-section-body">
+                    <div class="rw-field-group">
+                        <label class="rw-label">Report Type</label>
+                        <div class="rw-segmented">
+                            <button :class="['rw-seg-btn', reportType === 'list' && 'rw-seg-active']"
+                                @click="reportType = 'list'">
+                                <AppIcon name="list" :size="14" />
+                                Detailed List
+                            </button>
+                            <button :class="['rw-seg-btn', reportType === 'summary' && 'rw-seg-active']"
+                                @click="reportType = 'summary'">
+                                <AppIcon name="bar-chart-3" :size="14" />
+                                Summary
+                            </button>
+                        </div>
+                    </div>
 
-                <div class="ios-section">
-                    <div class="ios-section-label">Status</div>
-                    <div class="ios-card">
-                        <div v-for="(opt, idx) in statusChoices" :key="opt.value"
-                            :class="['ios-row', 'ios-row-selectable', selectedStatus === opt.value && 'ios-row-selected']"
-                            @click="selectedStatus = opt.value">
-                            <div class="ios-row-label">
-                                <span v-if="opt.color" class="status-dot" :style="{ background: opt.color }"></span>
-                                <AppIcon v-else name="list" :size="13" style="color: #8E8E93;" />
+                    <div class="rw-field-group">
+                        <label class="rw-label">Status</label>
+                        <div class="rw-chip-group">
+                            <button v-for="opt in statusChoices" :key="opt.value"
+                                :class="['rw-chip', selectedStatus === opt.value && 'rw-chip-active']"
+                                @click="selectedStatus = opt.value">
+                                <span v-if="opt.color" class="rw-chip-dot" :style="{ background: opt.color }"></span>
                                 {{ opt.label }}
-                            </div>
-                            <AppIcon v-if="selectedStatus === opt.value" name="check" :size="13"
-                                style="color: #007AFF;" />
+                            </button>
                         </div>
-                    </div>
-                    <div class="ios-section-footer">
-                        Choose a status, or "All Statuses" for a comprehensive report.
                     </div>
                 </div>
             </div>
 
-            <!-- STEP 2: Filters -->
-            <div v-show="step === 2">
-                <div class="ios-section">
-                    <div class="ios-section-label">Filters</div>
-                    <div class="ios-card">
-                        <!-- Program -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
-                                Program
-                            </div>
-                            <div class="ios-row-control">
-                                <ProgramSelect v-model="selectedPrograms" label="shortname" custom-placeholder="All"
-                                    class="ios-select" :multiple="true" />
-                            </div>
-                        </div>
-
-                        <!-- School -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="building-2" :size="13" style="color: #34C759;" />
-                                School
-                            </div>
-                            <div class="ios-row-control">
-                                <SchoolSelect v-model="selectedSchools" label="shortname" custom-placeholder="All"
-                                    class="ios-select" :multiple="true" />
-                            </div>
-                        </div>
-
-                        <!-- Course -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
-                                Course
-                            </div>
-                            <div class="ios-row-control">
-                                <CourseSelect v-model="selectedCourses"
-                                    :scholarship-program-id="selectedPrograms?.[0]?.id" label="shortname"
-                                    custom-placeholder="All" :multiple="true" class="ios-select" />
-                            </div>
-                        </div>
-
-                        <!-- Municipality -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="map-pin" :size="13" style="color: #FF2D55;" />
-                                Municipality
-                            </div>
-                            <div class="ios-row-control">
-                                <MunicipalitySelect v-model="selectedMunicipalities" custom-placeholder="All"
-                                    class="ios-select" :multiple="true" />
-                            </div>
-                        </div>
-
-                        <!-- Year Level -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="sort-numeric-up" :size="13" style="color: #5856D6;" />
-                                Year Level
-                            </div>
-                            <div class="ios-row-control">
-                                <YearLevelSelect v-model="selectedYearLevels" custom-placeholder="All"
-                                    class="ios-select" :multiple="true" />
-                            </div>
-                        </div>
-
-                        <!-- Grant Provision -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="wallet" :size="13" style="color: #FF9500;" />
-                                Grant Provision
-                            </div>
-                            <div class="ios-row-control">
-                                <Select v-model="selectedGrantProvisions" :options="grantProvisionOptions"
-                                    optionLabel="label" optionValue="value" placeholder="All" showClear
-                                    class="ios-select" :multiple="true" />
-                            </div>
-                        </div>
+            <!-- ═══ SECTION 2: FILTERS ═══ -->
+            <div class="rw-section" :class="{ 'rw-section-collapsed': collapsed.section2 }">
+                <div class="rw-section-header" @click="toggleSection('section2')">
+                    <div class="rw-section-step">2</div>
+                    <div class="rw-section-title">
+                        <span class="rw-section-label">Filters</span>
+                        <span class="rw-section-summary">{{ activeFiltersCount > 0 ? activeFiltersCount + ` filter(s)
+                            active` :
+                            `No filters set` }}</span>
                     </div>
+                    <AppIcon :name="collapsed.section2 ? 'chevron-down' : 'chevron-up'" :size="14"
+                        class="rw-section-chevron" />
                 </div>
-
-                <!-- Date Range -->
-                <div class="ios-section">
-                    <div class="ios-section-label">Date Range</div>
-                    <div class="ios-card">
-                        <div class="ios-row ios-row-dates">
-                            <div class="ios-row-label">
-                                <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                From
-                            </div>
-                            <div class="ios-row-control">
-                                <DatePicker v-model="dateFrom" placeholder="Select date" showButtonBar
-                                    dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
-                            </div>
-                            <span class="ios-date-separator">—</span>
-                            <div class="ios-row-label">
-                                <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
-                                To
-                            </div>
-                            <div class="ios-row-control">
-                                <DatePicker v-model="dateTo" placeholder="Select date" showButtonBar
-                                    dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
-                            </div>
+                <div v-show="!collapsed.section2" class="rw-section-body">
+                    <!-- Filter rows in 2-column grid -->
+                    <div class="rw-filters-grid">
+                        <div class="rw-filter-item">
+                            <label class="rw-label">Program</label>
+                            <ProgramSelect v-model="selectedPrograms" label="shortname"
+                                custom-placeholder="All Programs" class="rw-select" :multiple="true" />
+                        </div>
+                        <div class="rw-filter-item">
+                            <label class="rw-label">School</label>
+                            <SchoolSelect v-model="selectedSchools" label="shortname" custom-placeholder="All Schools"
+                                class="rw-select" :multiple="true" />
+                        </div>
+                        <div class="rw-filter-item">
+                            <label class="rw-label">Course</label>
+                            <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedPrograms?.[0]?.id"
+                                label="shortname" custom-placeholder="All Courses" :multiple="true" class="rw-select" />
+                        </div>
+                        <div class="rw-filter-item">
+                            <label class="rw-label">Municipality</label>
+                            <MunicipalitySelect v-model="selectedMunicipalities" custom-placeholder="All Municipalities"
+                                class="rw-select" :multiple="true" />
+                        </div>
+                        <div class="rw-filter-item">
+                            <label class="rw-label">Year Level</label>
+                            <YearLevelSelect v-model="selectedYearLevels" custom-placeholder="All Year Levels"
+                                class="rw-select" :multiple="true" />
+                        </div>
+                        <div class="rw-filter-item">
+                            <label class="rw-label">Grant Provision</label>
+                            <MultiSelect v-model="selectedGrantProvisions" :options="grantProvisionOptions"
+                                optionLabel="label" optionValue="value" placeholder="All Provisions" showClear filter
+                                :filterFields="['label', 'value']" :maxSelectedLabels="3"
+                                :selectedItemsLabel="'{0} provisions selected'" showSelectAll class="rw-select" />
                         </div>
                     </div>
-                    <div v-if="isDateToInvalid" class="ios-section-footer ios-error">
-                        Date To must be after Date From
+
+                    <!-- Date Range -->
+                    <div class="rw-field-group" style="margin-top: 12px;">
+                        <label class="rw-label">Date Range</label>
+                        <div class="rw-date-row">
+                            <DatePicker v-model="dateFrom" placeholder="From date" showButtonBar dateFormat="M dd, yy"
+                                class="rw-datepicker" showIcon iconDisplay="input" />
+                            <span class="rw-date-sep">—</span>
+                            <DatePicker v-model="dateTo" placeholder="To date" showButtonBar dateFormat="M dd, yy"
+                                class="rw-datepicker" showIcon iconDisplay="input" />
+                        </div>
+                        <div v-if="isDateToInvalid" class="rw-error">
+                            End date must be after start date
+                        </div>
+                    </div>
+
+                    <div v-if="activeFiltersCount > 0" class="rw-clear-row">
+                        <button class="rw-clear-btn" @click="clearAllFilters">
+                            <AppIcon name="x" :size="12" /> Clear {{ activeFiltersCount }} filter(s)
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- STEP 3: Options -->
-            <div v-show="step === 3">
-                <div class="ios-section">
-                    <div class="ios-section-label">Title</div>
-                    <div class="ios-card">
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="type" :size="13" style="color: #007AFF;" />
-                                Report Title
-                            </div>
-                            <div class="ios-row-control">
-                                <InputText v-model="customReportTitle" class="ios-select"
+            <!-- ═══ SECTION 3: OPTIONS ═══ -->
+            <div class="rw-section" :class="{ 'rw-section-collapsed': collapsed.section3 }">
+                <div class="rw-section-header" @click="toggleSection('section3')">
+                    <div class="rw-section-step">3</div>
+                    <div class="rw-section-title">
+                        <span class="rw-section-label">Options</span>
+                        <span class="rw-section-summary">{{ paperSize }} · {{ orientation }} · Grouped by {{ groupBy ===
+                            'none'
+                            ? 'None' : groupByLabel }}</span>
+                    </div>
+                    <AppIcon :name="collapsed.section3 ? 'chevron-down' : 'chevron-up'" :size="14"
+                        class="rw-section-chevron" />
+                </div>
+                <div v-show="!collapsed.section3" class="rw-section-body">
+                    <!-- Two-column layout for options -->
+                    <div class="rw-options-grid">
+                        <!-- Left column: Title, Layout, Signatory -->
+                        <div class="rw-options-left">
+                            <div class="rw-field-group">
+                                <label class="rw-label">Report Title</label>
+                                <InputText v-model="customReportTitle" class="rw-input"
                                     :placeholder="defaultReportTitle" />
+                                <span class="rw-hint">Leave blank to use "{{ defaultReportTitle }}"</span>
                             </div>
-                        </div>
-                    </div>
-                    <div class="ios-section-footer">
-                        Leave blank to use {{ defaultReportTitle }}.
-                    </div>
-                </div>
 
-                <div class="ios-section">
-                    <div class="ios-section-label">Layout</div>
-                    <div class="ios-card">
-                        <!-- Paper Size -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="file" :size="13" style="color: #8E8E93;" />
-                                Paper Size
+                            <div class="rw-field-group">
+                                <label class="rw-label">Paper & Orientation</label>
+                                <div class="rw-inline-row">
+                                    <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
+                                        optionValue="value" class="rw-select" style="flex:1" />
+                                    <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
+                                        optionValue="value" class="rw-select" style="flex:1" />
+                                </div>
                             </div>
-                            <div class="ios-row-control">
-                                <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
-                                    optionValue="value" class="ios-select" />
-                            </div>
-                        </div>
 
-                        <!-- Orientation -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="desktop" :size="13" style="color: #FF9500;" />
-                                Orientation
-                            </div>
-                            <div class="ios-row-control">
-                                <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
-                                    optionValue="value" class="ios-select" />
-                            </div>
-                        </div>
-
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="user" :size="13" style="color: #34C759;" />
-                                Prepared By
-                            </div>
-                            <div class="ios-row-control">
-                                <InputText v-model="preparedBy" class="ios-select" placeholder="Optional" />
-                            </div>
-                        </div>
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
-                                Designation
-                            </div>
-                            <div class="ios-row-control">
-                                <InputText v-model="preparedByTitle" class="ios-select" placeholder="Optional" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ios-section-footer">
-                        Leave both fields blank to omit the prepared-by section.
-                    </div>
-                </div>
-
-                <div class="ios-section">
-                    <div class="ios-section-label">Signatory</div>
-                    <div class="ios-card">
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="user-check" :size="13" style="color: #007AFF;" />
-                                Noted By
-                            </div>
-                            <div class="ios-row-control">
-                                <InputText v-model="signatoryName" class="ios-select" placeholder="Optional" />
-                            </div>
-                        </div>
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="briefcase" :size="13" style="color: #8E8E93;" />
-                                Designation
-                            </div>
-                            <div class="ios-row-control">
-                                <InputText v-model="signatoryTitle" class="ios-select" placeholder="Optional" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ios-section-footer">
-                        Leave both fields blank to omit the noted-by section.
-                    </div>
-                </div>
-
-                <div class="ios-section">
-                    <div class="ios-section-label">{{ reportType === 'summary' ? 'Summary Grouping' : 'Grouping'
-                        }}</div>
-                    <div class="ios-card">
-                        <!-- Group By -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="objects-column" :size="13" style="color: #5856D6;" />
-                                Group By
-                            </div>
-                            <div class="ios-row-control">
-                                <Select v-model="groupBy" :options="groupByOptions" optionLabel="label"
-                                    optionValue="value" class="ios-select" />
-                            </div>
-                        </div>
-
-                        <!-- Sub-Group By -->
-                        <div class="ios-row" v-if="reportType === 'list' && groupBy && groupBy !== 'none'">
-                            <div class="ios-row-label">
-                                <AppIcon name="objects-column" :size="13" style="color: #8E8E93;" />
-                                Sub-Group
-                            </div>
-                            <div class="ios-row-control">
-                                <Select v-model="groupBySecondary" :options="secondaryGroupByOptions"
-                                    optionLabel="label" optionValue="value" placeholder="None" showClear
-                                    class="ios-select" />
-                            </div>
-                        </div>
-
-                        <!-- Tertiary Group By -->
-                        <div class="ios-row"
-                            v-if="reportType === 'list' && groupBySecondary && groupBySecondary !== 'none'">
-                            <div class="ios-row-label">
-                                <AppIcon name="objects-column" :size="13" style="color: #C7C7CC;" />
-                                3rd Group
-                            </div>
-                            <div class="ios-row-control">
-                                <Select v-model="groupByTertiary" :options="tertiaryGroupByOptions" optionLabel="label"
-                                    optionValue="value" placeholder="None" showClear class="ios-select" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ios-section-footer" v-if="reportType === 'summary'">
-                        Summary mode uses the selected group for the breakdown table on the report summary page.
-                    </div>
-                </div>
-
-                <div class="ios-section">
-                    <div class="ios-section-label">Options</div>
-                    <div class="ios-card">
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="wallet" :size="13" style="color: #34C759;" />
-                                Include Projected Expense
-                            </div>
-                            <div class="ios-row-control" style="justify-content: flex-end;">
-                                <InputSwitch v-model="includeProjectedExpense" />
-                            </div>
-                        </div>
-
-                        <div v-if="reportType === 'list' && canEnableJpmHighlighting" class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="user" :size="13" style="color: #16A34A;" />
-                                Highlight JPM Members
-                            </div>
-                            <div class="ios-row-control" style="justify-content: flex-end;">
-                                <InputSwitch v-model="enableJpmHighlighting" />
-                            </div>
-                        </div>
-
-                        <!-- Sort By -->
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="arrow-up-down" :size="13" style="color: #5856D6;" />
-                                Sort By
-                            </div>
-                            <div class="ios-row-control">
+                            <div class="rw-field-group">
+                                <label class="rw-label">Sort By</label>
                                 <Select v-model="sortBy" :options="sortByOptions" optionLabel="label"
-                                    optionValue="value" class="ios-select" />
+                                    optionValue="value" class="rw-select" />
                             </div>
-                        </div>
-                    </div>
 
-                    <div v-if="reportType === 'list' && canEnableJpmHighlighting" class="ios-section-footer">
-                        JPM-tagged members are highlighted with a green row background in detailed list reports.
-                    </div>
-                </div>
+                            <div class="rw-field-group">
+                                <label class="rw-label">Grouping</label>
+                                <Select v-model="groupBy" :options="groupByOptions" optionLabel="label"
+                                    optionValue="value" class="rw-select" />
+                                <div v-if="reportType === 'list' && groupBy && groupBy !== 'none'"
+                                    style="margin-top: 6px;">
+                                    <Select v-model="groupBySecondary" :options="secondaryGroupByOptions"
+                                        optionLabel="label" optionValue="value" placeholder="Sub-group (optional)"
+                                        showClear class="rw-select" style="margin-bottom: 6px;" />
+                                    <Select v-model="groupByTertiary" :options="tertiaryGroupByOptions"
+                                        optionLabel="label" optionValue="value" placeholder="3rd group (optional)"
+                                        showClear class="rw-select"
+                                        v-if="groupBySecondary && groupBySecondary !== 'none'" />
+                                </div>
+                            </div>
 
-                <div class="ios-section">
-                    <div class="ios-section-label">Show/Hide Fields</div>
-                    <div class="ios-card">
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="map-pin" :size="13" style="color: #FF2D55;" />
-                                Address
+                            <div class="rw-field-group">
+                                <label class="rw-label">Prepared By</label>
+                                <InputText v-model="preparedBy" class="rw-input" placeholder="Name (optional)" />
+                                <InputText v-model="preparedByTitle" class="rw-input"
+                                    placeholder="Designation (optional)" style="margin-top: 6px;" />
                             </div>
-                            <div class="ios-row-control" style="justify-content: flex-end;">
-                                <InputSwitch v-model="showAddress" />
-                            </div>
-                        </div>
 
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="bookmark-fill" :size="13" style="color: #007AFF;" />
-                                Program
-                            </div>
-                            <div class="ios-row-control" style="justify-content: flex-end;">
-                                <InputSwitch v-model="showProgram" />
-                            </div>
-                        </div>
-
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="building-2" :size="13" style="color: #34C759;" />
-                                School
-                            </div>
-                            <div class="ios-row-control" style="justify-content: flex-end;">
-                                <InputSwitch v-model="showSchool" />
+                            <div class="rw-field-group">
+                                <label class="rw-label">Noted By</label>
+                                <InputText v-model="signatoryName" class="rw-input" placeholder="Name (optional)" />
+                                <InputText v-model="signatoryTitle" class="rw-input"
+                                    placeholder="Designation (optional)" style="margin-top: 6px;" />
                             </div>
                         </div>
 
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="graduation-cap" :size="13" style="color: #AF52DE;" />
-                                Course
+                        <!-- Right column: Toggles -->
+                        <div class="rw-options-right">
+                            <div class="rw-field-group">
+                                <label class="rw-label">Report Options</label>
+                                <div class="rw-toggle-list">
+                                    <label class="rw-toggle-row">
+                                        <span>Include Projected Expense</span>
+                                        <ToggleSwitch v-model="includeProjectedExpense" />
+                                    </label>
+                                    <label v-if="reportType === 'list' && canEnableJpmHighlighting"
+                                        class="rw-toggle-row">
+                                        <span>Highlight JPM Members</span>
+                                        <ToggleSwitch v-model="enableJpmHighlighting" />
+                                    </label>
+                                </div>
                             </div>
-                            <div class="ios-row-control" style="justify-content: flex-end;">
-                                <InputSwitch v-model="showCourse" />
-                            </div>
-                        </div>
 
-                        <div class="ios-row">
-                            <div class="ios-row-label">
-                                <AppIcon name="message-square" :size="13" style="color: #FF9500;" />
-                                Remarks
-                            </div>
-                            <div class="ios-row-control" style="justify-content: flex-end;">
-                                <InputSwitch v-model="showRemarks" />
+                            <div class="rw-field-group">
+                                <label class="rw-label">Show / Hide Fields</label>
+                                <div class="rw-toggle-list">
+                                    <label class="rw-toggle-row">
+                                        <span>Address</span>
+                                        <ToggleSwitch v-model="showAddress" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Contact Number</span>
+                                        <ToggleSwitch v-model="showContactNumber" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Date Filed</span>
+                                        <ToggleSwitch v-model="showDateFiled" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Program</span>
+                                        <ToggleSwitch v-model="showProgram" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>School</span>
+                                        <ToggleSwitch v-model="showSchool" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Course</span>
+                                        <ToggleSwitch v-model="showCourse" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Remarks</span>
+                                        <ToggleSwitch v-model="showRemarks" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Requirements</span>
+                                        <ToggleSwitch v-model="showRequirements" />
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="ios-section-footer">
-                        Toggle individual fields to show or hide them from the report.
                     </div>
                 </div>
             </div>
-            <div style="height: 24px;"></div>
-        </div>
-
-        <!-- Sticky Footer -->
-        <div v-if="activeFiltersCount > 0" class="ios-footer">
-            <button class="ios-destructive-btn" @click="clearAllFilters">
-                Clear All Filters ({{ activeFiltersCount }})
-            </button>
         </div>
     </IosModal>
 
-    <!-- Report Preview Modal -->
+    <!-- Report Preview Modal (unchanged) -->
     <IosModal :visible="showPreview" width="95vw" max-width="95vw" :modal-content-style="{ height: '90vh' }"
         body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
         @update:visible="showPreview = $event">
@@ -454,6 +286,9 @@
 
         <template #header-right>
             <div class="ios-nav-actions">
+                <button class="ios-icon-btn" @click="doExportExcel" title="Export to Excel">
+                    <AppIcon name="file-spreadsheet" :size="16" style="color: #34C759;" />
+                </button>
                 <button class="ios-icon-btn" @click="doPrint" title="Print / Save as PDF">
                     <AppIcon name="printer" :size="16" style="color: #007AFF;" />
                 </button>
@@ -471,7 +306,7 @@
                     <AppIcon name="minus" :size="10" />
                 </button>
                 <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
-                }}%</span>
+                    }}%</span>
                 <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
                     class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
                     :disabled="zoomLevel >= 200">
@@ -498,17 +333,16 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import moment from 'moment';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
 import { useSystemOptions } from '@/composables/useSystemOptions';
-import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
-import { pagedjsPolyfillScript } from '@/utils/pagedjsPolyfill';
-import { getProfileReportTitle } from '@/Pages/Scholarship/Reports/report-helpers';
+import { getProfileReportTitle, formatName, formatDate, formatStatus, getReportStatus } from '@/Pages/Scholarship/Reports/report-helpers';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 
 // Custom Select Components
@@ -527,11 +361,17 @@ const props = defineProps({
 const emit = defineEmits(['update:show']);
 
 // ─── State ───
-const step = ref(1);
 const generating = ref(false);
 const showPreview = ref(false);
 const previewHtml = ref('');
+const reportRecords = ref([]);
 const zoomLevel = ref(130);
+
+// Collapsible sections
+const collapsed = ref({ section1: false, section2: false, section3: false });
+function toggleSection(name) {
+    collapsed.value[name] = !collapsed.value[name];
+}
 
 // Step 1
 const reportType = ref('list');
@@ -565,16 +405,18 @@ const enableJpmHighlighting = ref(false);
 const jpmFilter = ref('all');
 const sortBy = ref('default');
 const showAddress = ref(true);
+const showContactNumber = ref(false);
+const showDateFiled = ref(true);
 const showProgram = ref(true);
 const showSchool = ref(true);
 const showCourse = ref(true);
-const showRemarks = ref(false);
+const showRemarks = ref(true);
+const showRequirements = ref(false);
 
 // ─── Composables ───
 const page = usePage();
 const currentUser = computed(() => page.props.auth.user);
 const preparedBy = ref('');
-const { statusOptions, getStatusConfig } = useScholarshipStatus();
 
 const canEnableJpmHighlighting = computed(() => {
     if (!currentUser.value) return false;
@@ -583,8 +425,16 @@ const canEnableJpmHighlighting = computed(() => {
     return userRoles.some(role => allowedRoles.includes(role.name || role));
 });
 
-// ─── Step titles ───
-const stepTitles = ['Report Type', 'Filters', 'Options'];
+// ─── Computed summaries ───
+const statusLabel = computed(() => {
+    const found = statusChoices.value.find(s => s.value === selectedStatus.value);
+    return found ? found.label : 'All Statuses';
+});
+
+const groupByLabel = computed(() => {
+    const found = groupByOptions.find(o => o.value === groupBy.value);
+    return found ? found.label : 'None';
+});
 
 // ─── Status choices ───
 const statusChoices = computed(() => {
@@ -599,13 +449,13 @@ const statusChoices = computed(() => {
         { value: 'withdrawn', label: 'Withdrawn', color: '#8B5CF6' },
         { value: 'loa', label: 'Leave of Absence', color: '#D97706' },
         { value: 'suspended', label: 'Suspended', color: '#DC2626' },
+        { value: 'endorsed', label: 'Endorsed', color: '#7C3AED' },
     ];
     return configs;
 });
 
 // ─── Options ───
-const _grantProvisionRaw = useSystemOptions('grant_provision');
-const grantProvisionOptions = computed(() => _grantProvisionRaw.value);
+const grantProvisionOptions = useSystemOptions('grant_provision');
 
 const groupByOptions = [
     { label: 'No Grouping', value: 'none' },
@@ -629,12 +479,6 @@ const orientationOptions = [
     { label: 'Landscape', value: 'landscape' },
 ];
 
-const jpmFilterOptions = [
-    { label: 'Show All', value: 'all' },
-    { label: 'JPM Only', value: 'jpm_only' },
-    { label: 'Hide JPM', value: 'hide_jpm' },
-];
-
 const sortByOptions = [
     { label: 'Default Order', value: 'default' },
     { label: 'Date Filed (Oldest First)', value: 'date_filed_asc' },
@@ -652,11 +496,6 @@ const tertiaryGroupByOptions = computed(() =>
 );
 
 // ─── Computed ───
-const canProceed = computed(() => {
-    if (step.value === 2 && isDateToInvalid.value) return false;
-    return true;
-});
-
 const isDateToInvalid = computed(() => {
     if (dateFrom.value && dateTo.value) {
         return moment(dateTo.value).isBefore(dateFrom.value);
@@ -680,76 +519,49 @@ const defaultReportTitle = computed(() => getProfileReportTitle(selectedStatus.v
 const resolvedReportTitle = computed(() => customReportTitle.value?.trim() || defaultReportTitle.value);
 
 const paperConfig = computed(() => getReportPaperConfig(paperSize.value, orientation.value));
-const SCHOLARSHIP_REPORT_PAGED_JS_ENABLED = false;
 const iframeWidth = computed(() => paperConfig.value.widthPx);
-const iframePagedHeight = ref(null); // set by postMessage from Paged.js after render
-const iframeHeight = computed(() => iframePagedHeight.value ?? paperConfig.value.heightPx);
-
-function _onPagedMessage(e) {
-    if (e.data?.type === 'pagedjs:rendered') {
-        iframePagedHeight.value = e.data.height;
-    }
-}
+const iframeHeight = computed(() => paperConfig.value.heightPx);
 
 function resetPreviewState() {
-    window.removeEventListener('message', _onPagedMessage);
     showPreview.value = false;
     previewHtml.value = '';
-    iframePagedHeight.value = null;
+    reportRecords.value = [];
 }
-
-watch(showPreview, (v) => {
-    if (v) {
-        iframePagedHeight.value = null;
-        window.addEventListener('message', _onPagedMessage);
-    } else {
-        window.removeEventListener('message', _onPagedMessage);
-    }
-});
 
 // ─── Methods ───
 function handleWizardVisibleUpdate(value) {
-    if (!value) {
-        close();
-        return;
-    }
-
-    emit('update:show', value);
+    if (value) emit('update:show', value);
+    else close();
 }
 
 function handleWizardBack() {
-    if (step.value > 1) {
-        step.value -= 1;
-        return;
-    }
-
     close();
-}
-
-function handleWizardAdvance() {
-    if (!canProceed.value || step.value >= 3) {
-        return;
-    }
-
-    step.value += 1;
 }
 
 function close() {
     resetPreviewState();
     emit('update:show', false);
-    // Reset to step 1 on close
-    setTimeout(() => { step.value = 1; }, 300);
+}
+
+function clearMultiSelection(selection) {
+    if (Array.isArray(selection.value)) {
+        if (selection.value.length === 0) return;
+        selection.value.splice(0, selection.value.length);
+        return;
+    }
+
+    selection.value = [];
 }
 
 function clearAllFilters() {
     dateFrom.value = null;
     dateTo.value = null;
-    selectedPrograms.value = [];
-    selectedSchools.value = [];
-    selectedCourses.value = [];
-    selectedMunicipalities.value = [];
-    selectedYearLevels.value = [];
-    selectedGrantProvisions.value = [];
+    clearMultiSelection(selectedCourses);
+    clearMultiSelection(selectedPrograms);
+    clearMultiSelection(selectedSchools);
+    clearMultiSelection(selectedMunicipalities);
+    clearMultiSelection(selectedYearLevels);
+    clearMultiSelection(selectedGrantProvisions);
 }
 
 async function generateReport() {
@@ -792,6 +604,7 @@ async function generateReport() {
         } else if (Array.isArray(response.data?.data)) {
             records = response.data.data;
         }
+        reportRecords.value = records;
 
         // Build filter summary for template header
         const filterSummary = buildFilterSummary();
@@ -819,19 +632,19 @@ async function generateReport() {
                 signatoryTitle: signatoryTitle.value?.trim() || '',
                 sortBy: sortBy.value,
                 showAddress: showAddress.value,
+                showContactNumber: showContactNumber.value,
+                showDateFiled: showDateFiled.value,
                 showProgram: showProgram.value,
                 showSchool: showSchool.value,
                 showCourse: showCourse.value,
                 showRemarks: showRemarks.value,
+                showRequirements: showRequirements.value,
             },
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
         };
 
-        // Pick template
-        const TemplateComponent = ProfileReportTemplate;
-
         // Render to HTML
-        const bodyHtml = renderVueTemplate(TemplateComponent, templateProps);
+        const bodyHtml = renderVueTemplate(ProfileReportTemplate, templateProps);
 
         // Build full document
         const fullHtml = buildReportDoc(bodyHtml, resolvedReportTitle.value, paperConfig.value);
@@ -870,10 +683,6 @@ function buildFilterSummary() {
     if (dateFrom.value) summary['Date From'] = moment(dateFrom.value).format('MMM DD, YYYY');
     if (dateTo.value) summary['Date To'] = moment(dateTo.value).format('MMM DD, YYYY');
     return summary;
-}
-
-function getReportTitle() {
-    return resolvedReportTitle.value;
 }
 
 function getReportLifecycleScript() {
@@ -930,26 +739,19 @@ function getReportLifecycleScript() {
         '}',
     ];
 
-    if (SCHOLARSHIP_REPORT_PAGED_JS_ENABLED) {
-        lines.push("window.PagedPolyfill.on('rendered', finalizeRender);");
-    } else {
-        lines.push('var scheduleFinalize = function () {');
-        lines.push('  window.requestAnimationFrame(finalizeRender);');
-        lines.push('};');
-        lines.push("if (document.readyState === 'complete') {");
-        lines.push('  scheduleFinalize();');
-        lines.push('} else {');
-        lines.push("  window.addEventListener('load', scheduleFinalize, { once: true });");
-        lines.push('}');
-    }
+    lines.push('var scheduleFinalize = function () {');
+    lines.push('  window.requestAnimationFrame(finalizeRender);');
+    lines.push('};');
+    lines.push("if (document.readyState === 'complete') {");
+    lines.push('  scheduleFinalize();');
+    lines.push('} else {');
+    lines.push("  window.addEventListener('load', scheduleFinalize, { once: true });");
+    lines.push('}');
 
     return lines.join('\n');
 }
 
 function buildReportDoc(bodyHtml, title, paperSettings) {
-    const pagedJsScriptTag = SCHOLARSHIP_REPORT_PAGED_JS_ENABLED
-        ? `\n    <script>${pagedjsPolyfillScript}<\/script>`
-        : '';
     const lifecycleScript = getReportLifecycleScript();
 
     return `<!DOCTYPE html>
@@ -961,7 +763,6 @@ function buildReportDoc(bodyHtml, title, paperSettings) {
     body { visibility: hidden; margin: 0; padding: 0; }
     ${getReportCss(paperSettings)}
   </style>
-${pagedJsScriptTag}
   <script>
 ${lifecycleScript}
   <\/script>
@@ -983,29 +784,133 @@ function doPrint() {
     win.document.close();
 }
 
-// ─── Watchers ───
-watch(enableJpmHighlighting, v => { if (!v) jpmFilter.value = 'all'; });
-watch(groupBy, v => { if (v === 'none' || v === groupBySecondary.value) { groupBySecondary.value = 'none'; groupByTertiary.value = 'none'; } });
-watch(groupBySecondary, v => { if (v === 'none' || v === groupByTertiary.value) groupByTertiary.value = 'none'; });
+function doExportExcel() {
+    const records = reportRecords.value;
+    if (!records || records.length === 0) return;
 
-// Reset step when modal opens
-watch(() => props.show, v => {
+    // Build columns matching the table structure
+    const headers = [];
+    const keys = [];
+
+    if (showSequenceNumbers.value) { headers.push('#'); keys.push('_seq'); }
+    headers.push('Name'); keys.push('name');
+    if (showContactNumber.value) { headers.push('Contact Number'); keys.push('contact_number'); }
+    if (showAddress.value) { headers.push('Address'); keys.push('address'); }
+    if (showProgram.value) { headers.push('Program'); keys.push('program'); }
+    if (showSchool.value) { headers.push('School'); keys.push('school'); }
+    if (showCourse.value) { headers.push('Course'); keys.push('course'); }
+    headers.push('Year Level'); keys.push('year_level');
+    headers.push('Term'); keys.push('term');
+    headers.push('Academic Year'); keys.push('academic_year');
+    headers.push('Grant Provision'); keys.push('grant_provision');
+    if (showDateFiled.value) { headers.push('Date Filed'); keys.push('date_filed'); }
+    headers.push('Status'); keys.push('status');
+    if (showRemarks.value) { headers.push('Remarks'); keys.push('remarks'); }
+
+    if (includeProjectedExpense.value) {
+        headers.push('Proj. Terms', 'Proj. Expense', 'Proj. Completion');
+        keys.push('projected_term_count', 'projected_total_expense', 'projected_completion_year');
+    }
+
+    // Build rows
+    const rows = records.map((rec, idx) => {
+        const row = [];
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            switch (key) {
+                case '_seq': row.push(idx + 1); break;
+                case 'name': row.push(formatName(rec)); break;
+                case 'contact_number': row.push(rec.contact_no || ''); break;
+                case 'address': row.push([rec.barangay, rec.municipality].filter(Boolean).join(', ')); break;
+                case 'program': row.push(rec.program_name || rec.program || ''); break;
+                case 'school': row.push(rec.school_name || rec.school || ''); break;
+                case 'course': row.push(rec.course_name || rec.course || ''); break;
+                case 'year_level': row.push(rec.year_level || ''); break;
+                case 'term': row.push(rec.term || ''); break;
+                case 'academic_year': row.push(rec.academic_year || ''); break;
+                case 'grant_provision': row.push(rec.grant_provision_label || rec.grant_provision || ''); break;
+                case 'date_filed': row.push(formatDate(rec.date_filed)); break;
+                case 'status': row.push(formatStatus(getReportStatus(rec))); break;
+                case 'remarks': row.push(rec.remarks || rec.decline_reason || ''); break;
+                case 'projected_term_count': row.push(rec.projected_term_count ?? ''); break;
+                case 'projected_total_expense': row.push(rec.projected_total_expense ?? ''); break;
+                case 'projected_completion_year': row.push(rec.projected_completion_year ?? ''); break;
+                default: row.push(rec[key] ?? ''); break;
+            }
+        }
+        return row;
+    });
+
+    // Create workbook and worksheet
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+
+    // Auto-fit column widths
+    const colWidths = headers.map((h, i) => {
+        const maxLen = Math.max(h.length, ...rows.map(r => String(r[i] || '').length));
+        return { wch: Math.min(Math.max(maxLen + 2, 8), 40) };
+    });
+    ws['!cols'] = colWidths;
+
+    // Generate filename
+    const title = (customReportTitle.value?.trim() || defaultReportTitle.value).replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
+    const filename = `${title}_${moment().format('YYYY-MM-DD')}.xlsx`;
+
+    XLSX.writeFile(wb, filename);
+}
+
+// ─── Watchers ───
+watch(enableJpmHighlighting, (v) => {
+    if (!v && jpmFilter.value !== 'all') {
+        jpmFilter.value = 'all';
+    }
+});
+
+// Use a shared suppression flag to prevent cascading watcher loops
+let suppressingGroupByUpdates = false;
+watch(groupBy, (v) => {
+    if (suppressingGroupByUpdates) return;
+    suppressingGroupByUpdates = true;
+
+    if (v === 'none' || v === groupBySecondary.value) {
+        if (groupBySecondary.value !== 'none') {
+            groupBySecondary.value = 'none';
+        }
+        if (groupByTertiary.value !== 'none') {
+            groupByTertiary.value = 'none';
+        }
+    }
+
+    suppressingGroupByUpdates = false;
+});
+
+watch(groupBySecondary, (v) => {
+    if (suppressingGroupByUpdates) return;
+
+    if (v === 'none' || v === groupByTertiary.value) {
+        if (groupByTertiary.value !== 'none') {
+            groupByTertiary.value = 'none';
+        }
+    }
+});
+
+// Reset state when modal opens - use a one-shot approach to avoid transition conflicts
+let hasResetOnOpen = false;
+watch(() => props.show, (v) => {
     if (v) {
-        nextTick(() => {
-            step.value = 1;
+        if (hasResetOnOpen) return;
+        hasResetOnOpen = true;
+        // Use queueMicrotask instead of nextTick to resolve before the next render frame
+        queueMicrotask(() => {
             customReportTitle.value = '';
             preparedBy.value = '';
             preparedByTitle.value = '';
             signatoryName.value = '';
             signatoryTitle.value = '';
-            sortBy.value = 'default';
-            showAddress.value = true;
-            showProgram.value = true;
-            showSchool.value = true;
-            showCourse.value = true;
-            showRemarks.value = false;
         });
     } else {
+        hasResetOnOpen = false;
         resetPreviewState();
     }
 });
@@ -1014,3 +919,408 @@ onBeforeUnmount(() => {
     resetPreviewState();
 });
 </script>
+
+<style scoped>
+/* ─── Report Wizard Layout ─── */
+.report-wizard-body {
+    padding: 4px 12px 12px;
+    max-height: 78vh;
+    overflow-y: auto;
+}
+
+/* ─── Collapsible Sections ─── */
+.rw-section {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    background: #fff;
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+}
+
+.rw-section:hover {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.rw-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.rw-section-header:active {
+    background: #f9fafb;
+}
+
+.rw-section-step {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #007AFF;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.rw-section-collapsed .rw-section-step {
+    background: #d1d5db;
+}
+
+.rw-section-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.rw-section-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+}
+
+.rw-section-summary {
+    display: block;
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.3;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rw-section-chevron {
+    color: #9ca3af;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.rw-section-body {
+    padding: 4px 12px 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* ─── Form Elements ─── */
+.rw-field-group {
+    margin-bottom: 12px;
+}
+
+.rw-field-group:last-child {
+    margin-bottom: 0;
+}
+
+.rw-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.rw-hint {
+    display: block;
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+.rw-error {
+    font-size: 11px;
+    color: #ef4444;
+    margin-top: 4px;
+}
+
+/* ─── Segmented Control ─── */
+.rw-segmented {
+    display: flex;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.rw-seg-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #374151;
+    background: #fff;
+    border: none;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.rw-seg-btn:not(:last-child) {
+    border-right: 1px solid #d1d5db;
+}
+
+.rw-seg-btn:hover {
+    background: #f9fafb;
+}
+
+.rw-seg-active {
+    background: #007AFF;
+    color: #fff;
+    font-weight: 600;
+}
+
+.rw-seg-active:hover {
+    background: #0066d6;
+}
+
+/* ─── Chip Group ─── */
+.rw-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.rw-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #374151;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.rw-chip:hover {
+    background: #e5e7eb;
+}
+
+.rw-chip-active {
+    background: #eff6ff;
+    border-color: #007AFF;
+    color: #007AFF;
+    font-weight: 600;
+}
+
+.rw-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ─── Filters Grid ─── */
+.rw-filters-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.rw-filter-item {
+    min-width: 0;
+}
+
+.rw-select {
+    width: 100%;
+}
+
+.rw-select :deep(.p-dropdown),
+.rw-select :deep(.p-multiselect),
+.rw-select :deep(.p-inputtext) {
+    width: 100%;
+    font-size: 12px;
+    padding: 6px 8px;
+}
+
+/* ─── Date Range ─── */
+.rw-date-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rw-datepicker {
+    flex: 1;
+}
+
+.rw-datepicker :deep(.p-datepicker) {
+    width: 100%;
+    font-size: 12px;
+}
+
+.rw-date-sep {
+    color: #9ca3af;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+/* ─── Clear Button ─── */
+.rw-clear-row {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.rw-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #ef4444;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.rw-clear-btn:hover {
+    background: #fee2e2;
+}
+
+/* ─── Options Two-Column Grid ─── */
+.rw-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.rw-options-left,
+.rw-options-right {
+    min-width: 0;
+}
+
+.rw-input {
+    width: 100%;
+}
+
+.rw-input :deep(.p-inputtext) {
+    width: 100%;
+    font-size: 12px;
+    padding: 6px 8px;
+}
+
+.rw-inline-row {
+    display: flex;
+    gap: 8px;
+}
+
+/* ─── Toggle List ─── */
+.rw-toggle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.rw-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 12px;
+    color: #374151;
+    cursor: pointer;
+    border-bottom: 1px solid #f9fafb;
+}
+
+.rw-toggle-row:last-child {
+    border-bottom: none;
+}
+
+.rw-toggle-row:hover {
+    color: #111827;
+}
+
+/* ─── Dark Mode ─── */
+.dark .rw-section {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .rw-section-header:active {
+    background: #111827;
+}
+
+.dark .rw-section-label {
+    color: #e5e7eb;
+}
+
+.dark .rw-section-body {
+    border-color: #374151;
+}
+
+.dark .rw-label {
+    color: #9ca3af;
+}
+
+.dark .rw-segmented {
+    border-color: #4b5563;
+}
+
+.dark .rw-seg-btn {
+    color: #d1d5db;
+    background: #1f2937;
+}
+
+.dark .rw-seg-btn:not(:last-child) {
+    border-color: #4b5563;
+}
+
+.dark .rw-seg-btn:hover {
+    background: #374151;
+}
+
+.dark .rw-chip {
+    color: #d1d5db;
+    background: #374151;
+    border-color: #4b5563;
+}
+
+.dark .rw-chip:hover {
+    background: #4b5563;
+}
+
+.dark .rw-chip-active {
+    background: #1e3a5f;
+    border-color: #3b82f6;
+    color: #60a5fa;
+}
+
+.dark .rw-toggle-row {
+    color: #d1d5db;
+    border-color: #1f2937;
+}
+
+.dark .rw-toggle-row:hover {
+    color: #f3f4f6;
+}
+
+.dark .rw-clear-btn {
+    background: #3b1a1a;
+    border-color: #7f1d1d;
+}
+
+.dark .rw-clear-btn:hover {
+    background: #4c2222;
+}
+
+.dark .rw-hint {
+    color: #6b7280;
+}
+</style>
