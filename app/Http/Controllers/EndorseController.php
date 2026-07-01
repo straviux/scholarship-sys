@@ -68,7 +68,8 @@ class EndorseController extends Controller
     {
         $query = $this->endorseService->getEndorsableProfilesQuery($request->all());
 
-        $profiles = $query->paginate($request->input('per_page', 50));
+        $perPage = $request->input('per_page', 1000);
+        $profiles = $query->paginate($perPage);
 
         return response()->json($profiles);
     }
