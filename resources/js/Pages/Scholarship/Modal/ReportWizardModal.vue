@@ -261,6 +261,14 @@
                                         <span>Requirements</span>
                                         <ToggleSwitch v-model="showRequirements" />
                                     </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Scholarship Date</span>
+                                        <ToggleSwitch v-model="showScholarshipDate" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Year Level</span>
+                                        <ToggleSwitch v-model="showYearLevel" />
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -412,6 +420,8 @@ const showSchool = ref(true);
 const showCourse = ref(true);
 const showRemarks = ref(true);
 const showRequirements = ref(false);
+const showScholarshipDate = ref(true);
+const showYearLevel = ref(true);
 
 // ─── Composables ───
 const page = usePage();
@@ -481,6 +491,8 @@ const orientationOptions = [
 
 const sortByOptions = [
     { label: 'Default Order', value: 'default' },
+    { label: 'Alphabetical (A-Z)', value: 'name_asc' },
+    { label: 'Alphabetical (Z-A)', value: 'name_desc' },
     { label: 'Date Filed (Oldest First)', value: 'date_filed_asc' },
     { label: 'Date Filed (Newest First)', value: 'date_filed_desc' },
     { label: 'Date Approved (Oldest First)', value: 'date_approved_asc' },
@@ -639,6 +651,8 @@ async function generateReport() {
                 showCourse: showCourse.value,
                 showRemarks: showRemarks.value,
                 showRequirements: showRequirements.value,
+                showScholarshipDate: showScholarshipDate.value,
+                showYearLevel: showYearLevel.value,
             },
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
         };

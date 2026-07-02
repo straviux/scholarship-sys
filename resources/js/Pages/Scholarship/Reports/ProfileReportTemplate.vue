@@ -18,6 +18,8 @@ const props = defineProps({
     showCourse: { type: Boolean, default: true },
     showRemarks: { type: Boolean, default: true },
     showRequirements: { type: Boolean, default: false },
+    showScholarshipDate: { type: Boolean, default: true },
+    showYearLevel: { type: Boolean, default: true },
 });
 
 const SUMMARY_HDR = 'background:#f0f0f0;font-weight:700;font-size:9pt;padding:5pt 8pt;text-transform:uppercase;border-bottom:0.5pt solid #ccc;';
@@ -44,6 +46,8 @@ const showSchool = computed(() => props.options?.showSchool !== false);
 const showCourse = computed(() => props.options?.showCourse !== false);
 const showRemarks = computed(() => props.options?.showRemarks !== false);
 const showRequirements = computed(() => props.options?.showRequirements === true);
+const showScholarshipDate = computed(() => props.options?.showScholarshipDate !== false);
+const showYearLevel = computed(() => props.options?.showYearLevel !== false);
 
 function resolveDateValue(record, fields) {
     for (const field of fields) {
@@ -74,6 +78,10 @@ function compareByName(left, right) {
 
 function compareRecords(left, right, sortOption) {
     switch (sortOption) {
+        case 'name_asc':
+            return compareByName(left, right);
+        case 'name_desc':
+            return -compareByName(left, right);
         case 'date_filed_asc':
             return compareByDate(left, right, ['date_filed', 'date_applied', 'created_at'], 'asc');
         case 'date_filed_desc':
@@ -92,11 +100,14 @@ const sortedRecords = computed(() => {
     const sortOption = sortBy.value;
 
     return records.sort((left, right) => {
-        const priorityResult = getPriorityReportSortBucket(left, highlightJpmMembers.value)
-            - getPriorityReportSortBucket(right, highlightJpmMembers.value);
+        // Priority grouping only applies for default sort
+        if (sortOption === 'default') {
+            const priorityResult = getPriorityReportSortBucket(left, highlightJpmMembers.value)
+                - getPriorityReportSortBucket(right, highlightJpmMembers.value);
 
-        if (priorityResult !== 0) {
-            return priorityResult;
+            if (priorityResult !== 0) {
+                return priorityResult;
+            }
         }
 
         return compareRecords(left, right, sortOption) || compareByName(left, right);
@@ -258,19 +269,23 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
             <template v-else-if="reportType === 'list'">
                 <template v-if="grouped">
                     <div v-for="group in grouped" :key="group.key" style="margin-bottom:14pt;">
+                        <!-- Main group: show header + records in one table -->
                         <ProfileReportTable v-if="group.records" :records="group.records" :filters="filters"
                             :options="options" :group-headers="buildGroupHeaderRows(group)" :show-address="showAddress"
                             :show-contact-number="showContactNumber" :show-date-filed="showDateFiled"
                             :show-program="showProgram" :show-school="showSchool" :show-course="showCourse"
-                            :show-remarks="showRemarks" :show-requirements="showRequirements" />
+                            :show-remarks="showRemarks" :show-requirements="showRequirements"
+                            :show-scholarship-date="showScholarshipDate" :show-year-level="showYearLevel" />
 
+                        <!-- Sub-groups: only show sub-group header (not the main group header again) -->
                         <template v-for="sub in group.subGroups || []" :key="`${group.key}-${sub.key}`">
                             <ProfileReportTable v-if="sub.records" :records="sub.records" :filters="filters"
                                 :options="options" :group-headers="buildGroupHeaderRows(group, sub)"
                                 :show-address="showAddress" :show-contact-number="showContactNumber"
                                 :show-date-filed="showDateFiled" :show-program="showProgram" :show-school="showSchool"
                                 :show-course="showCourse" :show-remarks="showRemarks"
-                                :show-requirements="showRequirements" style="margin-top:6pt;" />
+                                :show-requirements="showRequirements" :show-scholarship-date="showScholarshipDate"
+                                :show-year-level="showYearLevel" style="margin-top:6pt;" />
 
                             <template v-for="ter in sub.subGroups || []" :key="`${group.key}-${sub.key}-${ter.key}`">
                                 <ProfileReportTable v-if="ter.records" :records="ter.records" :filters="filters"
@@ -278,7 +293,8 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                                     :show-address="showAddress" :show-contact-number="showContactNumber"
                                     :show-date-filed="showDateFiled" :show-program="showProgram"
                                     :show-school="showSchool" :show-course="showCourse" :show-remarks="showRemarks"
-                                    :show-requirements="showRequirements" style="margin-top:6pt;" />
+                                    :show-requirements="showRequirements" :show-scholarship-date="showScholarshipDate"
+                                    :show-year-level="showYearLevel" style="margin-top:6pt;" />
                             </template>
                         </template>
                     </div>
@@ -288,7 +304,8 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                     <ProfileReportTable :records="sortedRecords" :filters="filters" :options="options"
                         :show-address="showAddress" :show-contact-number="showContactNumber"
                         :show-date-filed="showDateFiled" :show-program="showProgram" :show-school="showSchool"
-                        :show-course="showCourse" :show-remarks="showRemarks" :show-requirements="showRequirements" />
+                        :show-course="showCourse" :show-remarks="showRemarks" :show-requirements="showRequirements"
+                        :show-scholarship-date="showScholarshipDate" :show-year-level="showYearLevel" />
                 </template>
             </template>
 

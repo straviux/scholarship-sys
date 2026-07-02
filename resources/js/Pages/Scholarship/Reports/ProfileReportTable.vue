@@ -15,6 +15,8 @@ const props = defineProps({
     showCourse: { type: Boolean, default: true },
     showRemarks: { type: Boolean, default: true },
     showRequirements: { type: Boolean, default: false },
+    showScholarshipDate: { type: Boolean, default: true },
+    showYearLevel: { type: Boolean, default: true },
 });
 
 const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;line-height:1.15;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;vertical-align:middle;';
@@ -30,6 +32,7 @@ const groupHeaderRows = computed(() => (Array.isArray(props.groupHeaders) ? prop
     })));
 
 const selectedStatus = computed(() => props.options?.selectedStatus ?? null);
+const showScholarshipDate = computed(() => props.showScholarshipDate !== false);
 const highlightJpmMembers = computed(() => props.options?.enableJpmHighlighting === true);
 const showSequenceNumbers = computed(() => props.options?.showSequenceNumbers !== false);
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
@@ -45,8 +48,8 @@ const hiddenColumns = computed(() => ({
     program: !props.showProgram || !!props.filters?.Program || activeGroupFields.value.has('program'),
     school: !props.showSchool || !!props.filters?.School || activeGroupFields.value.has('school'),
     course: !props.showCourse || !!props.filters?.Course || activeGroupFields.value.has('course'),
-    remarks: false, // always show the remarks column
-    year_level: !!props.filters?.['Year Level'] || activeGroupFields.value.has('year_level'),
+    remarks: false,
+    year_level: !props.showYearLevel || !!props.filters?.['Year Level'] || activeGroupFields.value.has('year_level'),
     report_status: activeGroupFields.value.has('unified_status'),
 }));
 
@@ -109,6 +112,10 @@ const singleColumns = computed(() => {
 });
 
 const detailConfig = computed(() => {
+    if (!showScholarshipDate.value) {
+        return { label: '', columns: [] };
+    }
+
     switch (selectedStatus.value) {
         case 'pending':
             return {
@@ -315,7 +322,7 @@ function valueStyle(column) {
     const nowrap = ['contact_number', 'date_filed', 'date_approved', 'date_denied', 'interviewed_at', 'report_date'].includes(column.key)
         ? 'white-space:nowrap;'
         : '';
-    const uppercase = column.key === 'address_location' ? 'text-transform:uppercase;' : '';
+    const uppercase = (column.key === 'address_location' || column.key === 'year_level') ? 'text-transform:uppercase;' : '';
     const multiline = column.key === 'remarks_summary' ? 'white-space:pre-line;' : '';
 
     return `${TD}${align}${emphasis}${nameSize}${nowrap}${uppercase}${multiline}`;
@@ -361,7 +368,7 @@ function cellValue(record, column) {
         case 'name':
             return formatName(record);
         case 'contact_number':
-            return record?.contact_no || 'â€”';
+            return record?.contact_no || '';
         case 'address_location':
             return formatAddress(record);
         case 'program_name':
@@ -426,8 +433,8 @@ function cellValue(record, column) {
                     {{ column.label }}
                 </th>
                 <th v-if="projectedColumns.length" :style="TH" :colspan="projectedColumns.length">Projected</th>
-                <th v-if="groupedDetailColumns.length" :style="TH" :colspan="groupedDetailColumns.length">{{
-                    detailConfig.label }}</th>
+                <th v-if="detailConfig.columns.length && groupedDetailColumns.length" :style="TH"
+                    :colspan="groupedDetailColumns.length">{{ detailConfig.label }}</th>
                 <th v-for="column in trailingSingleColumns" :key="`top-trailing-${column.key}`" :style="TH"
                     :rowspan="hasSubHeaderRow ? 2 : 1">
                     {{ column.label }}

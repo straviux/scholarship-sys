@@ -1008,31 +1008,19 @@ const truncateText = (text, maxLength = 80) => {
                     <div class="flex flex-col col-span-2">
                         <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
                         <div class="flex gap-2">
-                            <InputGroup>
-                                <InputGroupAddon><span class="text-xs">From</span></InputGroupAddon>
-                                <DatePicker v-model="drawerFilter.date_from" size="small" class="w-full"
-                                    date-format="M dd, yy" showIcon iconDisplay="input" />
-                            </InputGroup>
-                            <InputGroup>
-                                <InputGroupAddon><span class="text-xs">To</span></InputGroupAddon>
-                                <DatePicker v-model="drawerFilter.date_to" size="small" class="w-full"
-                                    date-format="M dd, yy" showIcon iconDisplay="input" />
-                            </InputGroup>
+                            <DatePicker v-model="drawerFilter.date_from" size="small" class="w-full"
+                                date-format="M dd, yy" showIcon iconDisplay="input" placeholder="From" />
+                            <DatePicker v-model="drawerFilter.date_to" size="small" class="w-full"
+                                date-format="M dd, yy" showIcon iconDisplay="input" placeholder="To" />
                         </div>
                     </div>
                     <div class="flex flex-col col-span-2">
                         <label class="text-xs font-medium text-gray-600 mb-1">Date Encoded</label>
                         <div class="flex gap-2">
-                            <InputGroup>
-                                <InputGroupAddon><span class="text-xs">From</span></InputGroupAddon>
-                                <DatePicker v-model="drawerFilter.encoded_from" size="small" class="w-full"
-                                    date-format="M dd, yy" showIcon iconDisplay="input" />
-                            </InputGroup>
-                            <InputGroup>
-                                <InputGroupAddon><span class="text-xs">To</span></InputGroupAddon>
-                                <DatePicker v-model="drawerFilter.encoded_to" size="small" class="w-full"
-                                    date-format="M dd, yy" showIcon iconDisplay="input" />
-                            </InputGroup>
+                            <DatePicker v-model="drawerFilter.encoded_from" size="small" class="w-full"
+                                date-format="M dd, yy" showIcon iconDisplay="input" placeholder="From" />
+                            <DatePicker v-model="drawerFilter.encoded_to" size="small" class="w-full"
+                                date-format="M dd, yy" showIcon iconDisplay="input" placeholder="To" />
                         </div>
                     </div>
                 </div>
@@ -1093,20 +1081,10 @@ const truncateText = (text, maxLength = 80) => {
                             size="small" />
                     </div>
                     <div class="flex gap-3">
-                        <InputGroup class="!w-52">
-                            <InputGroupAddon>
-                                <span class="text-xs">Filed From</span>
-                            </InputGroupAddon>
-                            <DatePicker v-model="filter.date_from" size="small" class="w-full" date-format="M dd, yy"
-                                showIcon iconDisplay="input" />
-                        </InputGroup>
-                        <InputGroup class="!w-52">
-                            <InputGroupAddon>
-                                <span class="text-xs">Filed To</span>
-                            </InputGroupAddon>
-                            <DatePicker v-model="filter.date_to" size="small" class="w-full" date-format="M dd, yy"
-                                showIcon iconDisplay="input" />
-                        </InputGroup>
+                        <DatePicker v-model="filter.date_from" size="small" class="w-36" date-format="M dd, yy" showIcon
+                            iconDisplay="input" placeholder="Filed From" />
+                        <DatePicker v-model="filter.date_to" size="small" class="w-36" date-format="M dd, yy" showIcon
+                            iconDisplay="input" placeholder="Filed To" />
                     </div>
                     <AppButton v-if="activeFilterTags.length" icon="times" severity="danger" text rounded size="small"
                         @click="clearFilter" v-tooltip.bottom="'Clear Filters'" />
@@ -1160,8 +1138,8 @@ const truncateText = (text, maxLength = 80) => {
                     paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                     :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
                     v-model:selection="selectedRows" dataKey="profile_id"
-                    :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true" class="applicants-table ios-datatable-rounded"
-                    @row-contextmenu="onRowContextMenu" contextMenu>
+                    :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true"
+                    class="applicants-table ios-datatable-rounded" @row-contextmenu="onRowContextMenu" contextMenu>
 
                     <!-- Selection Column -->
                     <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
@@ -1412,4 +1390,3 @@ const truncateText = (text, maxLength = 80) => {
             @update:show="showExportModal = $event" />
     </AdminLayout>
 </template>
-

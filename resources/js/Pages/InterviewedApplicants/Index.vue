@@ -185,10 +185,10 @@
                         </div>
 
                         <Panel class="!rounded-4xl overflow-hidden shadow-sm">
-                            <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
+                            <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2"
+                                v-if="selectedRows.length">
                                 <span class="text-sm text-gray-500">
-                                    {{ filteredList.length }} applicant(s)
-                                    <span v-if="selectedRows.length">&middot; {{ selectedRows.length }} selected</span>
+                                    <span>&middot; {{ selectedRows.length }} selected</span>
                                 </span>
                             </div>
 
@@ -279,14 +279,14 @@
                                         </div>
                                         <div class="text-[11px] mono text-gray-500">{{
                                             slotProps.data.profile.contact_no
-                                        }}</div>
+                                            }}</div>
 
                                     </template>
                                 </Column>
                                 <Column field="program.shortname" header="Program" sortable>
                                     <template #body="slotProps">
                                         <span class="text-xs"> {{ slotProps.data.program?.shortname || 'N/A'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
                                 <Column field="school.shortname" header="School" sortable>
@@ -299,7 +299,7 @@
                                     <template #body="slotProps">
                                         <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name ||
                                             'N/A'
-                                        }}</span>
+                                            }}</span>
                                     </template>
                                 </Column>
                                 <Column header="Year Level" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
@@ -538,7 +538,7 @@
                                 <Column header="Prepared By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ slotProps.data.prepared_by || 'N/A'
-                                            }}</div>
+                                        }}</div>
                                         <div class="text-[11px] text-slate-500">{{ slotProps.data.prepared_by_position
                                             || 'Position not set' }}</div>
                                     </template>
@@ -620,7 +620,7 @@
                                                         class="mt-1 leading-relaxed">
                                                         <div class="font-semibold text-slate-800">{{
                                                             formatBudgetAllocationTitle(slotProps.data.budget_allocation)
-                                                            }}</div>
+                                                        }}</div>
                                                         <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
                                                             class="text-xs text-slate-500">
                                                             {{
@@ -675,7 +675,7 @@
                                                                 record.program?.shortname || 'N/A' }}</td>
                                                             <td class="px-4 py-3 text-slate-600">{{
                                                                 record.school?.shortname || record.school?.name || 'N/A'
-                                                                }}</td>
+                                                            }}</td>
                                                             <td class="px-4 py-3 text-slate-600">{{
                                                                 formatProjectedTerms(record.projected_term_count) }}
                                                             </td>
@@ -1242,12 +1242,12 @@ const openAssessmentDialog = (record, mode = 'view') => {
 };
 
 const stats = computed(() => {
-    const all = props.interviewed_applicants || [];
+    const pagination = props.interviewed_applicants_pagination;
     return {
-        total: props.interviewed_applicants_pagination?.total ?? all.length,
-        recommended: all.filter(r => r.recommendation === 'recommended').length,
-        furtherEval: all.filter(r => r.recommendation === 'further_evaluation').length,
-        notRecommended: all.filter(r => r.recommendation === 'not_recommended').length,
+        total: pagination?.total ?? 0,
+        recommended: 0, // server-side aggregation needed, not from current page
+        furtherEval: 0,
+        notRecommended: 0,
     };
 });
 

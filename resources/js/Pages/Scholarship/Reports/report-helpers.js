@@ -137,7 +137,11 @@ export function getGroupValue(item, groupByField) {
 		school: () => item.school_name,
 		program: () => item.program_name,
 		course: () => item.course_name,
-		year_level: () => item.year_level,
+		year_level: () => {
+			const yl = item.year_level;
+			if (yl === null || yl === undefined || String(yl).trim() === '') return null;
+			return /^\d+(?:ST|ND|RD|TH)?$/i.test(String(yl)) ? `${yl} YEAR` : yl;
+		},
 		municipality: () => item.municipality,
 		grant_provision: () => formatGrantProvision(item.grant_provision),
 	};
