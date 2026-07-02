@@ -657,12 +657,30 @@ class ScholarshipProfileController extends Controller
         }
 
         $profiles = $query->get();
+        $efaApprovalMode = $request->has('efa_approval_mode') && $request->input('efa_approval_mode') == 1;
+
         $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
-        $reportRows = $profiles->map(function (ScholarshipProfile $profile) use ($request, $expenseProjectionService) {
+        $reportRows = $profiles->map(function (ScholarshipProfile $profile) use ($request, $expenseProjectionService, $efaApprovalMode) {
             $record = $this->resolveReportScholarshipRecord($profile, $request);
 
             if ($record) {
                 $record = $this->attachExpenseProjection($record, $expenseProjectionService);
+
+                // EFA Approval: deduct 1 term since it's for the upcoming semester
+                if ($efaApprovalMode) {
+                    $currentTermCount = $record->getAttribute('projected_term_count');
+                    $currentExpense = $record->getAttribute('projected_total_expense');
+                    $currentGrantAmount = $record->getAttribute('grant_amount');
+
+                    if (is_numeric($currentTermCount) && $currentTermCount > 0) {
+                        $record->setAttribute('projected_term_count', max(0, $currentTermCount - 1));
+                    }
+                    if (is_numeric($currentExpense) && is_numeric($currentGrantAmount) && $currentTermCount > 0) {
+                        $deductedExpense = max(0, $currentExpense - $currentGrantAmount);
+                        $record->setAttribute('projected_total_expense', round($deductedExpense, 2));
+                        $record->setAttribute('projected_total_expense_formatted', number_format($deductedExpense, 2));
+                    }
+                }
             }
 
             return $this->transformProfileForReport($profile, $record);
@@ -933,7 +951,10 @@ class ScholarshipProfileController extends Controller
             'term' => $record?->term,
             'academic_year' => $record?->academic_year,
             'grant_provision' => $record?->grant_provision ?? '-',
-            'grant_provision_label' => $record?->grant_provision_label ?? SystemOption::formatGrantProvisionLabel($record?->grant_provision, 'N/A'),
+            'start_date' => $record?->start_date,
+            'end_date' => $record?->end_date,
+            'no_of_days' => $record?->no_of_days,
+            'no_of_hours' => $record?->no_of_hours,
             'yakap_category' => $record?->yakap_category ?? 'yakap-capitol',
             'yakap_location' => $record?->yakap_location,
             'projected_total_expense' => $record?->getAttribute('projected_total_expense'),
@@ -1877,11 +1898,6 @@ class ScholarshipProfileController extends Controller
         foreach ($expenseProjectionService->projectForRecord($record) as $key => $value) {
             $record->setAttribute($key, $value);
         }
-
-        $record->setAttribute(
-            'grant_provision_label',
-            SystemOption::formatGrantProvisionLabel($record->grant_provision, 'N/A')
-        );
 
         return $record;
     }

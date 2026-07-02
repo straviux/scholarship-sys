@@ -29,9 +29,19 @@
                                     severity="info" outlined class="justify-start" />
                             </div>
                         </Popover>
-                        <AppButton icon="print" @click="showReportWizard = true" severity="secondary"
+                        <AppButton icon="print" @click="reportTypePopover.toggle($event)" severity="secondary"
                             v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.view')" rounded
                             outlined />
+                        <Popover ref="reportTypePopover">
+                            <div class="flex flex-col gap-2 w-52">
+                                <AppButton @click="openReportWizard('master-list')" label="Master List"
+                                    icon="list" severity="secondary" class="justify-start" />
+                                <AppButton @click="openReportWizard('approval-list')" label="Approval List"
+                                    icon="clipboard-check" severity="info" class="justify-start" />
+                                <AppButton @click="openReportWizard('summary')" label="Summary"
+                                    icon="bar-chart-3" severity="success" class="justify-start" />
+                            </div>
+                        </Popover>
                         <AppButton icon="star" @click="showEndorseModal = true" severity="info"
                             v-tooltip.bottom="'Endorse Profiles'" v-if="hasPermission('applicants.edit')" rounded
                             outlined />
@@ -645,8 +655,38 @@
             </div>
         </IosModal>
 
+        <!-- Program Selection Modal -->
+        <IosModal :visible="showProgramSelectionModal" title="Select Program" width="calc(100vw - 2rem)"
+            max-width="640px" body-style="padding: 16px;" @update:visible="showProgramSelectionModal = $event">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button v-for="program in programs" :key="program.id"
+                    class="flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all text-left cursor-pointer"
+                    @click="selectProgramForReport(program)">
+                    <div
+                        class="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold shrink-0"
+                        :style="{ backgroundColor: program.bg_color || getProgramColor(program.id) }">
+                        {{ getProgramInitials(program) }}
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-gray-800 text-sm">{{ program.name }}</p>
+                        <p class="text-xs text-gray-500">{{ program.shortname || program.code }}</p>
+                    </div>
+                </button>
+            </div>
+            <div v-if="!programs || programs.length === 0" class="text-center py-8 text-gray-400">
+                <AppIcon name="folder-open" :size="40" class="mx-auto mb-3 opacity-40" />
+                <p>No programs available</p>
+            </div>
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <AppButton label="Cancel" icon="times" severity="secondary"
+                        @click="showProgramSelectionModal = false" />
+                </div>
+            </template>
+        </IosModal>
+
         <!-- Generate Report Modal -->
-        <ReportWizardModal :show="showReportWizard" @update:show="showReportWizard = $event" />
+        <ReportWizardModal v-if="!isTechvocReport" :show="showReportWizard" :mode="reportWizardMode" :selected-program="selectedReportProgram" @update:show="showReportWizard = $event" />
 
         <!-- Endorse Modal -->
         <EndorseModal :show="showEndorseModal" @update:show="showEndorseModal = $event" @endorsed="onEndorsed" />
@@ -709,6 +749,56 @@
         <!-- Scholar Form Modal (Create) -->
         <ScholarFormModal v-model:visible="showAddActiveModal" mode="create" @success="refreshData" />
 
+        <!-- TechVoc Report Modal -->
+        <TechvocWizardModal :show="showTechvocReportModal" :program="selectedReportProgram"
+            @update:show="showTechvocReportModal = $event"
+            @report-generated="onTechvocReportGenerated" />
+
+        <!-- TechVoc Report: Preview -->
+        <IosModal :visible="showTechvocReportPreview" width="95vw" max-width="95vw" :modal-content-style="{ height: '90vh' }"
+            body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
+            @update:visible="showTechvocReportPreview = $event">
+            <template #header-left>
+                <button class="ios-nav-btn ios-nav-cancel" @click="showTechvocReportPreview = false">
+                    <AppIcon name="x" :size="16" />
+                </button>
+            </template>
+            <template #title><span class="ios-nav-title">TechVoc Report Preview</span></template>
+            <template #header-right>
+                <div class="ios-nav-actions">
+                    <button class="ios-icon-btn" @click="doTechvocPrint" title="Print / Save as PDF">
+                        <AppIcon name="printer" :size="16" style="color: #007AFF;" />
+                    </button>
+                </div>
+            </template>
+            <!-- Zoom Toolbar -->
+            <div class="flex items-center justify-between px-4 py-2
+                        bg-[#f2f2f7] dark:bg-[#1e242b]
+                        border-b border-[#e5e5ea] dark:border-white/10">
+                <div class="flex items-center gap-1.5">
+                    <button @click="techvocZoomLevel = Math.max(40, techvocZoomLevel - 10)"
+                        class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
+                        :disabled="techvocZoomLevel <= 40">
+                        <AppIcon name="minus" :size="10" />
+                    </button>
+                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ techvocZoomLevel }}%</span>
+                    <button @click="techvocZoomLevel = Math.min(200, techvocZoomLevel + 10)"
+                        class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
+                        :disabled="techvocZoomLevel >= 200">
+                        <AppIcon name="plus" :size="10" />
+                    </button>
+                </div>
+                <span class="text-xs text-gray-400">A4 · Landscape</span>
+            </div>
+            <div class="overflow-auto bg-[#d1d1d6] dark:bg-[#1c1c1e]" style="flex: 1; min-height: 0; padding: 16px 0;">
+                <div style="display: flex; justify-content: center;">
+                    <iframe v-if="techvocReportHtml" :srcdoc="techvocReportHtml"
+                        :style="{ transform: `scale(${techvocZoomLevel / 100})`, transformOrigin: 'top center', border: 'none', background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.15)', width: '1320px', height: '1020px' }"
+                        frameborder="0"></iframe>
+                </div>
+            </div>
+        </IosModal>
+
         <!-- Context Menu -->
         <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
             <template #item="{ item, props }">
@@ -749,7 +839,11 @@ import IosModal from '@/Components/ui/IosModal.vue';
 // Modal Components
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import ReportWizardModal from './Modal/ReportWizardModal.vue';
+import TechvocWizardModal from './Modal/TechvocWizardModal.vue';
 import EndorseModal from './Modal/EndorseModal.vue';
+import TechVocReportTemplate from './Reports/TechVocReportTemplate.vue';
+import { renderVueTemplate } from '@/composables/usePdfPrint';
+import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 
 // Props
 const props = defineProps({
@@ -960,9 +1054,98 @@ const showProfileDialog = ref(false);
 const selectedProfile = ref(null);
 
 // Modal states
-const showReportModal = ref(false);
 const showReportWizard = ref(false);
 const showEndorseModal = ref(false);
+const reportTypePopover = ref(null);
+const reportWizardMode = ref(''); // 'master-list' | 'approval-list' | 'summary'
+const showProgramSelectionModal = ref(false);
+const selectedReportProgram = ref(null);
+const isTechvocReport = ref(false);
+const showTechvocReportModal = ref(false);
+const showTechvocReportPreview = ref(false);
+const techvocReportHtml = ref('');
+const techvocReportRecords = ref([]);
+const techvocZoomLevel = ref(85);
+
+const PROGRAM_COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#F97316', '#EAB308', '#22C55E', '#14B8A6', '#06B6D4', '#3B82F6'];
+
+function getProgramColor(id) {
+    return PROGRAM_COLORS[id % PROGRAM_COLORS.length];
+}
+
+function getProgramInitials(program) {
+    const name = program.shortname || program.name || '';
+    return name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+const isTechvocProgram = (program) => {
+    if (!program) return false;
+    const name = (program.shortname || program.name || '').toUpperCase();
+    return name.includes('TECH') || name.includes('TECH-VOC');
+};
+
+function openReportWizard(mode) {
+    reportWizardMode.value = mode;
+    selectedReportProgram.value = null;
+    isTechvocReport.value = false;
+    showReportWizard.value = false;
+    showTechvocReportModal.value = false;
+    showProgramSelectionModal.value = true;
+    reportTypePopover.value?.hide();
+}
+
+function selectProgramForReport(program) {
+    selectedReportProgram.value = program;
+    showProgramSelectionModal.value = false;
+
+    // TechVoc + (Approval List or Master List) → dedicated modal
+    if ((reportWizardMode.value === 'approval-list' || reportWizardMode.value === 'master-list') && isTechvocProgram(program)) {
+        isTechvocReport.value = true;
+        showReportWizard.value = false;
+        showTechvocReportModal.value = true;
+        return;
+    }
+
+    // Other programs/modes: open the standard report wizard
+    isTechvocReport.value = false;
+    showTechvocReportModal.value = false;
+    showReportWizard.value = true;
+}
+
+function onTechvocReportGenerated({ records, program: _program, title, status }) {
+    techvocReportRecords.value = records;
+    buildTechvocPreview(title, status);
+}
+
+async function buildTechvocPreview(title = '', _status = null) {
+    try {
+        const paperConfig = getReportPaperConfig('A4', 'landscape');
+        const filterSummary = {};
+        if (selectedReportProgram.value) {
+            filterSummary.Program = selectedReportProgram.value.shortname || selectedReportProgram.value.name;
+        }
+
+        const resolvedTitle = title || `Tech-Voc Approval List — ${selectedReportProgram.value?.shortname || ''}`;
+
+        const templateProps = {
+            records: techvocReportRecords.value,
+            filters: filterSummary,
+            options: {
+                reportTitle: resolvedTitle,
+                sortBy: 'default',
+            },
+            generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
+        };
+
+        const bodyHtml = renderVueTemplate(TechVocReportTemplate, templateProps);
+        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>TechVoc Report</title><style>body{margin:0;padding:0;}${getReportCss(paperConfig)}</style></head><body>${bodyHtml}</body></html>`;
+        
+        techvocReportHtml.value = fullHtml;
+        showTechvocReportPreview.value = true;
+    } catch (error) {
+        console.error('Failed to build TechVoc preview:', error);
+    }
+}
 
 const showAddActiveModal = ref(false);
 const addRecordPopover = ref();
@@ -1342,4 +1525,12 @@ onMounted(() => {
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
 });
+
+function doTechvocPrint() {
+    if (!techvocReportHtml.value) return;
+    const win = window.open('', '_blank');
+    if (!win) { alert('Pop-up blocked.'); return; }
+    win.document.write(techvocReportHtml.value);
+    win.document.close();
+}
 </script>

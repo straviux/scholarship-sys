@@ -49,6 +49,9 @@ const showRequirements = computed(() => props.options?.showRequirements === true
 const showScholarshipDate = computed(() => props.options?.showScholarshipDate !== false);
 const showYearLevel = computed(() => props.options?.showYearLevel !== false);
 
+// TechVoc override: always show address, contact, school, course, remarks; hide program, year_level
+
+
 function resolveDateValue(record, fields) {
     for (const field of fields) {
         if (record?.[field]) {
@@ -186,14 +189,42 @@ function groupProjectedExpense(group) {
     return sumProjectedExpense(flattenGroupRecords(group));
 }
 
+const GROUP_HDR_LABEL = {
+    unified_status: 'Status',
+    school: 'School',
+    program: 'Program',
+    course: 'Course',
+    year_level: 'Year Level',
+    municipality: 'Municipality',
+    grant_provision: 'Grant Provision',
+};
+
 function buildGroupHeaderRows(...groups) {
-    return groups.filter(Boolean).map((group, index) => ({
-        key: group.key,
-        label: group.key,
-        count: group.count,
-        projectedText: includeProjectedExpense.value ? fmtCurrency(groupProjectedExpense(group)) : '',
-        level: index,
-    }));
+    const groupByFields = [
+        props.options?.groupBy,
+        props.options?.groupBySecondary,
+        props.options?.groupByTertiary,
+    ];
+
+    const customLabels = [
+        props.options?.customGroupMainLabel?.trim(),
+        props.options?.customGroupSubLabel?.trim(),
+        props.options?.customGroupTertiaryLabel?.trim(),
+    ];
+
+    return groups.filter(Boolean).map((group, index) => {
+        const field = groupByFields[index] || '';
+        const customLabel = customLabels[index];
+        const prefix = customLabel || (GROUP_HDR_LABEL[field] ? `${GROUP_HDR_LABEL[field]}: ` : '');
+
+        return {
+            key: group.key,
+            label: `${prefix} ${group.key}`,
+            count: group.count,
+            projectedText: includeProjectedExpense.value ? fmtCurrency(groupProjectedExpense(group)) : '',
+            level: index,
+        };
+    });
 }
 
 const statusSummaryRows = computed(() => {
@@ -244,9 +275,9 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
             <div
                 style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1.5pt solid #000;padding:8pt 4pt;min-height:56pt;text-align:center;">
                 <img src="/images/pgp-logo.svg" alt="PGP Logo"
-                    style="position:absolute;left:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
+                    style="position:absolute;left:30%;top:50%;transform:translateY(-50%);width:64pt;height:auto;" />
                 <img src="/images/yakap-logo.svg" alt="YAKAP Logo"
-                    style="position:absolute;right:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
+                    style="position:absolute;right:30%;top:50%;transform:translateY(-50%);width:64pt;height:auto;" />
                 <p style="font-weight:700;font-size:11pt;">Republic of the Philippines</p>
                 <p style="font-weight:700;font-size:11pt;">Provincial Government of Palawan</p>
                 <p style="font-size:10pt;">Yakap sa Edukasyon</p>

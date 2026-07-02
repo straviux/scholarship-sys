@@ -151,40 +151,43 @@ export function printRecommendationList({ recommendationList = null } = {}) {
 export function exportInterviewedApplicantsExcel({ records = [] } = {}) {
     const normalizedRecords = normalizeRecords(records);
     const generatedAt = moment().format('MMMM DD, YYYY h:mm A');
+
+    const upper = (v) => String(v ?? '').toUpperCase();
+
     const workbook = XLSX.utils.book_new();
 
     const rows = [
-        ['Interviewed Applicants Report'],
-        [`Generated: ${generatedAt}`],
-        [`Total Records: ${normalizedRecords.length}`],
+        ['INTERVIEWED APPLICANTS REPORT'],
+        [`GENERATED: ${upper(generatedAt)}`],
+        [`TOTAL RECORDS: ${normalizedRecords.length}`],
         [],
-                [
+        [
             '#',
-            'Name',
-            'Program',
-            'School',
-            'Course',
-            'Year Level',
-            'Term',
-            'Academic Year',
-            'Grant Provision',
-            'Recommendation',
-            'Interview Date',
-            'Interviewed By',
+            'NAME',
+            'PROGRAM',
+            'SCHOOL',
+            'COURSE',
+            'YEAR LEVEL',
+            'TERM',
+            'ACADEMIC YEAR',
+            'GRANT PROVISION',
+            'RECOMMENDATION',
+            'INTERVIEW DATE',
+            'INTERVIEWED BY',
         ],
         ...normalizedRecords.map((record, index) => [
             index + 1,
-            formatApplicantName(record),
-            record?.program?.shortname || '—',
-            record?.school?.name || record?.school?.shortname || '—',
-            record?.course?.name || record?.course?.shortname || '—',
-            record?.year_level || '—',
-            record?.term || '—',
-            record?.academic_year || '—',
-            formatGrantProvision(record?.grant_provision_label || record?.grant_provision),
-            record?.recommendation || '—',
-            formatDate(record?.interviewed_at),
-            record?.interviewer?.name || '—',
+            upper(formatApplicantName(record)),
+            upper(record?.program?.shortname || record?.program?.name || '—'),
+            upper(record?.school?.name || record?.school?.shortname || '—'),
+            upper(record?.course?.name || record?.course?.shortname || '—'),
+            upper(record?.year_level || '—'),
+            upper(record?.term || '—'),
+            upper(record?.academic_year || '—'),
+            upper(formatGrantProvision(record?.grant_provision_label || record?.grant_provision)),
+            upper(record?.recommendation || '—'),
+            upper(formatDate(record?.interviewed_at)),
+            upper(record?.interviewer?.name || '—'),
         ]),
     ];
 
@@ -203,6 +206,25 @@ export function exportInterviewedApplicantsExcel({ records = [] } = {}) {
         { wch: 16 },
         { wch: 22 },
     ];
+
+    // Apply uniform font: Calibri 10pt, headers bold + centered
+    const DEFAULT_CELL_STYLE = { font: { name: 'Calibri', sz: 10 } };
+    const TITLE_STYLE = { font: { name: 'Calibri', sz: 12, bold: true }, alignment: { horizontal: 'center' } };
+    const META_STYLE = { font: { name: 'Calibri', sz: 10, bold: true } };
+    const HEADER_STYLE = { font: { name: 'Calibri', sz: 10, bold: true }, alignment: { horizontal: 'center' } };
+
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    for (let r = range.s.r; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+            const addr = XLSX.utils.encode_cell({ r, c });
+            if (!worksheet[addr]) continue;
+            if (!worksheet[addr].s) worksheet[addr].s = {};
+            if (r === 0) Object.assign(worksheet[addr].s, TITLE_STYLE);
+            else if (r <= 3) Object.assign(worksheet[addr].s, META_STYLE);
+            else if (r === 4) Object.assign(worksheet[addr].s, HEADER_STYLE);
+            else Object.assign(worksheet[addr].s, DEFAULT_CELL_STYLE);
+        }
+    }
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Interviewed Applicants');
     XLSX.writeFile(workbook, `interviewed_applicants_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`);

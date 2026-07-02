@@ -8,7 +8,7 @@
         </template>
 
         <template #title>
-            <span class="ios-nav-title">Report Wizard</span>
+            <span class="ios-nav-title">{{ modeTitle || 'Report Wizard' }}</span>
         </template>
 
         <template #header-right>
@@ -34,7 +34,7 @@
                         class="rw-section-chevron" />
                 </div>
                 <div v-show="!collapsed.section1" class="rw-section-body">
-                    <div class="rw-field-group">
+                    <div class="rw-field-group" v-if="!mode">
                         <label class="rw-label">Report Type</label>
                         <div class="rw-segmented">
                             <button :class="['rw-seg-btn', reportType === 'list' && 'rw-seg-active']"
@@ -118,10 +118,12 @@
                     <div class="rw-field-group" style="margin-top: 12px;">
                         <label class="rw-label">Date Range</label>
                         <div class="rw-date-row">
-                            <DatePicker v-model="dateFrom" placeholder="From date" showButtonBar dateFormat="M dd, yy"
+                            <DatePicker v-model="dateFrom" placeholder="From date"
+                                showButtonBar dateFormat="M dd, yy"
                                 class="rw-datepicker" showIcon iconDisplay="input" />
                             <span class="rw-date-sep">—</span>
-                            <DatePicker v-model="dateTo" placeholder="To date" showButtonBar dateFormat="M dd, yy"
+                            <DatePicker v-model="dateTo" placeholder="To date"
+                                showButtonBar dateFormat="M dd, yy"
                                 class="rw-datepicker" showIcon iconDisplay="input" />
                         </div>
                         <div v-if="isDateToInvalid" class="rw-error">
@@ -191,6 +193,26 @@
                                         optionLabel="label" optionValue="value" placeholder="3rd group (optional)"
                                         showClear class="rw-select"
                                         v-if="groupBySecondary && groupBySecondary !== 'none'" />
+                                </div>
+                                <InputText v-if="groupBy && groupBy !== 'none'" v-model="customGroupMainLabel"
+                                    class="rw-input" placeholder="Custom label for main group (optional)"
+                                    style="margin-top: 6px;" />
+                                <InputText v-if="groupBySecondary && groupBySecondary !== 'none'" v-model="customGroupSubLabel"
+                                    class="rw-input" placeholder="Custom label for sub-group (optional)"
+                                    style="margin-top: 6px;" />
+                                <InputText v-if="groupByTertiary && groupByTertiary !== 'none'" v-model="customGroupTertiaryLabel"
+                                    class="rw-input" placeholder="Custom label for 3rd group (optional)"
+                                    style="margin-top: 6px;" />
+                            </div>
+
+                            <!-- EFA Approval List: Upcoming Term fields -->
+                            <div v-if="isEfaApprovalList" class="rw-field-group">
+                                <label class="rw-label">Upcoming Term & Academic Year</label>
+                                <div class="rw-inline-row">
+                                    <Select v-model="efaUpcomingTerm" :options="termOptions" optionLabel="label"
+                                        optionValue="value" placeholder="Term" class="rw-select" style="flex:1" />
+                                    <InputText v-model="efaUpcomingAcademicYear" class="rw-input"
+                                        placeholder="Academic Year (e.g. 2026-2027)" style="flex:1" />
                                 </div>
                             </div>
 
@@ -380,9 +402,20 @@ import ProfileReportTemplate from '@/Pages/Scholarship/Reports/ProfileReportTemp
 
 const props = defineProps({
     show: Boolean,
+    mode: { type: String, default: '' },
+    selectedProgram: { type: Object, default: null },
 });
 
 const emit = defineEmits(['update:show']);
+
+const modeTitle = computed(() => {
+    switch (props.mode) {
+        case 'master-list': return 'Master List';
+        case 'approval-list': return 'Approval List';
+        case 'summary': return 'Summary Report';
+        default: return 'Report';
+    }
+});
 
 // ─── State ───
 const generating = ref(false);
@@ -422,6 +455,9 @@ const signatoryTitle = ref('');
 const groupBy = ref('none');
 const groupBySecondary = ref('none');
 const groupByTertiary = ref('none');
+const customGroupMainLabel = ref('');
+const customGroupSubLabel = ref('');
+const customGroupTertiaryLabel = ref('');
 const showSequenceNumbers = ref(true);
 const includeRemarks = ref(false);
 const includeProjectedExpense = ref(true);
@@ -532,6 +568,27 @@ const tertiaryGroupByOptions = computed(() =>
     groupByOptions.filter(o => o.value !== 'none' && o.value !== groupBy.value && o.value !== groupBySecondary.value)
 );
 
+// EFA Approval List detection
+const isEfaApprovalList = computed(() => {
+    if (props.mode !== 'approval-list') return false;
+    const program = props.selectedProgram || selectedPrograms.value?.[0];
+    if (!program) return false;
+    const name = (program.shortname || program.name || '').toUpperCase();
+    return name === 'EFA';
+});
+
+const efaUpcomingTerm = ref('');
+const efaUpcomingAcademicYear = ref('');
+
+const termOptions = [
+    { label: '1st Semester', value: '1st Semester' },
+    { label: '2nd Semester', value: '2nd Semester' },
+    { label: 'Summer', value: 'Summer' },
+    { label: '1st Trimester', value: '1st Trimester' },
+    { label: '2nd Trimester', value: '2nd Trimester' },
+    { label: '3rd Trimester', value: '3rd Trimester' },
+];
+
 // ─── Computed ───
 const isDateToInvalid = computed(() => {
     if (dateFrom.value && dateTo.value) {
@@ -632,6 +689,7 @@ async function generateReport() {
         if (enableJpmHighlighting.value) params.enable_jpm_highlighting = 1;
         if (jpmFilter.value === 'jpm_only') params.show_jpm_only = 1;
         if (jpmFilter.value === 'hide_jpm') params.hide_jpm = 1;
+        if (isEfaApprovalList.value) params.efa_approval_mode = 1;
 
         // Fetch data
         const response = await axios.get(route('profile.generateReport'), { params });
@@ -666,6 +724,9 @@ async function generateReport() {
                 groupBy: groupBy.value,
                 groupBySecondary: groupBySecondary.value !== 'none' ? groupBySecondary.value : null,
                 groupByTertiary: groupByTertiary.value !== 'none' ? groupByTertiary.value : null,
+                customGroupMainLabel: customGroupMainLabel.value?.trim() || '',
+                customGroupSubLabel: customGroupSubLabel.value?.trim() || '',
+                customGroupTertiaryLabel: customGroupTertiaryLabel.value?.trim() || '',
                 preparedByTitle: preparedByTitle.value?.trim() || '',
                 preparedByOffice: preparedByOffice.value?.trim() || '',
                 signatoryName: signatoryName.value?.trim() || '',
@@ -682,6 +743,9 @@ async function generateReport() {
                 showRequirements: showRequirements.value,
                 showScholarshipDate: showScholarshipDate.value,
                 showYearLevel: showYearLevel.value,
+                isEfaApprovalList: isEfaApprovalList.value,
+                efaUpcomingTerm: efaUpcomingTerm.value,
+                efaUpcomingAcademicYear: efaUpcomingAcademicYear.value,
             },
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
         };
@@ -831,54 +895,69 @@ function doExportExcel() {
     const records = reportRecords.value;
     if (!records || records.length === 0) return;
 
+    const upper = (v) => String(v ?? '').toUpperCase();
+
+    const incrementYearLevelForExcel = (yearLevel) => {
+        if (!yearLevel) return '';
+        const match = String(yearLevel).match(/^(\d+)(?:ST|ND|RD|TH)?$/i);
+        if (match) {
+            const num = parseInt(match[1], 10) + 1;
+            const suffix = num % 10 === 1 && num !== 11 ? 'ST' : num % 10 === 2 && num !== 12 ? 'ND' : num % 10 === 3 && num !== 13 ? 'RD' : 'TH';
+            return `${num}${suffix} YEAR`;
+        }
+        return String(yearLevel).toUpperCase();
+    };
+
     // Build columns matching the table structure
     const headers = [];
     const keys = [];
 
     if (showSequenceNumbers.value) { headers.push('#'); keys.push('_seq'); }
-    headers.push('Name'); keys.push('name');
-    if (showContactNumber.value) { headers.push('Contact Number'); keys.push('contact_number'); }
-    if (showAddress.value) { headers.push('Address'); keys.push('address'); }
-    if (showProgram.value) { headers.push('Program'); keys.push('program'); }
-    if (showSchool.value) { headers.push('School'); keys.push('school'); }
-    if (showCourse.value) { headers.push('Course'); keys.push('course'); }
-    headers.push('Year Level'); keys.push('year_level');
-    headers.push('Term'); keys.push('term');
-    headers.push('Academic Year'); keys.push('academic_year');
-    headers.push('Grant Provision'); keys.push('grant_provision');
-    if (showDateFiled.value) { headers.push('Date Filed'); keys.push('date_filed'); }
-    headers.push('Status'); keys.push('status');
-    if (showRemarks.value) { headers.push('Remarks'); keys.push('remarks'); }
+    headers.push('NAME'); keys.push('name');
+    if (showContactNumber.value) { headers.push('CONTACT NUMBER'); keys.push('contact_number'); }
+    if (showAddress.value) { headers.push('ADDRESS'); keys.push('address'); }
+    if (showProgram.value) { headers.push('PROGRAM'); keys.push('program'); }
+    if (showSchool.value) { headers.push('SCHOOL'); keys.push('school'); }
+    if (showCourse.value) { headers.push('COURSE'); keys.push('course'); }
+    if (isEfaApprovalList.value) { headers.push('CURRENT YEAR LEVEL'); keys.push('current_year_level'); }
+    headers.push('YEAR LEVEL'); keys.push('year_level');
+    headers.push('TERM'); keys.push('term');
+    headers.push('ACADEMIC YEAR'); keys.push('academic_year');
+    headers.push('GRANT PROVISION'); keys.push('grant_provision');
+    if (showDateFiled.value) { headers.push('DATE FILED'); keys.push('date_filed'); }
+    headers.push('STATUS'); keys.push('status');
+    if (showRemarks.value) { headers.push('REMARKS'); keys.push('remarks'); }
 
     if (includeProjectedExpense.value) {
-        headers.push('Proj. Terms', 'Proj. Expense', 'Proj. Completion');
+        headers.push('PROJ. TERMS', 'PROJ. EXPENSE', 'PROJ. COMPLETION');
         keys.push('projected_term_count', 'projected_total_expense', 'projected_completion_year');
     }
 
-    // Build rows
+    // Build rows — all values uppercase
     const rows = records.map((rec, idx) => {
         const row = [];
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             switch (key) {
                 case '_seq': row.push(idx + 1); break;
-                case 'name': row.push(formatName(rec)); break;
-                case 'contact_number': row.push(rec.contact_no || ''); break;
-                case 'address': row.push([rec.barangay, rec.municipality].filter(Boolean).join(', ')); break;
-                case 'program': row.push(rec.program_name || rec.program || ''); break;
-                case 'school': row.push(rec.school_name || rec.school || ''); break;
-                case 'course': row.push(rec.course_name || rec.course || ''); break;
-                case 'year_level': row.push(rec.year_level || ''); break;
-                case 'term': row.push(rec.term || ''); break;
-                case 'academic_year': row.push(rec.academic_year || ''); break;
-                case 'grant_provision': row.push(grantValue.value || rec.grant_provision_label || rec.grant_provision || ''); break;
-                case 'date_filed': row.push(formatDate(rec.date_filed)); break;
-                case 'status': row.push(formatStatus(getReportStatus(rec))); break;
-                case 'remarks': row.push(rec.remarks || rec.decline_reason || ''); break;
-                case 'projected_term_count': row.push(rec.projected_term_count ?? ''); break;
-                case 'projected_total_expense': row.push(rec.projected_total_expense ?? ''); break;
-                case 'projected_completion_year': row.push(rec.projected_completion_year ?? ''); break;
-                default: row.push(rec[key] ?? ''); break;
+                case 'name': row.push(upper(formatName(rec))); break;
+                case 'contact_number': row.push(upper(rec.contact_no || '')); break;
+                case 'address': row.push(upper([rec.barangay, rec.municipality].filter(Boolean).join(', '))); break;
+                case 'program': row.push(upper(rec.program_name || rec.program || '')); break;
+                case 'school': row.push(upper(rec.school_name || rec.school || '')); break;
+                case 'course': row.push(upper(rec.course_name || rec.course || '')); break;
+                case 'current_year_level': row.push(upper(incrementYearLevelForExcel(rec.year_level))); break;
+                case 'year_level': row.push(upper(rec.year_level || '')); break;
+                case 'term': row.push(upper(rec.term || '')); break;
+                case 'academic_year': row.push(upper(rec.academic_year || '')); break;
+                case 'grant_provision': row.push(upper(grantValue.value || rec.grant_provision_label || rec.grant_provision || '')); break;
+                case 'date_filed': row.push(upper(formatDate(rec.date_filed))); break;
+                case 'status': row.push(upper(formatStatus(getReportStatus(rec)))); break;
+                case 'remarks': row.push(upper(rec.remarks || rec.decline_reason || '')); break;
+                case 'projected_term_count': row.push(upper(rec.projected_term_count ?? '')); break;
+                case 'projected_total_expense': row.push(upper(rec.projected_total_expense ?? '')); break;
+                case 'projected_completion_year': row.push(upper(rec.projected_completion_year ?? '')); break;
+                default: row.push(upper(rec[key] ?? '')); break;
             }
         }
         return row;
@@ -888,6 +967,20 @@ function doExportExcel() {
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Report');
+
+    // Set uniform font across all cells
+    const DEFAULT_CELL_STYLE = { font: { name: 'Calibri', sz: 10 } };
+    const DEFAULT_HEADER_STYLE = { font: { name: 'Calibri', sz: 10, bold: true }, alignment: { horizontal: 'center' } };
+
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let r = range.s.r; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+            const addr = XLSX.utils.encode_cell({ r, c });
+            if (!ws[addr]) continue;
+            if (!ws[addr].s) ws[addr].s = {};
+            Object.assign(ws[addr].s, r === 0 ? DEFAULT_HEADER_STYLE : DEFAULT_CELL_STYLE);
+        }
+    }
 
     // Auto-fit column widths
     const colWidths = headers.map((h, i) => {
@@ -944,6 +1037,16 @@ watch(() => props.show, (v) => {
     if (v) {
         if (hasResetOnOpen) return;
         hasResetOnOpen = true;
+        // Set report type based on mode
+        if (props.mode === 'summary') {
+            reportType.value = 'summary';
+        } else {
+            reportType.value = 'list';
+        }
+        // Pre-select the program from the parent modal
+        if (props.selectedProgram) {
+            selectedPrograms.value = [props.selectedProgram];
+        }
         // Use queueMicrotask instead of nextTick to resolve before the next render frame
         queueMicrotask(() => {
             customReportTitle.value = '';
@@ -952,6 +1055,11 @@ watch(() => props.show, (v) => {
             preparedByOffice.value = '';
             signatoryName.value = '';
             signatoryTitle.value = '';
+            customGroupMainLabel.value = '';
+            customGroupSubLabel.value = '';
+            customGroupTertiaryLabel.value = '';
+            efaUpcomingTerm.value = '';
+            efaUpcomingAcademicYear.value = '';
         });
     } else {
         hasResetOnOpen = false;
