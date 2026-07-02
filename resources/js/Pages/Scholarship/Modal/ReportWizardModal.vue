@@ -198,14 +198,16 @@
                                 <label class="rw-label">Prepared By</label>
                                 <InputText v-model="preparedBy" class="rw-input" placeholder="Name (optional)" />
                                 <InputText v-model="preparedByTitle" class="rw-input"
-                                    placeholder="Designation (optional)" style="margin-top: 6px;" />
+                                    :placeholder="useInterviewedSignatories ? 'Position (optional)' : 'Designation (optional)'" style="margin-top: 6px;" />
+                                <InputText v-if="useInterviewedSignatories" v-model="preparedByOffice" class="rw-input"
+                                    placeholder="Office (optional)" style="margin-top: 6px;" />
                             </div>
 
                             <div class="rw-field-group">
-                                <label class="rw-label">Noted By</label>
+                                <label class="rw-label">{{ useInterviewedSignatories ? 'Approved By' : 'Noted By' }}</label>
                                 <InputText v-model="signatoryName" class="rw-input" placeholder="Name (optional)" />
                                 <InputText v-model="signatoryTitle" class="rw-input"
-                                    placeholder="Designation (optional)" style="margin-top: 6px;" />
+                                    :placeholder="useInterviewedSignatories ? 'Position (optional)' : 'Designation (optional)'" style="margin-top: 6px;" />
                             </div>
                         </div>
 
@@ -218,10 +220,24 @@
                                         <span>Include Projected Expense</span>
                                         <ToggleSwitch v-model="includeProjectedExpense" />
                                     </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Include Grant</span>
+                                        <ToggleSwitch v-model="includeGrantProvision" />
+                                    </label>
+                                    <div v-if="includeGrantProvision" class="rw-field-group" style="margin-top: 8px;">
+                                        <label class="rw-label" style="font-size: 11px;">Grant Value</label>
+                                        <Select v-model="grantValue" :options="grantProvisionOptions"
+                                            optionLabel="label" optionValue="value" placeholder="Select grant…"
+                                            showClear class="rw-select" />
+                                    </div>
                                     <label v-if="reportType === 'list' && canEnableJpmHighlighting"
                                         class="rw-toggle-row">
                                         <span>Highlight JPM Members</span>
                                         <ToggleSwitch v-model="enableJpmHighlighting" />
+                                    </label>
+                                    <label class="rw-toggle-row">
+                                        <span>Interviewed-Style Signatories</span>
+                                        <ToggleSwitch v-model="useInterviewedSignatories" />
                                     </label>
                                 </div>
                             </div>
@@ -400,6 +416,7 @@ const paperSize = ref('A4');
 const orientation = ref('landscape');
 const customReportTitle = ref('');
 const preparedByTitle = ref('');
+const preparedByOffice = ref('');
 const signatoryName = ref('');
 const signatoryTitle = ref('');
 const groupBy = ref('none');
@@ -407,9 +424,11 @@ const groupBySecondary = ref('none');
 const groupByTertiary = ref('none');
 const showSequenceNumbers = ref(true);
 const includeRemarks = ref(false);
-const includeGrantProvision = ref(true);
 const includeProjectedExpense = ref(true);
+const includeGrantProvision = ref(false);
+const grantValue = ref(null);
 const enableJpmHighlighting = ref(false);
+const useInterviewedSignatories = ref(false);
 const jpmFilter = ref('all');
 const sortBy = ref('default');
 const showAddress = ref(true);
@@ -466,6 +485,12 @@ const statusChoices = computed(() => {
 
 // ─── Options ───
 const grantProvisionOptions = useSystemOptions('grant_provision');
+
+const grantValueLabel = computed(() => {
+    if (!grantValue.value) return null;
+    const option = grantProvisionOptions.value?.find(o => o.value === grantValue.value);
+    return option?.label || grantValue.value;
+});
 
 const groupByOptions = [
     { label: 'No Grouping', value: 'none' },
@@ -630,6 +655,8 @@ async function generateReport() {
                 showSequenceNumbers: showSequenceNumbers.value,
                 includeRemarks: includeRemarks.value,
                 includeGrantProvision: includeGrantProvision.value,
+                grantValue: grantValue.value,
+                grantValueLabel: grantValueLabel.value,
                 includeProjectedExpense: includeProjectedExpense.value,
                 enableJpmHighlighting: enableJpmHighlighting.value,
                 jpmFilter: jpmFilter.value,
@@ -640,8 +667,10 @@ async function generateReport() {
                 groupBySecondary: groupBySecondary.value !== 'none' ? groupBySecondary.value : null,
                 groupByTertiary: groupByTertiary.value !== 'none' ? groupByTertiary.value : null,
                 preparedByTitle: preparedByTitle.value?.trim() || '',
+                preparedByOffice: preparedByOffice.value?.trim() || '',
                 signatoryName: signatoryName.value?.trim() || '',
                 signatoryTitle: signatoryTitle.value?.trim() || '',
+                useInterviewedSignatories: useInterviewedSignatories.value,
                 sortBy: sortBy.value,
                 showAddress: showAddress.value,
                 showContactNumber: showContactNumber.value,
@@ -842,7 +871,7 @@ function doExportExcel() {
                 case 'year_level': row.push(rec.year_level || ''); break;
                 case 'term': row.push(rec.term || ''); break;
                 case 'academic_year': row.push(rec.academic_year || ''); break;
-                case 'grant_provision': row.push(rec.grant_provision_label || rec.grant_provision || ''); break;
+                case 'grant_provision': row.push(grantValue.value || rec.grant_provision_label || rec.grant_provision || ''); break;
                 case 'date_filed': row.push(formatDate(rec.date_filed)); break;
                 case 'status': row.push(formatStatus(getReportStatus(rec))); break;
                 case 'remarks': row.push(rec.remarks || rec.decline_reason || ''); break;
@@ -920,6 +949,7 @@ watch(() => props.show, (v) => {
             customReportTitle.value = '';
             preparedBy.value = '';
             preparedByTitle.value = '';
+            preparedByOffice.value = '';
             signatoryName.value = '';
             signatoryTitle.value = '';
         });

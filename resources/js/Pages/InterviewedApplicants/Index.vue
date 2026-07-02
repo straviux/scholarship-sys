@@ -80,6 +80,10 @@
                             <ProgramSelect v-model="filters.program" size="small" class="w-full" />
                         </div>
                         <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                            <CourseSelect v-model="filters.course" size="small" class="w-full" :load-all-when-no-program="true" />
+                        </div>
+                        <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Recommendation List</label>
                             <Select v-model="filters.listStatus" :options="recommendationListStatusOptions"
                                 optionLabel="label" optionValue="value" placeholder="All Recommendation List Status"
@@ -112,6 +116,10 @@
                         <div class="flex flex-col">
                             <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
                             <ProgramSelect v-model="filters.program" size="small" class="w-full" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                            <CourseSelect v-model="filters.course" size="small" class="w-full" :load-all-when-no-program="true" />
                         </div>
                         <div class="ml-auto flex flex-wrap justify-end gap-2">
                             <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
@@ -823,6 +831,7 @@ import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
+import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import ContextMenu from 'primevue/contextmenu';
 import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
 import CumulativeScholarListModal from './Modal/CumulativeScholarListModal.vue';
@@ -858,6 +867,7 @@ const props = defineProps({
             recommendation: null,
             name: '',
             program: null,
+            course: null,
         }),
     },
     budget_allocations: {
@@ -893,6 +903,7 @@ const filters = ref({
     recommendation: null,
     name: '',
     program: null,
+    course: null,
     listStatus: null,
 });
 
@@ -989,6 +1000,20 @@ const recordMatchesProgram = (record, programId) => {
     return String(record?.program?.id ?? '') === String(programId);
 };
 
+const selectedCourseId = computed(() => {
+    return typeof filters.value.course === 'object'
+        ? filters.value.course?.id
+        : filters.value.course;
+});
+
+const recordMatchesCourse = (record, courseId) => {
+    if (!courseId) {
+        return true;
+    }
+
+    return String(record?.course?.id ?? '') === String(courseId);
+};
+
 // Computed
 const recommendationRecordIndex = computed(() => {
     const recordIndex = new Map();
@@ -1058,6 +1083,14 @@ const activeFilterTags = computed(() => {
         });
     }
 
+    if (filters.value.course) {
+        tags.push({
+            key: 'course',
+            label: 'Course',
+            display: filters.value.course?.shortname || filters.value.course?.name || 'N/A',
+        });
+    }
+
     if (activeTab.value === 'interviewed' && filters.value.listStatus) {
         tags.push({
             key: 'listStatus',
@@ -1073,6 +1106,7 @@ const filteredList = computed(() => {
     let list = interviewedApplicantsWithRecommendationFlags.value;
     const nameQuery = normalizedNameFilter.value;
     const programId = selectedProgramId.value;
+    const courseId = selectedCourseId.value;
 
     if (filters.value.recommendation) {
         list = list.filter(r => r.recommendation === filters.value.recommendation);
@@ -1084,6 +1118,10 @@ const filteredList = computed(() => {
 
     if (programId) {
         list = list.filter((record) => recordMatchesProgram(record, programId));
+    }
+
+    if (courseId) {
+        list = list.filter((record) => recordMatchesCourse(record, courseId));
     }
 
     if (filters.value.listStatus === 'available') {
@@ -1484,6 +1522,7 @@ const clearInterviewedFilters = () => {
     filters.value.recommendation = null;
     filters.value.name = '';
     filters.value.program = null;
+    filters.value.course = null;
     filters.value.listStatus = null;
     currentPage.value = 1;
     fetchPage(1, perPage.value);

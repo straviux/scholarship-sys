@@ -36,6 +36,8 @@ const showScholarshipDate = computed(() => props.showScholarshipDate !== false);
 const highlightJpmMembers = computed(() => props.options?.enableJpmHighlighting === true);
 const showSequenceNumbers = computed(() => props.options?.showSequenceNumbers !== false);
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
+const includeGrantProvision = computed(() => props.options?.includeGrantProvision === true);
+const grantValueLabel = computed(() => props.options?.grantValueLabel ?? null);
 const activeGroupFields = computed(() => new Set([
     props.options?.groupBy,
     props.options?.groupBySecondary,
@@ -59,9 +61,9 @@ const projectedColumns = computed(() => {
     }
 
     return [
-        { key: 'projected_term_count', label: 'Terms', width: '4%' },
-        { key: 'projected_total_expense', label: 'Expense', width: '8%' },
-        { key: 'projected_completion_year', label: 'Completion', width: '6%' },
+        { key: 'projected_term_count', label: 'Terms', width: '3%', align: 'center' },
+        { key: 'projected_total_expense', label: 'Expense', width: '6%', align: 'center' },
+        { key: 'projected_completion_year', label: 'Completion', width: '5%', align: 'center' },
     ];
 });
 
@@ -72,14 +74,14 @@ const singleColumns = computed(() => {
         columns.push({ key: 'sequence', label: '#', width: '2%', align: 'center' });
     }
 
-    columns.push({ key: 'name', label: 'Name', width: props.showContactNumber ? '10%' : '12%' });
+    columns.push({ key: 'name', label: 'Name', width: props.showContactNumber ? '11%' : '13%' });
 
     if (!hiddenColumns.value.contact_number) {
         columns.push({ key: 'contact_number', label: 'Contact Number', width: '7%', align: 'center' });
     }
 
     if (!hiddenColumns.value.address) {
-        columns.push({ key: 'address_location', label: 'Address', width: '8%' });
+        columns.push({ key: 'address_location', label: 'Address', width: '9%' });
     }
 
     if (!hiddenColumns.value.program) {
@@ -91,7 +93,7 @@ const singleColumns = computed(() => {
     }
 
     if (!hiddenColumns.value.course) {
-        columns.push({ key: 'course_name', label: 'Course', width: '10%' });
+        columns.push({ key: 'course_name', label: 'Course', width: '11%' });
     }
 
     if (!hiddenColumns.value.year_level) {
@@ -99,6 +101,10 @@ const singleColumns = computed(() => {
     }
 
     columns.push({ key: 'term_academic_year', label: 'Term / Academic Year', width: '7%', align: 'center' });
+
+    if (includeGrantProvision.value) {
+        columns.push({ key: 'grant_provision', label: 'Grant', width: '7%', align: 'center' });
+    }
 
     if (!hiddenColumns.value.remarks) {
         columns.push({ key: 'remarks_summary', label: 'Remarks', width: '10%' });
@@ -223,10 +229,6 @@ function fmtGrantAmount(value) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     }).format(Number(value) || 0);
-}
-
-function fmtGrantProvisionName(record) {
-    return parseGrantProvision(record?.grant_provision_label || record?.grant_provision).name;
 }
 
 function fmtGrantProvisionAmount(record) {
@@ -401,6 +403,10 @@ function cellValue(record, column) {
             return record.decline_reason || record.remarks || '—';
         case 'remarks_summary':
             return formatRemarks(record);
+        case 'grant_provision':
+            return grantValueLabel.value
+                ? (parseGrantProvision(grantValueLabel.value).amount || grantValueLabel.value)
+                : fmtGrantProvisionAmount(record);
         default:
             return record[column.key] || '—';
     }
@@ -459,7 +465,7 @@ function cellValue(record, column) {
                     </template>
                     <template v-else-if="column.key === 'term_academic_year'">
                         <div>{{ record.term || '—' }}</div>
-                        <div style="margin-top:2px;font-size:6px;line-height:1.1;">
+                        <div style="margin-top:2px;font-size:8px;line-height:1.2;font-weight:500;">
                             {{ record.academic_year || '—' }}
                         </div>
                     </template>

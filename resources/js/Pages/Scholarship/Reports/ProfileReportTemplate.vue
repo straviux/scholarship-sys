@@ -118,11 +118,13 @@ const grouped = computed(() => props.reportType === 'list'
     : null);
 const preparedBy = computed(() => props.options?.preparedBy?.trim() || '');
 const preparedByTitle = computed(() => props.options?.preparedByTitle?.trim() || '');
+const preparedByOffice = computed(() => props.options?.preparedByOffice?.trim() || '');
 const signatoryName = computed(() => props.options?.signatoryName?.trim() || '');
 const signatoryTitle = computed(() => props.options?.signatoryTitle?.trim() || '');
 const showPreparedBy = computed(() => Boolean(preparedBy.value));
 const showNotedBy = computed(() => Boolean(signatoryName.value));
 const showSignatoryBlock = computed(() => showPreparedBy.value || showNotedBy.value);
+const useInterviewedSignatories = computed(() => props.options?.useInterviewedSignatories === true);
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
 const summaryGroupBy = computed(() => {
     const requestedGroup = props.options?.groupBy;
@@ -422,7 +424,36 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
         </div>
 
         <!-- ── Signatory Block ──────────────────────────────────── -->
-        <div v-if="showSignatoryBlock" style="margin-top:28pt;page-break-inside:avoid;">
+        <!-- Interviewed-Applicants Style: Prepared by (left) | Approved by (right) -->
+        <div v-if="showSignatoryBlock && useInterviewedSignatories"
+            style="margin-top:28pt;display:flex;justify-content:space-between;font-size:8pt;page-break-inside:avoid;">
+            <div style="flex:1;max-width:60%;margin-left:70pt;">
+                <div style="font-weight:700;">Prepared by:</div>
+                <div style="margin-top:40pt;text-align:center;width:200px;">
+                    <div class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
+                        {{ preparedBy }}
+                    </div>
+                    <div v-if="preparedByTitle" style="margin-top:4pt;">{{ preparedByTitle }}</div>
+                    <div v-if="preparedByOffice">{{ preparedByOffice }}</div>
+                </div>
+            </div>
+            <div style="flex:1;max-width:35%;margin-left:auto;">
+                <div style="font-weight:700;text-align:left;">Approved by:</div>
+                <div style="margin-top:40pt;text-align:center;width:200px;">
+                    <div class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">
+                        {{ signatoryName }}
+                    </div>
+                    <div v-if="signatoryTitle" style="margin-top:4pt;">{{ signatoryTitle }}</div>
+                </div>
+
+                <div style="margin-top:40pt;text-align:center;width:200px;border-top:1px solid #000;">
+                    Date
+                </div>
+            </div>
+        </div>
+
+        <!-- Default Style: Prepared by | Noted by -->
+        <div v-else-if="showSignatoryBlock && !useInterviewedSignatories" style="margin-top:36pt;page-break-inside:avoid;">
             <div
                 :style="{ display: 'flex', justifyContent: showPreparedBy && showNotedBy ? 'space-between' : 'center', gap: '32pt' }">
                 <!-- Prepared By -->
@@ -432,6 +463,7 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
                         <p style="font-weight:700;font-size:9pt;text-transform:uppercase;letter-spacing:0.3pt;">{{
                             preparedBy }}</p>
                         <p v-if="preparedByTitle" style="font-size:8pt;color:#444;">{{ preparedByTitle }}</p>
+                        <p v-if="preparedByOffice" style="font-size:8pt;color:#444;">{{ preparedByOffice }}</p>
                     </div>
                 </div>
                 <!-- Noted By -->
