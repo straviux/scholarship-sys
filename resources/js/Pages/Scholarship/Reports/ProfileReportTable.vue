@@ -37,7 +37,6 @@ const highlightJpmMembers = computed(() => props.options?.enableJpmHighlighting 
 const showSequenceNumbers = computed(() => props.options?.showSequenceNumbers !== false);
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
 const includeGrantProvision = computed(() => props.options?.includeGrantProvision === true);
-const grantValueLabel = computed(() => props.options?.grantValueLabel ?? null);
 const isEfaApprovalList = computed(() => props.options?.isEfaApprovalList === true);
 const efaUpcomingTerm = computed(() => props.options?.efaUpcomingTerm || '');
 const efaUpcomingAcademicYear = computed(() => props.options?.efaUpcomingAcademicYear || '');
@@ -118,7 +117,7 @@ const singleColumns = computed(() => {
     }
 
     if (!hiddenColumns.value.remarks) {
-        columns.push({ key: 'remarks_summary', label: 'Remarks', width: '10%' });
+        columns.push({ key: 'remarks_summary', label: 'Remarks', width: '12%' });
     }
 
     if (selectedStatus.value === null && !hiddenColumns.value.report_status) {
@@ -437,9 +436,7 @@ function cellValue(record, column) {
         case 'remarks_summary':
             return formatRemarks(record);
         case 'grant_provision':
-            return grantValueLabel.value
-                ? (parseGrantProvision(grantValueLabel.value).amount || grantValueLabel.value)
-                : fmtGrantProvisionAmount(record);
+            return fmtGrantProvisionAmount(record);
         case 'current_year_level':
             return incrementYearLevel(record?.year_level) || '—';
         default:

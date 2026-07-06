@@ -56,150 +56,14 @@
                 </template>
             </Toolbar>
 
-            <Tabs v-model:value="activeTab">
-                <Panel class="mb-6 short:mb-3 !rounded-4xl overflow-hidden">
-                    <div v-if="activeTab === 'interviewed'"
-                        class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap">
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
-                            <IconField iconPosition="left">
-                                <InputIcon>
-                                    <AppIcon name="search" :size="14" class="text-gray-400" />
-                                </InputIcon>
-                                <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
-                            </IconField>
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
-                            <Select v-model="filters.recommendation" :options="recommendationOptions"
-                                optionLabel="label" optionValue="value" placeholder="All Recommendations" size="small"
-                                class="w-full" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                            <ProgramSelect v-model="filters.program" size="small" class="w-full" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                            <CourseSelect v-model="filters.course" size="small" class="w-full" :load-all-when-no-program="true" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Recommendation List</label>
-                            <Select v-model="filters.listStatus" :options="recommendationListStatusOptions"
-                                optionLabel="label" optionValue="value" placeholder="All Recommendation List Status"
-                                size="small" class="min-w-[220px] w-full" />
-                        </div>
-                        <div class="ml-auto flex flex-wrap justify-end gap-2">
-                            <AppButton icon="filter" label="Show Eligible Applicants" severity="secondary" rounded
-                                size="xsmall" @click="presetRecommendationCreationFilters" />
-                            <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
-                                size="xsmall" @click="clearInterviewedFilters" />
-                        </div>
-                    </div>
+            <Tabs v-model:value="activeTab" class="!bg-transparent">
+                <TabPanels class="!bg-transparent !p-0">
+                    <TabPanel value="interviewed" class="!bg-transparent !p-0">
 
-                    <div v-else class="flex items-end gap-3 short:gap-2 -mt-6 short:-mt-3 flex-wrap">
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
-                            <IconField iconPosition="left">
-                                <InputIcon>
-                                    <AppIcon name="search" :size="14" class="text-gray-400" />
-                                </InputIcon>
-                                <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
-                            </IconField>
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
-                            <Select v-model="filters.recommendation" :options="recommendationOptions"
-                                optionLabel="label" optionValue="value" placeholder="All Recommendations" size="small"
-                                class="w-full" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                            <ProgramSelect v-model="filters.program" size="small" class="w-full" />
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
-                            <CourseSelect v-model="filters.course" size="small" class="w-full" :load-all-when-no-program="true" />
-                        </div>
-                        <div class="ml-auto flex flex-wrap justify-end gap-2">
-                            <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
-                                size="xsmall" @click="clearInterviewedFilters" />
-                        </div>
-                    </div>
-
-                </Panel>
-
-                <div v-if="activeFilterTags.length" class="mb-4 flex flex-wrap items-center gap-2">
-                    <span class="text-xs text-gray-500">Active Filters:</span>
-                    <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded>
-                        <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
-                    </Tag>
-                </div>
-
-                <TabPanels>
-                    <TabPanel value="interviewed">
-
-                        <Panel
-                            class="mb-4 short:mb-2 !rounded-4xl overflow-hidden border border-sky-100 bg-sky-50/70 shadow-sm">
-                            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                                <div class="flex items-start gap-3">
-                                    <AppIcon name="info-circle" :size="18" class="mt-0.5 text-sky-600" />
-                                    <div>
-                                        <div class="text-sm font-semibold text-sky-900">How to create a recommendation
-                                            list</div>
-                                        <div class="mt-2 flex flex-wrap gap-2 text-xs text-sky-800">
-                                            <span class="rounded-full bg-white px-3 py-1 shadow-sm">1. Filter to
-                                                Recommended for
-                                                Approval</span>
-                                            <span class="rounded-full bg-white px-3 py-1 shadow-sm">2. Show applicants
-                                                not yet in a
-                                                recommendation list</span>
-                                            <span class="rounded-full bg-white px-3 py-1 shadow-sm">3. Select
-                                                applicants</span>
-                                            <span class="rounded-full bg-white px-3 py-1 shadow-sm">4. Click Create
-                                                Recommendation
-                                                List</span>
-                                        </div>
-                                        <div class="mt-2 text-xs text-sky-700">
-                                            Applicants already saved in a recommendation list are flagged in the table
-                                            and excluded
-                                            by the eligible filter.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </Panel>
-
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 short:gap-2 mb-6 short:mb-3">
-                            <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
-                                <div class="text-2xl short:text-xl font-bold text-blue-600">{{ stats.total }}</div>
-                                <div class="text-xs text-gray-500">Total Interviewed</div>
-                            </div>
-                            <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
-                                <div class="text-2xl short:text-xl font-bold text-green-600">{{ stats.recommended }}
-                                </div>
-                                <div class="text-xs text-gray-500">Recommended</div>
-                            </div>
-                            <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
-                                <div class="text-2xl short:text-xl font-bold text-yellow-600">{{ stats.furtherEval }}
-                                </div>
-                                <div class="text-xs text-gray-500">For Further Evaluation</div>
-                            </div>
-                            <div class="bg-white border rounded-4xl p-4 short:p-2 text-center shadow-sm">
-                                <div class="text-2xl short:text-xl font-bold text-red-600">{{ stats.notRecommended }}
-                                </div>
-                                <div class="text-xs text-gray-500">Not Recommended</div>
-                            </div>
-                        </div>
+                        
+                        
 
                         <Panel class="!rounded-4xl overflow-hidden shadow-sm">
-                            <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2"
-                                v-if="selectedRows.length">
-                                <span class="text-sm text-gray-500">
-                                    <span>&middot; {{ selectedRows.length }} selected</span>
-                                </span>
-                            </div>
-
                             <div v-if="selectedRows.length > 0"
                                 class="mb-4 rounded-3xl border border-yellow-200 bg-yellow-50 p-3">
                                 <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -233,6 +97,17 @@
                                     recommendation list.
                                 </div>
                             </div>
+                            
+                            <div class="flex items-end gap-6 short:gap-3 short:mb-2 px-3 py-2 text-sm opacity-75">
+                            <span class="font-semibold text-blue-600">{{ stats.total }} interviewed</span>
+                            <span class="text-gray-300">|</span>
+                            <span class="font-semibold text-green-600">{{ stats.recommended }} recommended</span>
+                            <span class="text-gray-300">|</span>
+                            <span class="font-semibold text-yellow-600">{{ stats.furtherEval }} for evaluation</span>
+                            <span class="text-gray-300">|</span>
+                            <span class="font-semibold text-red-600">{{ stats.notRecommended }} not recommended</span>
+                        </div>
+
                             <!-- Paginator (top) -->
                             <div class="flex items-center justify-between px-2 py-2 border-b border-slate-100">
                                 <span class="text-xs text-gray-400">
@@ -244,9 +119,56 @@
                                     :first="(props.interviewed_applicants_pagination.current_page - 1) * props.interviewed_applicants_pagination.per_page"
                                     :rows="props.interviewed_applicants_pagination.per_page"
                                     :totalRecords="props.interviewed_applicants_pagination.total"
-                                    :rowsPerPageOptions="[10, 20, 50, 100, 200]" @page="onPageChange"
+                                    :rowsPerPageOptions="[100, 50, 20, 10, 200]" @page="onPageChange"
                                     template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                                     class="!p-0 text-xs [&_.p-paginator-page]:!min-w-[1.75rem] [&_.p-paginator-page]:!h-[1.75rem] [&_.p-paginator-page]:!text-xs [&_.p-paginator-element]:!text-xs [&_.p-paginator-element]:!min-w-[1.75rem] [&_.p-paginator-element]:!h-[1.75rem] [&_.p-paginator-rpp-dropdown]:!text-xs [&_.p-paginator-current]:!text-xs" />
+                            </div>
+
+                            <!-- Filters above table -->
+                            <div class="flex items-end gap-3 short:gap-2 flex-wrap px-2 py-3 mb-4">
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
+                                    <IconField iconPosition="left">
+                                        <InputIcon>
+                                            <AppIcon name="search" :size="14" class="text-gray-400" />
+                                        </InputIcon>
+                                        <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
+                                    </IconField>
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
+                                    <Select v-model="filters.recommendation" :options="recommendationOptions"
+                                        optionLabel="label" optionValue="value" placeholder="All Recommendations" size="small"
+                                        class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                                    <ProgramSelect v-model="filters.program" size="small" class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                                    <CourseSelect v-model="filters.course" size="small" class="w-full" :load-all-when-no-program="true" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Recommendation List</label>
+                                    <Select v-model="filters.listStatus" :options="recommendationListStatusOptions"
+                                        optionLabel="label" optionValue="value" placeholder="All Recommendation List Status"
+                                        size="small" class="min-w-[220px] w-full" />
+                                </div>
+                                <div class="ml-auto flex flex-wrap justify-end gap-2">
+                                    <AppButton icon="filter" label="Show Eligible Applicants" severity="secondary" rounded
+                                        size="xsmall" @click="presetRecommendationCreationFilters" />
+                                    <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
+                                        size="xsmall" @click="clearInterviewedFilters" />
+                                </div>
+                            </div>
+
+                            <!-- Active filter tags -->
+                            <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 px-2 py-2 border-b border-slate-100">
+                                <span class="text-xs text-gray-500">Active Filters:</span>
+                                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded>
+                                    <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
+                                </Tag>
                             </div>
 
                             <div v-if="filteredList.length === 0" class="text-center py-8 text-gray-500">
@@ -464,7 +386,7 @@
                                     :first="(props.interviewed_applicants_pagination.current_page - 1) * props.interviewed_applicants_pagination.per_page"
                                     :rows="props.interviewed_applicants_pagination.per_page"
                                     :totalRecords="props.interviewed_applicants_pagination.total"
-                                    :rowsPerPageOptions="[10, 20, 50, 100, 200]" @page="onPageChange"
+                                    :rowsPerPageOptions="[100, 50, 20, 10, 200]" @page="onPageChange"
                                     template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                                     class="!p-0 text-xs [&_.p-paginator-page]:!min-w-[1.75rem] [&_.p-paginator-page]:!h-[1.75rem] [&_.p-paginator-page]:!text-xs [&_.p-paginator-element]:!text-xs [&_.p-paginator-element]:!min-w-[1.75rem] [&_.p-paginator-element]:!h-[1.75rem] [&_.p-paginator-rpp-dropdown]:!text-xs [&_.p-paginator-current]:!text-xs" />
                             </div>
@@ -481,6 +403,45 @@
                                         {{ filteredDeletedRecommendationLists.length }} deleted
                                     </span>
                                 </div>
+                            </div>
+
+                            <!-- Filters above table -->
+                            <div class="flex items-end gap-3 short:gap-2 flex-wrap px-2 py-3 border-b border-slate-100 bg-slate-50/50">
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
+                                    <IconField iconPosition="left">
+                                        <InputIcon>
+                                            <AppIcon name="search" :size="14" class="text-gray-400" />
+                                        </InputIcon>
+                                        <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
+                                    </IconField>
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
+                                    <Select v-model="filters.recommendation" :options="recommendationOptions"
+                                        optionLabel="label" optionValue="value" placeholder="All Recommendations" size="small"
+                                        class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
+                                    <ProgramSelect v-model="filters.program" size="small" class="w-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
+                                    <CourseSelect v-model="filters.course" size="small" class="w-full" :load-all-when-no-program="true" />
+                                </div>
+                                <div class="ml-auto flex flex-wrap justify-end gap-2">
+                                    <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
+                                        size="xsmall" @click="clearInterviewedFilters" />
+                                </div>
+                            </div>
+
+                            <!-- Active filter tags -->
+                            <div v-if="activeFilterTags.length" class="flex flex-wrap items-center gap-2 px-2 py-2 border-b border-slate-100">
+                                <span class="text-xs text-gray-500">Active Filters:</span>
+                                <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded>
+                                    <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
+                                </Tag>
                             </div>
 
                             <div v-if="filteredRecommendationLists.length === 0"
@@ -815,6 +776,9 @@
             :approval-form="approvalForm" :deny-form="denyForm" :decline-reasons="declineReasons"
             :interviewers="interviewers" @updated="onAssessmentUpdated" @confirm-approve="confirmApprove"
             @confirm-deny="confirmDeny" @revert="confirmRevert" />
+
+        <PdfPreviewModal v-model:show="showRecommendationListPreview" :htmlDoc="recommendationListPreviewHtml"
+            :title="recommendationListPreviewTitle" :paperSize="recommendationListPreviewPaperSize" />
     </AdminLayout>
 </template>
 
@@ -837,11 +801,13 @@ import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
 import CumulativeScholarListModal from './Modal/CumulativeScholarListModal.vue';
 import CreateRecommendationListModal from './Modal/CreateRecommendationListModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModalIOS.vue';
+import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 import {
     exportInterviewedApplicantsExcel,
     printInterviewedApplicantsSelection,
     printRecommendationList,
+    buildRecommendationListHtml,
 } from './interviewedApplicantsExport';
 import Paginator from 'primevue/paginator';
 
@@ -854,7 +820,7 @@ const props = defineProps({
         type: Object,
         default: () => ({
             current_page: 1,
-            per_page: 50,
+            per_page: 100,
             total: 0,
             last_page: 1,
             from: 0,
@@ -923,6 +889,10 @@ const confirm = useConfirm();
 const recommendationLists = ref([...(props.recommendation_lists || [])]);
 const deletedRecommendationLists = ref([...(props.deleted_recommendation_lists || [])]);
 const recommendationListExpandedRows = ref({});
+const showRecommendationListPreview = ref(false);
+const recommendationListPreviewHtml = ref('');
+const recommendationListPreviewTitle = ref('');
+const recommendationListPreviewPaperSize = ref('a4');
 
 const approvalForm = useForm({
     date_approved: new Date(),
@@ -1413,7 +1383,7 @@ const syncSelectedRows = () => {
 
 // --- Pagination ---
 const currentPage = ref(props.interviewed_applicants_pagination?.current_page ?? 1);
-const perPage = ref(props.interviewed_applicants_pagination?.per_page ?? 50);
+const perPage = ref(props.interviewed_applicants_pagination?.per_page ?? 100);
 
 const fetchPage = (page, perPageValue) => {
     const params = {};
@@ -1823,14 +1793,21 @@ const createRecommendationList = async (payload) => {
     }
 };
 
-const generateRecommendationListPrint = (recommendationList, successMessage = null) => {
+const generateRecommendationListPrint = (recommendationList, successMessage = null, printOptions = {}) => {
     try {
-        const opened = printRecommendationList({ recommendationList });
-
-        if (!opened) {
-            toast.error('Pop-up blocked. Please allow pop-ups and try again.');
-            return false;
-        }
+        const html = buildRecommendationListHtml({
+            recommendationList,
+            ...printOptions,
+        });
+        recommendationListPreviewHtml.value = html;
+        recommendationListPreviewTitle.value = recommendationList?.list_number
+            ? `Recommendation List ${recommendationList.list_number}`
+            : 'Recommendation List';
+        const paperMap = { landscape: { A4: 'a4-landscape', Letter: 'letter-landscape', Legal: 'landscape' }, portrait: { A4: 'a4', Letter: 'letter', Legal: 'long' } };
+        const orientation = recommendationList?.orientation || 'landscape';
+        const paperSize = recommendationList?.paper_size || 'A4';
+        recommendationListPreviewPaperSize.value = paperMap[orientation]?.[paperSize] || 'a4-landscape';
+        showRecommendationListPreview.value = true;
 
         if (successMessage) {
             toast.success(successMessage);
@@ -1879,9 +1856,14 @@ const updateRecommendationList = async (payload, { shouldPrintAfterSave = false 
         const successMessage = response.data?.message || 'Recommendation list updated successfully.';
 
         if (shouldPrintAfterSave) {
+            const printOptions = {
+                includeInterviewColumns: payload?.include_interview_columns,
+                includeProjectedColumns: payload?.include_projected_columns,
+            };
             const printed = generateRecommendationListPrint(
                 savedRecommendationList,
                 `Updated ${savedRecommendationList.list_number}. Printing recommendation list.`,
+                printOptions,
             );
 
             if (!printed) {

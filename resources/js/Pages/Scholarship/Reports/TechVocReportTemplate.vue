@@ -44,6 +44,7 @@ const signatoryName = computed(() => props.options?.signatoryName?.trim() || '')
 const signatoryTitle = computed(() => props.options?.signatoryTitle?.trim() || '');
 const preparedBy = computed(() => props.options?.preparedBy?.trim() || '');
 const preparedByTitle = computed(() => props.options?.preparedByTitle?.trim() || '');
+const defaultAmount = computed(() => props.options?.defaultAmount ?? null);
 </script>
 
 <template>
@@ -76,7 +77,7 @@ const preparedByTitle = computed(() => props.options?.preparedByTitle?.trim() ||
 
             <!-- Table -->
             <template v-else>
-                <TechVocReportTable :records="sortedRecords" :filters="filters" :options="options" />
+                <TechVocReportTable :records="sortedRecords" :filters="filters" :options="options" :default-amount="defaultAmount" />
             </template>
         </div>
 

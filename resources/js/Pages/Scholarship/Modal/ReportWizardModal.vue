@@ -12,313 +12,369 @@
         </template>
 
         <template #header-right>
-            <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="generating"
-                v-tooltip.bottom="'Generate Report'">
-                <AppIcon v-if="generating" name="spinner" :size="16" class="animate-spin" />
-                <template v-else>Generate</template>
+            <button class="ios-nav-btn ios-nav-cancel" @click="handleWizardBack">
+                <AppIcon name="x" :size="16" />
             </button>
         </template>
 
-        <div class="report-wizard-body">
-            <!-- ═══ SECTION 1: REPORT TYPE & STATUS ═══ -->
-            <div class="rw-section" :class="{ 'rw-section-collapsed': collapsed.section1 }">
-                <div class="rw-section-header" @click="toggleSection('section1')">
-                    <div class="rw-section-step">1</div>
-                    <div class="rw-section-title">
-                        <span class="rw-section-label">Report Type & Status</span>
-                        <span class="rw-section-summary">{{ selectedStatus ? statusLabel : 'All Statuses' }} · {{
-                            reportType ===
-                                'list' ? 'Detailed List' : 'Summary' }}</span>
+        <div class="p-3 max-h-[78vh] overflow-y-auto">
+            <!-- ═══ STEPPER ═══ -->
+            <div class="flex items-center justify-center gap-0 pb-4">
+                <div class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                    :class="{ 'opacity-40 cursor-default': currentStep < 1 && currentStep !== 1 }"
+                    @click="goToStep(1)">
+                    <div class="w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0 transition-colors text-xs font-bold text-white"
+                        :class="currentStep > 1 ? 'bg-green-500' : 'bg-blue-500'">
+                        <AppIcon v-if="currentStep > 1" name="check" :size="10" />
+                        <span v-else>1</span>
                     </div>
-                    <AppIcon :name="collapsed.section1 ? 'chevron-down' : 'chevron-up'" :size="14"
-                        class="rw-section-chevron" />
+                    <span class="text-xs font-medium whitespace-nowrap"
+                        :class="currentStep === 1 ? 'text-blue-500 font-semibold' : currentStep > 1 ? 'text-green-500' : 'text-gray-400'">Report Type</span>
                 </div>
-                <div v-show="!collapsed.section1" class="rw-section-body">
-                    <div class="rw-field-group" v-if="!mode">
-                        <label class="rw-label">Report Type</label>
-                        <div class="rw-segmented">
-                            <button :class="['rw-seg-btn', reportType === 'list' && 'rw-seg-active']"
-                                @click="reportType = 'list'">
-                                <AppIcon name="list" :size="14" />
-                                Detailed List
-                            </button>
-                            <button :class="['rw-seg-btn', reportType === 'summary' && 'rw-seg-active']"
-                                @click="reportType = 'summary'">
-                                <AppIcon name="bar-chart-3" :size="14" />
-                                Summary
-                            </button>
-                        </div>
+                <div class="flex-1 h-0.5 mx-2 transition-colors"
+                    :class="currentStep > 1 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'"></div>
+                <div class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                    :class="{ 'opacity-40 cursor-default': currentStep < 2 && currentStep !== 2 }"
+                    @click="goToStep(2)">
+                    <div class="w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0 transition-colors text-xs font-bold text-white"
+                        :class="currentStep > 2 ? 'bg-green-500' : currentStep === 2 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'">
+                        <AppIcon v-if="currentStep > 2" name="check" :size="10" />
+                        <span v-else>2</span>
                     </div>
-
-                    <div class="rw-field-group">
-                        <label class="rw-label">Status</label>
-                        <div class="rw-chip-group">
-                            <button v-for="opt in statusChoices" :key="opt.value"
-                                :class="['rw-chip', selectedStatus === opt.value && 'rw-chip-active']"
-                                @click="selectedStatus = opt.value">
-                                <span v-if="opt.color" class="rw-chip-dot" :style="{ background: opt.color }"></span>
-                                {{ opt.label }}
-                            </button>
-                        </div>
+                    <span class="text-xs font-medium whitespace-nowrap"
+                        :class="currentStep === 2 ? 'text-blue-500 font-semibold' : currentStep > 2 ? 'text-green-500' : 'text-gray-400'">Filters</span>
+                </div>
+                <div class="flex-1 h-0.5 mx-2 transition-colors"
+                    :class="currentStep > 2 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'"></div>
+                <div class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                    :class="{ 'opacity-40 cursor-default': currentStep < 3 && currentStep !== 3 }"
+                    @click="goToStep(3)">
+                    <div class="w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0 transition-colors text-xs font-bold text-white"
+                        :class="currentStep > 3 ? 'bg-green-500' : currentStep === 3 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'">
+                        <AppIcon v-if="currentStep > 3" name="check" :size="10" />
+                        <span v-else>3</span>
                     </div>
+                    <span class="text-xs font-medium whitespace-nowrap"
+                        :class="currentStep === 3 ? 'text-blue-500 font-semibold' : currentStep > 3 ? 'text-green-500' : 'text-gray-400'">Layout</span>
+                </div>
+                <div class="flex-1 h-0.5 mx-2 transition-colors"
+                    :class="currentStep > 3 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'"></div>
+                <div class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                    :class="{ 'opacity-40 cursor-default': currentStep !== 4 && currentStep < 4 }"
+                    @click="goToStep(4)">
+                    <div class="w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0 transition-colors text-xs font-bold text-white"
+                        :class="currentStep === 4 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'">
+                        <span>4</span>
+                    </div>
+                    <span class="text-xs font-medium whitespace-nowrap"
+                        :class="currentStep === 4 ? 'text-blue-500 font-semibold' : 'text-gray-400'">Options</span>
                 </div>
             </div>
 
-            <!-- ═══ SECTION 2: FILTERS ═══ -->
-            <div class="rw-section" :class="{ 'rw-section-collapsed': collapsed.section2 }">
-                <div class="rw-section-header" @click="toggleSection('section2')">
-                    <div class="rw-section-step">2</div>
-                    <div class="rw-section-title">
-                        <span class="rw-section-label">Filters</span>
-                        <span class="rw-section-summary">{{ activeFiltersCount > 0 ? activeFiltersCount + ` filter(s)
-                            active` :
-                            `No filters set` }}</span>
-                    </div>
-                    <AppIcon :name="collapsed.section2 ? 'chevron-down' : 'chevron-up'" :size="14"
-                        class="rw-section-chevron" />
-                </div>
-                <div v-show="!collapsed.section2" class="rw-section-body">
-                    <!-- Filter rows in 2-column grid -->
-                    <div class="rw-filters-grid">
-                        <div class="rw-filter-item">
-                            <label class="rw-label">Program</label>
-                            <ProgramSelect v-model="selectedPrograms" label="shortname"
-                                custom-placeholder="All Programs" class="rw-select" :multiple="true" />
-                        </div>
-                        <div class="rw-filter-item">
-                            <label class="rw-label">School</label>
-                            <SchoolSelect v-model="selectedSchools" label="shortname" custom-placeholder="All Schools"
-                                class="rw-select" :multiple="true" />
-                        </div>
-                        <div class="rw-filter-item">
-                            <label class="rw-label">Course</label>
-                            <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedPrograms?.[0]?.id"
-                                label="shortname" custom-placeholder="All Courses" :multiple="true" class="rw-select" />
-                        </div>
-                        <div class="rw-filter-item">
-                            <label class="rw-label">Municipality</label>
-                            <MunicipalitySelect v-model="selectedMunicipalities" custom-placeholder="All Municipalities"
-                                class="rw-select" :multiple="true" />
-                        </div>
-                        <div class="rw-filter-item">
-                            <label class="rw-label">Year Level</label>
-                            <YearLevelSelect v-model="selectedYearLevels" custom-placeholder="All Year Levels"
-                                class="rw-select" :multiple="true" />
-                        </div>
-                        <div class="rw-filter-item">
-                            <label class="rw-label">Grant Provision</label>
-                            <MultiSelect v-model="selectedGrantProvisions" :options="grantProvisionOptions"
-                                optionLabel="label" optionValue="value" placeholder="All Provisions" showClear filter
-                                :filterFields="['label', 'value']" :maxSelectedLabels="3"
-                                :selectedItemsLabel="'{0} provisions selected'" showSelectAll class="rw-select" />
-                        </div>
-                    </div>
-
-                    <!-- Date Range -->
-                    <div class="rw-field-group" style="margin-top: 12px;">
-                        <label class="rw-label">Date Range</label>
-                        <div class="rw-date-row">
-                            <DatePicker v-model="dateFrom" placeholder="From date"
-                                showButtonBar dateFormat="M dd, yy"
-                                class="rw-datepicker" showIcon iconDisplay="input" />
-                            <span class="rw-date-sep">—</span>
-                            <DatePicker v-model="dateTo" placeholder="To date"
-                                showButtonBar dateFormat="M dd, yy"
-                                class="rw-datepicker" showIcon iconDisplay="input" />
-                        </div>
-                        <div v-if="isDateToInvalid" class="rw-error">
-                            End date must be after start date
-                        </div>
-                    </div>
-
-                    <div v-if="activeFiltersCount > 0" class="rw-clear-row">
-                        <button class="rw-clear-btn" @click="clearAllFilters">
-                            <AppIcon name="x" :size="12" /> Clear {{ activeFiltersCount }} filter(s)
+            <!-- ═══ STEP 1: REPORT TYPE ═══ -->
+            <div v-show="currentStep === 1" class="py-2">
+                <div class="mb-3" v-if="!mode">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Type</label>
+                    <div class="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                        <button :class="['flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs font-medium border-none cursor-pointer transition-colors',
+                            reportType === 'list' ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+                            reportType !== 'summary' ? 'border-r border-gray-300 dark:border-gray-600' : '']"
+                            @click="reportType = 'list'">
+                            <AppIcon name="list" :size="14" />
+                            Detailed List
+                        </button>
+                        <button :class="['flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs font-medium border-none cursor-pointer transition-colors',
+                            reportType === 'summary' ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700']"
+                            @click="reportType = 'summary'">
+                            <AppIcon name="bar-chart-3" :size="14" />
+                            Summary
                         </button>
                     </div>
                 </div>
+                <p v-else class="text-sm text-gray-500 dark:text-gray-400 py-3 text-center">Report type is set to <strong>{{ modeTitle }}</strong> based on the selected mode.</p>
             </div>
 
-            <!-- ═══ SECTION 3: OPTIONS ═══ -->
-            <div class="rw-section" :class="{ 'rw-section-collapsed': collapsed.section3 }">
-                <div class="rw-section-header" @click="toggleSection('section3')">
-                    <div class="rw-section-step">3</div>
-                    <div class="rw-section-title">
-                        <span class="rw-section-label">Options</span>
-                        <span class="rw-section-summary">{{ paperSize }} · {{ orientation }} · Grouped by {{ groupBy ===
-                            'none'
-                            ? 'None' : groupByLabel }}</span>
+            <!-- ═══ STEP 2: FILTERS ═══ -->
+            <div v-show="currentStep === 2" class="py-2">
+                <div class="mb-3">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Status</label>
+                    <div class="flex flex-wrap gap-1">
+                        <button v-for="opt in statusChoices" :key="opt.value"
+                            :class="['inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-full border cursor-pointer transition-colors',
+                                selectedStatus === opt.value ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold' : 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600']"
+                            @click="selectedStatus = opt.value">
+                            <span v-if="opt.color" class="w-2 h-2 rounded-full flex-shrink-0" :style="{ background: opt.color }"></span>
+                            {{ opt.label }}
+                        </button>
                     </div>
-                    <AppIcon :name="collapsed.section3 ? 'chevron-down' : 'chevron-up'" :size="14"
-                        class="rw-section-chevron" />
                 </div>
-                <div v-show="!collapsed.section3" class="rw-section-body">
-                    <!-- Two-column layout for options -->
-                    <div class="rw-options-grid">
-                        <!-- Left column: Title, Layout, Signatory -->
-                        <div class="rw-options-left">
-                            <div class="rw-field-group">
-                                <label class="rw-label">Report Title</label>
-                                <InputText v-model="customReportTitle" class="rw-input"
-                                    :placeholder="defaultReportTitle" />
-                                <span class="rw-hint">Leave blank to use "{{ defaultReportTitle }}"</span>
-                            </div>
 
-                            <div class="rw-field-group">
-                                <label class="rw-label">Paper & Orientation</label>
-                                <div class="rw-inline-row">
-                                    <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
-                                        optionValue="value" class="rw-select" style="flex:1" />
-                                    <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
-                                        optionValue="value" class="rw-select" style="flex:1" />
-                                </div>
-                            </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="min-w-0">
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program</label>
+                        <ProgramSelect v-model="selectedPrograms" label="shortname"
+                            custom-placeholder="All Programs" class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" :multiple="true" />
+                    </div>
+                    <div class="min-w-0">
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">School</label>
+                        <SchoolSelect v-model="selectedSchools" label="shortname" custom-placeholder="All Schools"
+                            class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" :multiple="true" />
+                    </div>
+                    <div class="min-w-0">
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Course</label>
+                        <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedPrograms?.[0]?.id"
+                            label="shortname" custom-placeholder="All Courses" :multiple="true"
+                            class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" />
+                    </div>
+                    <div class="min-w-0">
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Municipality</label>
+                        <MunicipalitySelect v-model="selectedMunicipalities" custom-placeholder="All Municipalities"
+                            class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" :multiple="true" />
+                    </div>
+                    <div class="min-w-0">
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Year Level</label>
+                        <YearLevelSelect v-model="selectedYearLevels" custom-placeholder="All Year Levels"
+                            class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" :multiple="true" />
+                    </div>
+                    <div class="min-w-0">
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Grant Provision</label>
+                        <MultiSelect v-model="selectedGrantProvisions" :options="grantProvisionOptions"
+                            optionLabel="label" optionValue="value" placeholder="All Provisions" showClear filter
+                            :filterFields="['label', 'value']" :maxSelectedLabels="3"
+                            :selectedItemsLabel="'{0} provisions selected'" showSelectAll
+                            class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" />
+                    </div>
+                </div>
 
-                            <div class="rw-field-group">
-                                <label class="rw-label">Sort By</label>
-                                <Select v-model="sortBy" :options="sortByOptions" optionLabel="label"
-                                    optionValue="value" class="rw-select" />
-                            </div>
+                <div class="mb-3 mt-3">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Date Range</label>
+                    <div class="flex items-center gap-2">
+                        <DatePicker v-model="dateFrom" placeholder="From date"
+                            showButtonBar dateFormat="M dd, yy"
+                            class="flex-1 [&_.p-datepicker]:w-full [&_.p-datepicker]:text-xs" showIcon iconDisplay="input" />
+                        <span class="text-gray-400 text-sm flex-shrink-0">—</span>
+                        <DatePicker v-model="dateTo" placeholder="To date"
+                            showButtonBar dateFormat="M dd, yy"
+                            class="flex-1 [&_.p-datepicker]:w-full [&_.p-datepicker]:text-xs" showIcon iconDisplay="input" />
+                    </div>
+                    <div v-if="isDateToInvalid" class="text-[11px] text-red-500 mt-1">
+                        End date must be after start date
+                    </div>
+                </div>
 
-                            <div class="rw-field-group">
-                                <label class="rw-label">Grouping</label>
-                                <Select v-model="groupBy" :options="groupByOptions" optionLabel="label"
-                                    optionValue="value" class="rw-select" />
-                                <div v-if="reportType === 'list' && groupBy && groupBy !== 'none'"
-                                    style="margin-top: 6px;">
-                                    <Select v-model="groupBySecondary" :options="secondaryGroupByOptions"
-                                        optionLabel="label" optionValue="value" placeholder="Sub-group (optional)"
-                                        showClear class="rw-select" style="margin-bottom: 6px;" />
-                                    <Select v-model="groupByTertiary" :options="tertiaryGroupByOptions"
-                                        optionLabel="label" optionValue="value" placeholder="3rd group (optional)"
-                                        showClear class="rw-select"
-                                        v-if="groupBySecondary && groupBySecondary !== 'none'" />
-                                </div>
-                                <InputText v-if="groupBy && groupBy !== 'none'" v-model="customGroupMainLabel"
-                                    class="rw-input" placeholder="Custom label for main group (optional)"
-                                    style="margin-top: 6px;" />
-                                <InputText v-if="groupBySecondary && groupBySecondary !== 'none'" v-model="customGroupSubLabel"
-                                    class="rw-input" placeholder="Custom label for sub-group (optional)"
-                                    style="margin-top: 6px;" />
-                                <InputText v-if="groupByTertiary && groupByTertiary !== 'none'" v-model="customGroupTertiaryLabel"
-                                    class="rw-input" placeholder="Custom label for 3rd group (optional)"
-                                    style="margin-top: 6px;" />
-                            </div>
+                <div v-if="activeFiltersCount > 0" class="mt-2.5 pt-2.5 border-t border-gray-100 dark:border-gray-700">
+                    <button class="inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md px-2.5 py-1 cursor-pointer transition-colors hover:bg-red-100 dark:hover:bg-red-900/40"
+                        @click="clearAllFilters">
+                        <AppIcon name="x" :size="12" /> Clear {{ activeFiltersCount }} filter(s)
+                    </button>
+                </div>
+            </div>
 
-                            <!-- EFA Approval List: Upcoming Term fields -->
-                            <div v-if="isEfaApprovalList" class="rw-field-group">
-                                <label class="rw-label">Upcoming Term & Academic Year</label>
-                                <div class="rw-inline-row">
-                                    <Select v-model="efaUpcomingTerm" :options="termOptions" optionLabel="label"
-                                        optionValue="value" placeholder="Term" class="rw-select" style="flex:1" />
-                                    <InputText v-model="efaUpcomingAcademicYear" class="rw-input"
-                                        placeholder="Academic Year (e.g. 2026-2027)" style="flex:1" />
-                                </div>
-                            </div>
+            <!-- ═══ STEP 3: LAYOUT & FORMATTING ═══ -->
+            <div v-show="currentStep === 3" class="py-2">
+                <div class="mb-3">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
+                    <Editor v-model="customReportTitle" editorStyle="height: 100px">
+                        <template v-slot:toolbar>
+                            <span class="ql-formats">
+                                <button v-tooltip.bottom="'Bold'" class="ql-bold"></button>
+                                <button v-tooltip.bottom="'Italic'" class="ql-italic"></button>
+                                <button v-tooltip.bottom="'Underline'" class="ql-underline"></button>
+                            </span>
+                        </template>
+                    </Editor>
+                    <span class="block text-[10px] text-gray-400 mt-1">Leave blank to use "{{ defaultReportTitle }}"</span>
+                </div>
 
-                            <div class="rw-field-group">
-                                <label class="rw-label">Prepared By</label>
-                                <InputText v-model="preparedBy" class="rw-input" placeholder="Name (optional)" />
-                                <InputText v-model="preparedByTitle" class="rw-input"
-                                    :placeholder="useInterviewedSignatories ? 'Position (optional)' : 'Designation (optional)'" style="margin-top: 6px;" />
-                                <InputText v-if="useInterviewedSignatories" v-model="preparedByOffice" class="rw-input"
-                                    placeholder="Office (optional)" style="margin-top: 6px;" />
-                            </div>
+                <div class="mb-3">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
+                    <div class="flex gap-2 w-1/2">
+                        <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
+                            class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                        <Select v-model="orientation" :options="orientationOptions" optionLabel="label" optionValue="value"
+                            class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                    </div>
+                </div>
 
-                            <div class="rw-field-group">
-                                <label class="rw-label">{{ useInterviewedSignatories ? 'Approved By' : 'Noted By' }}</label>
-                                <InputText v-model="signatoryName" class="rw-input" placeholder="Name (optional)" />
-                                <InputText v-model="signatoryTitle" class="rw-input"
-                                    :placeholder="useInterviewedSignatories ? 'Position (optional)' : 'Designation (optional)'" style="margin-top: 6px;" />
-                            </div>
+                <div class="mb-3">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Group &amp; Sort</label>
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <Select v-model="groupBy" :options="groupByOptions" optionLabel="label" optionValue="value"
+                                class="w-full [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                            <Select v-if="reportType === 'list' && groupBy && groupBy !== 'none'"
+                                v-model="groupBySecondary" :options="secondaryGroupByOptions"
+                                optionLabel="label" optionValue="value" placeholder="Sub-group (optional)" showClear
+                                class="mt-1.5 w-full [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                            <Select v-if="reportType === 'list' && groupBySecondary && groupBySecondary !== 'none'"
+                                v-model="groupByTertiary" :options="tertiaryGroupByOptions"
+                                optionLabel="label" optionValue="value" placeholder="3rd group (optional)" showClear
+                                class="mt-1.5 w-full [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                            <InputText v-if="reportType === 'list' && groupBy && groupBy !== 'none'"
+                                v-model="customGroupMainLabel" placeholder="Custom label (optional)"
+                                class="mt-1.5 w-full [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
+                            <InputText v-if="reportType === 'list' && groupBySecondary && groupBySecondary !== 'none'"
+                                v-model="customGroupSubLabel" placeholder="Sub-group label (optional)"
+                                class="mt-1.5 w-full [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
+                            <InputText v-if="reportType === 'list' && groupByTertiary && groupByTertiary !== 'none'"
+                                v-model="customGroupTertiaryLabel" placeholder="3rd group label (optional)"
+                                class="mt-1.5 w-full [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                         </div>
-
-                        <!-- Right column: Toggles -->
-                        <div class="rw-options-right">
-                            <div class="rw-field-group">
-                                <label class="rw-label">Report Options</label>
-                                <div class="rw-toggle-list">
-                                    <label class="rw-toggle-row">
-                                        <span>Include Projected Expense</span>
-                                        <ToggleSwitch v-model="includeProjectedExpense" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Include Grant</span>
-                                        <ToggleSwitch v-model="includeGrantProvision" />
-                                    </label>
-                                    <div v-if="includeGrantProvision" class="rw-field-group" style="margin-top: 8px;">
-                                        <label class="rw-label" style="font-size: 11px;">Grant Value</label>
-                                        <Select v-model="grantValue" :options="grantProvisionOptions"
-                                            optionLabel="label" optionValue="value" placeholder="Select grant…"
-                                            showClear class="rw-select" />
-                                    </div>
-                                    <label v-if="reportType === 'list' && canEnableJpmHighlighting"
-                                        class="rw-toggle-row">
-                                        <span>Highlight JPM Members</span>
-                                        <ToggleSwitch v-model="enableJpmHighlighting" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Interviewed-Style Signatories</span>
-                                        <ToggleSwitch v-model="useInterviewedSignatories" />
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="rw-field-group">
-                                <label class="rw-label">Show / Hide Fields</label>
-                                <div class="rw-toggle-list">
-                                    <label class="rw-toggle-row">
-                                        <span>Address</span>
-                                        <ToggleSwitch v-model="showAddress" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Contact Number</span>
-                                        <ToggleSwitch v-model="showContactNumber" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Date Filed</span>
-                                        <ToggleSwitch v-model="showDateFiled" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Program</span>
-                                        <ToggleSwitch v-model="showProgram" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>School</span>
-                                        <ToggleSwitch v-model="showSchool" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Course</span>
-                                        <ToggleSwitch v-model="showCourse" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Remarks</span>
-                                        <ToggleSwitch v-model="showRemarks" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Requirements</span>
-                                        <ToggleSwitch v-model="showRequirements" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Scholarship Date</span>
-                                        <ToggleSwitch v-model="showScholarshipDate" />
-                                    </label>
-                                    <label class="rw-toggle-row">
-                                        <span>Year Level</span>
-                                        <ToggleSwitch v-model="showYearLevel" />
-                                    </label>
-                                </div>
-                            </div>
+                        <div class="flex-1">
+                            <Select v-model="sortBy" :options="sortByOptions" optionLabel="label" optionValue="value"
+                                class="w-full [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
                         </div>
                     </div>
                 </div>
+
+                <div v-if="isEfaApprovalList" class="mb-3">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Upcoming Term &amp; Academic Year</label>
+                    <div class="flex gap-2">
+                        <Select v-model="efaUpcomingTerm" :options="termOptions" optionLabel="label" optionValue="value"
+                            placeholder="Term" class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                        <InputText v-model="efaUpcomingAcademicYear" placeholder="Academic Year (e.g. 2026-2027)"
+                            class="flex-1 [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatory Style</label>
+                    <label class="flex items-center gap-4 py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer">
+                        <span>For Approval Layout</span>
+                        <ToggleSwitch v-model="useInterviewedSignatories" />
+                    </label>
+                </div>
+
+                <div class="mb-3">
+                    <div class="flex gap-2" style="align-items: flex-start;">
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Prepared By</label>
+                            <InputText v-model="preparedBy" placeholder="Name (optional)"
+                                class="w-full [&_.p-inputtext]:w-full" />
+                            <InputText v-model="preparedByTitle"
+                                :placeholder="useInterviewedSignatories ? 'Position (optional)' : 'Designation (optional)'"
+                                class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
+                            <InputText v-if="useInterviewedSignatories" v-model="preparedByOffice" placeholder="Office (optional)"
+                                class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{{ useInterviewedSignatories ? 'Approved By' : 'Noted By' }}</label>
+                            <InputText v-model="signatoryName" placeholder="Name (optional)"
+                                class="w-full [&_.p-inputtext]:w-full" />
+                            <InputText v-model="signatoryTitle"
+                                :placeholder="useInterviewedSignatories ? 'Position (optional)' : 'Designation (optional)'"
+                                class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
+                        </div>
+                    </div>
+                    <span class="block text-[10px] text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block at the bottom of the report.</span>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 4: REPORT OPTIONS ═══ -->
+            <div v-show="currentStep === 4" class="py-2">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="min-w-0">
+                        <div class="mb-3">
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Options</label>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Include Projected Expense</span>
+                                    <ToggleSwitch v-model="includeProjectedExpense" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Include Grant</span>
+                                    <ToggleSwitch v-model="includeGrantProvision" />
+                                </label>
+                                <div v-if="includeGrantProvision" class="mt-2">
+                                    <Select v-model="grantValue" :options="grantProvisionOptions"
+                                        optionLabel="label" optionValue="value" placeholder="Select grant…" showClear
+                                        class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                                </div>
+                                <label v-if="reportType === 'list' && canEnableJpmHighlighting"
+                                    class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Highlight JPM Members</span>
+                                    <ToggleSwitch v-model="enableJpmHighlighting" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="min-w-0">
+                        <div class="mb-3">
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Show / Hide Fields</label>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Address</span>
+                                    <ToggleSwitch v-model="showAddress" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Contact Number</span>
+                                    <ToggleSwitch v-model="showContactNumber" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Date Filed</span>
+                                    <ToggleSwitch v-model="showDateFiled" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Program</span>
+                                    <ToggleSwitch v-model="showProgram" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>School</span>
+                                    <ToggleSwitch v-model="showSchool" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Course</span>
+                                    <ToggleSwitch v-model="showCourse" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Remarks</span>
+                                    <ToggleSwitch v-model="showRemarks" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Requirements</span>
+                                    <ToggleSwitch v-model="showRequirements" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Scholarship Date</span>
+                                    <ToggleSwitch v-model="showScholarshipDate" />
+                                </label>
+                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer hover:text-gray-900 dark:hover:text-gray-100">
+                                    <span>Year Level</span>
+                                    <ToggleSwitch v-model="showYearLevel" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ NAVIGATION ═══ -->
+            <div class="flex items-center justify-between pt-3.5 mt-2 border-t border-gray-100 dark:border-gray-700">
+                <button v-if="currentStep > 1"
+                    class="inline-flex items-center gap-1 text-sm font-semibold text-blue-500 bg-transparent px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/30 border-none"
+                    @click="prevStep">
+                    <AppIcon name="chevron-left" :size="13" /> Back
+                </button>
+                <div v-else></div>
+                <button v-if="currentStep < 4"
+                    class="inline-flex items-center gap-1 text-sm font-semibold text-white bg-blue-500 px-4 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-blue-600"
+                    @click="nextStep">
+                    Next <AppIcon name="chevron-right" :size="13" />
+                </button>
+                <button v-else
+                    class="inline-flex items-center gap-1 text-sm font-bold text-white bg-green-500 px-5 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    @click="generateReport" :disabled="generating">
+                    <AppIcon v-if="generating" name="spinner" :size="14" class="animate-spin" />
+                    <template v-else>Generate Report</template>
+                </button>
             </div>
         </div>
     </IosModal>
 
     <!-- Report Preview Modal (unchanged) -->
     <IosModal :visible="showPreview" width="95vw" max-width="95vw" :modal-content-style="{ height: '90vh' }"
-        body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
+        body-style="padding: 0; flex: 1; display: flex; direction: column; overflow: hidden;"
         @update:visible="showPreview = $event">
         <template #header-left>
             <button class="ios-nav-btn ios-nav-cancel" @click="showPreview = false">
@@ -331,7 +387,20 @@
         </template>
 
         <template #header-right>
-            <div class="ios-nav-actions">
+            <div class="ios-nav-actions flex items-center gap-2">
+                <div class="flex items-center gap-1.5 mr-2">
+                    <button @click="zoomLevel = Math.max(40, zoomLevel - 10)"
+                        class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
+                        :disabled="zoomLevel <= 40">
+                        <AppIcon name="minus" :size="10" />
+                    </button>
+                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-10 text-center">{{ zoomLevel }}%</span>
+                    <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
+                        class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
+                        :disabled="zoomLevel >= 200">
+                        <AppIcon name="plus" :size="10" />
+                    </button>
+                </div>
                 <button class="ios-icon-btn" @click="doExportExcel" title="Export to Excel">
                     <AppIcon name="file-spreadsheet" :size="16" style="color: #34C759;" />
                 </button>
@@ -340,28 +409,6 @@
                 </button>
             </div>
         </template>
-
-        <!-- Zoom Toolbar -->
-        <div class="flex items-center justify-between px-4 py-2
-                    bg-[#f2f2f7] dark:bg-[#1e242b]
-                    border-b border-[#e5e5ea] dark:border-white/10">
-            <div class="flex items-center gap-1.5">
-                <button @click="zoomLevel = Math.max(40, zoomLevel - 10)"
-                    class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
-                    :disabled="zoomLevel <= 40">
-                    <AppIcon name="minus" :size="10" />
-                </button>
-                <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ zoomLevel
-                    }}%</span>
-                <button @click="zoomLevel = Math.min(200, zoomLevel + 10)"
-                    class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
-                    :disabled="zoomLevel >= 200">
-                    <AppIcon name="plus" :size="10" />
-                </button>
-            </div>
-            <span class="text-xs text-gray-400">{{ orientation === 'landscape' ? 'Landscape' : 'Portrait' }} ·
-                {{ paperSize }}</span>
-        </div>
 
         <!-- Preview Body -->
         <div class="overflow-auto bg-[#d1d1d6] dark:bg-[#1c1c1e]" style="flex: 1; min-height: 0; padding: 16px 0;">
@@ -422,12 +469,31 @@ const generating = ref(false);
 const showPreview = ref(false);
 const previewHtml = ref('');
 const reportRecords = ref([]);
-const zoomLevel = ref(130);
+const zoomLevel = ref(100);
 
-// Collapsible sections
-const collapsed = ref({ section1: false, section2: false, section3: false });
-function toggleSection(name) {
-    collapsed.value[name] = !collapsed.value[name];
+// ─── Stepper ───
+const currentStep = ref(1);
+const maxReachedStep = ref(1);
+
+function goToStep(step) {
+    if (step <= maxReachedStep.value) {
+        currentStep.value = step;
+    }
+}
+
+function nextStep() {
+    if (currentStep.value < 4) {
+        currentStep.value++;
+        if (currentStep.value > maxReachedStep.value) {
+            maxReachedStep.value = currentStep.value;
+        }
+    }
+}
+
+function prevStep() {
+    if (currentStep.value > 1) {
+        currentStep.value--;
+    }
 }
 
 // Step 1
@@ -468,13 +534,13 @@ const useInterviewedSignatories = ref(false);
 const jpmFilter = ref('all');
 const sortBy = ref('default');
 const showAddress = ref(true);
-const showContactNumber = ref(false);
+const showContactNumber = ref(true);
 const showDateFiled = ref(true);
 const showProgram = ref(true);
 const showSchool = ref(true);
 const showCourse = ref(true);
 const showRemarks = ref(true);
-const showRequirements = ref(false);
+const showRequirements = ref(true);
 const showScholarshipDate = ref(true);
 const showYearLevel = ref(true);
 
@@ -621,6 +687,7 @@ function resetPreviewState() {
     previewHtml.value = '';
     reportRecords.value = [];
 }
+
 
 // ─── Methods ───
 function handleWizardVisibleUpdate(value) {
@@ -1037,6 +1104,9 @@ watch(() => props.show, (v) => {
     if (v) {
         if (hasResetOnOpen) return;
         hasResetOnOpen = true;
+        // Reset stepper
+        currentStep.value = 1;
+        maxReachedStep.value = 1;
         // Set report type based on mode
         if (props.mode === 'summary') {
             reportType.value = 'summary';
@@ -1073,223 +1143,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* ─── Report Wizard Layout ─── */
-.report-wizard-body {
-    padding: 4px 12px 12px;
-    max-height: 78vh;
-    overflow-y: auto;
-}
-
-/* ─── Collapsible Sections ─── */
-.rw-section {
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    background: #fff;
-    overflow: hidden;
-    transition: box-shadow 0.15s;
-}
-
-.rw-section:hover {
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-.rw-section-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.rw-section-header:active {
-    background: #f9fafb;
-}
-
-.rw-section-step {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #007AFF;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.rw-section-collapsed .rw-section-step {
-    background: #d1d5db;
-}
-
-.rw-section-title {
-    flex: 1;
-    min-width: 0;
-}
-
-.rw-section-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #111827;
-    line-height: 1.3;
-}
-
-.rw-section-summary {
-    display: block;
-    font-size: 11px;
-    color: #9ca3af;
-    line-height: 1.3;
-    margin-top: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.rw-section-chevron {
-    color: #9ca3af;
-    flex-shrink: 0;
-    transition: transform 0.2s;
-}
-
-.rw-section-body {
-    padding: 4px 12px 12px;
-    border-top: 1px solid #f3f4f6;
-}
-
-/* ─── Form Elements ─── */
-.rw-field-group {
-    margin-bottom: 12px;
-}
-
-.rw-field-group:last-child {
-    margin-bottom: 0;
-}
-
-.rw-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #6b7280;
-    margin-bottom: 6px;
-}
-
-.rw-hint {
-    display: block;
-    font-size: 10px;
-    color: #9ca3af;
-    margin-top: 4px;
-}
-
-.rw-error {
-    font-size: 11px;
-    color: #ef4444;
-    margin-top: 4px;
-}
-
-/* ─── Segmented Control ─── */
-.rw-segmented {
-    display: flex;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.rw-seg-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 7px 10px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #374151;
-    background: #fff;
-    border: none;
-    cursor: pointer;
-    transition: all 0.12s;
-}
-
-.rw-seg-btn:not(:last-child) {
-    border-right: 1px solid #d1d5db;
-}
-
-.rw-seg-btn:hover {
-    background: #f9fafb;
-}
-
-.rw-seg-active {
-    background: #007AFF;
-    color: #fff;
-    font-weight: 600;
-}
-
-.rw-seg-active:hover {
-    background: #0066d6;
-}
-
-/* ─── Chip Group ─── */
-.rw-chip-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
-
-.rw-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    font-size: 11px;
-    font-weight: 500;
-    color: #374151;
-    background: #f3f4f6;
-    border: 1px solid #e5e7eb;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.12s;
-}
-
-.rw-chip:hover {
-    background: #e5e7eb;
-}
-
-.rw-chip-active {
-    background: #eff6ff;
-    border-color: #007AFF;
-    color: #007AFF;
-    font-weight: 600;
-}
-
-.rw-chip-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-/* ─── Filters Grid ─── */
-.rw-filters-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.rw-filter-item {
-    min-width: 0;
-}
-
-.rw-select {
-    width: 100%;
-}
-
+/* ─── Compact PrimeVue inputs for filter selects only ─── */
 .rw-select :deep(.p-dropdown),
 .rw-select :deep(.p-multiselect),
 .rw-select :deep(.p-inputtext) {
@@ -1298,181 +1152,8 @@ onBeforeUnmount(() => {
     padding: 6px 8px;
 }
 
-/* ─── Date Range ─── */
-.rw-date-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.rw-datepicker {
-    flex: 1;
-}
-
-.rw-datepicker :deep(.p-datepicker) {
+:deep(.p-datepicker) {
     width: 100%;
     font-size: 12px;
-}
-
-.rw-date-sep {
-    color: #9ca3af;
-    font-size: 13px;
-    flex-shrink: 0;
-}
-
-/* ─── Clear Button ─── */
-.rw-clear-row {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #f3f4f6;
-}
-
-.rw-clear-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    font-weight: 500;
-    color: #ef4444;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 6px;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: all 0.12s;
-}
-
-.rw-clear-btn:hover {
-    background: #fee2e2;
-}
-
-/* ─── Options Two-Column Grid ─── */
-.rw-options-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.rw-options-left,
-.rw-options-right {
-    min-width: 0;
-}
-
-.rw-input {
-    width: 100%;
-}
-
-.rw-input :deep(.p-inputtext) {
-    width: 100%;
-    font-size: 12px;
-    padding: 6px 8px;
-}
-
-.rw-inline-row {
-    display: flex;
-    gap: 8px;
-}
-
-/* ─── Toggle List ─── */
-.rw-toggle-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.rw-toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 0;
-    font-size: 12px;
-    color: #374151;
-    cursor: pointer;
-    border-bottom: 1px solid #f9fafb;
-}
-
-.rw-toggle-row:last-child {
-    border-bottom: none;
-}
-
-.rw-toggle-row:hover {
-    color: #111827;
-}
-
-/* ─── Dark Mode ─── */
-.dark .rw-section {
-    background: #1f2937;
-    border-color: #374151;
-}
-
-.dark .rw-section-header:active {
-    background: #111827;
-}
-
-.dark .rw-section-label {
-    color: #e5e7eb;
-}
-
-.dark .rw-section-body {
-    border-color: #374151;
-}
-
-.dark .rw-label {
-    color: #9ca3af;
-}
-
-.dark .rw-segmented {
-    border-color: #4b5563;
-}
-
-.dark .rw-seg-btn {
-    color: #d1d5db;
-    background: #1f2937;
-}
-
-.dark .rw-seg-btn:not(:last-child) {
-    border-color: #4b5563;
-}
-
-.dark .rw-seg-btn:hover {
-    background: #374151;
-}
-
-.dark .rw-chip {
-    color: #d1d5db;
-    background: #374151;
-    border-color: #4b5563;
-}
-
-.dark .rw-chip:hover {
-    background: #4b5563;
-}
-
-.dark .rw-chip-active {
-    background: #1e3a5f;
-    border-color: #3b82f6;
-    color: #60a5fa;
-}
-
-.dark .rw-toggle-row {
-    color: #d1d5db;
-    border-color: #1f2937;
-}
-
-.dark .rw-toggle-row:hover {
-    color: #f3f4f6;
-}
-
-.dark .rw-clear-btn {
-    background: #3b1a1a;
-    border-color: #7f1d1d;
-}
-
-.dark .rw-clear-btn:hover {
-    background: #4c2222;
-}
-
-.dark .rw-hint {
-    color: #6b7280;
 }
 </style>

@@ -951,6 +951,7 @@ class ScholarshipProfileController extends Controller
             'term' => $record?->term,
             'academic_year' => $record?->academic_year,
             'grant_provision' => $record?->grant_provision ?? '-',
+            'grant_provision_label' => $record?->grant_provisionLabel ?? $record?->grant_provision ?? '-',
             'start_date' => $record?->start_date,
             'end_date' => $record?->end_date,
             'no_of_days' => $record?->no_of_days,
@@ -1457,7 +1458,7 @@ class ScholarshipProfileController extends Controller
         $query->orderBy('interviewed_at', 'desc');
 
         // --- Server-side Pagination ---
-        $perPage = (int) $request->input('per_page', 50);
+        $perPage = (int) $request->input('per_page', 100);
         $perPage = max(10, min(200, $perPage)); // clamp between 10 and 200
 
         $page = (int) $request->input('page', 1);

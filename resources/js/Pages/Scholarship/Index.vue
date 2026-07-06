@@ -759,13 +759,16 @@
             body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
             @update:visible="showTechvocReportPreview = $event">
             <template #header-left>
-                <button class="ios-nav-btn ios-nav-cancel" @click="showTechvocReportPreview = false">
-                    <AppIcon name="x" :size="16" />
+                <button class="ios-nav-btn ios-nav-cancel" @click="goBackToTechvocFilters">
+                    <AppIcon name="chevron-left" :size="16" /> Back
                 </button>
             </template>
             <template #title><span class="ios-nav-title">TechVoc Report Preview</span></template>
             <template #header-right>
                 <div class="ios-nav-actions">
+                    <button class="ios-icon-btn" @click="doTechvocExportExcel" title="Export to Excel">
+                        <AppIcon name="file-spreadsheet" :size="16" style="color: #34C759;" />
+                    </button>
                     <button class="ios-icon-btn" @click="doTechvocPrint" title="Print / Save as PDF">
                         <AppIcon name="printer" :size="16" style="color: #007AFF;" />
                     </button>
@@ -1066,6 +1069,7 @@ const showTechvocReportPreview = ref(false);
 const techvocReportHtml = ref('');
 const techvocReportRecords = ref([]);
 const techvocZoomLevel = ref(85);
+const techvocDefaultAmount = ref(null);
 
 const PROGRAM_COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#F97316', '#EAB308', '#22C55E', '#14B8A6', '#06B6D4', '#3B82F6'];
 
@@ -1112,8 +1116,9 @@ function selectProgramForReport(program) {
     showReportWizard.value = true;
 }
 
-function onTechvocReportGenerated({ records, program: _program, title, status }) {
+function onTechvocReportGenerated({ records, program: _program, title, status, defaultAmount }) {
     techvocReportRecords.value = records;
+    techvocDefaultAmount.value = defaultAmount ?? null;
     buildTechvocPreview(title, status);
 }
 
@@ -1133,6 +1138,7 @@ async function buildTechvocPreview(title = '', _status = null) {
             options: {
                 reportTitle: resolvedTitle,
                 sortBy: 'default',
+                defaultAmount: techvocDefaultAmount.value,
             },
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
         };
@@ -1526,11 +1532,81 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
 });
 
+function goBackToTechvocFilters() {
+    showTechvocReportPreview.value = false;
+    showTechvocReportModal.value = true;
+}
+
 function doTechvocPrint() {
     if (!techvocReportHtml.value) return;
-    const win = window.open('', '_blank');
-    if (!win) { alert('Pop-up blocked.'); return; }
-    win.document.write(techvocReportHtml.value);
-    win.document.close();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        alert('Pop-up blocked. Please allow pop-ups for this site.');
+        return;
+    }
+    printWindow.document.write(techvocReportHtml.value);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
+}
+
+function doTechvocExportExcel() {
+    const records = techvocReportRecords.value;
+    if (!records || records.length === 0) return;
+
+    const upper = (v) => String(v ?? '').toUpperCase();
+    const fmt = (d) => d ? moment(d).format('MMM DD, YYYY') : '';
+    const isJpm = (r) => r?.is_jpm_member || r?.is_father_jpm || r?.is_mother_jpm || r?.is_guardian_jpm;
+
+    const headers = ['#', 'NAME', 'CONTACT NO.', 'ADDRESS', 'SCHOOL', 'COURSE', 'START DATE', 'END DATE', 'NO. OF DAYS', 'NO. OF HOURS', 'REMARKS'];
+    const rows = records.map((rec, idx) => [
+        idx + 1,
+        upper(formatName(rec)),
+        upper(rec.contact_no || ''),
+        upper([rec.barangay, rec.municipality].filter(Boolean).join(', ')),
+        upper(rec.school_name || rec.school || ''),
+        upper(rec.course_name || rec.course || ''),
+        upper(fmt(rec.start_date)),
+        upper(fmt(rec.end_date)),
+        rec.no_of_days ?? '',
+        rec.no_of_hours ?? '',
+        upper(rec.remarks || rec.decline_reason || ''),
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'TechVoc Report');
+
+    // Uniform font: Calibri 10pt, headers bold + centered
+    const HEADER_STYLE = { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '333333' } }, alignment: { horizontal: 'center' }, fill: { fgColor: { rgb: 'E8E8E8' } } };
+    const CELL_STYLE = { font: { name: 'Calibri', sz: 10 } };
+    const JPM_STYLE = { font: { name: 'Calibri', sz: 10, color: { rgb: 'B91C1C' }, bold: true }, fill: { fgColor: { rgb: 'FEF2F2' } } };
+
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let r = range.s.r; r <= range.e.r; r++) {
+        const isJpmRow = r > 0 && isJpm(records[r - 1]);
+        for (let c = range.s.c; c <= range.e.c; c++) {
+            const addr = XLSX.utils.encode_cell({ r, c });
+            if (!ws[addr]) continue;
+            if (!ws[addr].s) ws[addr].s = {};
+            if (r === 0) {
+                Object.assign(ws[addr].s, HEADER_STYLE);
+            } else if (isJpmRow) {
+                Object.assign(ws[addr].s, JPM_STYLE);
+            } else {
+                Object.assign(ws[addr].s, CELL_STYLE);
+            }
+        }
+    }
+
+    // Auto-fit column widths
+    const colWidths = headers.map((h, i) => {
+        const maxLen = Math.max(h.length, ...rows.map(r => String(r[i] || '').length));
+        return { wch: Math.min(Math.max(maxLen + 2, 8), 40) };
+    });
+    ws['!cols'] = colWidths;
+
+    const filename = `techvoc_report_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`;
+    XLSX.writeFile(wb, filename);
 }
 </script>

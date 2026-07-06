@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { formatDate, formatName } from './report-helpers';
 
 const props = defineProps({
@@ -7,7 +7,29 @@ const props = defineProps({
     filters: { type: Object, default: () => ({}) },
     options: { type: Object, default: () => ({}) },
     groupHeaders: { type: Array, default: () => [] },
+    defaultAmount: { type: [Number, String], default: null },
 });
+
+// Editable amounts (keyed by record index)
+const amounts = ref({});
+
+// Pre-fill amounts with defaultAmount whenever records or defaultAmount change
+watch([() => props.records, () => props.defaultAmount], () => {
+    if (props.defaultAmount != null && props.defaultAmount !== '') {
+        const newAmounts = { ...amounts.value };
+        props.records.forEach((rec, index) => {
+            const key = rec.profile_id ?? index;
+            if (!(key in newAmounts)) {
+                newAmounts[key] = String(props.defaultAmount);
+            }
+        });
+        amounts.value = newAmounts;
+    }
+}, { immediate: true });
+
+function getAmountKey(record, index) {
+    return record.profile_id ?? index;
+}
 
 const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;line-height:1.15;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;vertical-align:middle;';
 const TD = 'border:1px solid #000;padding:3px 3px;font-size:7px;line-height:1.2;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
@@ -23,17 +45,28 @@ const groupHeaderRows = computed(() => (Array.isArray(props.groupHeaders) ? prop
 
 const columns = computed(() => [
     { key: 'sequence', label: '#', width: '2%', align: 'center' },
-    { key: 'name', label: 'Name', width: '14%' },
-    { key: 'contact_number', label: 'Contact No.', width: '8%', align: 'center' },
-    { key: 'address_location', label: 'Address', width: '12%' },
-    { key: 'school_name', label: 'School', width: '14%' },
-    { key: 'course_name', label: 'Course', width: '12%' },
-    { key: 'start_date', label: 'Start Date', width: '8%', align: 'center' },
-    { key: 'end_date', label: 'End Date', width: '8%', align: 'center' },
+    { key: 'name', label: 'Name', width: '13%' },
+    { key: 'contact_number', label: 'Contact No.', width: '7%', align: 'center' },
+    { key: 'address_location', label: 'Address', width: '11%' },
+    { key: 'school_name', label: 'School', width: '13%' },
+    { key: 'course_name', label: 'Course', width: '11%' },
+    { key: 'start_date', label: 'Start Date', width: '7%', align: 'center' },
+    { key: 'end_date', label: 'End Date', width: '7%', align: 'center' },
     { key: 'no_of_days', label: 'Days', width: '4%', align: 'center' },
     { key: 'no_of_hours', label: 'Hours', width: '4%', align: 'center' },
-    { key: 'remarks_summary', label: 'Remarks', width: '14%' },
+    { key: 'amount', label: 'Amount', width: '8%', align: 'right' },
+    { key: 'remarks_summary', label: 'Remarks', width: '13%' },
 ]);
+
+const totalAmount = computed(() => {
+    let total = 0;
+    props.records.forEach((rec) => {
+        const key = getAmountKey(rec);
+        const val = parseFloat(amounts.value[key]) || 0;
+        total += val;
+    });
+    return total;
+});
 
 function formatAddress(record) {
     const parts = [record?.barangay, record?.municipality]
@@ -53,6 +86,11 @@ function cellValue(record, column) {
         case 'end_date': return record[column.key] ? formatDate(record[column.key]) : '';
         case 'no_of_days': return record?.no_of_days ?? record?.no_of_days_alternative ?? '';
         case 'no_of_hours': return record?.no_of_hours ?? record?.no_of_hours_alternative ?? '';
+        case 'amount': {
+            const raw = amounts.value[getAmountKey(record)] || '';
+            const num = parseFloat(raw);
+            return isNaN(num) ? raw : num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
         case 'remarks_summary': return record?.remarks || record?.decline_reason || '';
         default: return record[column.key] || '—';
     }
@@ -114,6 +152,16 @@ function formatGroupHeaderSummary(header) {
                     <template v-if="column.key === 'sequence'">{{ index + 1 }}</template>
                     <template v-else>{{ cellValue(record, column) }}</template>
                 </td>
+            </tr>
+            <!-- Total Row -->
+            <tr>
+                <td :colspan="columns.findIndex(c => c.key === 'amount')" :style="TD + 'font-weight:700;text-align:right;background:#f8f8f8;'">
+                    TOTAL
+                </td>
+                <td :style="TD + 'font-weight:700;text-align:right;background:#f8f8f8;font-size:10px;'">
+                    {{ totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                </td>
+                <td :colspan="columns.length - columns.findIndex(c => c.key === 'amount') - 1" :style="TD + 'background:#f8f8f8;'"></td>
             </tr>
         </tbody>
     </table>

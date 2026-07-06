@@ -3,9 +3,9 @@
         <div
             style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1.5pt solid #000;padding:8pt 4pt;min-height:56pt;text-align:center;">
             <img src="/images/pgp-logo.svg" alt="PGP Logo"
-                style="position:absolute;left:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
+                style="position:absolute;left:27%;top:50%;transform:translateY(-50%);width:62pt;height:auto;" />
             <img src="/images/yakap-logo.svg" alt="YAKAP Logo"
-                style="position:absolute;right:4%;top:50%;transform:translateY(-50%);width:48pt;height:auto;" />
+                style="position:absolute;right:27%;top:50%;transform:translateY(-50%);width:62pt;height:auto;" />
             <p class="bold t-11">Republic of the Philippines</p>
             <p class="bold t-11">Provincial Government of Palawan</p>
             <p class="t-10">Yakap Sa Edukasyon</p>
@@ -20,19 +20,22 @@
             <p class="t-9" style="margin-top:3pt;">{{ today }}</p>
         </div>
 
-        <div v-if="listNumber" style="padding:2pt 0 1pt;text-align:right;">
-            <p class="t-9 bold">Request No. {{ listNumber }}</p>
-        </div>
+        
 
         <div v-if="records.length === 0" class="center italic" style="padding:24pt;color:#888;font-size:10pt;">
             No interviewed applicants match the current selection.
         </div>
 
         <template v-else-if="reportType === 'list'">
-            <div v-if="records.length > 0 && includeProjectedColumns"
-                style="display:flex;justify-content:flex-start;padding:2pt 0 1pt;font-size:8pt;font-weight:700;">
-                Grant: {{ perScholarGrantLabel }}
-            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:2pt;">
+                <div v-if="records.length > 0 && includeProjectedColumns"
+                    style="display:flex;justify-content:flex-start;padding:2pt 0 1pt;font-size:8pt;font-weight:700;">
+                    Grant: {{ perScholarGrantLabel }}
+                </div>
+                <div v-if="listNumber && records.length > 2" style="padding:2pt 0 1pt;text-align:right;">
+                    <p class="t-9 bold">Request No. {{ listNumber }}</p>
+                </div>
+             </div>
             <template v-if="groupBy !== 'none'">
                 <div v-for="(group, groupName) in groupedData" :key="groupName" style="margin-bottom:14pt;">
                     <div
@@ -140,11 +143,11 @@
                         <colgroup>
                             <col style="width:3%;" />
                             <col
-                                :style="includeEndorsedBy ? 'width:20%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
+                                :style="includeEndorsedBy ? 'width:16%;' : (includeInterviewColumns ? 'width:10%;' : 'width:16%;')" />
                             <col style="width:7.5%;" />
                             <col style="width:4.5%;" />
                             <col style="width:10%;" />
-                            <col style="width:9%;" />
+                            <col style="width:14%;" />
                             <col style="width:3.5%;" />
                             <col style="width:6%;" />
                             <col v-if="includeProjectedColumns" style="width:3.5%;" />
@@ -154,7 +157,7 @@
                             <col v-if="includeInterviewColumns" style="width:7%;" />
                             <col v-if="includeEndorsedBy" style="width:6.5%;" />
                             <col
-                                :style="includeEndorsedBy ? 'width:16.5%;' : (includeInterviewColumns ? 'width:13.75%;' : 'width:20.75%;')" />
+                                :style="includeEndorsedBy ? 'width:12%;' : (includeInterviewColumns ? 'width:10%;' : 'width:16%;')" />
                         </colgroup>
                         <thead>
                             <tr>
@@ -222,6 +225,17 @@
                             </tr>
                         </tbody>
                     </table>
+
+                    <!-- Reviewed by signatory per page -->
+                    <div v-if="page.records.length > 2 && resolvedReviewedBy" class="no-break" style="margin-right:20pt;margin-top:40pt;font-size:8pt;display:flex;justify-content:flex-end;page-break-inside:avoid;break-inside:avoid-page;">
+                        <div style="width:220px;display:flex;align-items:flex-start;gap:2pt;">
+                            <div style="display: flex;width:100%;">Reviewed by:</div>
+                            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;">
+                                <span class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">{{ resolvedReviewedBy }}</span>
+                                <div style="margin-top:2pt;">Governor</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </template>
 
@@ -274,8 +288,8 @@
 
         </template>
 
-        <div v-if="budgetAllocation" class="break-before no-break"
-            style="padding-top:4pt;page-break-inside:avoid;break-inside:avoid-page;margin-top:40pt;padding-left:20pt;padding-right:20pt;">
+        <div v-if="budgetAllocation" :class="{ 'break-before': budgetAllocationOnNextPage }" class="no-break"
+            style="padding-top:4pt;page-break-inside:avoid;break-inside:avoid-page;margin-top:20pt;padding-left:20pt;padding-right:20pt;">
             <div style="padding:8pt;font-size:8pt;line-height:1.45;">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12pt;">
                     <div class="bold" style="font-size:9pt;text-transform:uppercase;">{{ budgetAllocationHeading }}
@@ -285,7 +299,7 @@
                     </p>
                 </div>
 
-                <table style="width:100%;border-collapse:collapse;margin-top:6pt;font-size:8pt;">
+                <table style="width:100%;border-collapse:collapse;margin-top:4pt;font-size:8pt;">
                     <tbody>
                         <tr>
                             <td
@@ -347,13 +361,13 @@
                         </tr>
                     </tbody>
                 </table>
-                <div style="margin-top:12pt;font-size:7pt;color:#555;display:flex;justify-content:flex-end;gap:16pt;">
+                <div style="margin-top:6pt;font-size:7pt;color:#555;display:flex;justify-content:flex-end;gap:16pt;">
                     <p>___APPROVED</p>
                     <p>___DISAPPROVED</p>
                 </div>
             </div>
 
-            <div style="margin-top:14pt;font-size:8pt;">
+            <div style="margin-top:2pt;font-size:8pt;">
                 <div style="display:flex;justify-content:space-between;">
                     <div style="flex:1;max-width:60%;margin-left:70pt;">
                         <div style="font-weight:700;">Prepared by:</div>
@@ -376,7 +390,7 @@
                             <div style="margin-top:4pt;">{{ resolvedApprovedByPosition }}</div>
                         </div>
 
-                        <div style="margin-top:40pt;text-align:center; width: 200px; border-top:1px solid #000;">
+                        <div style="margin-top:30pt;text-align:center; width: 200px; border-top:1px solid #000;">
                             Date
                         </div>
                     </div>
@@ -405,7 +419,7 @@
                     <div style="margin-top:4pt;">{{ resolvedApprovedByPosition }}</div>
                 </div>
 
-                <div style="margin-top:40pt;text-align:center; width: 200px; border-top:1px solid #000;">
+                <div style="margin-top:32pt;text-align:center; width: 200px; border-top:1px solid #000;">
                     Date
                 </div>
             </div>
@@ -437,15 +451,16 @@ const props = defineProps({
     includeProjectedColumns: { type: Boolean, default: true },
     highlightJpmMembers: { type: Boolean, default: false },
     showRemarks: { type: Boolean, default: false },
+    reviewedBy: { type: String, default: '' },
 });
 
 const TH = 'border:1px solid #000;padding:2px 2px;font-weight:700;font-size:7px;line-height:1.05;text-transform:uppercase;text-align:center;background:#f0f0f0;word-break:break-word;overflow-wrap:anywhere;';
-const TD = 'border:1px solid #000;padding:3px 2px;font-size:7px;line-height:1.1;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
+const TD = 'border:1px solid #000;padding:3px 2px;font-size:8pt;line-height:1.1;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
 const SUMMARY_HDR = 'background:#f0f0f0;font-weight:700;font-size:9pt;padding:5pt 8pt;text-transform:uppercase;border-bottom:0.5pt solid #ccc;';
 const SUMMARY_TH = 'border:0.5pt solid #d9d9d9;padding:4pt 6pt;font-weight:700;font-size:8pt;text-transform:uppercase;background:#f8f8f8;text-align:left;';
 const SUMMARY_TD = 'border:0.5pt solid #e5e5e5;padding:4pt 6pt;font-size:8pt;';
-const FIRST_PAGE_ROW_LIMIT = 20;
-const CONTINUATION_PAGE_ROW_LIMIT = 30;
+const FIRST_PAGE_ROW_LIMIT = 10;
+const CONTINUATION_PAGE_ROW_LIMIT = 15;
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
 const DEFAULT_PREPARED_BY_POSITION = 'Program Manager';
@@ -458,6 +473,7 @@ const resolvedPreparedByPosition = computed(() => props.preparedByPosition?.trim
 const resolvedPreparedByOffice = computed(() => props.preparedByOffice?.trim() || DEFAULT_PREPARED_BY_OFFICE);
 const resolvedApprovedBy = computed(() => props.approvedBy?.trim() || DEFAULT_APPROVED_BY);
 const resolvedApprovedByPosition = computed(() => props.approvedByPosition?.trim() || DEFAULT_APPROVED_BY_POSITION);
+const resolvedReviewedBy = computed(() => showSignatories.value ? (props.reviewedBy?.trim() || DEFAULT_APPROVED_BY) : '');
 const showSignatories = computed(() => Boolean(props.preparedBy?.trim()));
 const resolvedBudgetProgram = computed(() => props.budgetProgram?.trim() || props.budgetAllocation?.program || 'N/A');
 const explicitBudgetProgramLabel = computed(() => props.budgetProgram?.trim() || '');
@@ -800,6 +816,20 @@ const groupedData = computed(() => {
     return groups;
 });
 const paginatedRecords = computed(() => paginateRecordsForPdf(props.records));
+const lastPageHasMoreThanThreshold = computed(() => {
+    const pages = paginatedRecords.value;
+    if (pages.length === 0) return true;
+    const lastPage = pages[pages.length - 1];
+    return (lastPage.records || []).length > 4;
+});
+
+const firstPageHasReviewedBy = computed(() => {
+    const pages = paginatedRecords.value;
+    if (pages.length === 0) return false;
+    return (pages[0].records || []).length > 2;
+});
+
+const budgetAllocationOnNextPage = computed(() => lastPageHasMoreThanThreshold.value || firstPageHasReviewedBy.value);
 
 const totalScholars = computed(() => props.records.length);
 const approvedScholarsCalendarYearLabel = computed(() => {

@@ -3,7 +3,6 @@ import * as XLSX from 'xlsx';
 
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import InterviewedApplicantsTemplate from './Pdf/InterviewedApplicantsTemplate.vue';
-import RecommendationListTemplate from './Pdf/RecommendationListTemplate.vue';
 import { buildInterviewedApplicantsPdfDoc } from './Pdf/pdf-styles';
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
@@ -75,15 +74,10 @@ function formatDate(value) {
     return value ? moment(value).format('MMM DD, YYYY') : '—';
 }
 
-export function printInterviewedApplicantsSelection({ records = [], preparedBy = DEFAULT_PREPARED_BY } = {}) {
+export function buildInterviewedApplicantsSelectionHtml({ records = [], preparedBy = DEFAULT_PREPARED_BY } = {}) {
     const normalizedRecords = normalizeRecords(records);
-    const printWindow = window.open('', '_blank');
 
-    if (!printWindow) {
-        return false;
-    }
-
-        const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
+    const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
         records: normalizedRecords,
         reportType: 'list',
         groupBy: 'none',
@@ -101,28 +95,39 @@ export function printInterviewedApplicantsSelection({ records = [], preparedBy =
     });
 
     const title = 'Selected Interviewed Applicants Report';
-
-    printWindow.document.write(buildInterviewedApplicantsPdfDoc(bodyHtml, title, 'a4-landscape', true));
-    printWindow.document.close();
-
-    return true;
+    return buildInterviewedApplicantsPdfDoc(bodyHtml, title, 'a4-landscape');
 }
 
-export function printRecommendationList({ recommendationList = null } = {}) {
+export function printInterviewedApplicantsSelection({ records = [], preparedBy = DEFAULT_PREPARED_BY } = {}) {
+    const html = buildInterviewedApplicantsSelectionHtml({ records, preparedBy });
     const printWindow = window.open('', '_blank');
 
     if (!printWindow) {
         return false;
     }
 
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    return true;
+}
+
+export function buildRecommendationListHtml({ recommendationList = null, paperSize = null, orientation = null, includeInterviewColumns = null, includeProjectedColumns = null } = {}) {
     const normalizedRecords = normalizeRecords(recommendationList?.records || []);
     const requestDateLabel = recommendationList?.request_date
         ? moment(recommendationList.request_date).format('MMMM D, YYYY')
         : recommendationList?.created_at
             ? moment(recommendationList.created_at).format('MMMM D, YYYY')
             : moment().format('MMMM D, YYYY');
-    const bodyHtml = renderVueTemplate(RecommendationListTemplate, {
+
+    // Prefer function args; fall back to recommendationList data; then defaults
+    const finalPaperSize = paperSize || recommendationList?.paper_size || 'A4';
+    const finalOrientation = orientation || recommendationList?.orientation || 'landscape';
+
+    const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
         records: normalizedRecords,
+        reportType: 'list',
+        groupBy: 'none',
         today: requestDateLabel,
         preparedBy: recommendationList?.prepared_by || DEFAULT_PREPARED_BY,
         preparedByPosition: recommendationList?.prepared_by_position || DEFAULT_PREPARED_BY_POSITION,
@@ -136,13 +141,27 @@ export function printRecommendationList({ recommendationList = null } = {}) {
         showRemarks: Boolean(recommendationList?.show_remarks),
         reportTitle: recommendationList?.report_title || 'RECOMMENDATION LIST FOR APPROVAL',
         listNumber: recommendationList?.list_number || '',
+        includeInterviewColumns: includeInterviewColumns ?? true,
+        includeProjectedColumns: includeProjectedColumns ?? true,
     });
 
     const title = recommendationList?.list_number
         ? `Recommendation List ${recommendationList.list_number}`
         : 'Recommendation List';
 
-    printWindow.document.write(buildInterviewedApplicantsPdfDoc(bodyHtml, title, 'a4-landscape', true));
+    const paperMap = { landscape: { A4: 'a4-landscape', Letter: 'letter-landscape', Legal: 'landscape' }, portrait: { A4: 'a4', Letter: 'letter', Legal: 'long' } };
+    const ps = paperMap[finalOrientation]?.[finalPaperSize] || 'a4-landscape';
+    return buildInterviewedApplicantsPdfDoc(bodyHtml, title, ps);
+}
+
+export function printRecommendationList({ recommendationList = null } = {}) {
+    const printWindow = window.open('', '_blank');
+
+    if (!printWindow) {
+        return false;
+    }
+
+    printWindow.document.write(buildRecommendationListHtml({ recommendationList }));
     printWindow.document.close();
 
     return true;

@@ -138,6 +138,10 @@ const summaryGroupTitle = computed(() => `Breakdown by ${summaryGroupColumnLabel
 const reportTitle = computed(() => props.options?.reportTitle?.trim()
     || getProfileReportTitle(selectedStatus.value, props.reportType)
 );
+const isCustomHtmlTitle = computed(() => {
+    const t = props.options?.reportTitle?.trim();
+    return t && /<[^>]+>/.test(t);
+});
 const asOfLabel = computed(() => {
     if (!props.generatedAt) {
         return moment().format('MMMM D, YYYY');
@@ -286,7 +290,8 @@ const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.v
             </div>
 
             <div style="text-align:center;padding:8pt 0 4pt;">
-                <p style="font-weight:700;font-size:13pt;">{{ reportTitle }}</p>
+                <div v-if="isCustomHtmlTitle" v-html="reportTitle" style="text-align:center;"></div>
+                <p v-else style="font-weight:700;font-size:13pt;">{{ reportTitle }}</p>
                 <div v-if="reportType !== 'summary' || !dateRangeText"
                     style="display:flex;flex-direction:column;align-items:center;gap:3pt;margin-top:3pt;">
                     <p v-if="reportType !== 'summary'" style="font-size:9pt;">As of {{ asOfLabel }}</p>
