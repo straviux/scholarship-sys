@@ -888,14 +888,28 @@ class ScholarshipProfileController extends Controller
             return false;
         }
 
-        $dateFiled = $record->date_filed?->format('Y-m-d');
+        $isTechVoc = $request->has('techvoc_date_filter');
 
-        if ($request->filled('date_from') && (!$dateFiled || $dateFiled < (string) $request->date_from)) {
-            return false;
-        }
+        if ($isTechVoc) {
+            $startDate = $record->start_date?->format('Y-m-d');
+            $endDate = $record->end_date?->format('Y-m-d');
 
-        if ($request->filled('date_to') && (!$dateFiled || $dateFiled > (string) $request->date_to)) {
-            return false;
+            if ($request->filled('date_from') && $request->filled('date_to')) {
+                $from = (string) $request->date_from;
+                $to = (string) $request->date_to;
+                $overlaps = ($startDate && $startDate <= $to && $endDate && $endDate >= $from)
+                    || ($startDate && $startDate >= $from && $startDate <= $to)
+                    || ($endDate && $endDate >= $from && $endDate <= $to);
+                if (!$overlaps) return false;
+            } elseif ($request->filled('date_from')) {
+                if (!$endDate || $endDate < (string) $request->date_from) return false;
+            } elseif ($request->filled('date_to')) {
+                if (!$startDate || $startDate > (string) $request->date_to) return false;
+            }
+        } else {
+            $dateFiled = $record->date_filed?->format('Y-m-d');
+            if ($request->filled('date_from') && (!$dateFiled || $dateFiled < (string) $request->date_from)) return false;
+            if ($request->filled('date_to') && (!$dateFiled || $dateFiled > (string) $request->date_to)) return false;
         }
 
         return true;
