@@ -295,11 +295,6 @@ const usePagination = computed(() => {
     if (props.reportType !== 'list' || grouped.value) return false;
     return flatPages.value.length > 1;
 });
-
-const showReviewedByFooter = computed(() => {
-    if (props.reportType !== 'list') return false;
-    return true;
-});
 </script>
 
 <template>
@@ -395,12 +390,6 @@ const showReviewedByFooter = computed(() => {
                             :show-course="showCourse" :show-remarks="showRemarks" :show-requirements="showRequirements"
                             :show-scholarship-date="showScholarshipDate" :show-year-level="showYearLevel" />
                     </template>
-
-                    <!-- Reviewed by footer (non-paginated) -->
-                    <div v-if="showReviewedByFooter && !usePagination" style="margin-top:24pt;font-size:7pt;color:#666;page-break-inside:avoid;break-inside:avoid-page;">
-                        <div style="margin-bottom:4pt;">Reviewed by:</div>
-                        <div style="width:160pt;border-bottom:0.5pt solid #999;padding-bottom:2pt;"></div>
-                    </div>
                 </template>
             </template>
 

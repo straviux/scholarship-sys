@@ -257,10 +257,12 @@ function fmtGrantAmount(value) {
 }
 
 function fmtGrantProvisionAmount(record) {
-    const rawAmount = parseGrantProvision(record?.grant_provision).amount;
+    const parsed = parseGrantProvision(record?.grant_provision_label || record?.grant_provision);
+    const rawAmount = parsed.amount;
 
     if (!rawAmount) {
-        return '';
+        // Fallback: show the name if no amount available
+        return parsed.name && parsed.name !== '—' ? parsed.name : '';
     }
 
     const numericAmount = Number(rawAmount.toString().replace(/,/g, ''));
@@ -436,7 +438,7 @@ function cellValue(record, column) {
         case 'remarks_summary':
             return formatRemarks(record);
         case 'grant_provision':
-            return fmtGrantProvisionAmount(record);
+            return '₱10,000.00';
         case 'current_year_level':
             return incrementYearLevel(record?.year_level) || '—';
         default:

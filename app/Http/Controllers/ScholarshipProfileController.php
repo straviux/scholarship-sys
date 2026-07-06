@@ -970,7 +970,7 @@ class ScholarshipProfileController extends Controller
             'term' => $record?->term,
             'academic_year' => $record?->academic_year,
             'grant_provision' => $record?->grant_provision ?? '-',
-            'grant_provision_label' => $record?->grant_provisionLabel ?? $record?->grant_provision ?? '-',
+            'grant_provision_label' => SystemOption::formatGrantProvisionLabel($record?->grant_provision, '-'),
             'start_date' => $record?->start_date,
             'end_date' => $record?->end_date,
             'no_of_days' => $record?->no_of_days,

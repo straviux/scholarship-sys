@@ -38,15 +38,17 @@
              </div>
             
             <template v-if="groupBy !== 'none'">
-                <div v-for="(group, groupName) in groupedData" :key="groupName" style="margin-bottom:14pt;">
-                    <div
-                        style="display:flex;align-items:center;justify-content:space-between;border-bottom:1pt solid #000;padding:3pt 0;margin-bottom:4pt;">
-                        <span class="bold" style="font-size:10pt;">{{ groupName }}</span>
-                        <span style="font-size:8pt;color:#555;">
-                            {{ group.length }} record{{ group.length !== 1 ? 's' : '' }}
-                            | {{ fmtCurrency(sumProjectedExpense(group)) }} projected grant
-                        </span>
-                    </div>
+                <template v-for="(page, pageIndex) in groupedPaginatedRecords" :key="`grouped-page-${pageIndex}`">
+                    <div :class="{ 'break-before': pageIndex > 0 }">
+                        <div v-for="(group, groupName) in page.groups" :key="groupName" style="margin-bottom:14pt;">
+                            <div
+                                style="display:flex;align-items:center;justify-content:space-between;border-bottom:1pt solid #000;padding:3pt 0;margin-bottom:4pt;">
+                                <span class="bold" style="font-size:10pt;">{{ groupName }}</span>
+                                <span style="font-size:8pt;color:#555;">
+                                    {{ group.length }} record{{ group.length !== 1 ? 's' : '' }}
+                                    | {{ fmtCurrency(sumProjectedExpense(group)) }} projected grant
+                                </span>
+                            </div>
 
                     <table style="width:100%;border-collapse:collapse;font-size:9pt;table-layout:auto;">
                         <colgroup>
@@ -134,6 +136,8 @@
                         </tbody>
                     </table>
                 </div>
+                    </div>
+                </template>
             </template>
 
             <template v-else>
@@ -460,8 +464,8 @@ const TD = 'border:1px solid #000;padding:3px 2px;font-size:8pt;line-height:1.1;
 const SUMMARY_HDR = 'background:#f0f0f0;font-weight:700;font-size:9pt;padding:5pt 8pt;text-transform:uppercase;border-bottom:0.5pt solid #ccc;';
 const SUMMARY_TH = 'border:0.5pt solid #d9d9d9;padding:4pt 6pt;font-weight:700;font-size:8pt;text-transform:uppercase;background:#f8f8f8;text-align:left;';
 const SUMMARY_TD = 'border:0.5pt solid #e5e5e5;padding:4pt 6pt;font-size:8pt;';
-const FIRST_PAGE_ROW_LIMIT = 10;
-const CONTINUATION_PAGE_ROW_LIMIT = 15;
+const FIRST_PAGE_ROW_LIMIT = 22;
+const CONTINUATION_PAGE_ROW_LIMIT = 25;
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
 const DEFAULT_PREPARED_BY_POSITION = 'Program Manager';
@@ -815,6 +819,33 @@ const groupedData = computed(() => {
     }
 
     return groups;
+});
+
+const groupedPaginatedRecords = computed(() => {
+    const pages = [];
+    let currentPage = { groups: {} };
+    let currentPageRows = 0;
+
+    const sortedGroups = Object.entries(groupedData.value)
+        .sort(([a], [b]) => a.localeCompare(b));
+
+    for (const [groupName, groupRecords] of sortedGroups) {
+        // If this group would overflow, start a new page
+        if (currentPageRows + groupRecords.length > FIRST_PAGE_ROW_LIMIT && currentPageRows > 0) {
+            pages.push(currentPage);
+            currentPage = { groups: {} };
+            currentPageRows = 0;
+        }
+        currentPage.groups[groupName] = groupRecords;
+        currentPageRows += groupRecords.length;
+    }
+
+    // Push last page if not empty
+    if (Object.keys(currentPage.groups).length > 0) {
+        pages.push(currentPage);
+    }
+
+    return pages;
 });
 const paginatedRecords = computed(() => paginateRecordsForPdf(props.records));
 const lastPageHasMoreThanThreshold = computed(() => {
