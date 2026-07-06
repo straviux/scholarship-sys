@@ -267,6 +267,21 @@ tr, td, th { page-break-inside: avoid; break-inside: avoid-page; }
   margin-top: 8pt;
 }
 
+/* ── Page Number (row-based pagination) ───── */
+.report-page-number {
+  text-align: center;
+  font-size: 7pt;
+  color: #888;
+  padding-top: 6pt;
+  margin-top: 4pt;
+}
+
+/* ── Page Break ───────────────────────────── */
+.page-break-before {
+  page-break-before: always;
+  break-before: page;
+}
+
 /* ── JPM Highlight ─────────────────────────── */
 .jpm-row,
 .jpm-row td {

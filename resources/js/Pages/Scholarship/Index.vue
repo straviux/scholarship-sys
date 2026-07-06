@@ -1116,13 +1116,13 @@ function selectProgramForReport(program) {
     showReportWizard.value = true;
 }
 
-function onTechvocReportGenerated({ records, program: _program, title, status, defaultAmount }) {
+function onTechvocReportGenerated({ records, program: _program, title, status, defaultAmount, useInterviewedSignatories, preparedBy, preparedByTitle, preparedByOffice, signatoryName, signatoryTitle, reviewedBy }) {
     techvocReportRecords.value = records;
     techvocDefaultAmount.value = defaultAmount ?? null;
-    buildTechvocPreview(title, status);
+    buildTechvocPreview(title, status, { useInterviewedSignatories, preparedBy, preparedByTitle, preparedByOffice, signatoryName, signatoryTitle, reviewedBy });
 }
 
-async function buildTechvocPreview(title = '', _status = null) {
+async function buildTechvocPreview(title = '', _status = null, signatoryOpts = {}) {
     try {
         const paperConfig = getReportPaperConfig('A4', 'landscape');
         const filterSummary = {};
@@ -1139,6 +1139,13 @@ async function buildTechvocPreview(title = '', _status = null) {
                 reportTitle: resolvedTitle,
                 sortBy: 'default',
                 defaultAmount: techvocDefaultAmount.value,
+                useInterviewedSignatories: signatoryOpts.useInterviewedSignatories || false,
+                preparedBy: signatoryOpts.preparedBy || '',
+                preparedByTitle: signatoryOpts.preparedByTitle || '',
+                preparedByOffice: signatoryOpts.preparedByOffice || '',
+                signatoryName: signatoryOpts.signatoryName || '',
+                signatoryTitle: signatoryOpts.signatoryTitle || '',
+                reviewedBy: signatoryOpts.reviewedBy || '',
             },
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
         };

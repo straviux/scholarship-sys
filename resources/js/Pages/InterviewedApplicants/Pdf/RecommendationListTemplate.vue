@@ -1,5 +1,5 @@
 <template>
-    <InterviewedApplicantsTemplate :records="records" report-type="list" group-by="none" :today="today"
+    <InterviewedApplicantsTemplate :records="records" report-type="list" :group-by="groupBy" :today="today"
         :prepared-by="preparedBy" :prepared-by-position="preparedByPosition" :prepared-by-office="preparedByOffice"
         :approved-by="approvedBy" :approved-by-position="approvedByPosition" :budget-program="budgetProgram"
         :budget-allocation="budgetAllocation" :highlight-jpm-members="highlightJpmMembers"
@@ -70,6 +70,10 @@ const props = defineProps({
     listNumber: {
         type: String,
         default: '',
+    },
+    groupBy: {
+        type: String,
+        default: 'course',
     },
 });
 

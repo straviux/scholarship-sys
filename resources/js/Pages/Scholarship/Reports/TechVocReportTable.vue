@@ -89,7 +89,7 @@ function cellValue(record, column) {
         case 'amount': {
             const raw = amounts.value[getAmountKey(record)] || '';
             const num = parseFloat(raw);
-            return isNaN(num) ? raw : num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return isNaN(num) ? raw : '₱' + num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         case 'remarks_summary': return record?.remarks || record?.decline_reason || '';
         default: return record[column.key] || '—';
@@ -159,7 +159,7 @@ function formatGroupHeaderSummary(header) {
                     TOTAL
                 </td>
                 <td :style="TD + 'font-weight:700;text-align:right;background:#f8f8f8;font-size:10px;'">
-                    {{ totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                    ₱{{ totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                 </td>
                 <td :colspan="columns.length - columns.findIndex(c => c.key === 'amount') - 1" :style="TD + 'background:#f8f8f8;'"></td>
             </tr>

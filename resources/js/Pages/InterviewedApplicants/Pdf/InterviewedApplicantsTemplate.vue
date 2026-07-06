@@ -36,6 +36,7 @@
                     <p class="t-9 bold">Request No. {{ listNumber }}</p>
                 </div>
              </div>
+            
             <template v-if="groupBy !== 'none'">
                 <div v-for="(group, groupName) in groupedData" :key="groupName" style="margin-bottom:14pt;">
                     <div

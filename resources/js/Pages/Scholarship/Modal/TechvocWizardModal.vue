@@ -111,6 +111,36 @@
                         <InputNumber v-model="defaultAmount" placeholder="0.00" :minFractionDigits="2"
                             :maxFractionDigits="2" mode="currency" currency="PHP" class="rw-input" />
                     </div>
+                    <div class="rw-field-group">
+                        <label class="rw-label">Signatory Style</label>
+                        <label class="flex items-center gap-4 py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer">
+                            <span>For Approval Layout</span>
+                            <ToggleSwitch v-model="useInterviewedSignatories" />
+                        </label>
+                    </div>
+                    <div class="rw-field-group">
+                        <div class="flex gap-2" style="align-items: flex-start;">
+                            <div class="flex-1">
+                                <label class="rw-label">Prepared By</label>
+                                <InputText v-model="preparedBy" placeholder="Name (optional)"
+                                    class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
+                                <InputText v-model="preparedByTitle"
+                                    :placeholder="useInterviewedSignatories ? 'Position (optional)' : 'Designation (optional)'"
+                                    class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
+                                <InputText v-if="useInterviewedSignatories" v-model="preparedByOffice" placeholder="Office (optional)"
+                                    class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
+                            </div>
+                            <div class="flex-1">
+                                <label class="rw-label">{{ useInterviewedSignatories ? 'Approved By' : 'Noted By' }}</label>
+                                <InputText v-model="signatoryName" placeholder="Name (optional)"
+                                    class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
+                                <InputText v-model="signatoryTitle"
+                                    :placeholder="useInterviewedSignatories ? 'Position (optional)' : 'Designation (optional)'"
+                                    class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
+                            </div>
+                        </div>
+                        <span class="block text-[10px] text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block.</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -124,6 +154,7 @@ import axios from 'axios';
 import DatePicker from 'primevue/datepicker';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
+import ToggleSwitch from 'primevue/toggleswitch';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
@@ -177,6 +208,12 @@ const activeFiltersCount = computed(() => {
 // ─── Options ───
 const customTitle = ref('');
 const defaultAmount = ref(null);
+const useInterviewedSignatories = ref(false);
+const preparedBy = ref('');
+const preparedByTitle = ref('');
+const preparedByOffice = ref('');
+const signatoryName = ref('');
+const signatoryTitle = ref('');
 
 function clearAllFilters() {
     dateFrom.value = null;
@@ -204,6 +241,7 @@ async function generateReport() {
         }
         if (dateFrom.value) params.date_from = moment(dateFrom.value).format('YYYY-MM-DD');
         if (dateTo.value) params.date_to = moment(dateTo.value).format('YYYY-MM-DD');
+        params.techvoc_date_filter = 1;
         if (selectedStatus.value) params.unified_status = selectedStatus.value;
 
         const response = await axios.get(route('profile.generateReport'), { params });
@@ -217,6 +255,12 @@ async function generateReport() {
             title: customTitle.value?.trim(),
             status: selectedStatus.value,
             defaultAmount: defaultAmount.value,
+            useInterviewedSignatories: useInterviewedSignatories.value,
+            preparedBy: preparedBy.value?.trim() || '',
+            preparedByTitle: preparedByTitle.value?.trim() || '',
+            preparedByOffice: preparedByOffice.value?.trim() || '',
+            signatoryName: signatoryName.value?.trim() || '',
+            signatoryTitle: signatoryTitle.value?.trim() || '',
         });
         handleClose();
     } catch (error) {

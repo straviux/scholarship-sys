@@ -622,18 +622,37 @@ class ScholarshipProfileController extends Controller
             });
         }
 
-        // Filter by date range (date_filed) from scholarshipGrant relation
+        // Filter by date range: use start_date/end_date for TechVoc, date_filed for others
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
+                if ($request->has('techvoc_date_filter')) {
+                    $q->where(function ($sub) use ($request) {
+                        $sub->whereBetween('start_date', [$request->date_from, $request->date_to])
+                            ->orWhereBetween('end_date', [$request->date_from, $request->date_to])
+                            ->orWhere(function ($inner) use ($request) {
+                                $inner->where('start_date', '<=', $request->date_from)
+                                    ->where('end_date', '>=', $request->date_to);
+                            });
+                    });
+                } else {
+                    $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
+                }
             });
         } elseif ($request->filled('date_from')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereDate('date_filed', '>=', $request->date_from);
+                if ($request->has('techvoc_date_filter')) {
+                    $q->whereDate('end_date', '>=', $request->date_from);
+                } else {
+                    $q->whereDate('date_filed', '>=', $request->date_from);
+                }
             });
         } elseif ($request->filled('date_to')) {
             $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->whereDate('date_filed', '<=', $request->date_to);
+                if ($request->has('techvoc_date_filter')) {
+                    $q->whereDate('start_date', '<=', $request->date_to);
+                } else {
+                    $q->whereDate('date_filed', '<=', $request->date_to);
+                }
             });
         }
 
