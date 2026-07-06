@@ -937,6 +937,7 @@ function buildReportDoc(bodyHtml, title, paperSettings) {
     body { visibility: hidden; margin: 0; padding: 0; }
     ${getReportCss(paperSettings)}
   </style>
+  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"><\/script>
   <script>
 ${lifecycleScript}
   <\/script>

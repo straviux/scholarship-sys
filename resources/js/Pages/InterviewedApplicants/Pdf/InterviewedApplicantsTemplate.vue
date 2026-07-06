@@ -230,17 +230,6 @@
                             </tr>
                         </tbody>
                     </table>
-
-                    <!-- Reviewed by signatory per page -->
-                    <div v-if="page.records.length > 2 && resolvedReviewedBy" class="no-break" style="margin-right:20pt;margin-top:40pt;font-size:8pt;display:flex;justify-content:flex-end;page-break-inside:avoid;break-inside:avoid-page;">
-                        <div style="width:220px;display:flex;align-items:flex-start;gap:2pt;">
-                            <div style="display: flex;width:100%;">Reviewed by:</div>
-                            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;">
-                                <span class="bold" style="border-bottom:1px solid #000;padding-bottom:2pt;text-transform:uppercase;">{{ resolvedReviewedBy }}</span>
-                                <div style="margin-top:2pt;">Governor</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </template>
 
@@ -478,7 +467,7 @@ const resolvedPreparedByPosition = computed(() => props.preparedByPosition?.trim
 const resolvedPreparedByOffice = computed(() => props.preparedByOffice?.trim() || DEFAULT_PREPARED_BY_OFFICE);
 const resolvedApprovedBy = computed(() => props.approvedBy?.trim() || DEFAULT_APPROVED_BY);
 const resolvedApprovedByPosition = computed(() => props.approvedByPosition?.trim() || DEFAULT_APPROVED_BY_POSITION);
-const resolvedReviewedBy = computed(() => showSignatories.value ? (props.reviewedBy?.trim() || DEFAULT_APPROVED_BY) : '');
+const resolvedReviewedBy = computed(() => props.reviewedBy?.trim() || DEFAULT_APPROVED_BY);
 const showSignatories = computed(() => Boolean(props.preparedBy?.trim()));
 const resolvedBudgetProgram = computed(() => props.budgetProgram?.trim() || props.budgetAllocation?.program || 'N/A');
 const explicitBudgetProgramLabel = computed(() => props.budgetProgram?.trim() || '');
@@ -565,6 +554,30 @@ function scholarMatchesBudgetProgram(scholar) {
     ]
         .filter(Boolean)
         .some((programValue) => String(programValue).trim().toLowerCase() === programLabel);
+}
+
+function sortRecords(records) {
+    return [...records].sort((a, b) => {
+        // Sort by course name first
+        const courseA = (a.course?.name || a.course?.shortname || '').toLowerCase();
+        const courseB = (b.course?.name || b.course?.shortname || '').toLowerCase();
+        if (courseA !== courseB) return courseA.localeCompare(courseB);
+
+        // Then by year level numerically
+        const yearA = parseInt(a.year_level) || 0;
+        const yearB = parseInt(b.year_level) || 0;
+        if (yearA !== yearB) return yearA - yearB;
+
+        // Then alphabetically by last name
+        const nameA = (a.profile?.last_name || '').toLowerCase();
+        const nameB = (b.profile?.last_name || '').toLowerCase();
+        if (nameA !== nameB) return nameA.localeCompare(nameB);
+
+        // Then by first name
+        const firstA = (a.profile?.first_name || '').toLowerCase();
+        const firstB = (b.profile?.first_name || '').toLowerCase();
+        return firstA.localeCompare(firstB);
+    });
 }
 
 function fmtCurrency(value) {
@@ -816,6 +829,11 @@ const groupedData = computed(() => {
         }
 
         groups[key].push(record);
+    }
+
+    // Sort records within each group
+    for (const key of Object.keys(groups)) {
+        groups[key] = sortRecords(groups[key]);
     }
 
     return groups;

@@ -127,7 +127,7 @@ export function buildRecommendationListHtml({ recommendationList = null, paperSi
     const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
         records: normalizedRecords,
         reportType: 'list',
-        groupBy: 'none',
+        groupBy: recommendationList?.group_by || 'course',
         today: requestDateLabel,
         preparedBy: recommendationList?.prepared_by || DEFAULT_PREPARED_BY,
         preparedByPosition: recommendationList?.prepared_by_position || DEFAULT_PREPARED_BY_POSITION,

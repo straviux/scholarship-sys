@@ -534,124 +534,131 @@ class ScholarshipProfileController extends Controller
             'scholarshipGrant.interviewer',
         ]);
 
-        // Filter by unified_status parameter
+        // ── Build scholarshipGrant-level filters ──
+        $scholarshipGrantFilters = [];
+
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            $dateFrom = $request->filled('date_from') ? $request->date_from : null;
+            $dateTo = $request->filled('date_to') ? $request->date_to : null;
+            $isTechVoc = $request->has('techvoc_date_filter');
+
+            $scholarshipGrantFilters[] = function ($q) use ($dateFrom, $dateTo, $isTechVoc) {
+                if ($dateFrom && $dateTo) {
+                    if ($isTechVoc) {
+                        $q->where(function ($sub) use ($dateFrom, $dateTo) {
+                            $sub->whereBetween('start_date', [$dateFrom, $dateTo])
+                                ->orWhereBetween('end_date', [$dateFrom, $dateTo])
+                                ->orWhere(function ($inner) use ($dateFrom, $dateTo) {
+                                    $inner->where('start_date', '<=', $dateFrom)
+                                        ->where('end_date', '>=', $dateTo);
+                                });
+                        });
+                    } else {
+                        $q->whereBetween('date_filed', [$dateFrom, $dateTo]);
+                    }
+                } elseif ($dateFrom) {
+                    if ($isTechVoc) {
+                        $q->whereDate('end_date', '>=', $dateFrom);
+                    } else {
+                        $q->whereDate('date_filed', '>=', $dateFrom);
+                    }
+                } elseif ($dateTo) {
+                    if ($isTechVoc) {
+                        $q->whereDate('start_date', '<=', $dateTo);
+                    } else {
+                        $q->whereDate('date_filed', '<=', $dateTo);
+                    }
+                }
+            };
+        }
+
+        if ($request->filled('course')) {
+            $singleCourse = $request->course;
+            $scholarshipGrantFilters[] = function ($q) use ($singleCourse) {
+                $q->whereHas('course', function ($cq) use ($singleCourse) {
+                    $cq->where('courses.shortname', 'like', '%' . $singleCourse . '%')
+                        ->orWhere('courses.name', 'like', '%' . $singleCourse . '%');
+                });
+            };
+        }
+
+        if ($request->filled('courses')) {
+            $coursesArray = array_map('trim', explode(',', $request->courses));
+            $scholarshipGrantFilters[] = function ($q) use ($coursesArray) {
+                $q->whereHas('course', function ($cq) use ($coursesArray) {
+                    $cq->where(function ($subQuery) use ($coursesArray) {
+                        foreach ($coursesArray as $course) {
+                            $subQuery->orWhere('courses.name', 'like', '%' . $course . '%');
+                        }
+                    });
+                });
+            };
+        }
+
         if ($request->filled('unified_status')) {
             $statuses = is_array($request->unified_status)
                 ? $request->unified_status
                 : explode(',', $request->unified_status);
-
             $statuses = array_values(array_unique(array_filter(array_merge(
                 array_map('trim', $statuses),
                 in_array('active', array_map('trim', $statuses), true) ? ['approved'] : []
             ))));
-
-            $query->whereHas('scholarshipGrant', function ($q) use ($statuses) {
+            $scholarshipGrantFilters[] = function ($q) use ($statuses) {
                 $q->whereIn('unified_status', $statuses);
-            });
+            };
         }
 
         if ($request->filled('program')) {
             $programIds = array_map('trim', explode(',', $request->program));
-            $query->whereHas('scholarshipGrant', function ($q) use ($programIds) {
+            $scholarshipGrantFilters[] = function ($q) use ($programIds) {
                 $q->whereIn('program_id', $programIds);
-            });
-        }
-        if ($request->filled('municipality')) {
-            $municipalities = array_map('trim', explode(',', $request->municipality));
-            $query->where(function ($q) use ($municipalities) {
-                foreach ($municipalities as $municipality) {
-                    $q->orWhere('municipality', 'like', '%' . $municipality . '%');
-                }
-            });
+            };
         }
 
-        // Filter by school under scholarshipGrant relation
         if ($request->filled('school')) {
             $schools = array_map('trim', explode(',', $request->school));
-            $query->whereHas('scholarshipGrant.school', function ($q) use ($schools) {
-                $q->where(function ($subQuery) use ($schools) {
-                    foreach ($schools as $school) {
-                        $subQuery->orWhere('schools.shortname', 'like', '%' . $school . '%')
-                            ->orWhere('schools.name', 'like', '%' . $school . '%');
-                    }
+            $scholarshipGrantFilters[] = function ($q) use ($schools) {
+                $q->whereHas('school', function ($sq) use ($schools) {
+                    $sq->where(function ($subQuery) use ($schools) {
+                        foreach ($schools as $school) {
+                            $subQuery->orWhere('schools.shortname', 'like', '%' . $school . '%')
+                                ->orWhere('schools.name', 'like', '%' . $school . '%');
+                        }
+                    });
                 });
-            });
-        }
-        if ($request->filled('course')) {
-            $query->whereHas('scholarshipGrant.course', function ($cq) use ($request) {
-                $cq->where('courses.shortname', 'like', '%' . $request->course . '%')
-                    ->orWhere('courses.name', 'like', '%' . $request->course . '%');
-            });
+            };
         }
 
-        // Handle multiple courses filter
-        if ($request->filled('courses')) {
-            $coursesArray = explode(',', $request->courses);
-            $coursesArray = array_map('trim', $coursesArray); // Remove any whitespace
-            $query->whereHas('scholarshipGrant.course', function ($cq) use ($coursesArray) {
-                $cq->where(function ($subQuery) use ($coursesArray) {
-                    foreach ($coursesArray as $course) {
-                        $subQuery->orWhere('courses.name', 'like', '%' . $course . '%');
-                    }
-                });
-            });
-        }
         if ($request->filled('year_level')) {
             $yearLevels = array_map('trim', explode(',', $request->year_level));
-            $query->whereHas('scholarshipGrant', function ($q) use ($yearLevels) {
+            $scholarshipGrantFilters[] = function ($q) use ($yearLevels) {
                 $q->where(function ($subQuery) use ($yearLevels) {
                     foreach ($yearLevels as $yearLevel) {
                         $subQuery->orWhere('year_level', 'like', '%' . $yearLevel . '%');
                     }
                 })->whereNotNull('year_level');
-            });
+            };
         }
 
-        // Filter by yakap_category under scholarshipGrant relation
         if ($request->filled('yakap_category')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                $q->where('yakap_category', $request->yakap_category);
-            });
+            $yakapCategory = $request->yakap_category;
+            $scholarshipGrantFilters[] = function ($q) use ($yakapCategory) {
+                $q->where('yakap_category', $yakapCategory);
+            };
         }
 
-        // Filter by grant_provision under scholarshipGrant relation
         if ($request->filled('grant_provision')) {
             $grantProvisions = array_map('trim', explode(',', $request->grant_provision));
-            $query->whereHas('scholarshipGrant', function ($q) use ($grantProvisions) {
+            $scholarshipGrantFilters[] = function ($q) use ($grantProvisions) {
                 $q->whereIn('grant_provision', $grantProvisions);
-            });
+            };
         }
 
-        // Filter by date range: use start_date/end_date for TechVoc, date_filed for others
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                if ($request->has('techvoc_date_filter')) {
-                    $q->where(function ($sub) use ($request) {
-                        $sub->whereBetween('start_date', [$request->date_from, $request->date_to])
-                            ->orWhereBetween('end_date', [$request->date_from, $request->date_to])
-                            ->orWhere(function ($inner) use ($request) {
-                                $inner->where('start_date', '<=', $request->date_from)
-                                    ->where('end_date', '>=', $request->date_to);
-                            });
-                    });
-                } else {
-                    $q->whereBetween('date_filed', [$request->date_from, $request->date_to]);
-                }
-            });
-        } elseif ($request->filled('date_from')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                if ($request->has('techvoc_date_filter')) {
-                    $q->whereDate('end_date', '>=', $request->date_from);
-                } else {
-                    $q->whereDate('date_filed', '>=', $request->date_from);
-                }
-            });
-        } elseif ($request->filled('date_to')) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($request) {
-                if ($request->has('techvoc_date_filter')) {
-                    $q->whereDate('start_date', '<=', $request->date_to);
-                } else {
-                    $q->whereDate('date_filed', '<=', $request->date_to);
+        // Apply all scholarshipGrant filters in a SINGLE whereHas so they match the SAME record
+        if (!empty($scholarshipGrantFilters)) {
+            $query->whereHas('scholarshipGrant', function ($q) use ($scholarshipGrantFilters) {
+                foreach ($scholarshipGrantFilters as $filter) {
+                    $filter($q);
                 }
             });
         }

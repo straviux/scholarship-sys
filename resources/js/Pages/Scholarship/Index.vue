@@ -1151,7 +1151,7 @@ async function buildTechvocPreview(title = '', _status = null, signatoryOpts = {
         };
 
         const bodyHtml = renderVueTemplate(TechVocReportTemplate, templateProps);
-        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>TechVoc Report</title><style>body{margin:0;padding:0;}${getReportCss(paperConfig)}</style></head><body>${bodyHtml}</body></html>`;
+        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>TechVoc Report</title><style>body{margin:0;padding:0;}${getReportCss(paperConfig)}</style><script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"><\/script></head><body>${bodyHtml}</body></html>`;
         
         techvocReportHtml.value = fullHtml;
         showTechvocReportPreview.value = true;
@@ -1565,7 +1565,7 @@ function doTechvocExportExcel() {
     const fmt = (d) => d ? moment(d).format('MMM DD, YYYY') : '';
     const isJpm = (r) => r?.is_jpm_member || r?.is_father_jpm || r?.is_mother_jpm || r?.is_guardian_jpm;
 
-    const headers = ['#', 'NAME', 'CONTACT NO.', 'ADDRESS', 'SCHOOL', 'COURSE', 'START DATE', 'END DATE', 'NO. OF DAYS', 'NO. OF HOURS', 'REMARKS'];
+    const headers = ['#', 'NAME', 'CONTACT NO.', 'ADDRESS', 'SCHOOL', 'COURSE', 'REQ. NO. OF DAYS', 'REQ. NO. OF HOURS', 'REMARKS'];
     const rows = records.map((rec, idx) => [
         idx + 1,
         upper(formatName(rec)),
@@ -1573,8 +1573,6 @@ function doTechvocExportExcel() {
         upper([rec.barangay, rec.municipality].filter(Boolean).join(', ')),
         upper(rec.school_name || rec.school || ''),
         upper(rec.course_name || rec.course || ''),
-        upper(fmt(rec.start_date)),
-        upper(fmt(rec.end_date)),
         rec.no_of_days ?? '',
         rec.no_of_hours ?? '',
         upper(rec.remarks || rec.decline_reason || ''),

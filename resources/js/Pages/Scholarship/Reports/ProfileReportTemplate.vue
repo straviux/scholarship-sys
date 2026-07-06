@@ -271,30 +271,6 @@ const summaryGroupRows = computed(() => {
 });
 
 const totalProjectedExpense = computed(() => sumProjectedExpense(sortedRecords.value));
-
-// ── Page-based pagination ────────────────────
-const ROWS_PER_PAGE = 22;
-
-const flatPages = computed(() => {
-    if (props.reportType !== 'list') return [];
-    const records = sortedRecords.value;
-    if (records.length === 0) return [];
-    const pages = [];
-    for (let i = 0; i < records.length; i += ROWS_PER_PAGE) {
-        pages.push({
-            pageNum: pages.length + 1,
-            records: records.slice(i, i + ROWS_PER_PAGE),
-        });
-    }
-    return pages;
-});
-
-const totalPages = computed(() => flatPages.value.length);
-
-const usePagination = computed(() => {
-    if (props.reportType !== 'list' || grouped.value) return false;
-    return flatPages.value.length > 1;
-});
 </script>
 
 <template>
@@ -329,30 +305,7 @@ const usePagination = computed(() => {
             </div>
 
             <template v-else-if="reportType === 'list'">
-                <!-- Paginated: page breaks with footer on each page -->
-                <template v-if="usePagination">
-                    <div v-for="page in flatPages" :key="`page-${page.pageNum}`"
-                        :class="{ 'page-break-before': page.pageNum > 1 }"
-                        style="padding-bottom: 20pt;">
-                        <ProfileReportTable :records="page.records" :filters="filters" :options="options"
-                            :show-address="showAddress" :show-contact-number="showContactNumber"
-                            :show-date-filed="showDateFiled" :show-program="showProgram" :show-school="showSchool"
-                            :show-course="showCourse" :show-remarks="showRemarks" :show-requirements="showRequirements"
-                            :show-scholarship-date="showScholarshipDate" :show-year-level="showYearLevel" />
-                        <!-- Footer: Reviewed by + Page Number -->
-                        <div style="margin-top:24pt;display:flex;justify-content:space-between;align-items:flex-end;font-size:7pt;color:#666;page-break-inside:avoid;break-inside:avoid-page;">
-                            <div>
-                               
-                                <div style="margin-top:4pt;">Page {{ page.pageNum }} of {{ totalPages }}</div>
-                            </div>
-                            <div></div>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Non-paginated: grouping or single table -->
-                <template v-else>
-                    <template v-if="grouped">
+                <template v-if="grouped">
                         <div v-for="group in grouped" :key="group.key" style="margin-bottom:14pt;">
                             <ProfileReportTable v-if="group.records" :records="group.records" :filters="filters"
                                 :options="options" :group-headers="buildGroupHeaderRows(group)" :show-address="showAddress"
@@ -390,7 +343,6 @@ const usePagination = computed(() => {
                             :show-course="showCourse" :show-remarks="showRemarks" :show-requirements="showRequirements"
                             :show-scholarship-date="showScholarshipDate" :show-year-level="showYearLevel" />
                     </template>
-                </template>
             </template>
 
             <template v-else>

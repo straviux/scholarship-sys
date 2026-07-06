@@ -37,6 +37,7 @@ const highlightJpmMembers = computed(() => props.options?.enableJpmHighlighting 
 const showSequenceNumbers = computed(() => props.options?.showSequenceNumbers !== false);
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
 const includeGrantProvision = computed(() => props.options?.includeGrantProvision === true);
+const grantValueLabel = computed(() => props.options?.grantValueLabel ?? null);
 const isEfaApprovalList = computed(() => props.options?.isEfaApprovalList === true);
 const efaUpcomingTerm = computed(() => props.options?.efaUpcomingTerm || '');
 const efaUpcomingAcademicYear = computed(() => props.options?.efaUpcomingAcademicYear || '');
@@ -410,11 +411,11 @@ function cellValue(record, column) {
         case 'report_status':
             return formatStatus(getReportStatus(record));
         case 'projected_term_count':
-            return record.projected_term_count ?? 'Not configured';
+            return record.projected_term_count ?? '—';
         case 'projected_total_expense':
             return fmtCurrency(record.projected_total_expense);
         case 'projected_completion_year':
-            return record.projected_completion_year ?? 'Not configured';
+            return record.projected_completion_year || '—';
         case 'start_date':
         case 'end_date':
             return formatDate(record[column.key]);
@@ -438,7 +439,9 @@ function cellValue(record, column) {
         case 'remarks_summary':
             return formatRemarks(record);
         case 'grant_provision':
-            return '₱10,000.00';
+            return grantValueLabel.value
+                ? (parseGrantProvision(grantValueLabel.value).amount || grantValueLabel.value)
+                : fmtGrantProvisionAmount(record);
         case 'current_year_level':
             return incrementYearLevel(record?.year_level) || '—';
         default:

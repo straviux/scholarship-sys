@@ -160,7 +160,12 @@ class AcademicEnrollmentTermService
             $term = AcademicEnrollmentTerm::with(['enrollment', 'recordMaps'])->findOrFail($term->id);
 
             $recordIds = $term->recordMaps->pluck('scholarship_record_id');
-            $records = ScholarshipRecord::withTrashed()->whereIn('id', $recordIds)->get();
+            $primaryRecordId = $term->primaryRecordMap?->scholarship_record_id;
+
+            // Only delete the primary scholarship record and any others specifically linked
+            $records = ScholarshipRecord::withTrashed()
+                ->whereIn('id', $primaryRecordId ? [$primaryRecordId] : $recordIds->all())
+                ->get();
 
             if ($records->isEmpty()) {
                 $term->delete();

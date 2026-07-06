@@ -45,17 +45,15 @@ const groupHeaderRows = computed(() => (Array.isArray(props.groupHeaders) ? prop
 
 const columns = computed(() => [
     { key: 'sequence', label: '#', width: '2%', align: 'center' },
-    { key: 'name', label: 'Name', width: '13%' },
-    { key: 'contact_number', label: 'Contact No.', width: '7%', align: 'center' },
-    { key: 'address_location', label: 'Address', width: '11%' },
-    { key: 'school_name', label: 'School', width: '13%' },
-    { key: 'course_name', label: 'Course', width: '11%' },
-    { key: 'start_date', label: 'Start Date', width: '7%', align: 'center' },
-    { key: 'end_date', label: 'End Date', width: '7%', align: 'center' },
-    { key: 'no_of_days', label: 'Days', width: '4%', align: 'center' },
-    { key: 'no_of_hours', label: 'Hours', width: '4%', align: 'center' },
+    { key: 'name', label: 'Name', width: '16%' },
+    { key: 'contact_number', label: 'Contact No.', width: '8%', align: 'center' },
+    { key: 'address_location', label: 'Address', width: '13%' },
+    { key: 'school_name', label: 'School', width: '15%' },
+    { key: 'course_name', label: 'Course', width: '13%' },
+    { key: 'no_of_days', label: 'Required No. of Days', width: '8%', align: 'center' },
+    { key: 'no_of_hours', label: 'Required No. of Hours', width: '8%', align: 'center' },
     { key: 'amount', label: 'Amount', width: '8%', align: 'right' },
-    { key: 'remarks_summary', label: 'Remarks', width: '13%' },
+    { key: 'remarks_summary', label: 'Remarks', width: '11%' },
 ]);
 
 const totalAmount = computed(() => {
@@ -82,8 +80,6 @@ function cellValue(record, column) {
         case 'address_location': return formatAddress(record);
         case 'school_name': return record?.school_name || record?.school || '—';
         case 'course_name': return record?.course_name || record?.course || '—';
-        case 'start_date':
-        case 'end_date': return record[column.key] ? formatDate(record[column.key]) : '';
         case 'no_of_days': return record?.no_of_days ?? record?.no_of_days_alternative ?? '';
         case 'no_of_hours': return record?.no_of_hours ?? record?.no_of_hours_alternative ?? '';
         case 'amount': {
@@ -100,7 +96,7 @@ function valueStyle(column) {
     const align = column.align ? `text-align:${column.align};` : '';
     const emphasis = column.key === 'name' ? 'font-weight:600;' : '';
     const nameSize = column.key !== 'sequence' ? 'font-size:10px;line-height:1.3;' : '';
-    const nowrap = ['start_date', 'end_date'].includes(column.key) ? 'white-space:nowrap;' : '';
+    const nowrap = [].includes(column.key) ? 'white-space:nowrap;' : '';
     const uppercase = column.key === 'address_location' ? 'text-transform:uppercase;' : '';
 
     return `${TD}${align}${emphasis}${nameSize}${nowrap}${uppercase}`;
