@@ -452,7 +452,9 @@
                             <DataTable v-else :value="filteredRecommendationLists" dataKey="id"
                                 v-model:expandedRows="recommendationListExpandedRows" showGridlines stripedRows
                                 scrollable responsiveLayout="scroll"
-                                class="text-sm ios-interviewed-table ios-datatable-clean">
+                                class="text-sm ios-interviewed-table ios-datatable-clean"
+                                @rowContextmenu="(event) => openRecommendationListContextMenu(event.originalEvent, event.data)"
+                                contextMenu>
                                 <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
                                 <Column field="list_number" header="List No." sortable headerClass="min-w-[160px]"
                                     bodyClass="min-w-[160px]">
@@ -757,6 +759,15 @@
             </template>
         </ContextMenu>
 
+        <ContextMenu ref="recommendationListContextMenu" :model="recommendationListContextMenuItems" appendTo="body">
+            <template #item="{ item, props }">
+                <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
+                    <AppIcon v-if="item.icon" :name="item.icon" :size="14" />
+                    <span>{{ item.label }}</span>
+                </a>
+            </template>
+        </ContextMenu>
+
         <!-- Generate Report Modal -->
         <CumulativeScholarListModal :show="showCumulativeScholarListModal"
             @update:show="showCumulativeScholarListModal = $event" :budget-allocations="props.budget_allocations" />
@@ -836,6 +847,15 @@ const props = defineProps({
             course: null,
         }),
     },
+    interviewed_applicants_stats: {
+        type: Object,
+        default: () => ({
+            total: 0,
+            recommended: 0,
+            further_eval: 0,
+            not_recommended: 0,
+        }),
+    },
     budget_allocations: {
         type: Array,
         default: () => [],
@@ -874,6 +894,7 @@ const filters = ref({
 });
 
 const contextMenu = ref();
+const recommendationListContextMenu = ref();
 const showAssessmentDialog = ref(false);
 const assessmentInitialMode = ref('view');
 const showCumulativeScholarListModal = ref(false);
@@ -904,6 +925,7 @@ const denyForm = useForm({
 });
 
 const selectedRecord = ref(null);
+const selectedRecommendationList = ref(null);
 const canManageActions = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer'));
 const currentUser = computed(() => page.props.auth?.user ?? null);
 
@@ -1249,14 +1271,60 @@ const openAssessmentDialog = (record, mode = 'view') => {
     showAssessmentDialog.value = true;
 };
 
-const stats = computed(() => {
-    const pagination = props.interviewed_applicants_pagination;
-    return {
-        total: pagination?.total ?? 0,
-        recommended: 0, // server-side aggregation needed, not from current page
-        furtherEval: 0,
-        notRecommended: 0,
-    };
+const stats = computed(() => ({
+    total: props.interviewed_applicants_stats?.total ?? 0,
+    recommended: props.interviewed_applicants_stats?.recommended ?? 0,
+    furtherEval: props.interviewed_applicants_stats?.further_eval ?? 0,
+    notRecommended: props.interviewed_applicants_stats?.not_recommended ?? 0,
+}));
+
+// Recommendation List Context Menu
+const openRecommendationListContextMenu = (event, recommendationList) => {
+    selectedRecommendationList.value = recommendationList;
+    recommendationListContextMenu.value.show(event);
+};
+
+const recommendationListContextMenuItems = computed(() => {
+    if (!selectedRecommendationList.value) {
+        return [];
+    }
+
+    const recommendationList = selectedRecommendationList.value;
+    const items = [];
+
+    if (recommendationList.is_approved) {
+        items.push({
+            label: 'Revert Approval',
+            icon: 'rotate-ccw',
+            command: () => revertRecommendationListApproval(recommendationList),
+        });
+    } else {
+        items.push({
+            label: 'Approve',
+            icon: 'check-circle',
+            command: () => approveRecommendationList(recommendationList),
+        });
+    }
+
+    items.push(
+        {
+            label: 'Edit',
+            icon: 'pencil',
+            command: () => openEditRecommendationListModal(recommendationList),
+        },
+        {
+            label: 'Print',
+            icon: 'printer',
+            command: () => printSavedRecommendationList(recommendationList),
+        },
+        {
+            label: 'Delete',
+            icon: 'trash',
+            command: () => deleteRecommendationList(recommendationList),
+        },
+    );
+
+    return items;
 });
 
 // Context Menu

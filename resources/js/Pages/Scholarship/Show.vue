@@ -1465,6 +1465,7 @@ const editingTerm = ref(null);
 const legacyScholarEditProfile = ref(null);
 const enrollmentForGraduation = ref(null);
 const termForCompletion = ref(null);
+const termForCompletionEnrollmentId = ref(null);
 const deleteTarget = ref(null);
 const deleteTargetType = ref('term');
 const qrCodeData = ref(null);
@@ -2294,6 +2295,11 @@ const openCompleteTermModal = (term) => {
         return;
     }
 
+    // Find the enrollment for this term so we can reopen it after completion
+    const enrollment = academicEnrollmentGroups.value.find((enr) =>
+        (enr.terms || enr.displayTerms || []).some((t) => t.id === term.id)
+    );
+    termForCompletionEnrollmentId.value = enrollment?.id ?? null;
     termForCompletion.value = term;
     showTermCompletionModal.value = true;
 };
@@ -2366,7 +2372,10 @@ const showQrCode = async (record) => {
 };
 
 // Handle success from external modals
-const handleModalSuccess = () => {
+const handleModalSuccess = (payload = {}) => {
+    const proceedAddTerm = payload?.proceedAddTerm === true;
+    const enrollmentId = termForCompletionEnrollmentId.value;
+
     editingEnrollment.value = null;
     activeEnrollmentForTerm.value = null;
     editingTerm.value = null;
@@ -2374,8 +2383,25 @@ const handleModalSuccess = () => {
     legacyScholarEditProfile.value = null;
     enrollmentForGraduation.value = null;
     termForCompletion.value = null;
+    termForCompletionEnrollmentId.value = null;
     deleteTarget.value = null;
     selectedAcademicTerm.value = null;
+
+    if (proceedAddTerm && enrollmentId) {
+        router.reload({
+            only: ['profile'],
+            onSuccess: () => {
+                const enrollment = academicEnrollmentGroups.value.find(
+                    (enr) => enr.id === enrollmentId
+                );
+                if (enrollment) {
+                    openAddTermModal(enrollment);
+                }
+            }
+        });
+        return;
+    }
+
     router.reload({ only: ['profile'] });
     if (refreshActivityLogs) refreshActivityLogs();
 };

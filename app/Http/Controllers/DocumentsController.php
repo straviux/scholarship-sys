@@ -63,7 +63,7 @@ class DocumentsController extends Controller
 
             $validated['file_name'] = $file->getClientOriginalName();
             $validated['file_path'] = $filePath;
-            $validated['file_type'] = $file->getMimeType();
+            $validated['file_type'] = $file->getClientMimeType() ?: 'application/octet-stream';
             $validated['file_size'] = $file->getSize();
         }
 
@@ -113,7 +113,7 @@ class DocumentsController extends Controller
 
             $validated['file_name'] = $file->getClientOriginalName();
             $validated['file_path'] = $filePath;
-            $validated['file_type'] = $file->getMimeType();
+            $validated['file_type'] = $file->getClientMimeType() ?: 'application/octet-stream';
             $validated['file_size'] = $file->getSize();
         }
 
@@ -179,6 +179,10 @@ class DocumentsController extends Controller
         // Increment download count
         $document->incrementDownloadCount();
 
-        return response()->download($filePath, $document->file_name);
+        return response()->download(
+            $filePath,
+            $document->file_name,
+            ['Content-Type' => $document->file_type ?: 'application/octet-stream']
+        );
     }
 }

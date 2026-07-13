@@ -158,6 +158,7 @@ export function formatStatus(status) {
 		denied: 'Denied',
 		active: 'Active',
 		completed: 'Completed',
+		graduated: 'Graduated',
 		withdrawn: 'Withdrawn',
 		loa: 'Leave of Absence',
 		suspended: 'Suspended',

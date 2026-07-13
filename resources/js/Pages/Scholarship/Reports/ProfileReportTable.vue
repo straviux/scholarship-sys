@@ -121,6 +121,10 @@ const singleColumns = computed(() => {
         columns.push({ key: 'remarks_summary', label: 'Remarks', width: '12%' });
     }
 
+    if (selectedStatus.value === 'graduated') {
+        columns.push({ key: 'graduation_date', label: 'Graduation Date', width: '7%', align: 'center' });
+    }
+
     if (selectedStatus.value === null && !hiddenColumns.value.report_status) {
         columns.push({ key: 'report_status', label: 'Status', width: '6%', align: 'center' });
     }
@@ -444,6 +448,8 @@ function cellValue(record, column) {
                 : fmtGrantProvisionAmount(record);
         case 'current_year_level':
             return incrementYearLevel(record?.year_level) || '—';
+        case 'graduation_date':
+            return formatDate(record?.graduation_info?.graduation_date || record?.graduation_date) || '—';
         default:
             return record[column.key] || '—';
     }

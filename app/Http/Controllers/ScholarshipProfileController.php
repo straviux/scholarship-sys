@@ -532,6 +532,7 @@ class ScholarshipProfileController extends Controller
             'profileRequirements.requirement',
             'scholarshipGrant',
             'scholarshipGrant.interviewer',
+            'academicEnrollments',
         ]);
 
         // ── Build scholarshipGrant-level filters ──
@@ -603,9 +604,28 @@ class ScholarshipProfileController extends Controller
                 array_map('trim', $statuses),
                 in_array('active', array_map('trim', $statuses), true) ? ['approved'] : []
             ))));
-            $scholarshipGrantFilters[] = function ($q) use ($statuses) {
-                $q->whereIn('unified_status', $statuses);
-            };
+
+            // "graduated" is not a unified_status — it's based on academic_enrollments.graduation_date
+            $hasGraduated = false;
+            $statuses = array_values(array_filter($statuses, function ($s) use (&$hasGraduated) {
+                if ($s === 'graduated') {
+                    $hasGraduated = true;
+                    return false;
+                }
+                return true;
+            }));
+
+            if (!empty($statuses)) {
+                $scholarshipGrantFilters[] = function ($q) use ($statuses) {
+                    $q->whereIn('unified_status', $statuses);
+                };
+            }
+
+            if ($hasGraduated) {
+                $query->whereHas('academicEnrollments', function ($q) {
+                    $q->whereNotNull('graduation_date');
+                });
+            }
         }
 
         if ($request->filled('program')) {
@@ -819,7 +839,10 @@ class ScholarshipProfileController extends Controller
                 in_array('active', array_map('trim', $statuses), true) ? ['approved'] : []
             ))));
 
-            if (!in_array((string) $record->unified_status, $statuses, true)) {
+            // "graduated" is handled at the profile level, not the record level
+            $statuses = array_values(array_filter($statuses, fn($s) => $s !== 'graduated'));
+
+            if (!empty($statuses) && !in_array((string) $record->unified_status, $statuses, true)) {
                 return false;
             }
         }
@@ -955,6 +978,24 @@ class ScholarshipProfileController extends Controller
     private function transformProfileForReport(ScholarshipProfile $profile, ?ScholarshipRecord $record): array
     {
         $reportStatus = (string) ($record?->unified_status ?? 'unknown');
+
+        // Check if the profile is graduated (has any enrollment with graduation_date)
+        $isGraduated = $profile->relationLoaded('academicEnrollments')
+            && $profile->academicEnrollments->contains(fn($e) => !empty($e->graduation_date));
+
+        if ($isGraduated) {
+            $reportStatus = 'graduated';
+        }
+
+        $graduationInfo = null;
+        if ($isGraduated) {
+            $gradEnrollment = $profile->academicEnrollments->first(fn($e) => !empty($e->graduation_date));
+            $graduationInfo = [
+                'graduation_date' => $gradEnrollment?->graduation_date,
+                'graduation_remarks' => $gradEnrollment?->graduation_remarks,
+            ];
+        }
+
         $reportDate = $record?->date_approved ?? $record?->date_filed ?? $profile->date_filed;
 
         return [
@@ -1011,6 +1052,7 @@ class ScholarshipProfileController extends Controller
             'date_denied' => $reportStatus === 'denied' ? $reportDate : null,
             'report_date' => $reportDate,
             'jpm_remarks' => $profile->jpm_remarks,
+            'graduation_info' => $graduationInfo,
         ];
     }
 
@@ -1513,6 +1555,16 @@ class ScholarshipProfileController extends Controller
             ->get()
             ->map(fn(ScholarshipRecord $record) => $this->attachExpenseProjection($record, $expenseProjectionService));
 
+        // Aggregate recommendation stats (ignoring pagination/filters for overall totals)
+        $stats = ScholarshipRecord::where('unified_status', 'interviewed')
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN recommendation = 'recommended' THEN 1 ELSE 0 END) as recommended,
+                SUM(CASE WHEN recommendation = 'further_evaluation' THEN 1 ELSE 0 END) as further_eval,
+                SUM(CASE WHEN recommendation = 'not_recommended' THEN 1 ELSE 0 END) as not_recommended
+            ")
+            ->first();
+
         return Inertia::render('InterviewedApplicants/Index', [
             'interviewed_applicants' => $records,
             'interviewed_applicants_pagination' => [
@@ -1522,6 +1574,12 @@ class ScholarshipProfileController extends Controller
                 'last_page' => $lastPage,
                 'from' => $total > 0 ? (($page - 1) * $perPage) + 1 : 0,
                 'to' => min($total, $page * $perPage),
+            ],
+            'interviewed_applicants_stats' => [
+                'total' => (int) ($stats->total ?? 0),
+                'recommended' => (int) ($stats->recommended ?? 0),
+                'further_eval' => (int) ($stats->further_eval ?? 0),
+                'not_recommended' => (int) ($stats->not_recommended ?? 0),
             ],
             'interviewed_applicants_filters' => $request->only(['recommendation', 'name', 'program']),
             'decline_reasons' => config('scholarship.decline_reasons'),

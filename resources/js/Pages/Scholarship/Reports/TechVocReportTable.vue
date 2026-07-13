@@ -35,6 +35,8 @@ const TH = 'border:1px solid #000;padding:3px 2px;font-weight:700;font-size:7px;
 const TD = 'border:1px solid #000;padding:3px 3px;font-size:7px;line-height:1.2;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
 const GROUP_HEADER_CELL_BASE = 'border:1px solid #000;text-align:left;vertical-align:middle;';
 
+const tableRef = `techvoc-table-${Math.random().toString(36).slice(2, 8)}`;
+
 const groupHeaderRows = computed(() => (Array.isArray(props.groupHeaders) ? props.groupHeaders : [])
     .filter(Boolean)
     .map((header, index) => ({
@@ -45,15 +47,15 @@ const groupHeaderRows = computed(() => (Array.isArray(props.groupHeaders) ? prop
 
 const columns = computed(() => [
     { key: 'sequence', label: '#', width: '2%', align: 'center' },
-    { key: 'name', label: 'Name', width: '16%' },
-    { key: 'contact_number', label: 'Contact No.', width: '8%', align: 'center' },
-    { key: 'address_location', label: 'Address', width: '13%' },
-    { key: 'school_name', label: 'School', width: '15%' },
-    { key: 'course_name', label: 'Course', width: '13%' },
-    { key: 'no_of_days', label: 'Required No. of Days', width: '8%', align: 'center' },
-    { key: 'no_of_hours', label: 'Required No. of Hours', width: '8%', align: 'center' },
-    { key: 'amount', label: 'Amount', width: '8%', align: 'right' },
-    { key: 'remarks_summary', label: 'Remarks', width: '11%' },
+    { key: 'name', label: 'Name', width: '18%' },
+    { key: 'contact_number', label: 'Contact No.', width: '7%', align: 'center' },
+    { key: 'address_location', label: 'Address', width: '10%' },
+    { key: 'school_name', label: 'School', width: '13%' },
+    { key: 'course_name', label: 'Course', width: '12%' },
+    { key: 'no_of_days', label: 'Required No. of Days', width: '7%', align: 'center' },
+    { key: 'no_of_hours', label: 'Required No. of Hours', width: '7%', align: 'center' },
+    { key: 'amount', label: 'Amount', width: '7%', align: 'right' },
+    { key: 'remarks_summary', label: 'Remarks', width: '17%' },
 ]);
 
 const totalAmount = computed(() => {
@@ -123,7 +125,7 @@ function formatGroupHeaderSummary(header) {
 </script>
 
 <template>
-    <table style="width:100%;border-collapse:collapse;font-size:7pt;table-layout:fixed;">
+    <table :data-ref="tableRef" style="width:100%;border-collapse:collapse;font-size:7pt;table-layout:fixed;">
         <colgroup>
             <col v-for="column in columns" :key="column.key" :style="`width:${column.width};`" />
         </colgroup>

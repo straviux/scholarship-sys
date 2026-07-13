@@ -34,6 +34,7 @@ import IosModal from '@/Components/ui/IosModal.vue';
 import { computed, ref, watch } from 'vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
+import { useConfirm } from 'primevue/useconfirm';
 
 const props = defineProps({
     visible: { type: Boolean, default: false },
@@ -42,6 +43,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'success']);
 
+const confirm = useConfirm();
 const processing = ref(false);
 const form = ref(getDefaultForm());
 
@@ -98,12 +100,7 @@ const extractErrorMessage = (error, fallback) => {
     return error?.response?.data?.message || fallback;
 };
 
-const submitCompletion = async () => {
-    if (!props.term?.id) {
-        toast.error('Select an academic term first.');
-        return;
-    }
-
+const finishCompletion = async (shouldProceed) => {
     processing.value = true;
 
     try {
@@ -116,12 +113,31 @@ const submitCompletion = async () => {
 
         toast.success(response.data?.message || 'Academic term completed successfully.');
         close();
-        emit('success');
+        emit('success', { proceedAddTerm: shouldProceed });
     } catch (error) {
         console.error('Failed to complete academic term:', error);
         toast.error(extractErrorMessage(error, 'Failed to complete academic term.'));
     } finally {
         processing.value = false;
     }
+};
+
+const submitCompletion = async () => {
+    if (!props.term?.id) {
+        toast.error('Select an academic term first.');
+        return;
+    }
+
+    confirm.require({
+        message: 'Do you want to add a new academic term after completing this semester?',
+        header: 'Complete Semester',
+        icon: 'pi pi-question-circle',
+        rejectLabel: 'No, Just Complete',
+        acceptLabel: 'Yes, Add New Term',
+        rejectClass: 'p-button-secondary p-button-outlined',
+        acceptClass: 'p-button-success',
+        accept: () => finishCompletion(true),
+        reject: () => finishCompletion(false),
+    });
 };
 </script>

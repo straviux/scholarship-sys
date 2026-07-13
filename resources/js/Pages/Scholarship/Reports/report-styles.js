@@ -57,7 +57,7 @@ body {
 
 @page {
   size: {{PAGE_SIZE}};
-  margin: 3mm 10mm 7mm 10mm;
+  margin: 6mm 8mm 8mm 8mm;
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-family: Arial, Helvetica, sans-serif;
@@ -257,6 +257,11 @@ tr, td, th { page-break-inside: avoid; break-inside: avoid-page; }
 }
 
 /* ── Footer ────────────────────────────────── */
+.report-page {
+  width: 100%;
+  max-width: 100%;
+}
+
 .report-footer {
   display: flex;
   justify-content: space-between;

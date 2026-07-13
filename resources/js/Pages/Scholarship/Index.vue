@@ -1151,7 +1151,7 @@ async function buildTechvocPreview(title = '', _status = null, signatoryOpts = {
         };
 
         const bodyHtml = renderVueTemplate(TechVocReportTemplate, templateProps);
-        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>TechVoc Report</title><style>body{margin:0;padding:0;}${getReportCss(paperConfig)}</style><script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"><\/script></head><body>${bodyHtml}</body></html>`;
+        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>TechVoc Report</title><style>body{margin:0;padding:0;}${getReportCss(paperConfig)}</style></head><body>${bodyHtml}</body></html>`;
         
         techvocReportHtml.value = fullHtml;
         showTechvocReportPreview.value = true;

@@ -577,6 +577,7 @@ const statusChoices = computed(() => {
         { value: 'denied_history', label: 'Denied', color: '#EF4444' },
         { value: 'active', label: 'Active', color: '#10B981' },
         { value: 'completed', label: 'Completed', color: '#6B7280' },
+        { value: 'graduated', label: 'Graduated', color: '#0891B2' },
         { value: 'withdrawn', label: 'Withdrawn', color: '#8B5CF6' },
         { value: 'loa', label: 'Leave of Absence', color: '#D97706' },
         { value: 'suspended', label: 'Suspended', color: '#DC2626' },
@@ -937,7 +938,6 @@ function buildReportDoc(bodyHtml, title, paperSettings) {
     body { visibility: hidden; margin: 0; padding: 0; }
     ${getReportCss(paperSettings)}
   </style>
-  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"><\/script>
   <script>
 ${lifecycleScript}
   <\/script>
