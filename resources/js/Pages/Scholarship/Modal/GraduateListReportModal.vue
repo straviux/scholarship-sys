@@ -46,8 +46,8 @@
                         class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" />
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Academic Year</label>
-                    <Select v-model="selectedAcademicYear" :options="academicYearOptions"
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Year Graduated</label>
+                    <Select v-model="selectedYearGraduated" :options="yearGraduatedOptions"
                         optionLabel="label" optionValue="value" placeholder="All Years" showClear
                         class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
                 </div>
@@ -139,6 +139,9 @@
                         <AppIcon name="plus" :size="10" />
                     </button>
                 </div>
+                <button class="ios-icon-btn" @click="doExportExcel" title="Export to Excel">
+                    <AppIcon name="file-spreadsheet" :size="16" style="color: #34C759;" />
+                </button>
                 <button class="ios-icon-btn" @click="doPrint" title="Print / Save as PDF">
                     <AppIcon name="printer" :size="16" style="color: #007AFF;" />
                 </button>
@@ -162,6 +165,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import moment from 'moment';
+import * as XLSX from 'xlsx';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
@@ -191,6 +195,7 @@ const selectedPrograms = ref([]);
 const selectedSchools = ref([]);
 const selectedCourses = ref([]);
 const selectedAcademicYear = ref(null);
+const selectedYearGraduated = ref(null);
 const customReportTitle = ref('');
 
 // Layout
@@ -205,12 +210,12 @@ const preparedByPosition = ref('');
 const approvedBy = ref('');
 const approvedByPosition = ref('');
 
-// Academic year options (generate from 2015 to current+1)
+// Year graduated options (generate from 2000 to current year)
 const currentYear = new Date().getFullYear();
-const academicYearOptions = computed(() => {
+const yearGraduatedOptions = computed(() => {
     const options = [];
-    for (let y = currentYear + 1; y >= 2015; y--) {
-        options.push({ label: `${y - 1}-${y}`, value: `${y - 1}-${y}` });
+    for (let y = currentYear; y >= 2000; y--) {
+        options.push({ label: String(y), value: y });
     }
     return options;
 });
@@ -253,8 +258,8 @@ async function generateReport() {
         if (selectedCourses.value?.length > 0) {
             params.course = selectedCourses.value.map(c => c.name).join(',');
         }
-        if (selectedAcademicYear.value) {
-            params.academic_year = selectedAcademicYear.value;
+        if (selectedYearGraduated.value) {
+            params.year_graduated = selectedYearGraduated.value;
         }
 
         const response = await axios.get(route('profile.graduateListReport'), { params });
@@ -270,8 +275,8 @@ async function generateReport() {
             filters.School = selectedSchools.value.map(s => s.shortname || s.name).join(', ');
         if (selectedCourses.value?.length)
             filters.Course = selectedCourses.value.map(c => c.shortname || c.name).join(', ');
-        if (selectedAcademicYear.value)
-            filters['Academic Year'] = selectedAcademicYear.value;
+        if (selectedYearGraduated.value)
+            filters['Year Graduated'] = selectedYearGraduated.value;
 
         const templateProps = {
             records,
@@ -305,5 +310,38 @@ function doPrint() {
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => printWindow.print(), 300);
+}
+
+function doExportExcel() {
+    const records = reportRecords.value;
+    if (!records || records.length === 0) return;
+
+    const upper = (v) => String(v ?? '').toUpperCase();
+
+    const headers = ['#', 'NAME'];
+    if (showRemarks.value) headers.push('REMARKS');
+    headers.push('SCHOOL', 'COURSE', 'YEAR GRADUATED');
+
+    const rows = records.map((rec, idx) => {
+        const row = [
+            idx + 1,
+            upper(rec.name || ''),
+        ];
+        if (showRemarks.value) row.push(upper(blankRemarks.value ? '' : (rec.remarks || '')));
+        row.push(
+            upper(rec.school || ''),
+            upper(rec.course || ''),
+            rec.year_graduated || '',
+        );
+        return row;
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Graduate List');
+
+    const title = (customReportTitle.value?.trim() || 'Graduate_List').replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
+    const filename = `${title}_${moment().format('YYYY-MM-DD')}.xlsx`;
+    XLSX.writeFile(wb, filename);
 }
 </script>

@@ -571,13 +571,11 @@ class ScholarshipProfileController extends Controller
             });
         }
 
-        if ($request->filled('academic_year')) {
-            $ay = $request->academic_year;
-            $query->whereHas('academicEnrollments', function ($q) use ($ay) {
-                $q->whereNotNull('graduation_date');
-                $q->whereHas('terms', function ($tq) use ($ay) {
-                    $tq->where('academic_year', $ay);
-                });
+        if ($request->filled('year_graduated')) {
+            $year = $request->year_graduated;
+            $query->whereHas('academicEnrollments', function ($q) use ($year) {
+                $q->whereNotNull('graduation_date')
+                    ->whereYear('graduation_date', $year);
             });
         }
 
@@ -587,9 +585,9 @@ class ScholarshipProfileController extends Controller
             $enrollment = $profile->academicEnrollments
                 ->sortByDesc('graduation_date')
                 ->firstWhere(function ($e) use ($request) {
-                    if ($request->filled('academic_year')) {
+                    if ($request->filled('year_graduated')) {
                         return !empty($e->graduation_date)
-                            && $e->terms->contains('academic_year', $request->academic_year);
+                            && \Carbon\Carbon::parse($e->graduation_date)->year == $request->year_graduated;
                     }
                     return !empty($e->graduation_date);
                 });
