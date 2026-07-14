@@ -606,8 +606,30 @@ class ScholarshipProfileController extends Controller
                     ? \Carbon\Carbon::parse($enrollment->graduation_date)->format('Y')
                     : '—',
                 'remarks'        => $enrollment?->graduation_remarks ?? '—',
+                '_sort_year'     => $enrollment?->graduation_date
+                    ? \Carbon\Carbon::parse($enrollment->graduation_date)->year
+                    : 0,
+                '_sort_school'   => mb_strtolower($enrollment?->school?->name ?? ''),
+                '_sort_course'   => mb_strtolower($enrollment?->course?->name ?? ''),
+                '_sort_name'     => mb_strtolower(trim(
+                    ($profile->last_name ?? '')
+                    . ($profile->first_name ?? '')
+                    . ($profile->middle_name ?? '')
+                )),
             ];
-        })->values();
+        })
+        ->sortBy([
+            ['_sort_year', 'desc'],
+            ['_sort_school', 'asc'],
+            ['_sort_course', 'asc'],
+            ['_sort_name', 'asc'],
+        ])
+        ->values()
+        ->map(function ($row) {
+            unset($row['_sort_year'], $row['_sort_school'], $row['_sort_course'], $row['_sort_name']);
+            return $row;
+        })
+        ->values();
 
         return response()->json([
             'success' => true,
