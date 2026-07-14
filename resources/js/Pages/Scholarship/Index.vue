@@ -40,6 +40,8 @@
                                     icon="clipboard-check" severity="info" class="justify-start" />
                                 <AppButton @click="openReportWizard('summary')" label="Summary"
                                     icon="bar-chart-3" severity="success" class="justify-start" />
+                                <AppButton @click="openGraduateListModal" label="Graduate List"
+                                    icon="graduation-cap" severity="warning" class="justify-start" />
                             </div>
                         </Popover>
                         <AppButton icon="star" @click="showEndorseModal = true" severity="info"
@@ -688,6 +690,9 @@
         <!-- Generate Report Modal -->
         <ReportWizardModal v-if="!isTechvocReport" :show="showReportWizard" :mode="reportWizardMode" :selected-program="selectedReportProgram" @update:show="showReportWizard = $event" />
 
+        <!-- Graduate List Report Modal -->
+        <GraduateListReportModal :show="showGraduateListModal" @update:show="showGraduateListModal = $event" />
+
         <!-- Endorse Modal -->
         <EndorseModal :show="showEndorseModal" @update:show="showEndorseModal = $event" @endorsed="onEndorsed" />
 
@@ -842,6 +847,7 @@ import IosModal from '@/Components/ui/IosModal.vue';
 // Modal Components
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import ReportWizardModal from './Modal/ReportWizardModal.vue';
+import GraduateListReportModal from './Modal/GraduateListReportModal.vue';
 import TechvocWizardModal from './Modal/TechvocWizardModal.vue';
 import EndorseModal from './Modal/EndorseModal.vue';
 import TechVocReportTemplate from './Reports/TechVocReportTemplate.vue';
@@ -1066,6 +1072,7 @@ const selectedReportProgram = ref(null);
 const isTechvocReport = ref(false);
 const showTechvocReportModal = ref(false);
 const showTechvocReportPreview = ref(false);
+const showGraduateListModal = ref(false);
 const techvocReportHtml = ref('');
 const techvocReportRecords = ref([]);
 const techvocZoomLevel = ref(85);
@@ -1095,6 +1102,11 @@ function openReportWizard(mode) {
     showReportWizard.value = false;
     showTechvocReportModal.value = false;
     showProgramSelectionModal.value = true;
+    reportTypePopover.value?.hide();
+}
+
+function openGraduateListModal() {
+    showGraduateListModal.value = true;
     reportTypePopover.value?.hide();
 }
 

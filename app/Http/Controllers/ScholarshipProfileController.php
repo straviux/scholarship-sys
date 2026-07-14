@@ -522,6 +522,101 @@ class ScholarshipProfileController extends Controller
 
 
     /**
+     * Generate a report for graduated scholars with filters.
+     */
+    public function graduateListReport(Request $request)
+    {
+        $query = ScholarshipProfile::with([
+            'academicEnrollments.program',
+            'academicEnrollments.school',
+            'academicEnrollments.course',
+        ])
+            ->whereHas('academicEnrollments', function ($q) {
+                $q->whereNotNull('graduation_date');
+            });
+
+        // ── Filters ──
+        if ($request->filled('program')) {
+            $programIds = array_map('trim', explode(',', $request->program));
+            $query->whereHas('academicEnrollments', function ($q) use ($programIds) {
+                $q->whereIn('program_id', $programIds)->whereNotNull('graduation_date');
+            });
+        }
+
+        if ($request->filled('school')) {
+            $schools = array_map('trim', explode(',', $request->school));
+            $query->whereHas('academicEnrollments', function ($q) use ($schools) {
+                $q->whereHas('school', function ($sq) use ($schools) {
+                    $sq->where(function ($sub) use ($schools) {
+                        foreach ($schools as $s) {
+                            $sub->orWhere('schools.shortname', 'like', '%' . $s . '%')
+                                ->orWhere('schools.name', 'like', '%' . $s . '%');
+                        }
+                    });
+                })->whereNotNull('graduation_date');
+            });
+        }
+
+        if ($request->filled('course')) {
+            $courses = array_map('trim', explode(',', $request->course));
+            $query->whereHas('academicEnrollments', function ($q) use ($courses) {
+                $q->whereHas('course', function ($cq) use ($courses) {
+                    $cq->where(function ($sub) use ($courses) {
+                        foreach ($courses as $course) {
+                            $sub->orWhere('courses.shortname', 'like', '%' . $course . '%')
+                                ->orWhere('courses.name', 'like', '%' . $course . '%');
+                        }
+                    });
+                })->whereNotNull('graduation_date');
+            });
+        }
+
+        if ($request->filled('academic_year')) {
+            $ay = $request->academic_year;
+            $query->whereHas('academicEnrollments', function ($q) use ($ay) {
+                $q->whereNotNull('graduation_date');
+                $q->whereHas('terms', function ($tq) use ($ay) {
+                    $tq->where('academic_year', $ay);
+                });
+            });
+        }
+
+        $profiles = $query->get();
+
+        $rows = $profiles->map(function (ScholarshipProfile $profile) use ($request) {
+            $enrollment = $profile->academicEnrollments
+                ->sortByDesc('graduation_date')
+                ->firstWhere(function ($e) use ($request) {
+                    if ($request->filled('academic_year')) {
+                        return !empty($e->graduation_date)
+                            && $e->terms->contains('academic_year', $request->academic_year);
+                    }
+                    return !empty($e->graduation_date);
+                });
+
+            return [
+                'name'           => trim(
+                    ($profile->last_name ?? '')
+                    . (($profile->first_name || $profile->middle_name) ? ', ' : '')
+                    . trim(($profile->first_name ?? '') . ' ' . ($profile->middle_name ?? ''))
+                ),
+                'school'         => $enrollment?->school?->name ?? '—',
+                'course'         => $enrollment?->course?->name ?? '—',
+                'year_graduated' => $enrollment?->graduation_date
+                    ? \Carbon\Carbon::parse($enrollment->graduation_date)->format('Y')
+                    : '—',
+                'remarks'        => $enrollment?->graduation_remarks ?? '—',
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'count'   => $rows->count(),
+            'data'    => $rows,
+        ]);
+    }
+
+    /**
      * Generate a report based on filters (date range, program, school, course, municipality).
      */
     public function generateReport(Request $request)
@@ -703,6 +798,19 @@ class ScholarshipProfileController extends Controller
         }
 
         $profiles = $query->get();
+
+        // Assign grant provision value to all matched profiles if requested
+        if ($request->filled('grant_value')) {
+            $grantValue = $request->grant_value;
+            $profileIds = $profiles->pluck('profile_id')->toArray();
+            ScholarshipRecord::whereIn('profile_id', $profileIds)
+                ->whereIn('unified_status', self::CURRENT_SCHOLARSHIP_RECORD_STATUSES)
+                ->update(['grant_provision' => $grantValue]);
+
+            // Reload the records from DB to reflect the changes
+            $profiles->load('scholarshipGrant');
+        }
+
         $efaApprovalMode = $request->has('efa_approval_mode') && $request->input('efa_approval_mode') == 1;
 
         $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
