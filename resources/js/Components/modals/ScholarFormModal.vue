@@ -20,217 +20,155 @@
 
         <div class="ios-body">
             <div class="mt-8">
-                        <Stepper v-model:value="activeStep" :linear="mode !== 'edit' || !canProceedStep1">
-                            <StepList>
-                                <Step value="1" asChild>
-                                    <template #default="{ activateCallback, active }">
-                                        <button class="ios-step-btn" :class="{ 'ios-step-active': active }"
-                                            @click="activateCallback">
-                                            <AppIcon name="user" :size="16" />
-                                            <span>Personal</span>
-                                        </button>
-                                    </template>
-                                </Step>
-                                <div class="ios-step-separator"></div>
-                                <Step value="2" asChild>
-                                    <template #default="{ activateCallback, active }">
-                                        <button class="ios-step-btn"
-                                            :class="{ 'ios-step-active': active, 'ios-step-disabled': !canProceedStep1 && mode !== 'edit' }"
-                                            :disabled="!canProceedStep1 && mode !== 'edit'" @click="activateCallback">
-                                            <AppIcon name="users" :size="16" />
-                                            <span>Family</span>
-                                        </button>
-                                    </template>
-                                </Step>
-                                <div class="ios-step-separator"></div>
-                                <Step value="3" asChild>
-                                    <template #default="{ activateCallback, active }">
-                                        <button class="ios-step-btn"
-                                            :class="{ 'ios-step-active': active, 'ios-step-disabled': !canProceedStep1 && mode !== 'edit' }"
-                                            :disabled="!canProceedStep1 && mode !== 'edit'" @click="activateCallback">
-                                            <AppIcon name="graduation-cap" :size="16" />
-                                            <span>Academic</span>
-                                        </button>
-                                    </template>
-                                </Step>
-                            </StepList>
-                            <StepPanels>
-                                <!-- Step 1: Personal Information -->
-                                <StepPanel value="1">
-                                    <div class="flex flex-col h-full">
-                                        <div class="flex-auto">
-                                            <PersonalInformationFields v-model:first_name="form.first_name"
-                                                v-model:middle_name="form.middle_name"
-                                                v-model:last_name="form.last_name"
-                                                v-model:extension_name="form.extension_name"
-                                                v-model:contact_no="form.contact_no"
-                                                v-model:contact_no_2="form.contact_no_2" v-model:email="form.email"
-                                                v-model:date_of_birth="form.date_of_birth" v-model:gender="form.gender"
-                                                v-model:place_of_birth="form.place_of_birth"
-                                                v-model:civil_status="form.civil_status"
-                                                v-model:religion="form.religion"
-                                                v-model:indigenous_group="form.indigenous_group"
-                                                v-model:municipality="form.municipality"
-                                                v-model:barangay="form.barangay" v-model:address="form.address"
-                                                v-model:temporary_municipality="form.temporary_municipality"
-                                                v-model:temporary_barangay="form.temporary_barangay"
-                                                v-model:temporary_address="form.temporary_address"
-                                                :show-header="false" />
+                        <!-- ═══ STEPPER ═══ -->
+                        <div class="flex items-center justify-center gap-0 pb-4">
+                            <div class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                                :class="{ 'opacity-40 cursor-default': activeStep !== '1' && Number(activeStep) < 1 }"
+                                @click="activeStep = '1'">
+                                <div class="w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0 transition-colors text-xs font-bold text-white"
+                                    :class="Number(activeStep) > 1 ? 'bg-green-500' : 'bg-blue-500'">
+                                    <AppIcon v-if="Number(activeStep) > 1" name="check" :size="10" />
+                                    <span v-else>1</span>
+                                </div>
+                                <span class="text-xs font-medium whitespace-nowrap"
+                                    :class="activeStep === '1' ? 'text-blue-500 font-semibold' : Number(activeStep) > 1 ? 'text-green-500' : 'text-gray-400'">Personal</span>
+                            </div>
+                            <div class="flex-1 h-0.5 mx-2 transition-colors"
+                                :class="Number(activeStep) > 1 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'"></div>
+                            <div class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                                :class="{ 'opacity-40 cursor-default': !canProceedStep1 && mode !== 'edit' }"
+                                @click="goToStep(2)">
+                                <div class="w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0 transition-colors text-xs font-bold text-white"
+                                    :class="Number(activeStep) > 2 ? 'bg-green-500' : activeStep === '2' ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'">
+                                    <AppIcon v-if="Number(activeStep) > 2" name="check" :size="10" />
+                                    <span v-else>2</span>
+                                </div>
+                                <span class="text-xs font-medium whitespace-nowrap"
+                                    :class="activeStep === '2' ? 'text-blue-500 font-semibold' : Number(activeStep) > 2 ? 'text-green-500' : 'text-gray-400'">Family</span>
+                            </div>
+                            <div class="flex-1 h-0.5 mx-2 transition-colors"
+                                :class="Number(activeStep) > 2 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'"></div>
+                            <div class="flex items-center gap-1.5 cursor-pointer select-none transition-opacity"
+                                :class="{ 'opacity-40 cursor-default': !canProceedStep1 && mode !== 'edit' }"
+                                @click="goToStep(3)">
+                                <div class="w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0 transition-colors text-xs font-bold text-white"
+                                    :class="activeStep === '3' ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'">
+                                    <span>3</span>
+                                </div>
+                                <span class="text-xs font-medium whitespace-nowrap"
+                                    :class="activeStep === '3' ? 'text-blue-500 font-semibold' : 'text-gray-400'">Academic</span>
+                            </div>
+                        </div>
 
-                                            <!-- Validation Warning -->
-                                            <div v-if="validationError"
-                                                class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
-                                                <p class="text-sm text-red-800 dark:text-red-300 font-medium">
-                                                    <AppIcon name="exclamation-triangle" :size="14" class="mr-2" />
-                                                    {{ validationError }}
-                                                </p>
-                                            </div>
+                        <!-- Panel: Step 1 - Personal -->
+                        <div v-show="activeStep === '1'">
+                            <PersonalInformationFields v-model:first_name="form.first_name"
+                                v-model:middle_name="form.middle_name"
+                                v-model:last_name="form.last_name"
+                                v-model:extension_name="form.extension_name"
+                                v-model:contact_no="form.contact_no"
+                                v-model:contact_no_2="form.contact_no_2" v-model:email="form.email"
+                                v-model:date_of_birth="form.date_of_birth" v-model:gender="form.gender"
+                                v-model:place_of_birth="form.place_of_birth"
+                                v-model:civil_status="form.civil_status"
+                                v-model:religion="form.religion"
+                                v-model:indigenous_group="form.indigenous_group"
+                                v-model:municipality="form.municipality"
+                                v-model:barangay="form.barangay" v-model:address="form.address"
+                                v-model:temporary_municipality="form.temporary_municipality"
+                                v-model:temporary_barangay="form.temporary_barangay"
+                                v-model:temporary_address="form.temporary_address"
+                                :show-header="false" />
 
-                                            <!-- Duplicate Name Confirmation Dialog -->
-                                            <IosModal
-                                                :visible="showDuplicateDialog"
-                                                width="480px"
-                                                title="Possible Duplicate"
-                                                :show-action="true"
-                                                action-label="Proceed"
-                                                action-icon=""
-                                                action-class="ios-dup-proceed"
-                                                :draggable="false"
-                                                body-style="padding: 0 16px;"
-                                                @update:visible="value => showDuplicateDialog = value"
-                                                @action="proceedDespiteDuplicate"
-                                            >
-                                                <div class="ios-section" style="margin-top: 12px;">
-                                                    <div class="ios-section-footer" style="padding: 0;">
-                                                        <AppIcon name="exclamation-triangle" :size="14"
-                                                            style="color: #FF9500;" />
-                                                        The following record(s) match
-                                                        <strong>{{ form.first_name }} {{ form.last_name }}</strong>:
-                                                    </div>
-                                                </div>
-                                                <div class="ios-section">
-                                                    <div class="ios-section-label">Matches Found</div>
-                                                    <div class="ios-card">
-                                                        <div v-for="(match, idx) in duplicateMatches"
-                                                            :key="match.profile_id" class="ios-row"
-                                                            :class="{ 'ios-row-last': idx === duplicateMatches.length - 1 }">
-                                                            <div style="display: flex; align-items: center; gap: 10px;">
-                                                                <AppIcon name="user" :size="16"
-                                                                    style="color: #8E8E93;" />
-                                                                <div>
-                                                                    <div class="ios-row-label">
-                                                                        {{ match.last_name }}, {{ match.first_name }}
-                                                                        {{ match.middle_name || '' }} {{ match.extension_name || '' }}
-                                                                    </div>
-                                                                    <div style="font-size: 12px; color: #8E8E93;">
-                                                                        {{ match.municipality || `No address` }}{{ match.barangay ? `, ${match.barangay}` : `` }}
-                                                                        <span v-if="match.contact_no"> · {{ match.contact_no }}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="ios-section">
-                                                    <div class="ios-section-footer" style="padding: 0;">
-                                                        Are you sure this is a different person? You may proceed or close to review.
-                                                    </div>
-                                                </div>
-                                                <div style="height: 16px;"></div>
-                                            </IosModal>
-                                        </div>
-                                    </div>
-                                </StepPanel>
+                            <!-- Validation Warning -->
+                            <div v-if="validationError"
+                                class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                <p class="text-sm text-red-800 dark:text-red-300 font-medium">
+                                    <AppIcon name="exclamation-triangle" :size="14" class="mr-2" />
+                                    {{ validationError }}
+                                </p>
+                            </div>
+                        </div>
 
-                                <!-- Step 2: Family Information -->
-                                <StepPanel value="2">
-                                    <div class="flex flex-col h-full">
-                                        <div class="flex-auto">
-                                            <FamilyInformationFields v-model:father_name="form.father_name"
-                                                v-model:father_occupation="form.father_occupation"
-                                                v-model:father_contact_no="form.father_contact_no"
-                                                v-model:mother_name="form.mother_name"
-                                                v-model:mother_occupation="form.mother_occupation"
-                                                v-model:mother_contact_no="form.mother_contact_no"
-                                                v-model:guardian_name="form.guardian_name"
-                                                v-model:guardian_occupation="form.guardian_occupation"
-                                                v-model:guardian_relationship="form.guardian_relationship"
-                                                v-model:guardian_contact_no="form.guardian_contact_no"
-                                                v-model:parents_guardian_gross_monthly_income="form.parents_guardian_gross_monthly_income"
-                                                :show-header="false" />
-                                        </div>
-                                    </div>
-                                </StepPanel>
+                        <!-- Panel: Step 2 - Family -->
+                        <div v-show="activeStep === '2'">
+                            <FamilyInformationFields v-model:father_name="form.father_name"
+                                v-model:father_occupation="form.father_occupation"
+                                v-model:father_contact_no="form.father_contact_no"
+                                v-model:mother_name="form.mother_name"
+                                v-model:mother_occupation="form.mother_occupation"
+                                v-model:mother_contact_no="form.mother_contact_no"
+                                v-model:guardian_name="form.guardian_name"
+                                v-model:guardian_occupation="form.guardian_occupation"
+                                v-model:guardian_relationship="form.guardian_relationship"
+                                v-model:guardian_contact_no="form.guardian_contact_no"
+                                v-model:parents_guardian_gross_monthly_income="form.parents_guardian_gross_monthly_income"
+                                :show-header="false" />
+                        </div>
 
-                                <!-- Step 3: Academic Information (ALL REQUIRED for scholars) -->
-                                <StepPanel value="3">
-                                    <div class="flex flex-col h-full">
-                                        <div class="flex-auto">
-                                            <div class="space-y-4">
-                                                <AcademicInformationFields v-model:program="form.program"
-                                                    v-model:school="form.school" v-model:course="form.course"
-                                                    v-model:year_level="form.year_level" v-model:term="form.term"
-                                                    v-model:academic_year="form.academic_year"
-                                                    v-model:no_of_hours="form.no_of_hours"
-                                                    v-model:no_of_days="form.no_of_days"
-                                                    v-model:start_date="form.start_date"
-                                                    v-model:end_date="form.end_date"
-                                                    v-model:remarks="form.remarks"
-                                                    :is-tech-voc-program="isTechVocProgram"
-                                                    :show-tech-voc-fields="true"
-                                                    :show-header="false" />
+                        <!-- Panel: Step 3 - Academic -->
+                        <div v-show="activeStep === '3'">
+                            <div class="space-y-4">
+                                <AcademicInformationFields v-model:program="form.program"
+                                    v-model:school="form.school" v-model:course="form.course"
+                                    v-model:year_level="form.year_level" v-model:term="form.term"
+                                    v-model:academic_year="form.academic_year"
+                                    v-model:no_of_hours="form.no_of_hours"
+                                    v-model:no_of_days="form.no_of_days"
+                                    v-model:start_date="form.start_date"
+                                    v-model:end_date="form.end_date"
+                                    v-model:remarks="form.remarks"
+                                    :is-tech-voc-program="isTechVocProgram"
+                                    :show-tech-voc-fields="true"
+                                    :show-header="false" />
 
-                                                <!-- Date Fields (for backlog encoding) -->
-                                                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
-                                                    <FloatLabel>
-                                                        <DatePicker v-model="form.date_filed" type="date"
-                                                            inputId="date_filed" variant="filled"
-                                                            placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"
-                                                            :manualInput="true" @input="formatDateInput" />
-                                                        <label class="text-sm" for="date_filed">Date Filed</label>
-                                                    </FloatLabel>
-                                                    <FloatLabel>
-                                                        <DatePicker v-model="form.date_approved" type="date"
-                                                            inputId="date_approved" variant="filled"
-                                                            placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"
-                                                            :manualInput="true" @input="formatDateInput" />
-                                                        <label class="text-sm" for="date_approved">Date Approved</label>
-                                                    </FloatLabel>
-                                                </div>
+                                <!-- Date Fields (for backlog encoding) -->
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
+                                    <FloatLabel>
+                                        <DatePicker v-model="form.date_filed" type="date"
+                                            inputId="date_filed" variant="filled"
+                                            placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"
+                                            :manualInput="true" @input="formatDateInput" />
+                                        <label class="text-sm" for="date_filed">Date Filed</label>
+                                    </FloatLabel>
+                                    <FloatLabel>
+                                        <DatePicker v-model="form.date_approved" type="date"
+                                            inputId="date_approved" variant="filled"
+                                            placeholder="mm/dd/yyyy" showIcon fluid iconDisplay="input"
+                                            :manualInput="true" @input="formatDateInput" />
+                                        <label class="text-sm" for="date_approved">Date Approved</label>
+                                    </FloatLabel>
+                                </div>
 
-                                                <div
-                                                    class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
-                                                    <p class="text-sm text-blue-800 dark:text-blue-300">
-                                                        <AppIcon name="info-circle" :size="14" class="mr-2" />
-                                                        <strong>Note:</strong>
-                                                        <span v-if="isTechVocProgram">
-                                                            Program, course, school, and academic year are required.
-                                                            Year level and term are optional for Tech-Voc scholars.
-                                                        </span>
-                                                        <span v-else>
-                                                            All academic fields are required for scholars.
-                                                        </span>
-                                                    </p>
-                                                </div>
+                                <div
+                                    class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                                    <p class="text-sm text-blue-800 dark:text-blue-300">
+                                        <AppIcon name="info-circle" :size="14" class="mr-2" />
+                                        <strong>Note:</strong>
+                                        <span v-if="isTechVocProgram">
+                                            Program, course, school, and academic year are required.
+                                            Year level and term are optional for Tech-Voc scholars.
+                                        </span>
+                                        <span v-else>
+                                            All academic fields are required for scholars.
+                                        </span>
+                                    </p>
+                                </div>
 
-                                                <!-- Academic Validation Messages -->
-                                                <div v-if="academicValidationError"
-                                                    class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
-                                                    <p class="text-sm text-red-800 dark:text-red-300 font-medium">
-                                                        <AppIcon name="exclamation-triangle" :size="14" class="mr-2" />
-                                                        {{ academicValidationError }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </StepPanel>
-                            </StepPanels>
-                        </Stepper>
+                                <!-- Academic Validation Messages -->
+                                <div v-if="academicValidationError"
+                                    class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                                    <p class="text-sm text-red-800 dark:text-red-300 font-medium">
+                                        <AppIcon name="exclamation-triangle" :size="14" class="mr-2" />
+                                        {{ academicValidationError }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
             </div>
         </div>
 
-        <div class="ios-footer">
+        <div class="ios-footer mt-4">
             <button v-if="activeStep !== '1'" class="ios-footer-btn ios-footer-back"
                 @click="activeStep = String(Number(activeStep) - 1)">
                 <AppIcon name="arrow-left" :size="12" /> Back
@@ -389,6 +327,16 @@ const form = useForm({
 const canProceedStep1 = computed(() => {
     return form.first_name && form.last_name && form.municipality && form.contact_no;
 });
+
+// Navigate to step (with validation gate for step 2 & 3)
+const goToStep = (step) => {
+    if (step === 1) {
+        activeStep.value = '1';
+        return;
+    }
+    if (!canProceedStep1.value && mode !== 'edit') return;
+    activeStep.value = String(step);
+};
 
 const step1TooltipMessage = computed(() => {
     const missingFields = [];

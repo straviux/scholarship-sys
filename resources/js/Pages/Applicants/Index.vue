@@ -9,7 +9,7 @@ import { useFilterManager } from '@/composables/useFilterManager';
 import { stripHtml } from '@/utils/sanitize';
 import axios from 'axios';
 
-import FloatingDrawer from '@/Components/FloatingDrawer.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import ApplicantFormModal from './Modal/ApplicantFormModal.vue';
 import YakapCategoryModal from './Modal/YakapCategoryModal.vue';
 import ExportSelectedModal from './Modal/ExportSelectedModal.vue';
@@ -104,6 +104,7 @@ const {
         { key: 'encoded_from', type: 'date', default: null },
         { key: 'encoded_to', type: 'date', default: null },
         { key: 'remarks', type: 'text', default: '' },
+        { key: 'encoded_by', type: 'text', default: '' },
     ],
     beforeSearch(params) {
         // Include sort params if set
@@ -134,6 +135,7 @@ const activeFilterTags = computed(() => {
         date_to: 'Date Filed To',
         encoded_from: 'Date Encoded From',
         encoded_to: 'Date Encoded To',
+        encoded_by: 'Encoded By',
         remarks: 'Remarks',
     };
     for (const [key, label] of Object.entries(labelMap)) {
@@ -483,7 +485,7 @@ const academicYearOptions = computed(() => {
 // Separate drawer filter model (only applied on submit)
 const drawerFilter = ref({});
 
-const drawerFilterKeys = ['parent_name', 'program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'yakap_category', 'priority_level', 'date_from', 'date_to', 'encoded_from', 'encoded_to'];
+const drawerFilterKeys = ['parent_name', 'program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'yakap_category', 'priority_level', 'date_from', 'date_to', 'encoded_from', 'encoded_to', 'encoded_by'];
 
 const openDrawer = () => {
     // Snapshot current applied filters into drawer model
@@ -506,7 +508,7 @@ const applyDrawerFilters = () => {
 
 const clearDrawerFilters = () => {
     const dateKeys = ['date_from', 'date_to', 'encoded_from', 'encoded_to'];
-    const nullKeys = ['academic_year', 'term'];
+    const nullKeys = ['academic_year', 'term', 'encoded_by'];
     for (const key of drawerFilterKeys) {
         if (dateKeys.includes(key)) drawerFilter.value[key] = null;
         else if (nullKeys.includes(key)) drawerFilter.value[key] = null;
@@ -950,9 +952,10 @@ const truncateText = (text, maxLength = 80) => {
 
 
             <!-- Filter Drawer -->
-            <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right"
-                class="!w-[calc(100vw-1rem)] sm:!w-[min(600px,calc(100vw-1rem))] !max-w-[calc(100vw-1rem)]">
-                <div class="grid grid-cols-2 gap-4">
+            <IosModal v-model:visible="showFilterDrawer" title="All Filters"
+                modal-class="!w-[calc(100vw-1rem)] sm:!w-[min(600px,calc(100vw-1rem))] !max-w-[calc(100vw-1rem)]">
+
+                <div class="grid grid-cols-2 gap-4 mt-4">
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
                         <ProgramSelect v-model="drawerFilter.program" label="shortname"
@@ -1006,6 +1009,10 @@ const truncateText = (text, maxLength = 80) => {
                             class="w-full" showClear />
                     </div>
                     <div class="flex flex-col col-span-2">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Encoded By</label>
+                        <InputText v-model="drawerFilter.encoded_by" placeholder="Type encoder name..." size="small" class="w-full" />
+                    </div>
+                    <div class="flex flex-col col-span-2">
                         <label class="text-xs font-medium text-gray-600 mb-1">Date Filed</label>
                         <div class="flex gap-2">
                             <DatePicker v-model="drawerFilter.date_from" size="small" class="w-full"
@@ -1024,12 +1031,12 @@ const truncateText = (text, maxLength = 80) => {
                         </div>
                     </div>
                 </div>
-                <div class="flex gap-2 justify-end mt-6 pt-4 border-t">
+                <div class="flex gap-2 justify-end mt-6 pt-4 border-t mb-4">
                     <AppButton severity="secondary" outlined size="small" icon="history" label="Clear"
                         @click="clearDrawerFilters" />
                     <AppButton label="Apply" icon="filter" severity="info" size="small" @click="applyDrawerFilters" />
                 </div>
-            </FloatingDrawer>
+            </IosModal>
 
             <!-- Applicants DataTable -->
             <Panel class="!rounded-4xl overflow-hidden mt-8">
@@ -1045,10 +1052,10 @@ const truncateText = (text, maxLength = 80) => {
                             <InputText v-model="globalFilter" placeholder="Type name, remarks etc.." size="small"
                                 @keyup.enter="triggerSearch()" />
                         </InputGroup>
-                        <AppButton icon="filter" severity="warn" text rounded @click="openDrawer()"
-                            v-tooltip.bottom="'More Filters'" />
+                        <AppIcon name="sliders-horizontal" :size="24" class="text-gray-400 cursor-pointer" @click="openDrawer()" v-tooltip.bottom="'More Filters'"/>
                     </div>
                     <div class="flex items-center gap-4">
+                        
                         <div class="ml-auto flex items-center gap-2">
                             <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>

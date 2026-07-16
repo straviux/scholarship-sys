@@ -52,9 +52,9 @@
             </Toolbar>
 
             <!-- Filter Drawer -->
-            <FloatingDrawer v-model:visible="showFilterDrawer" header="All Filters" position="right"
-                class="!w-[calc(100vw-1rem)] sm:!w-[min(600px,calc(100vw-1rem))] !max-w-[calc(100vw-1rem)]">
-                <div class="grid grid-cols-2 gap-4">
+            <IosModal v-model:visible="showFilterDrawer" title="All Filters"
+                width="calc(100vw - 1rem)" max-width="min(600px, calc(100vw - 1rem))">
+                <div class="grid grid-cols-2 gap-4 mt-4">
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
                         <ProgramSelect v-model="drawerFilter.program" label="shortname"
@@ -128,14 +128,18 @@
                             placeholder="All" size="small" class="w-full" showClear optionLabel="label"
                             optionValue="value" />
                     </div>
+                    <div class="flex flex-col col-span-2">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Encoded By</label>
+                        <InputText v-model="drawerFilter.encoded_by" placeholder="Type encoder name..." size="small" class="w-full" />
+                    </div>
                 </div>
-                <div class="flex gap-2 justify-end mt-6 pt-4 border-t">
+                <div class="flex gap-2 justify-end mt-6 pt-4 border-t mb-4">
                     <AppButton severity="secondary" outlined size="small" icon="history" label="Clear"
                         @click="clearDrawerFilters" />
                     <AppButton label="Apply" icon="filter-fill" severity="info" size="small"
                         @click="applyDrawerFilters" />
                 </div>
-            </FloatingDrawer>
+            </IosModal>
 
             <!-- Profiles Panel (filters + dataview merged) -->
             <Panel class="!rounded-4xl overflow-hidden mt-8">
@@ -150,10 +154,12 @@
                             <InputText v-model="globalFilter" placeholder="Search..." size="small"
                                 @keyup.enter="triggerSearch()" />
                         </InputGroup>
-                        <AppButton icon="filter" severity="warn" text rounded @click="openDrawer()"
-                            v-tooltip.bottom="'More Filters'" />
+                        <AppIcon name="sliders-horizontal" :size="24" class="text-gray-400 cursor-pointer" @click="openDrawer()" v-tooltip.bottom="'More Filters'"/>
+                        <!-- <AppButton icon="sliders-horizontal"  severity="warn" text rounded @click="openDrawer()"
+                            v-tooltip.bottom="'More Filters'" /> -->
                     </div>
                     <div class="flex w-full flex-wrap items-center justify-between gap-3 xl:w-auto xl:justify-end">
+                        
                         <div class="flex items-center gap-2">
                             <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
@@ -828,7 +834,7 @@ import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useFilterManager } from '@/composables/useFilterManager';
 
-import FloatingDrawer from '@/Components/FloatingDrawer.vue';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { toast } from '@/utils/toast';
 import axios from 'axios';
 import { getSystemOptionLabel, useSystemOptions } from '@/composables/useSystemOptions';
@@ -842,7 +848,6 @@ import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import SchoolSelect from '@/Components/selects/SchoolSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
-import IosModal from '@/Components/ui/IosModal.vue';
 
 // Modal Components
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
@@ -895,6 +900,7 @@ const {
         { key: 'needs_term_review', type: 'text', default: null },
         { key: 'contract_status', type: 'text', default: null },
         { key: 'voucher_status', type: 'text', default: null },
+        { key: 'encoded_by', type: 'text', default: '' },
     ],
     beforeSearch(params, filterValues) {
         // Handle attachment filter values (three-state: null, 'with', 'without')
@@ -927,6 +933,7 @@ const activeFilterTags = computed(() => {
         needs_term_review: 'Review Status',
         contract_status: 'Contract',
         voucher_status: 'Voucher',
+        encoded_by: 'Encoded By',
     };
     for (const [key, label] of Object.entries(labelMap)) {
         const val = f[key];
@@ -972,7 +979,7 @@ watch(records, () => {
 // Filter drawer state
 const showFilterDrawer = ref(false);
 const drawerFilter = ref({});
-const drawerFilterKeys = ['program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status'];
+const drawerFilterKeys = ['program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status', 'encoded_by'];
 
 const openDrawer = () => {
     const snapshot = {};
@@ -994,7 +1001,7 @@ const applyDrawerFilters = () => {
 };
 
 const clearDrawerFilters = () => {
-    const nullKeys = ['grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status', 'academic_year', 'term'];
+    const nullKeys = ['grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status', 'academic_year', 'term', 'encoded_by'];
     for (const key of drawerFilterKeys) {
         drawerFilter.value[key] = nullKeys.includes(key) ? null : '';
     }
@@ -1199,11 +1206,12 @@ const unifiedStatusOptions = computed(() => {
         { label: 'Active', value: 'active' },
         { label: 'Completed', value: 'completed' },
         { label: 'Interviewed', value: 'interviewed' },
+        { label: 'Graduated', value: 'graduated' },
     ];
 
     // Add remaining statuses
     const remaining = statusOptions.value.filter(option =>
-        !['pending', 'active', 'completed', 'interviewed'].includes(option.value)
+        !['pending', 'active', 'completed', 'interviewed', 'graduated'].includes(option.value)
     );
 
     return [...ordered, ...remaining];

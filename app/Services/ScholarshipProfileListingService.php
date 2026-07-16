@@ -125,15 +125,22 @@ class ScholarshipProfileListingService
     private function applyFilters(Builder $query, Request $request, LegacyAcademicTermReviewService $legacyAcademicTermReviewService): void
     {
         if ($request->filled('unified_status')) {
-            $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($request) {
-                $statuses = [$request->unified_status];
+            if ($request->unified_status === 'graduated') {
+                // Graduated profiles are identified by having a graduation_date on academic_enrollments
+                $query->whereHas('academicEnrollments', function ($relationQuery) {
+                    $relationQuery->whereNotNull('graduation_date');
+                });
+            } else {
+                $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($request) {
+                    $statuses = [$request->unified_status];
 
-                if ($request->unified_status === 'active') {
-                    $statuses[] = 'approved';
-                }
+                    if ($request->unified_status === 'active') {
+                        $statuses[] = 'approved';
+                    }
 
-                $relationQuery->whereIn('unified_status', array_unique($statuses));
-            });
+                    $relationQuery->whereIn('unified_status', array_unique($statuses));
+                });
+            }
         }
 
         if ($request->filled('program')) {
@@ -229,6 +236,13 @@ class ScholarshipProfileListingService
             } elseif ($request->voucher_status === 'without') {
                 $query->whereDoesntHave('disbursements.attachments');
             }
+        }
+
+        if ($request->filled('encoded_by')) {
+            $encodedBy = $request->get('encoded_by');
+            $query->whereHas('createdBy', function ($q) use ($encodedBy) {
+                $q->where('name', 'like', '%' . $encodedBy . '%');
+            });
         }
 
         if ($request->input('needs_term_review') === 'needs_review') {

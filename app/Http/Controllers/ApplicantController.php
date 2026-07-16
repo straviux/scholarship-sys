@@ -137,6 +137,14 @@ class ApplicantController extends Controller
             $query->whereDate('scholarship_profiles.created_at', '<=', $request->encoded_to);
         }
 
+        // Filter by encoded by (user who created/encoded the profile)
+        if ($request->filled('encoded_by')) {
+            $encodedBy = $request->get('encoded_by');
+            $query->whereHas('createdBy', function ($q) use ($encodedBy) {
+                $q->where('name', 'like', '%' . $encodedBy . '%');
+            });
+        }
+
         // Filter by school - use leftJoin to avoid duplicate rows
         if ($request->filled('school')) {
             $schools = is_array($request->school) ? $request->school : explode(',', $request->school);
