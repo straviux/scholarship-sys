@@ -427,7 +427,7 @@
 }
 
 body.ios-admin-page .ios-page-shell .p-button,
-body.ios-admin-page .p-dialog .p-button {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button {
 	min-height: 2.75rem;
 	padding: 0.72rem 1.08rem;
 	gap: 0.55rem;
@@ -447,20 +447,20 @@ body.ios-admin-page .p-dialog .p-button {
 }
 
 body.ios-admin-page .ios-page-shell .p-button:not(.p-disabled):hover,
-body.ios-admin-page .p-dialog .p-button:not(.p-disabled):hover {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button:not(.p-disabled):hover {
 	transform: translateY(-1px);
 	box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
 	border-color: rgba(99, 102, 241, 0.26);
 }
 
 body.ios-admin-page .ios-page-shell .p-button:not(.p-disabled):active,
-body.ios-admin-page .p-dialog .p-button:not(.p-disabled):active {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button:not(.p-disabled):active {
 	transform: translateY(0);
 	box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 body.ios-admin-page .ios-page-shell .p-button.p-button-icon-only,
-body.ios-admin-page .p-dialog .p-button.p-button-icon-only {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-icon-only {
 	width: 2.75rem;
 	padding: 0;
 	justify-content: center;
@@ -469,9 +469,9 @@ body.ios-admin-page .p-dialog .p-button.p-button-icon-only {
 body.ios-admin-page .ios-page-shell .p-button .p-button-icon,
 body.ios-admin-page .ios-page-shell .p-button .p-button-icon-left,
 body.ios-admin-page .ios-page-shell .p-button .p-button-icon-right,
-body.ios-admin-page .p-dialog .p-button .p-button-icon,
-body.ios-admin-page .p-dialog .p-button .p-button-icon-left,
-body.ios-admin-page .p-dialog .p-button .p-button-icon-right {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button .p-button-icon,
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button .p-button-icon-left,
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button .p-button-icon-right {
 	width: 18px !important;
 	height: 18px !important;
 	min-width: 18px;
@@ -481,54 +481,54 @@ body.ios-admin-page .p-dialog .p-button .p-button-icon-right {
 }
 
 body.ios-admin-page .ios-page-shell .p-button .p-button-label,
-body.ios-admin-page .p-dialog .p-button .p-button-label {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button .p-button-label {
 	font-weight: 600;
 	letter-spacing: -0.01em;
 }
 
 body.ios-admin-page .ios-page-shell .p-button.p-button-secondary,
-body.ios-admin-page .p-dialog .p-button.p-button-secondary,
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-secondary,
 body.ios-admin-page .ios-page-shell .p-button.p-button-contrast,
-body.ios-admin-page .p-dialog .p-button.p-button-contrast {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-contrast {
 	background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
 	color: #0f172a;
 	border-color: rgba(148, 163, 184, 0.3);
 }
 
 body.ios-admin-page .ios-page-shell .p-button.p-button-success,
-body.ios-admin-page .p-dialog .p-button.p-button-success {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-success {
 	background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
 	color: #ffffff;
 	border-color: rgba(16, 185, 129, 0.4);
 }
 
 body.ios-admin-page .ios-page-shell .p-button.p-button-info,
-body.ios-admin-page .p-dialog .p-button.p-button-info,
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-info,
 body.ios-admin-page .ios-page-shell .p-button.p-button-help,
-body.ios-admin-page .p-dialog .p-button.p-button-help {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-help {
 	background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
 	color: #ffffff;
 	border-color: rgba(59, 130, 246, 0.34);
 }
 
 body.ios-admin-page .ios-page-shell .p-button.p-button-warning,
-body.ios-admin-page .p-dialog .p-button.p-button-warning,
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-warning,
 body.ios-admin-page .ios-page-shell .p-button.p-button-warn,
-body.ios-admin-page .p-dialog .p-button.p-button-warn {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-warn {
 	background: linear-gradient(180deg, #fde68a 0%, #fbbf24 100%);
 	color: #78350f;
 	border-color: rgba(245, 158, 11, 0.4);
 }
 
 body.ios-admin-page .ios-page-shell .p-button.p-button-danger,
-body.ios-admin-page .p-dialog .p-button.p-button-danger {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-danger {
 	background: linear-gradient(180deg, #fda4af 0%, #ef4444 100%);
 	color: #ffffff;
 	border-color: rgba(239, 68, 68, 0.36);
 }
 
 body.ios-admin-page .ios-page-shell .p-button.p-button-outlined,
-body.ios-admin-page .p-dialog .p-button.p-button-outlined {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-outlined {
 	background: rgba(255, 255, 255, 0.88);
 	color: #111827;
 	box-shadow: none;
@@ -536,7 +536,7 @@ body.ios-admin-page .p-dialog .p-button.p-button-outlined {
 }
 
 body.ios-admin-page .ios-page-shell .p-button.p-button-text,
-body.ios-admin-page .p-dialog .p-button.p-button-text {
+body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-text {
 	background: transparent;
 	border-color: transparent;
 	box-shadow: none;

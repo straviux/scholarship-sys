@@ -398,11 +398,10 @@
                             <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
                                 <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
                                     <span>{{ filteredRecommendationLists.length }} saved transaction(s)</span>
-                                    <span v-if="deletedRecommendationLists.length > 0"
-                                        class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-                                        {{ filteredDeletedRecommendationLists.length }} deleted
-                                    </span>
                                 </div>
+                                <AppButton v-if="deletedRecommendationLists.length > 0" icon="archive"
+                                    label="Deleted Lists" severity="warning" outlined rounded size="xsmall"
+                                    @click="showDeletedListsModal = true" />
                             </div>
 
                             <!-- Filters above table -->
@@ -523,22 +522,12 @@
                                             'Unknown user' }}</div>
                                     </template>
                                 </Column>
-                                <Column header="Actions" :style="{ width: '390px' }">
+                                <Column header="Actions" :style="{ width: '80px' }">
                                     <template #body="slotProps">
-                                        <div class="flex flex-wrap gap-2">
-                                            <AppButton v-if="slotProps.data.is_approved" icon="rotate-ccw"
-                                                label="Revert Approval" severity="warning" outlined rounded size="small"
-                                                @click="revertRecommendationListApproval(slotProps.data)" />
-                                            <AppButton v-else icon="check-circle" label="Approve" severity="success"
-                                                rounded size="small"
-                                                @click="approveRecommendationList(slotProps.data)" />
-                                            <AppButton icon="pencil" label="Edit" severity="secondary" outlined rounded
-                                                size="small" @click="openEditRecommendationListModal(slotProps.data)" />
-                                            <AppButton icon="printer" label="Print" severity="info" rounded size="small"
-                                                @click="printSavedRecommendationList(slotProps.data)" />
-                                            <AppButton icon="trash" label="Delete" severity="danger" outlined rounded
-                                                size="small" @click="deleteRecommendationList(slotProps.data)" />
-                                        </div>
+                                        <button class="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 border-none cursor-pointer bg-transparent"
+                                            @click="openRecommendationListContextMenu($event, slotProps.data)">
+                                            <AppIcon name="ellipsis-vertical" :size="16" class="text-gray-500" />
+                                        </button>
                                     </template>
                                 </Column>
 
@@ -662,14 +651,12 @@
                             </DataTable>
                         </Panel>
 
-                        <Panel v-if="deletedRecommendationLists.length > 0"
-                            class="mt-4 !rounded-4xl overflow-hidden shadow-sm">
-                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 short:mb-2 -mt-2">
+                        <IosModal v-model:visible="showDeletedListsModal" title="Soft-Deleted Lists"
+                            width="calc(100vw - 2rem)" max-width="1100px" body-style="padding: 16px;">
+                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                                 <div>
-                                    <div class="text-sm font-semibold text-slate-800">Soft-Deleted Lists</div>
                                     <div class="text-xs text-slate-500">Restore a list or permanently remove a record
-                                        that is
-                                        already soft-deleted.</div>
+                                        that is already soft-deleted.</div>
                                 </div>
                                 <span class="text-sm font-semibold text-amber-700">
                                     {{ filteredDeletedRecommendationLists.length }} deleted transaction(s)
@@ -742,7 +729,7 @@
                                     </template>
                                 </Column>
                             </DataTable>
-                        </Panel>
+                        </IosModal>
                     </TabPanel>
                 </TabPanels>
             </Tabs>
@@ -790,6 +777,160 @@
 
         <PdfPreviewModal v-model:show="showRecommendationListPreview" :htmlDoc="recommendationListPreviewHtml"
             :title="recommendationListPreviewTitle" :paperSize="recommendationListPreviewPaperSize" />
+
+        <!-- Confirmation Dialog -->
+        <IosModal v-model:visible="confirmDialogVisible" :title="confirmDialogHeader" width="calc(100vw - 2rem)"
+            max-width="450px" body-style="padding: 16px;">
+            <template #header-right>
+                <button
+                    class="ios-nav-btn ios-nav-action"
+                    type="button"
+                    @click="handleConfirmDialogAccept"
+                >
+                    
+                    <AppIcon name="check" :size="18" />
+                </button>
+            </template>
+            <div class="flex items-start gap-3">
+                <i v-if="confirmDialogIcon" :class="confirmDialogIcon" class="text-xl mt-0.5" />
+                <p class="m-0 text-sm leading-relaxed text-gray-700">{{ confirmDialogMessage }}</p>
+            </div>
+        </IosModal>
+
+        <!-- Update List Modal -->
+        <IosModal v-model:visible="showUpdateListModal" :title="'Update List: ' + (editingRecommendationList?.list_number || '')"
+            width="calc(100vw - 2rem)" max-width="1100px" body-style="padding: 16px;">
+            <template #header-right>
+                <button class="ios-nav-btn ios-nav-action"
+                    type="button"
+                    @click="showAddApplicantsModal = true">
+                    <AppIcon name="user-round-plus" :size="18" />
+                </button>
+            </template>
+            <div v-if="editingRecommendationList" class="flex flex-col gap-4">
+                <!-- Current Records -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-semibold text-gray-700">
+                            Current Applicants ({{ (editingRecommendationList.records || []).length }})
+                        </h3>
+                    </div>
+                    <div v-if="(editingRecommendationList.records || []).length === 0"
+                        class="py-6 text-center text-xs text-gray-400">
+                        No applicants in this list.
+                    </div>
+                    <div v-else class="max-h-[28rem] overflow-y-auto rounded-lg border border-gray-200">
+                        <table class="min-w-full text-xs">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th class="text-center px-3 py-2 font-medium text-gray-500 w-10">#</th>
+                                    <th class="text-left px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
+                                        @click="toggleUpdateListSort('name')">
+                                        Name
+                                        <AppIcon v-if="updateListSortField === 'name'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
+                                    </th>
+                                    <th class="text-left px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
+                                        @click="toggleUpdateListSort('program')">
+                                        Program
+                                        <AppIcon v-if="updateListSortField === 'program'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
+                                    </th>
+                                    <th class="text-left px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
+                                        @click="toggleUpdateListSort('school')">
+                                        School
+                                        <AppIcon v-if="updateListSortField === 'school'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
+                                    </th>
+                                    <th class="text-left px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
+                                        @click="toggleUpdateListSort('course')">
+                                        Course
+                                        <AppIcon v-if="updateListSortField === 'course'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
+                                    </th>
+                                    <th class="text-center px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
+                                        @click="toggleUpdateListSort('year_level')">
+                                        Year Level
+                                        <AppIcon v-if="updateListSortField === 'year_level'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
+                                    </th>
+                                    <th class="text-center px-3 py-2 font-medium text-gray-500 w-16">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr v-for="(record, idx) in sortedUpdateListRecords" :key="record.id">
+                                    <td class="px-3 py-2 text-center text-gray-400">{{ idx + 1 }}</td>
+                                    <td class="px-3 py-2 font-medium text-gray-800">
+                                        {{ formatApplicantName(record) }}
+                                    </td>
+                                    <td class="px-3 py-2 text-gray-600">{{ record.program?.shortname || 'N/A' }}</td>
+                                    <td class="px-3 py-2 text-gray-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
+                                    <td class="px-3 py-2 text-gray-600">{{ record.course?.shortname || record.course?.name || 'N/A' }}</td>
+                                    <td class="px-3 py-2 text-center text-gray-600">{{ getSystemOptionLabel('year_level', record.year_level, 'N/A') }}</td>
+                                    <td class="px-3 py-2 text-center">
+                                        <button class="text-red-500 hover:text-red-700 border-none bg-transparent cursor-pointer"
+                                            @click="removeFromUpdateListIdx = idx">
+                                            <AppIcon name="trash-2" :size="14" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </IosModal>
+
+        <!-- Add Applicants Modal -->
+        <IosModal v-model:visible="showAddApplicantsModal" title="Add Applicants" width="calc(100vw - 2rem)"
+            max-width="900px" body-style="padding: 16px;">
+            <template #header-right>
+                <button class="ios-nav-btn ios-nav-action"
+                    type="button"
+                    :disabled="updateListSelectedIds.length === 0"
+                    @click="addSelectedUpdateListApplicants">
+                    Save
+                    <AppIcon name="save" :size="16" />
+                </button>
+            </template>
+            <div class="flex flex-col gap-4">
+                <div class="flex gap-2">
+                    <IconField iconPosition="left" class="flex-1">
+                        <InputIcon><AppIcon name="search" :size="14" class="text-gray-400" /></InputIcon>
+                        <InputText v-model="updateListSearch" placeholder="Search by name..." size="small" class="w-full" />
+                    </IconField>
+                    <button class="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium text-gray-500 rounded-full cursor-pointer border-none bg-transparent hover:bg-gray-100"
+                        @click="updateListSelectedIds = []">Clear</button>
+                </div>
+                <div v-if="availableForUpdateList.length === 0" class="py-6 text-center text-xs text-gray-400">
+                    No available recommended applicants to add.
+                </div>
+                <div v-else class="max-h-96 overflow-y-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full text-xs">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="text-center px-3 py-2 font-medium text-gray-500 w-10">
+                                    <Checkbox :modelValue="allUpdateListAvailableSelected" binary
+                                        :indeterminate="someUpdateListAvailableSelected"
+                                        @update:modelValue="toggleAllUpdateListAvailable" />
+                                </th>
+                                <th class="text-left px-3 py-2 font-medium text-gray-500">Name</th>
+                                <th class="text-left px-3 py-2 font-medium text-gray-500">Program</th>
+                                <th class="text-left px-3 py-2 font-medium text-gray-500">School</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="record in filteredAddApplicantsAvailable" :key="record.id">
+                                <td class="px-3 py-2 text-center">
+                                    <Checkbox :modelValue="isUpdateListAvailableSelected(record)" binary
+                                        @update:modelValue="(checked) => toggleUpdateListAvailable(record, checked)" />
+                                </td>
+                                <td class="px-3 py-2 font-medium text-gray-800">
+                                    {{ formatApplicantName(record) }}
+                                </td>
+                                <td class="px-3 py-2 text-gray-600">{{ record.program?.shortname || 'N/A' }}</td>
+                                <td class="px-3 py-2 text-gray-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </IosModal>
     </AdminLayout>
 </template>
 
@@ -801,7 +942,7 @@ import AppIcon from '@/Components/ui/AppIcon.vue';
 import axios from 'axios';
 import AppButton from '@/Components/ui/AppButton.vue';
 import moment from 'moment';
-import { useConfirm } from 'primevue/useconfirm';
+import IosModal from '@/Components/ui/IosModal.vue';
 import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 
@@ -884,7 +1025,7 @@ const recommendationListReloadProps = [
 ];
 
 // State
-const activeTab = ref('interviewed');
+const activeTab = ref(sessionStorage.getItem('interviewed_applicants_tab') || 'interviewed');
 const filters = ref({
     recommendation: null,
     name: '',
@@ -900,20 +1041,51 @@ const assessmentInitialMode = ref('view');
 const showCumulativeScholarListModal = ref(false);
 const showReportModal = ref(false);
 const showCreateRecommendationListModal = ref(false);
+const showDeletedListsModal = ref(false);
 const isCreatingRecommendationList = ref(false);
 const recommendationListModalMode = ref('create');
 const recommendationListSubmitIntent = ref('save');
 const editingRecommendationList = ref(null);
 const selectedRows = ref([]);
 const expandedRows = ref({});
-const confirm = useConfirm();
 const recommendationLists = ref([...(props.recommendation_lists || [])]);
 const deletedRecommendationLists = ref([...(props.deleted_recommendation_lists || [])]);
 const recommendationListExpandedRows = ref({});
 const showRecommendationListPreview = ref(false);
+const showUpdateListModal = ref(false);
+const showAddApplicantsModal = ref(false);
+const updateListSearch = ref('');
+const updateListSelectedIds = ref([]);
+const removeFromUpdateListIdx = ref(-1);
 const recommendationListPreviewHtml = ref('');
 const recommendationListPreviewTitle = ref('');
 const recommendationListPreviewPaperSize = ref('a4');
+
+// Confirmation Dialog
+const confirmDialogVisible = ref(false);
+const confirmDialogHeader = ref('');
+const confirmDialogMessage = ref('');
+const confirmDialogAcceptLabel = ref('');
+const confirmDialogIcon = ref('');
+const confirmDialogSeverity = ref('primary');
+const confirmDialogOnAccept = ref(null);
+
+function openConfirmDialog({ header, message, acceptLabel, icon, severity, onAccept }) {
+    confirmDialogHeader.value = header;
+    confirmDialogMessage.value = message;
+    confirmDialogAcceptLabel.value = acceptLabel;
+    confirmDialogIcon.value = icon || '';
+    confirmDialogSeverity.value = severity || 'primary';
+    confirmDialogOnAccept.value = onAccept;
+    confirmDialogVisible.value = true;
+}
+
+function handleConfirmDialogAccept() {
+    confirmDialogVisible.value = false;
+    if (typeof confirmDialogOnAccept.value === 'function') {
+        confirmDialogOnAccept.value();
+    }
+}
 
 const approvalForm = useForm({
     date_approved: new Date(),
@@ -1308,8 +1480,13 @@ const recommendationListContextMenuItems = computed(() => {
 
     items.push(
         {
-            label: 'Edit',
-            icon: 'pencil',
+            label: 'Update List',
+            icon: 'refresh-cw',
+            command: () => openUpdateListModal(recommendationList),
+        },
+        {
+            label: 'Settings',
+            icon: 'settings',
             command: () => openEditRecommendationListModal(recommendationList),
         },
         {
@@ -1955,6 +2132,40 @@ const updateRecommendationList = async (payload, { shouldPrintAfterSave = false 
 };
 
 const submitRecommendationList = async (payload) => {
+    if (payload?.is_update_list && editingRecommendationList.value?.id) {
+        // "Update List" uses the refresh endpoint with selected record IDs
+        const recordIds = selectedRows.value.map(r => r.id);
+        if (recordIds.length === 0) {
+            toast.warn('Please select at least one applicant.');
+            return;
+        }
+
+        isCreatingRecommendationList.value = true;
+        try {
+            const response = await axios.patch(
+                route('scholarship.recommendation-lists.refresh', editingRecommendationList.value.id),
+                { record_ids: recordIds },
+            );
+
+            upsertRecommendationList(response.data?.data);
+            recommendationListExpandedRows.value = {
+                ...recommendationListExpandedRows.value,
+                [editingRecommendationList.value.id]: true,
+            };
+            handleRecommendationListModalVisibility(false);
+            activeTab.value = 'recommendation-lists';
+            selectedRows.value = [];
+            refreshPage();
+            toast.success(response.data?.message || 'Recommendation list updated successfully.');
+        } catch (error) {
+            console.error('Failed to update recommendation list:', error);
+            toast.error(error?.response?.data?.message || 'Failed to update recommendation list.');
+        } finally {
+            isCreatingRecommendationList.value = false;
+        }
+        return;
+    }
+
     if (recommendationListModalMode.value === 'edit') {
         await updateRecommendationList(payload, {
             shouldPrintAfterSave: recommendationListSubmitIntent.value === 'print',
@@ -2071,13 +2282,13 @@ const approveRecommendationList = (recommendationList) => {
     const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
     const approverName = currentUser.value?.name || 'the current user';
 
-    confirm.require({
-        message: `Approve ${targetLabel}? This will record ${approverName} as the approving user and timestamp the list.`,
+    openConfirmDialog({
         header: 'Approve Recommendation List',
+        message: `Approve ${targetLabel}? This will record ${approverName} as the approving user and timestamp the list.`,
         icon: 'pi pi-check-circle',
         acceptLabel: 'Approve',
-        rejectLabel: 'Cancel',
-        accept: () => {
+        severity: 'success',
+        onAccept: () => {
             void performApproveRecommendationList(recommendationList);
         },
     });
@@ -2100,13 +2311,13 @@ const revertRecommendationListApproval = (recommendationList) => {
 
     const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
 
-    confirm.require({
-        message: `Revert approval for ${targetLabel}? This will remove the list approval stamp and restore affected applicants to their previous review status.`,
+    openConfirmDialog({
         header: 'Revert Recommendation List Approval',
+        message: `Revert approval for ${targetLabel}? This will remove the list approval stamp and restore affected applicants to their previous review status.`,
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Revert Approval',
-        rejectLabel: 'Cancel',
-        accept: () => {
+        severity: 'warning',
+        onAccept: () => {
             void performRevertRecommendationListApproval(recommendationList);
         },
     });
@@ -2168,13 +2379,13 @@ const deleteRecommendationList = (recommendationList) => {
 
     const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
 
-    confirm.require({
-        message: `Delete ${targetLabel}? This will move the saved recommendation list to the deleted section until it is restored.`,
+    openConfirmDialog({
         header: 'Delete Recommendation List',
+        message: `Delete ${targetLabel}? This will move the saved recommendation list to the deleted section until it is restored.`,
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Delete',
-        rejectLabel: 'Cancel',
-        accept: () => {
+        severity: 'danger',
+        onAccept: () => {
             void performDeleteRecommendationList(recommendationList);
         },
     });
@@ -2230,13 +2441,13 @@ const restoreRecommendationList = (recommendationList) => {
 
     const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
 
-    confirm.require({
-        message: `Restore ${targetLabel}? This will return it to the active recommendation list table.`,
+    openConfirmDialog({
         header: 'Restore Recommendation List',
+        message: `Restore ${targetLabel}? This will return it to the active recommendation list table.`,
         icon: 'pi pi-refresh',
         acceptLabel: 'Restore',
-        rejectLabel: 'Cancel',
-        accept: () => {
+        severity: 'warning',
+        onAccept: () => {
             void performRestoreRecommendationList(recommendationList);
         },
     });
@@ -2288,16 +2499,264 @@ const forceDeleteRecommendationList = (recommendationList) => {
 
     const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
 
-    confirm.require({
-        message: `Permanently delete the soft-deleted record ${targetLabel}? This cannot be undone and will remove the saved recommendation list permanently.`,
+    openConfirmDialog({
         header: 'Permanently Delete Soft-Deleted List',
+        message: `Permanently delete the soft-deleted record ${targetLabel}? This cannot be undone and will remove the saved recommendation list permanently.`,
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Delete Permanently',
-        rejectLabel: 'Cancel',
-        accept: () => {
+        severity: 'danger',
+        onAccept: () => {
             void performForceDeleteRecommendationList(recommendationList);
         },
     });
+};
+
+const openUpdateListModal = (recommendationList) => {
+    if (isCreatingRecommendationList.value || !recommendationList?.id) {
+        return;
+    }
+
+    editingRecommendationList.value = recommendationList;
+    updateListSearch.value = '';
+    showUpdateListModal.value = true;
+};
+
+const updateListSortField = ref('school');
+const updateListSortOrder = ref('asc');
+
+function toggleUpdateListSort(field) {
+    if (updateListSortField.value === field) {
+        updateListSortOrder.value = updateListSortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        updateListSortField.value = field;
+        updateListSortOrder.value = 'asc';
+    }
+}
+
+// Computed: recommended applicants NOT already in the editing list
+const availableForUpdateList = computed(() => {
+    if (!editingRecommendationList.value) return [];
+
+    const currentIds = new Set(
+        (editingRecommendationList.value.records || []).map(r => Number(r.id))
+    );
+
+    return (props.interviewed_applicants || [])
+        .filter(r => r.recommendation === 'recommended' && !currentIds.has(Number(r.id)));
+});
+
+// Sorted for the update list modal
+const FIELD_ACCESSORS = {
+    name: (r) => formatApplicantName(r).toLowerCase(),
+    program: (r) => (r.program?.shortname || '').toLowerCase(),
+    school: (r) => (r.school?.shortname || r.school?.name || '').toLowerCase(),
+    course: (r) => (r.course?.shortname || r.course?.name || '').toLowerCase(),
+    year_level: (r) => (getSystemOptionLabel('year_level', r.year_level, '') || '').toLowerCase(),
+};
+
+const sortedUpdateListRecords = computed(() => {
+    const records = editingRecommendationList.value?.records || [];
+    const field = updateListSortField.value;
+    const order = updateListSortOrder.value;
+
+    const sorted = [...records].sort((a, b) => {
+        const accessor = FIELD_ACCESSORS[field] || FIELD_ACCESSORS.school;
+        const valA = accessor(a);
+        const valB = accessor(b);
+        if (valA !== valB) return valA.localeCompare(valB);
+
+        // Secondary sort by school then name
+        const schoolA = FIELD_ACCESSORS.school(a);
+        const schoolB = FIELD_ACCESSORS.school(b);
+        if (schoolA !== schoolB) return schoolA.localeCompare(schoolB);
+
+        const nameA = FIELD_ACCESSORS.name(a);
+        const nameB = FIELD_ACCESSORS.name(b);
+        return nameA.localeCompare(nameB);
+    });
+
+    return order === 'desc' ? sorted.reverse() : sorted;
+});
+
+const filteredUpdateListAvailable = computed(() => {
+// renamed to avoid confusion — used by add applicants modal
+    const q = updateListSearch.value.trim().toLowerCase();
+    if (!q) return availableForUpdateList.value;
+
+    return availableForUpdateList.value.filter(r => {
+        const name = `${r.profile?.last_name || ''} ${r.profile?.first_name || ''}`.toLowerCase();
+        return name.includes(q);
+    });
+});
+
+// Filtered available applicants for the add-applicants modal
+const filteredAddApplicantsAvailable = computed(() => {
+    const q = updateListSearch.value.trim().toLowerCase();
+    if (!q) return availableForUpdateList.value;
+
+    return availableForUpdateList.value.filter(r => {
+        const name = `${r.profile?.last_name || ''} ${r.profile?.first_name || ''}`.toLowerCase();
+        return name.includes(q);
+    });
+});
+
+const allUpdateListAvailableSelected = computed(() => {
+    return filteredAddApplicantsAvailable.value.length > 0
+        && filteredAddApplicantsAvailable.value.every(r => updateListSelectedIds.value.includes(r.id));
+});
+
+const someUpdateListAvailableSelected = computed(() => {
+    return !allUpdateListAvailableSelected.value
+        && filteredAddApplicantsAvailable.value.some(r => updateListSelectedIds.value.includes(r.id));
+});
+
+function isUpdateListAvailableSelected(record) {
+    return updateListSelectedIds.value.includes(record.id);
+}
+
+function toggleUpdateListAvailable(record, checked) {
+    if (checked) {
+        updateListSelectedIds.value = [...updateListSelectedIds.value, record.id];
+    } else {
+        updateListSelectedIds.value = updateListSelectedIds.value.filter(id => id !== record.id);
+    }
+}
+
+function toggleAllUpdateListAvailable(checked) {
+    if (checked) {
+        updateListSelectedIds.value = filteredAddApplicantsAvailable.value.map(r => r.id);
+    } else {
+        updateListSelectedIds.value = [];
+    }
+}
+
+function selectAllUpdateListAvailable() {
+    updateListSelectedIds.value = filteredAddApplicantsAvailable.value.map(r => r.id);
+}
+
+function addSelectedUpdateListApplicants() {
+    if (!editingRecommendationList.value || updateListSelectedIds.value.length === 0) return;
+
+    const existingIds = new Set(
+        (editingRecommendationList.value.records || []).map(r => Number(r.id))
+    );
+
+    console.log('addSelectedUpdateListApplicants - selectedIds:', updateListSelectedIds.value);
+    console.log('addSelectedUpdateListApplicants - existingIds:', [...existingIds]);
+
+    const newRecords = (props.interviewed_applicants || [])
+        .filter(r => updateListSelectedIds.value.includes(r.id) && !existingIds.has(Number(r.id)));
+
+    console.log('addSelectedUpdateListApplicants - newRecords:', newRecords.map(r => r.id));
+
+    editingRecommendationList.value = {
+        ...editingRecommendationList.value,
+        records: [...(editingRecommendationList.value.records || []), ...newRecords],
+    };
+    console.log('addSelectedUpdateListApplicants - total records after add:', editingRecommendationList.value.records?.length);
+    updateListSelectedIds.value = [];
+    showAddApplicantsModal.value = false;
+
+    // Persist to backend immediately
+    saveUpdateListChanges();
+}
+
+// Watcher for remove from update list — requires confirmation
+watch(removeFromUpdateListIdx, (idx) => {
+    if (idx < 0 || !editingRecommendationList.value) return;
+    const sorted = sortedUpdateListRecords.value;
+    if (idx >= sorted.length) { removeFromUpdateListIdx.value = -1; return; }
+    const record = sorted[idx];
+    if (!record?.id) { removeFromUpdateListIdx.value = -1; return; }
+
+    const applicantName = formatApplicantName(record);
+
+    openConfirmDialog({
+        header: 'Remove Applicant',
+        message: `Remove ${applicantName} from this list?`,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Remove',
+        severity: 'danger',
+        onAccept: async () => {
+            isCreatingRecommendationList.value = true;
+            try {
+                const response = await axios.delete(
+                    route('scholarship.recommendation-lists.remove-record', {
+                        recommendationList: editingRecommendationList.value.id,
+                        scholarshipRecord: record.id,
+                    }),
+                );
+
+                const updated = response.data?.data;
+                upsertRecommendationList(updated);
+                editingRecommendationList.value = updated;
+                toast.success(response.data?.message || 'Record removed successfully.');
+            } catch (error) {
+                console.error('Failed to remove record:', error);
+                toast.error(error?.response?.data?.message || 'Failed to remove record from list.');
+            } finally {
+                isCreatingRecommendationList.value = false;
+            }
+        },
+    });
+    removeFromUpdateListIdx.value = -1;
+});
+
+async function saveUpdateListChanges() {
+    if (!editingRecommendationList.value?.id) return;
+
+    const recordIds = (editingRecommendationList.value.records || []).map(r => r.id);
+    console.log('saveUpdateListChanges - recordIds:', recordIds);
+    if (recordIds.length === 0) {
+        toast.warn('Please keep at least one applicant in the list.');
+        return;
+    }
+
+    isCreatingRecommendationList.value = true;
+    const url = route('scholarship.recommendation-lists.refresh', editingRecommendationList.value.id);
+    console.log('saveUpdateListChanges - calling:', url, recordIds);
+    try {
+        const response = await axios.patch(url, { record_ids: recordIds });
+        console.log('saveUpdateListChanges - response:', response.data);
+
+        upsertRecommendationList(response.data?.data);
+        showUpdateListModal.value = false;
+        editingRecommendationList.value = null;
+        toast.success(response.data?.message || 'Recommendation list updated successfully.');
+    } catch (error) {
+        const msg = error?.response?.data?.message || error?.message || 'Failed to update recommendation list.';
+        console.error('Failed to update recommendation list:', error);
+        toast.error(msg);
+    } finally {
+        isCreatingRecommendationList.value = false;
+    }
+}
+
+const refreshRecommendationList = async (recommendationList) => {
+    if (isCreatingRecommendationList.value || !recommendationList?.id) {
+        return;
+    }
+
+    recommendationList._refreshing = true;
+
+    try {
+        const response = await axios.patch(
+            route('scholarship.recommendation-lists.refresh', recommendationList.id),
+        );
+
+        upsertRecommendationList(response.data?.data);
+        recommendationListExpandedRows.value = {
+            ...recommendationListExpandedRows.value,
+            [recommendationList.id]: true,
+        };
+        refreshPage();
+        toast.success(response.data?.message || 'Recommendation list updated successfully.');
+    } catch (error) {
+        console.error('Failed to refresh recommendation list:', error);
+        toast.error(error?.response?.data?.message || 'Failed to update recommendation list.');
+    } finally {
+        recommendationList._refreshing = false;
+    }
 };
 
 const formatApplicantName = (record) => {
@@ -2387,6 +2846,10 @@ const refreshPage = () => {
         preserveScroll: true
     });
 };
+
+watch(activeTab, (value) => {
+    sessionStorage.setItem('interviewed_applicants_tab', value);
+});
 
 watch(() => props.recommendation_lists, (value) => {
     recommendationLists.value = [...(value || [])];

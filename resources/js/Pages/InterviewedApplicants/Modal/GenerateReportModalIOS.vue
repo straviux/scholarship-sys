@@ -256,8 +256,13 @@
                         <label v-if="reportType === 'list'" class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer hover:text-gray-900">
                             <span>Show Remarks</span>
                             <ToggleSwitch v-model="showRemarks" />
+                        </label>                        <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-t border-gray-50 hover:text-gray-900">
+                            <span>Include Grant</span>
+                            <ToggleSwitch v-model="includeGrantProvision" />
                         </label>
-                    </div>
+                        <div v-if="includeGrantProvision" class="pb-1.5">
+                            <Select v-model="grantValue" :options="grantProvisionOptions" optionLabel="label" optionValue="value" placeholder="Select grant provision..." size="small" class="w-full [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                        </div>                    </div>
                 </div>
             </div>
         </div>
@@ -747,6 +752,8 @@ function generateReport() {
         budgetAllocation: showBudgetAllocation.value ? buildBudgetAllocationPayload(selectedBudgetAllocation.value) : null,
         reportTitle,
         includeInterviewColumns: includeInterviewColumns.value,
+        includeGrantProvision: includeGrantProvision.value,
+        grant_value: grantValue.value,
         highlightJpmMembers: reportType.value === 'list' ? highlightJpmMembers.value : false,
         showRemarks: reportType.value === 'list' ? showRemarks.value : false,
         reviewedBy: showSignatories.value ? (approvedBy.value?.trim() || DEFAULT_APPROVED_BY) : '',

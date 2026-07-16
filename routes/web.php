@@ -476,6 +476,14 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('check.permission:scholarships.view')
         ->name('scholarship.recommendation-lists.revert-approval');
 
+    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}/refresh', [ScholarshipProfileController::class, 'refreshRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.refresh');
+
+    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}/records/{scholarshipRecord}', [ScholarshipProfileController::class, 'removeRecordFromRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.remove-record');
+
     Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}', [ScholarshipProfileController::class, 'destroyRecommendationList'])
         ->middleware('check.permission:scholarships.view')
         ->name('scholarship.recommendation-lists.destroy');

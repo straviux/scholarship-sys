@@ -1930,6 +1930,176 @@ class ScholarshipProfileController extends Controller
         ]);
     }
 
+    public function refreshRecommendationList(RecommendationList $recommendationList): JsonResponse
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to update recommendation lists.');
+        }
+
+        // If record_ids are provided, update the list composition
+        $rawInput = request()->input('record_ids');
+        \Log::info('refreshRecommendationList - raw record_ids input', [
+            'has_key' => request()->has('record_ids'),
+            'raw_type' => gettype($rawInput),
+            'raw_value' => $rawInput,
+            'all_input' => request()->all(),
+        ]);
+
+        if (request()->has('record_ids')) {
+            $recordIds = collect(request()->input('record_ids', []))
+                ->map(fn($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($recordIds->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'At least one record is required.',
+                ], 422);
+            }
+
+            // Validate that all records are recommended for approval
+            $validRecords = ScholarshipRecord::where('unified_status', 'interviewed')
+                ->where('recommendation', 'recommended')
+                ->whereIn('id', $recordIds)
+                ->pluck('id');
+
+            $invalidIds = $recordIds->diff($validRecords);
+
+            if ($invalidIds->isNotEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Some selected records are not recommended for approval.',
+                ], 422);
+            }
+
+            \Log::info('refreshRecommendationList - setting record_ids', [
+                'list_id' => $recommendationList->id,
+                'old_ids' => $recommendationList->selected_record_ids,
+                'new_ids' => $recordIds->toArray(),
+            ]);
+
+            $recommendationList->selected_record_ids = $recordIds->toArray();
+        }
+
+        $selectedRecordIds = collect($recommendationList->selected_record_ids ?? [])
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedRecordIds->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No records found in this recommendation list.',
+            ], 422);
+        }
+
+        $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
+
+        $records = ScholarshipRecord::with([
+            'profile',
+            'program', 'school', 'course', 'interviewer',
+        ])
+            ->whereIn('id', $selectedRecordIds)
+            ->get()
+            ->map(fn(ScholarshipRecord $record) => $this->attachExpenseProjection($record, $expenseProjectionService))
+            ->keyBy('id');
+
+        $refreshedRecords = $selectedRecordIds
+            ->map(fn($id) => $records->get($id))
+            ->filter()
+            ->values();
+
+        $recommendationList->records_snapshot = $refreshedRecords;
+        $recommendationList->record_count = $refreshedRecords->count();
+        $recommendationList->total_projected_expense = $refreshedRecords->sum('projected_total_expense');
+        $recommendationList->save();
+        $recommendationList->refresh();
+
+        \Log::info('refreshRecommendationList - saved', [
+            'list_id' => $recommendationList->id,
+            'saved_ids' => $recommendationList->fresh()->selected_record_ids,
+            'record_count' => $refreshedRecords->count(),
+        ]);
+
+        Log::info('recommendation_list_refreshed', [
+            'id' => $recommendationList->id,
+            'list_number' => $recommendationList->list_number,
+            'record_count' => $refreshedRecords->count(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf('Recommendation list %s updated with latest record data.', $recommendationList->list_number),
+            'data' => $this->transformRecommendationList($recommendationList),
+        ]);
+    }
+
+    public function removeRecordFromRecommendationList(RecommendationList $recommendationList, ScholarshipRecord $scholarshipRecord): JsonResponse
+    {
+        if (!Gate::allows('applicants.approve')) {
+            abort(403, 'You do not have permission to update recommendation lists.');
+        }
+
+        $recordId = (int) $scholarshipRecord->id;
+        $currentIds = collect($recommendationList->selected_record_ids ?? [])
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if (!$currentIds->contains($recordId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Record is not in this recommendation list.',
+            ], 422);
+        }
+
+        $newIds = $currentIds->filter(fn($id) => $id !== $recordId)->values();
+
+        if ($newIds->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot remove the last record. At least one record is required.',
+            ], 422);
+        }
+
+        $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
+
+        $records = ScholarshipRecord::with([
+            'profile',
+            'program', 'school', 'course', 'interviewer',
+        ])
+            ->whereIn('id', $newIds)
+            ->get()
+            ->map(fn(ScholarshipRecord $r) => $this->attachExpenseProjection($r, $expenseProjectionService))
+            ->keyBy('id');
+
+        $refreshedRecords = $newIds->map(fn($id) => $records->get($id))->filter()->values();
+
+        $recommendationList->selected_record_ids = $newIds->toArray();
+        $recommendationList->records_snapshot = $refreshedRecords;
+        $recommendationList->record_count = $refreshedRecords->count();
+        $recommendationList->total_projected_expense = $refreshedRecords->sum('projected_total_expense');
+        $recommendationList->save();
+        $recommendationList->refresh();
+
+        Log::info('recommendation_list_record_removed', [
+            'id' => $recommendationList->id,
+            'list_number' => $recommendationList->list_number,
+            'removed_record_id' => $recordId,
+            'remaining_count' => $refreshedRecords->count(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf('Record removed from recommendation list %s.', $recommendationList->list_number),
+            'data' => $this->transformRecommendationList($recommendationList),
+        ]);
+    }
+
     public function destroyRecommendationList(RecommendationList $recommendationList): JsonResponse
     {
         if (!Gate::allows('applicants.approve')) {

@@ -1,16 +1,7 @@
 <template>
-    <Dialog :visible="show" :modal="true" :closable="false"
-        :style="{ width: '620px' }" :breakpoints="{ '640px': '90vw' }"
+    <IosModal :visible="show" :title="modalTitle" width="calc(100vw - 2rem)"
+        max-width="620px" body-style="padding: 16px;"
         @update:visible="val => emit('update:show', val)">
-        <template #header>
-            <div class="flex items-center gap-2">
-                <button class="p-1 !rounded-full !bg-transparent hover:!bg-gray-100 !border-none cursor-pointer" @click="close">
-                    <AppIcon name="x" :size="16" />
-                </button>
-                <span class="text-lg font-semibold">{{ modalTitle }}</span>
-            </div>
-        </template>
-
         <!-- ═══ STEPPER INDICATOR ═══ -->
         <div class="flex items-center justify-center gap-1 mb-5">
             <template v-for="(step, idx) in steps" :key="step.key">
@@ -78,30 +69,8 @@
                 </div>
             </div>
 
-            <!-- ═══ STEP 2: Cumulative Count ═══ -->
+            <!-- ═══ STEP 2: Signatories ═══ -->
             <div v-show="activeStep === 1">
-                <div v-if="selectedBudgetAllocation" class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Cumulative Count</label>
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                        <div class="text-xs text-gray-700 font-semibold">
-                            {{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's' : '' }} counted.
-                        </div>
-                        <InputText v-model="cumulativeScholarSearchQuery" placeholder="Search cumulative scholars"
-                            class="w-full mt-2 [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
-                        <div v-if="filteredCumulativeScholars.length" class="max-h-40 overflow-y-auto mt-2 space-y-1">
-                            <div v-for="scholar in filteredCumulativeScholars" :key="scholar.profile_id" class="text-xs text-gray-600">
-                                <span class="font-medium">{{ scholar.name }}</span>
-                                <span class="text-gray-400">· {{ scholar.program || 'N/A' }}</span>
-                            </div>
-                        </div>
-                        <div v-else-if="selectedBudgetAllocationApprovedCount" class="text-xs text-gray-400 mt-2">No scholars match search.</div>
-                    </div>
-                </div>
-                <div v-else class="text-xs text-gray-400 italic">Select a budget allocation in Step 1 to view cumulative scholars.</div>
-            </div>
-
-            <!-- ═══ STEP 3: Signatories ═══ -->
-            <div v-show="activeStep === 2">
                 <div class="mb-4">
                     <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatories</label>
                     <div class="flex gap-2">
@@ -125,8 +94,8 @@
                 </div>
             </div>
 
-            <!-- ═══ STEP 4: Options & Paper ═══ -->
-            <div v-show="activeStep === 3">
+            <!-- ═══ STEP 3: Options & Paper ═══ -->
+            <div v-show="activeStep === 2">
                 <!-- Options -->
                 <div class="mb-4">
                     <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Options</label>
@@ -189,18 +158,18 @@
                     :disabled="isSubmitDisabled || loading" @click="submitForm">
                     <AppIcon v-if="loading" name="loader-circle" :size="14" class="animate-spin" />
                     <AppIcon v-else-if="isPrintIntent" name="printer" :size="14" />
-                    {{ loading ? 'Saving...' : (isPrintIntent ? 'Save & Print' : (isEditMode ? 'Save Changes' : 'Create List')) }}
+                    {{ loading ? 'Saving...' : (isPrintIntent ? 'Save & Print' : (isUpdateListIntent ? 'Update List' : (isEditMode ? 'Save Changes' : 'Create List'))) }}
                 </button>
             </div>
         </div>
-    </Dialog>
+    </IosModal>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue';
 
 import AppIcon from '@/Components/ui/AppIcon.vue';
-import Dialog from 'primevue/dialog';
+import IosModal from '@/Components/ui/IosModal.vue';
 import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
 import DatePicker from 'primevue/datepicker';
@@ -261,7 +230,6 @@ const form = ref({
     approved_by_position: DEFAULT_APPROVED_BY_POSITION,
 });
 const selectedBudgetAllocation = ref(null);
-const cumulativeScholarSearchQuery = ref('');
 const showBudgetError = ref(false);
 const includeProjectedColumns = ref(true);
 const includeInterviewColumns = ref(true);
@@ -271,7 +239,6 @@ const activeStep = ref(0);
 
 const steps = [
     { key: 'details', label: 'Report Details' },
-    { key: 'cumulative', label: 'Cumulative Count' },
     { key: 'signatories', label: 'Signatories' },
     { key: 'options', label: 'Options & Paper' },
 ];
@@ -289,12 +256,16 @@ const orientationOptions = [
 
 const isEditMode = computed(() => props.mode === 'edit');
 const isPrintIntent = computed(() => props.submitIntent === 'print');
+const isUpdateListIntent = computed(() => props.submitIntent === 'update-list');
 const modalTitle = computed(() => {
+    if (isUpdateListIntent.value) {
+        return 'Update Recommendation List';
+    }
     if (isEditMode.value && isPrintIntent.value) {
         return 'Print Recommendation List';
     }
 
-    return isEditMode.value ? 'Edit Recommendation List' : 'Create Recommendation List';
+    return isEditMode.value ? 'Edit Report Settings' : 'Create Recommendation List';
 });
 const submitTooltip = computed(() => {
     if (isEditMode.value && isPrintIntent.value) {
@@ -515,113 +486,6 @@ const selectedBudgetProgramLabel = computed(() => {
 
     return String(value).trim();
 });
-const hasCumulativeScholarDetails = computed(() => Array.isArray(selectedBudgetAllocation.value?.approved_scholars));
-const cumulativeScholars = computed(() => {
-    const scholars = hasCumulativeScholarDetails.value
-        ? [...selectedBudgetAllocation.value.approved_scholars]
-        : [];
-
-    return scholars.sort((left, right) => (left?.name || '').localeCompare(right?.name || '', undefined, {
-        sensitivity: 'base',
-    }));
-});
-
-function scholarMatchesSelectedBudgetProgram(scholar) {
-    const selectedProgramId = selectedBudgetProgramId.value;
-    const selectedProgramLabel = selectedBudgetProgramLabel.value.trim().toLowerCase();
-
-    if (!selectedProgramId && !selectedProgramLabel) {
-        return true;
-    }
-
-    if (selectedProgramId && String(scholar?.program_id ?? '') === String(selectedProgramId)) {
-        return true;
-    }
-
-    if (!selectedProgramLabel) {
-        return false;
-    }
-
-    return [
-        scholar?.program,
-        scholar?.program_name,
-        scholar?.program_shortname,
-    ]
-        .filter(Boolean)
-        .some((programValue) => String(programValue).trim().toLowerCase() === selectedProgramLabel);
-}
-
-const scopedCumulativeScholars = computed(() => cumulativeScholars.value.filter(scholarMatchesSelectedBudgetProgram));
-const selectedBudgetAllocationApprovedCount = computed(() => {
-    if (hasCumulativeScholarDetails.value) {
-        return scopedCumulativeScholars.value.length;
-    }
-
-    return Number(selectedBudgetAllocation.value?.approved_scholars_to_date ?? 0) || 0;
-});
-const filteredCumulativeScholars = computed(() => {
-    const searchTerm = cumulativeScholarSearchQuery.value.trim().toLowerCase();
-    const scholars = scopedCumulativeScholars.value;
-
-    if (!searchTerm) {
-        return scholars;
-    }
-
-    return scholars.filter(scholar => {
-        const haystack = [
-            scholar?.name,
-            scholar?.program,
-            scholar?.program_name,
-            scholar?.program_shortname,
-            scholar?.date_approved,
-            formatScholarStatus(scholar?.status),
-        ]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase();
-
-        return haystack.includes(searchTerm);
-    });
-});
-const showCumulativeScholarMissingDetails = computed(() => {
-    return selectedBudgetAllocationApprovedCount.value > 0 && !hasCumulativeScholarDetails.value;
-});
-const cumulativeScopeDescription = computed(() => {
-    const calendarYear = getBudgetAllocationCalendarYear(selectedBudgetAllocation.value);
-    const programLabel = selectedBudgetProgramLabel.value;
-
-    if (calendarYear && programLabel) {
-        return `This list follows calendar year ${calendarYear} for ${programLabel}.`;
-    }
-
-    if (calendarYear) {
-        return `This list follows calendar year ${calendarYear} for the selected allocation program coverage.`;
-    }
-
-    if (programLabel) {
-        return `This list follows the selected program (${programLabel}).`;
-    }
-
-    return 'This list follows the selected allocation program coverage.';
-});
-const emptyCumulativeScholarMessage = computed(() => {
-    const calendarYear = getBudgetAllocationCalendarYear(selectedBudgetAllocation.value);
-    const programLabel = selectedBudgetProgramLabel.value;
-
-    if (calendarYear && programLabel) {
-        return `No approved scholars are currently counted for calendar year ${calendarYear} under ${programLabel}.`;
-    }
-
-    if (calendarYear) {
-        return 'No approved scholars are currently counted for this calendar year and allocation program coverage.';
-    }
-
-    if (programLabel) {
-        return `No approved scholars are currently counted for ${programLabel}.`;
-    }
-
-    return 'No approved scholars are currently counted for this allocation.';
-});
 const budgetFooterMessage = computed(() => {
     if (showBudgetError.value) {
         return budgetErrorMessage.value;
@@ -696,7 +560,6 @@ function resetForm() {
             : null;
     }
 
-    cumulativeScholarSearchQuery.value = '';
     showBudgetError.value = false;
     activeStep.value = 0;
 
@@ -714,6 +577,15 @@ function close() {
 }
 
 function submitForm() {
+    if (isUpdateListIntent.value) {
+        // For update-list, we only need to submit record IDs
+        showBudgetError.value = false;
+        emit('submit', {
+            is_update_list: true,
+        });
+        return;
+    }
+
     if (requiresBudgetAllocationSelection.value && !selectedBudgetAllocation.value) {
         showBudgetError.value = true;
         return;
@@ -744,14 +616,6 @@ function submitForm() {
 watch(() => props.show, (value) => {
     if (value) {
         resetForm();
-    }
-});
-
-watch(selectedBudgetAllocation, () => {
-    cumulativeScholarSearchQuery.value = '';
-
-    if (selectedBudgetAllocation.value) {
-        showBudgetError.value = false;
     }
 });
 
@@ -796,17 +660,5 @@ function formatRequestDateForPayload(value) {
     const day = String(date.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
-}
-
-function formatScholarStatus(status) {
-    const labels = {
-        active: 'Active',
-        completed: 'Completed',
-        'completed-transferred': 'Completed - Transferred',
-    };
-
-    return labels[status] || String(status || '—')
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, character => character.toUpperCase());
 }
 </script>
