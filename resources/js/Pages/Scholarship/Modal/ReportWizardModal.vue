@@ -741,6 +741,7 @@ async function generateReport() {
         if (enableJpmHighlighting.value) params.enable_jpm_highlighting = 1;
         if (jpmFilter.value === 'jpm_only') params.show_jpm_only = 1;
         if (jpmFilter.value === 'hide_jpm') params.hide_jpm = 1;
+        if (grantValue.value) params.grant_value = grantValue.value;
         // Fetch data
         const response = await axios.get(route('profile.generateReport'), { params });
         let records = [];
@@ -1086,12 +1087,16 @@ watch(() => props.show, (v) => {
         }
         // Use queueMicrotask instead of nextTick to resolve before the next render frame
         queueMicrotask(() => {
-            customReportTitle.value = '';
-            preparedBy.value = '';
+            const userName = currentUser.value?.name
+                || [currentUser.value?.first_name, currentUser.value?.last_name]
+                    .filter(Boolean).join(' ')
+                || '';
+            preparedBy.value = userName;
             preparedByTitle.value = '';
             preparedByOffice.value = '';
             signatoryName.value = '';
             signatoryTitle.value = '';
+            customReportTitle.value = '';
             customGroupMainLabel.value = '';
             customGroupSubLabel.value = '';
             customGroupTertiaryLabel.value = '';
