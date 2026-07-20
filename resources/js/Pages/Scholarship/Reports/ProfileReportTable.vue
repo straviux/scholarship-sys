@@ -38,9 +38,6 @@ const showSequenceNumbers = computed(() => props.options?.showSequenceNumbers !=
 const includeProjectedExpense = computed(() => props.options?.includeProjectedExpense !== false);
 const includeGrantProvision = computed(() => props.options?.includeGrantProvision === true);
 const grantValueLabel = computed(() => props.options?.grantValueLabel ?? null);
-const isEfaApprovalList = computed(() => props.options?.isEfaApprovalList === true);
-const efaUpcomingTerm = computed(() => props.options?.efaUpcomingTerm || '');
-const efaUpcomingAcademicYear = computed(() => props.options?.efaUpcomingAcademicYear || '');
 const activeGroupFields = computed(() => new Set([
     props.options?.groupBy,
     props.options?.groupBySecondary,
@@ -98,11 +95,7 @@ const singleColumns = computed(() => {
     }
 
     if (!hiddenColumns.value.course) {
-        columns.push({ key: 'course_name', label: 'Course', width: isEfaApprovalList.value ? '10%' : '11%' });
-    }
-
-    if (isEfaApprovalList.value) {
-        columns.push({ key: 'current_year_level', label: 'Current Year Level', width: '7%', align: 'center' });
+        columns.push({ key: 'course_name', label: 'Course', width: '11%' });
     }
 
     if (!hiddenColumns.value.year_level) {
@@ -110,7 +103,7 @@ const singleColumns = computed(() => {
     }
 
     if (!hiddenColumns.value.term_academic_year) {
-        columns.push({ key: 'term_academic_year', label: isEfaApprovalList.value ? 'Term & Academic Year' : 'Term & Academic Year', width: '7%', align: 'center' });
+        columns.push({ key: 'term_academic_year', label: 'Term & Academic Year', width: '7%', align: 'center' });
     }
 
     if (includeGrantProvision.value) {
@@ -237,21 +230,6 @@ function parseGrantProvision(value) {
 
 function isTrimesterTerm(term) {
     return typeof term === 'string' && term.toLowerCase().includes('trimester');
-}
-
-function incrementYearLevel(yearLevel) {
-    if (!yearLevel) return '—';
-    const match = String(yearLevel).match(/^(\d+)(?:ST|ND|RD|TH)?$/i);
-    if (match) {
-        const num = parseInt(match[1], 10);
-        const next = num + 1;
-        const suffix = next % 10 === 1 && next !== 11 ? 'ST'
-            : next % 10 === 2 && next !== 12 ? 'ND'
-            : next % 10 === 3 && next !== 13 ? 'RD'
-            : 'TH';
-        return `${next}${suffix} YEAR`;
-    }
-    return String(yearLevel).toUpperCase();
 }
 
 function fmtGrantAmount(value) {
@@ -446,8 +424,6 @@ function cellValue(record, column) {
             return grantValueLabel.value
                 ? (parseGrantProvision(grantValueLabel.value).amount || grantValueLabel.value)
                 : fmtGrantProvisionAmount(record);
-        case 'current_year_level':
-            return incrementYearLevel(record?.year_level) || '—';
         case 'graduation_date':
             return formatDate(record?.graduation_info?.graduation_date || record?.graduation_date) || '—';
         default:
@@ -507,9 +483,9 @@ function cellValue(record, column) {
                         {{ index + 1 }}
                     </template>
                     <template v-else-if="column.key === 'term_academic_year'">
-                        <div>{{ isEfaApprovalList ? (efaUpcomingTerm || '—') : (record.term || '—') }}</div>
+                        <div>{{ record.term || '—' }}</div>
                         <div style="margin-top:2px;font-size:10px;line-height:1.3;font-weight:600;">
-                            {{ isEfaApprovalList ? (efaUpcomingAcademicYear || '—') : (record.academic_year || '—') }}
+                            {{ record.academic_year || '—' }}
                         </div>
                     </template>
                     <template v-else-if="column.key === 'remarks_summary'">

@@ -227,16 +227,6 @@
                     </div>
                 </div>
 
-                <div v-if="isEfaApprovalList" class="mb-3">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Upcoming Term &amp; Academic Year</label>
-                    <div class="flex gap-2">
-                        <Select v-model="efaUpcomingTerm" :options="termOptions" optionLabel="label" optionValue="value"
-                            placeholder="Term" class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
-                        <InputText v-model="efaUpcomingAcademicYear" placeholder="Academic Year (e.g. 2026-2027)"
-                            class="flex-1 [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
-                    </div>
-                </div>
-
                 <div class="mb-3">
                     <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatory Style</label>
                     <label class="flex items-center gap-4 py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer">
@@ -303,7 +293,7 @@
                         <div class="mb-3">
                             <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Show / Hide Fields</label>
                             <div class="flex flex-col gap-0.5">
-                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                <label v-if="!activeGroupFields.has('municipality')" class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
                                     <span>Address</span>
                                     <ToggleSwitch v-model="showAddress" />
                                 </label>
@@ -315,15 +305,15 @@
                                     <span>Date Filed</span>
                                     <ToggleSwitch v-model="showDateFiled" />
                                 </label>
-                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                <label v-if="!activeGroupFields.has('program')" class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
                                     <span>Program</span>
                                     <ToggleSwitch v-model="showProgram" />
                                 </label>
-                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                <label v-if="!activeGroupFields.has('school')" class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
                                     <span>School</span>
                                     <ToggleSwitch v-model="showSchool" />
                                 </label>
-                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
+                                <label v-if="!activeGroupFields.has('course')" class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
                                     <span>Course</span>
                                     <ToggleSwitch v-model="showCourse" />
                                 </label>
@@ -339,7 +329,7 @@
                                     <span>Scholarship Date</span>
                                     <ToggleSwitch v-model="showScholarshipDate" />
                                 </label>
-                                <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer hover:text-gray-900 dark:hover:text-gray-100">
+                                <label v-if="!activeGroupFields.has('year_level')" class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer hover:text-gray-900 dark:hover:text-gray-100">
                                     <span>Year Level</span>
                                     <ToggleSwitch v-model="showYearLevel" />
                                 </label>
@@ -533,16 +523,16 @@ const enableJpmHighlighting = ref(false);
 const useInterviewedSignatories = ref(false);
 const jpmFilter = ref('all');
 const sortBy = ref('default');
-const showAddress = ref(true);
-const showContactNumber = ref(true);
-const showDateFiled = ref(true);
-const showProgram = ref(true);
-const showSchool = ref(true);
-const showCourse = ref(true);
-const showRemarks = ref(true);
-const showRequirements = ref(true);
-const showScholarshipDate = ref(true);
-const showYearLevel = ref(true);
+const showAddress = ref(false);
+const showContactNumber = ref(false);
+const showDateFiled = ref(false);
+const showProgram = ref(false);
+const showSchool = ref(false);
+const showCourse = ref(false);
+const showRemarks = ref(false);
+const showRequirements = ref(false);
+const showScholarshipDate = ref(false);
+const showYearLevel = ref(false);
 
 // ─── Composables ───
 const page = usePage();
@@ -595,6 +585,12 @@ const grantValueLabel = computed(() => {
     return option?.label || grantValue.value;
 });
 
+const activeGroupFields = computed(() => new Set([
+    groupBy.value,
+    groupBySecondary.value,
+    groupByTertiary.value,
+].filter(v => v && v !== 'none')));
+
 const groupByOptions = [
     { label: 'No Grouping', value: 'none' },
     { label: 'By Status', value: 'unified_status' },
@@ -634,18 +630,6 @@ const secondaryGroupByOptions = computed(() =>
 const tertiaryGroupByOptions = computed(() =>
     groupByOptions.filter(o => o.value !== 'none' && o.value !== groupBy.value && o.value !== groupBySecondary.value)
 );
-
-// EFA Approval List detection
-const isEfaApprovalList = computed(() => {
-    if (props.mode !== 'approval-list') return false;
-    const program = props.selectedProgram || selectedPrograms.value?.[0];
-    if (!program) return false;
-    const name = (program.shortname || program.name || '').toUpperCase();
-    return name === 'EFA';
-});
-
-const efaUpcomingTerm = ref('');
-const efaUpcomingAcademicYear = ref('');
 
 const termOptions = [
     { label: '1st Semester', value: '1st Semester' },
@@ -757,8 +741,6 @@ async function generateReport() {
         if (enableJpmHighlighting.value) params.enable_jpm_highlighting = 1;
         if (jpmFilter.value === 'jpm_only') params.show_jpm_only = 1;
         if (jpmFilter.value === 'hide_jpm') params.hide_jpm = 1;
-        if (isEfaApprovalList.value) params.efa_approval_mode = 1;
-
         // Fetch data
         const response = await axios.get(route('profile.generateReport'), { params });
         let records = [];
@@ -811,9 +793,6 @@ async function generateReport() {
                 showRequirements: showRequirements.value,
                 showScholarshipDate: showScholarshipDate.value,
                 showYearLevel: showYearLevel.value,
-                isEfaApprovalList: isEfaApprovalList.value,
-                efaUpcomingTerm: efaUpcomingTerm.value,
-                efaUpcomingAcademicYear: efaUpcomingAcademicYear.value,
             },
             generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
         };
@@ -965,17 +944,6 @@ function doExportExcel() {
 
     const upper = (v) => String(v ?? '').toUpperCase();
 
-    const incrementYearLevelForExcel = (yearLevel) => {
-        if (!yearLevel) return '';
-        const match = String(yearLevel).match(/^(\d+)(?:ST|ND|RD|TH)?$/i);
-        if (match) {
-            const num = parseInt(match[1], 10) + 1;
-            const suffix = num % 10 === 1 && num !== 11 ? 'ST' : num % 10 === 2 && num !== 12 ? 'ND' : num % 10 === 3 && num !== 13 ? 'RD' : 'TH';
-            return `${num}${suffix} YEAR`;
-        }
-        return String(yearLevel).toUpperCase();
-    };
-
     // Build columns matching the table structure
     const headers = [];
     const keys = [];
@@ -987,7 +955,6 @@ function doExportExcel() {
     if (showProgram.value) { headers.push('PROGRAM'); keys.push('program'); }
     if (showSchool.value) { headers.push('SCHOOL'); keys.push('school'); }
     if (showCourse.value) { headers.push('COURSE'); keys.push('course'); }
-    if (isEfaApprovalList.value) { headers.push('CURRENT YEAR LEVEL'); keys.push('current_year_level'); }
     headers.push('YEAR LEVEL'); keys.push('year_level');
     headers.push('TERM'); keys.push('term');
     headers.push('ACADEMIC YEAR'); keys.push('academic_year');
@@ -1014,7 +981,6 @@ function doExportExcel() {
                 case 'program': row.push(upper(rec.program_name || rec.program || '')); break;
                 case 'school': row.push(upper(rec.school_name || rec.school || '')); break;
                 case 'course': row.push(upper(rec.course_name || rec.course || '')); break;
-                case 'current_year_level': row.push(upper(incrementYearLevelForExcel(rec.year_level))); break;
                 case 'year_level': row.push(upper(rec.year_level || '')); break;
                 case 'term': row.push(upper(rec.term || '')); break;
                 case 'academic_year': row.push(upper(rec.academic_year || '')); break;
@@ -1129,8 +1095,7 @@ watch(() => props.show, (v) => {
             customGroupMainLabel.value = '';
             customGroupSubLabel.value = '';
             customGroupTertiaryLabel.value = '';
-            efaUpcomingTerm.value = '';
-            efaUpcomingAcademicYear.value = '';
+
         });
     } else {
         hasResetOnOpen = false;

@@ -817,48 +817,31 @@ class ScholarshipProfileController extends Controller
             });
         }
 
-        $profiles = $query->get();
-
-        // Assign grant provision value to all matched profiles if requested
+        // Assign grant provision value to all matched profiles if requested (use lightweight ID query)
         if ($request->filled('grant_value')) {
             $grantValue = $request->grant_value;
-            $profileIds = $profiles->pluck('profile_id')->toArray();
+            $profileIds = (clone $query)->pluck('scholarship_profiles.profile_id')->toArray();
             ScholarshipRecord::whereIn('profile_id', $profileIds)
                 ->whereIn('unified_status', self::CURRENT_SCHOLARSHIP_RECORD_STATUSES)
                 ->update(['grant_provision' => $grantValue]);
-
-            // Reload the records from DB to reflect the changes
-            $profiles->load('scholarshipGrant');
         }
 
-        $efaApprovalMode = $request->has('efa_approval_mode') && $request->input('efa_approval_mode') == 1;
-
         $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
-        $reportRows = $profiles->map(function (ScholarshipProfile $profile) use ($request, $expenseProjectionService, $efaApprovalMode) {
-            $record = $this->resolveReportScholarshipRecord($profile, $request);
+        $reportRows = [];
 
-            if ($record) {
-                $record = $this->attachExpenseProjection($record, $expenseProjectionService);
+        $query->chunk(200, function ($profiles) use ($request, $expenseProjectionService, &$reportRows) {
+            foreach ($profiles as $profile) {
+                $record = $this->resolveReportScholarshipRecord($profile, $request);
 
-                // EFA Approval: deduct 1 term since it's for the upcoming semester
-                if ($efaApprovalMode) {
-                    $currentTermCount = $record->getAttribute('projected_term_count');
-                    $currentExpense = $record->getAttribute('projected_total_expense');
-                    $currentGrantAmount = $record->getAttribute('grant_amount');
-
-                    if (is_numeric($currentTermCount) && $currentTermCount > 0) {
-                        $record->setAttribute('projected_term_count', max(0, $currentTermCount - 1));
-                    }
-                    if (is_numeric($currentExpense) && is_numeric($currentGrantAmount) && $currentTermCount > 0) {
-                        $deductedExpense = max(0, $currentExpense - $currentGrantAmount);
-                        $record->setAttribute('projected_total_expense', round($deductedExpense, 2));
-                        $record->setAttribute('projected_total_expense_formatted', number_format($deductedExpense, 2));
-                    }
+                if ($record) {
+                    $record = $this->attachExpenseProjection($record, $expenseProjectionService);
                 }
-            }
 
-            return $this->transformProfileForReport($profile, $record);
-        })->values();
+                $reportRows[] = $this->transformProfileForReport($profile, $record);
+            }
+        });
+
+        $reportRows = collect($reportRows);
 
         $reportType = $request->input('report_type', 'list');
         $filters = [

@@ -131,7 +131,7 @@ Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->g
 });
 
 // Admin-only routes for system management
-Route::middleware(['auth', 'check.role:system-report,deleted-records,maintenance', 'maintenance'])->group(function () {
+Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
     // System Report Routes - Administrator Only
     Route::get('/admin/system-report', [SystemReportController::class, 'index'])->name('admin.system-report');
     Route::get('/admin/system-report/export-json', [SystemReportController::class, 'exportJson'])->name('admin.system-report.export-json');
@@ -176,8 +176,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('documents.download');
 });
 
-// Menu Item Management Routes - Available to authenticated administrators
-Route::middleware(['auth'])->group(function () {
+// Menu Item Management Routes - Administrator Only
+Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
     Route::get('/admin/menu-items', [App\Http\Controllers\Admin\MenuItemController::class, 'index'])->name('admin.menu-items.index');
     Route::post('/admin/menu-items', [App\Http\Controllers\Admin\MenuItemController::class, 'store'])->name('admin.menu-items.store');
     Route::put('/admin/menu-items/{menuItem}', [App\Http\Controllers\Admin\MenuItemController::class, 'update'])->name('admin.menu-items.update');
@@ -194,8 +194,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/role-menus/{role}/order', [App\Http\Controllers\Admin\RoleMenuController::class, 'updateOrder'])->name('admin.role-menus.order');
 });
 
-// System Updates Management - Available to All Users
-Route::middleware(['auth'])->group(function () {
+// System Updates Management - Admin management pages restricted to administrators
+Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
     // Admin page for managing system updates
     Route::get('/admin/system-updates', function () {
         return inertia('Admin/SystemUpdates');
@@ -204,8 +204,11 @@ Route::middleware(['auth'])->group(function () {
     // Admin page for viewing single update details
     Route::get('/admin/system-updates/{id}', function ($id) {
         return inertia('Admin/SystemUpdateShow', ['id' => $id]);
-    })->name('admin.system-updates.show')->middleware('check-roles:administrator|program_manager');
+    })->name('admin.system-updates.show');
+});
 
+// System Updates - User-facing pages available to all authenticated users
+Route::middleware(['auth'])->group(function () {
     // User-facing page to view all system updates
     Route::get('/system-updates', function () {
         return inertia('SystemUpdates/Index');
@@ -693,8 +696,8 @@ Route::middleware(['auth'])->get('/test-notifications', function () {
 Route::get('/api/municipalities', [\App\Http\Controllers\Api\MunicipalityController::class, 'index'])->name('api.municipalities.index');
 Route::get('/api/municipalities/{municipality}/barangays', [\App\Http\Controllers\Api\MunicipalityController::class, 'getBarangays'])->name('api.municipalities.barangays');
 
-// Data Export Routes - For migrating data to standalone app
-Route::middleware(['auth'])->group(function () {
+// Data Export Routes - Administrator Only (for migrating data to standalone app)
+Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
     Route::get('/admin/data-export', [\App\Http\Controllers\DataExportController::class, 'index'])->name('data-export.index');
     Route::get('/admin/data-export/summary', [\App\Http\Controllers\DataExportController::class, 'getExportSummary'])->name('data-export.summary');
     Route::get('/admin/data-export/download', [\App\Http\Controllers\DataExportController::class, 'exportToJson'])->name('data-export.download');

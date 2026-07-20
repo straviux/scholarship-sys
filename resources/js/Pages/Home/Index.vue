@@ -3,11 +3,15 @@ import { Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { ref, computed, onMounted } from 'vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import { usePermission } from '@/composable/permissions';
 
 // ─── Props ───
 const props = defineProps({
     user: Object,
 });
+
+// ─── Permission helpers ───
+const { hasPermission, isAdmin } = usePermission();
 
 // ─── State ───
 const showHelpDialog = ref(false);
@@ -90,13 +94,17 @@ const fetchDrawerItems = async () => {
     }
 };
 
-// Flatten nested menu structure into a flat list of cards
+// Flatten nested menu structure into a flat list of cards,
+// only including items the user has permission for.
 function flattenMenuItems(items, depth = 0) {
     const flat = [];
     for (const item of items) {
         // Skip Home (already on the page) and group headers without a route
         if (item.route === 'home.index' || item.route === 'home') continue;
         if (item.is_group && (!item.children || item.children.length === 0)) continue;
+
+        // If this item itself requires a permission the user lacks, skip it entirely
+        if (item.permission && !hasPermission(item.permission)) continue;
 
         if (item.children && item.children.length > 0) {
             flat.push(...flattenMenuItems(item.children, depth + 1));

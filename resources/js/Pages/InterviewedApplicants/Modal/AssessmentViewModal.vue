@@ -397,13 +397,13 @@
                     <div v-if="showDialogFooter" class="assessment-dialog-footer">
                         <div class="assessment-dialog-footer-actions">
                             <template v-if="activeMode === 'view'">
-                                <AppButton icon="pencil" label="Edit" severity="secondary" text size="xsmall"
+                                <Button icon="pencil" label="Edit" severity="secondary" text size="xsmall"
                                     iconColor="#2563eb" @click="openEditMode" />
-                                <AppButton v-if="canManage" icon="check" label="Approve" severity="secondary" text
+                                <Button v-if="canManage" icon="check" label="Approve" severity="secondary" text
                                     size="xsmall" iconColor="#16a34a" @click="openApproveMode" />
-                                <AppButton v-if="canManage" icon="x" label="Deny" severity="secondary" text
+                                <Button v-if="canManage" icon="x" label="Deny" severity="secondary" text
                                     size="xsmall" iconColor="#dc2626" @click="openDenyMode" />
-                                <AppButton v-if="canRevert" icon="arrow-left" label="Revert to Pending"
+                                <Button v-if="canRevert" icon="arrow-left" label="Revert to Pending"
                                     severity="secondary" text size="xsmall" iconColor="#d97706"
                                     @click="$emit('revert')" />
                             </template>

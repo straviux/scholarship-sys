@@ -146,6 +146,7 @@ class MenuService
                         'route' => $item->route ?? null,
                         'order' => $item->order ?? 0,
                         'is_group' => $item->is_group ?? false,
+                        'permission' => $item->permission ?? null,
                     ];
 
                     // Load children if they exist
@@ -158,6 +159,7 @@ class MenuService
                                 'route' => $child->route ?? null,
                                 'order' => $child->order ?? 0,
                                 'is_group' => $child->is_group ?? false,
+                                'permission' => $child->permission ?? null,
                             ];
                         })->filter(function ($child) {
                             return $child['id'] !== null; // Filter out invalid children
