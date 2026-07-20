@@ -174,6 +174,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/documents/{document}/download', [\App\Http\Controllers\DocumentsController::class, 'download'])
         ->middleware('check.permission:documents.view')
         ->name('documents.download');
+
+    // System Options API - accessible to all authenticated users for dropdowns
+    Route::get('/api/system-options/{category}', [SystemOptionController::class, 'getByCategory'])->name('api.system-options.category');
 });
 
 // Menu Item Management Routes - Administrator Only
