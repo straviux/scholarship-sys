@@ -343,11 +343,11 @@ onBeforeUnmount(() => {
         :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: 0 }"
         @update:visible="val => { if (!val) closeMain(); }">
         <template #header-right>
-            <span class="ios-nav-btn" style="visibility: hidden; right: 16px;">_</span>
+            <span class="ios-nav-btn text-nav" style="visibility: hidden; right: 16px;">_</span>
         </template>
 
         <!-- Applicant name subtitle -->
-        <div class="ios-subtitle font-semibold" v-if="applicant">
+        <div class="ios-subtitle font-semibold text-compact" v-if="applicant">
             {{ applicant?.last_name }}, {{ applicant?.first_name }}
         </div>
 
@@ -387,11 +387,11 @@ onBeforeUnmount(() => {
                                     <div style="display: flex; gap: 2px; flex-shrink: 0; margin-left: 6px;" @click.stop>
                                         <!-- View/Download for submitted files -->
                                         <button v-if="requirement.is_submitted && requirement.file_name"
-                                            class="ios-icon-btn" @click.stop="viewAttachment(requirement)" title="View">
+                                            class="ios-icon-btn text-sm" @click.stop="viewAttachment(requirement)" title="View">
                                             <AppIcon name="eye" :size="13" style="color: #007AFF;" />
                                         </button>
                                         <button v-if="requirement.is_submitted && requirement.file_name"
-                                            class="ios-icon-btn" @click.stop="downloadFile(requirement)"
+                                            class="ios-icon-btn text-sm" @click.stop="downloadFile(requirement)"
                                             title="Download">
                                             <AppIcon name="download" :size="13" style="color: #34C759;" />
                                         </button>
@@ -402,12 +402,12 @@ onBeforeUnmount(() => {
                                                 @change="(e) => onUpload({ files: [e.target.files[0]] }, requirement)" />
                                             <label :for="`file-${requirement.id}`"
                                                 style="cursor: pointer; display: flex;" @click.stop>
-                                                <span class="ios-icon-btn">
+                                                <span class="ios-icon-btn text-sm">
                                                     <AppIcon name="upload" :size="13" style="color: #007AFF;"
                                                         :style="{ opacity: uploadingRequirementId === requirement.requirement_id ? 0.4 : 1 }" />
                                                 </span>
                                             </label>
-                                            <button class="ios-icon-btn" @click.stop="showQrUpload(requirement)"
+                                            <button class="ios-icon-btn text-sm" @click.stop="showQrUpload(requirement)"
                                                 title="QR Upload">
                                                 <AppIcon name="qrcode" :size="13" style="color: #8E8E93;" />
                                             </button>
@@ -430,7 +430,7 @@ onBeforeUnmount(() => {
         <!-- Footer -->
         <div class="ios-footer">
             <span class="ios-footer-counter">{{ checkedCount }}/{{ totalCount }} checked</span>
-            <button class="ios-footer-btn ios-footer-back" @click="closeMain">Close</button>
+            <button class="ios-footer-btn ios-footer-back text-sm" @click="closeMain">Close</button>
         </div>
     </IosModal>
 
@@ -462,13 +462,13 @@ onBeforeUnmount(() => {
 
                     <!-- URL -->
                     <div class="ios-section ios-section-tight">
-                        <div class="ios-section-label">Or use this link</div>
+                        <div class="ios-section-label text-compact">Or use this link</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last" style="gap: 8px;">
                                 <InputText type="text" :value="qrCodeData.url" readonly
                                     style="flex: 1; font-size: 11px; border: none; background: transparent; box-shadow: none; padding: 0;"
                                     @click="$event.target.select()" />
-                                <button class="ios-icon-btn" @click="copyToClipboard(qrCodeData.url)" title="Copy">
+                                <button class="ios-icon-btn text-sm" @click="copyToClipboard(qrCodeData.url)" title="Copy">
                                     <AppIcon name="copy" :size="14" style="color: #007AFF;" />
                                 </button>
                             </div>

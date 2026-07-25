@@ -101,75 +101,75 @@ const closeModal = () => {
         :loading="processing" @action="submit" @update:visible="val => !val && closeModal()">
                     <!-- PROGRAM SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Scholarship Program</div>
+                        <div class="ios-section-label text-compact">Scholarship Program</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="bookmark-fill" style="color: #007AFF; font-size: 13px;" />
                                     Program
                                 </div>
                                 <div class="ios-row-control">
                                     <Select v-model="form.scholarship_program_id" :options="scholarshipProgramsOptions"
                                         optionLabel="label" optionValue="value" placeholder="Select Program" showClear
-                                        class="ios-select" />
+                                        class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" />
                                 </div>
                             </div>
                         </div>
-                        <div v-if="errors.scholarship_program_id" class="ios-section-footer ios-error">
+                        <div v-if="errors.scholarship_program_id" class="ios-section-footer ios-error text-compact">
                             {{ errors.scholarship_program_id?.[0] || errors.scholarship_program_id }}
                         </div>
                     </div>
 
                     <!-- COURSE DETAILS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Course Details</div>
+                        <div class="ios-section-label text-compact">Course Details</div>
                         <div class="ios-card">
                             <!-- Name -->
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="graduation-cap" style="color: #AF52DE; font-size: 13px;" />
                                     Name
                                 </div>
                                 <div class="ios-row-control">
-                                    <InputText v-model="form.name" placeholder="Course name" class="ios-row-input" />
+                                    <InputText v-model="form.name" placeholder="Course name" class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                                 </div>
                             </div>
                             <!-- Shortname -->
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="tag" style="color: #FF9500; font-size: 13px;" />
                                     Shortname
                                 </div>
                                 <div class="ios-row-control">
-                                    <InputText v-model="form.shortname" placeholder="e.g. BSIT" class="ios-row-input" />
+                                    <InputText v-model="form.shortname" placeholder="e.g. BSIT" class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                                 </div>
                             </div>
                             <!-- Field of Study -->
                             <div class="ios-row ios-row-last">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="book" style="color: #5856D6; font-size: 13px;" />
                                     Field of Study
                                 </div>
                                 <div class="ios-row-control">
                                     <InputText v-model="form.field_of_study" placeholder="e.g. Information Technology"
-                                        class="ios-row-input" />
+                                        class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                                 </div>
                             </div>
                         </div>
-                        <div v-if="errors.name" class="ios-section-footer ios-error">
+                        <div v-if="errors.name" class="ios-section-footer ios-error text-compact">
                             {{ errors.name?.[0] || errors.name }}
                         </div>
-                        <div v-if="errors.shortname" class="ios-section-footer ios-error">
+                        <div v-if="errors.shortname" class="ios-section-footer ios-error text-compact">
                             {{ errors.shortname?.[0] || errors.shortname }}
                         </div>
-                        <div v-if="errors.field_of_study" class="ios-section-footer ios-error">
+                        <div v-if="errors.field_of_study" class="ios-section-footer ios-error text-compact">
                             {{ errors.field_of_study?.[0] || errors.field_of_study }}
                         </div>
                     </div>
 
                     <!-- DESCRIPTION SECTION -->
                     <div class="ios-section">
-                        <label class="ios-section-label"
+                        <label class="ios-section-label text-compact"
                             style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
                             Description
                             <ToggleSwitch v-model="showDescription" />
@@ -178,46 +178,46 @@ const closeModal = () => {
                             <Textarea v-model="form.description" rows="3" class="w-full"
                                 style="border: none; resize: vertical;" placeholder="Course description (optional)" />
                         </div>
-                        <div v-if="errors.description" class="ios-section-footer ios-error">
+                        <div v-if="errors.description" class="ios-section-footer ios-error text-compact">
                             {{ errors.description?.[0] || errors.description }}
                         </div>
                     </div>
 
                     <!-- SCHEDULE SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Schedule</div>
+                        <div class="ios-section-label text-compact">Schedule</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-dates">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" style="color: #FF3B30; font-size: 13px;" />
                                     Start Date
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="form.start_date" placeholder="Select date" showButtonBar
-                                        dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
+                                        dateFormat="M dd, yy" class="ios-datepicker [&_.p-inputtext]:text-compact" showIcon iconDisplay="input" />
                                 </div>
-                                <span class="ios-date-separator">—</span>
-                                <div class="ios-row-label">
+                                <span class="ios-date-separator text-sm">—</span>
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" style="color: #FF3B30; font-size: 13px;" />
                                     End Date
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="form.end_date" placeholder="Select date" showButtonBar
-                                        dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
+                                        dateFormat="M dd, yy" class="ios-datepicker [&_.p-inputtext]:text-compact" showIcon iconDisplay="input" />
                                 </div>
                             </div>
                         </div>
-                        <div v-if="errors.start_date" class="ios-section-footer ios-error">
+                        <div v-if="errors.start_date" class="ios-section-footer ios-error text-compact">
                             {{ errors.start_date?.[0] || errors.start_date }}
                         </div>
-                        <div v-if="errors.end_date" class="ios-section-footer ios-error">
+                        <div v-if="errors.end_date" class="ios-section-footer ios-error text-compact">
                             {{ errors.end_date?.[0] || errors.end_date }}
                         </div>
                     </div>
 
                     <!-- REMARKS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label text-compact">Remarks</div>
                         <div class="ios-card" style="padding: 0;">
                             <Editor v-model="form.remarks" editorStyle="height: 120px">
                                 <template #toolbar>
@@ -236,17 +236,17 @@ const closeModal = () => {
                                 </template>
                             </Editor>
                         </div>
-                        <div v-if="errors.remarks" class="ios-section-footer ios-error">
+                        <div v-if="errors.remarks" class="ios-section-footer ios-error text-compact">
                             {{ errors.remarks?.[0] || errors.remarks }}
                         </div>
                     </div>
 
                     <!-- STATUS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Status</div>
+                        <div class="ios-section-label text-compact">Status</div>
                         <div class="ios-card">
                             <label class="ios-row ios-row-last" style="cursor: pointer;">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="check-circle" style="color: #34C759; font-size: 13px;" />
                                     Active
                                 </div>

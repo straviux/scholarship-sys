@@ -336,12 +336,6 @@ class ScholarshipProfileListingService
             $profile->has_contract = $contractCount > 0;
             $profile->has_voucher = $voucherCount > 0;
 
-            // Derive is_endorsed from the latest scholarship record's unified_status
-            $profile->is_endorsed = $latestRecord && $latestRecord->unified_status === 'endorsed';
-            $profile->endorsement_details = $latestRecord && $latestRecord->unified_status === 'endorsed'
-                ? $latestRecord->remarks
-                : null;
-
             return $profile;
         });
     }

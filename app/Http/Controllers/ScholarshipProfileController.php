@@ -59,11 +59,6 @@ class ScholarshipProfileController extends Controller
      */
     public function storeApplicant(CreateScholarshipProfileRequest $request): Response
     {
-        // Check permission to create applicants
-        if (!Gate::allows('applicants.create')) {
-            abort(403, 'You do not have permission to create applicants.');
-        }
-
         $validated = $request->validated();
         // is_on_waiting_list is now managed through scholarship_records.application_status (pending status)
         $new_profile = ScholarshipProfile::create($validated);
@@ -136,11 +131,6 @@ class ScholarshipProfileController extends Controller
      */
     public function updateApplicant(UpdateScholarshipProfileRequest $request, $id)
     {
-        // Check permission to edit applicants
-        if (!Gate::allows('applicants.edit')) {
-            abort(403, 'You do not have permission to edit applicants.');
-        }
-
         $profile = ScholarshipProfile::findOrFail($id);
         $oldData = $profile->getAttributes();
 
@@ -462,6 +452,11 @@ class ScholarshipProfileController extends Controller
      */
     public function destroy($id)
     {
+        // Deleting applicant profiles is administrator-only
+        if (!Gate::allows('admin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $profile = ScholarshipProfile::findOrFail($id);
         $profileData = $profile->getAttributes();
 
@@ -1293,10 +1288,6 @@ class ScholarshipProfileController extends Controller
 
     public function updateLedger(UpsertScholarLedgerRequest $request, ScholarshipProfile $profile): JsonResponse
     {
-        if (!Gate::allows('scholarships.edit')) {
-            abort(403, 'You do not have permission to update scholar ledgers.');
-        }
-
         $validated = $request->validated();
 
         $entries = collect($validated['entries'] ?? [])
@@ -2923,11 +2914,6 @@ class ScholarshipProfileController extends Controller
      */
     public function updateApplicantRemarks($profile_id, Request $request)
     {
-        // Check permissions
-        if (!Gate::allows('applicants.edit')) {
-            abort(403, 'Unauthorized action.');
-        }
-
         // Validate the request
         $validated = $request->validate([
             'remarks' => 'nullable|string|max:1000'

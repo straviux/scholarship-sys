@@ -73,16 +73,16 @@ const deleteApplicant = () => {
 
                     <!-- Applicant Info -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Applicant</div>
+                        <div class="ios-section-label text-compact">Applicant</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label">Name</span>
+                                <span class="ios-row-label text-sm">Name</span>
                                 <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
                                     {{ applicant.last_name }}, {{ applicant.first_name }}
                                 </span>
                             </div>
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Contact</span>
+                                <span class="ios-row-label text-sm">Contact</span>
                                 <span style="font-size: 13px; color: #8E8E93;">{{ applicant.contact_no }}</span>
                             </div>
                         </div>

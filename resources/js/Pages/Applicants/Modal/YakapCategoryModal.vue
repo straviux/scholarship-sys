@@ -67,21 +67,21 @@ const resetForm = () => {
         :action-disabled="!canConfirm" @action="handleConfirm" @update:visible="val => !val && handleCancel()">
                     <!-- Description -->
                     <div class="ios-section">
-                        <div class="ios-section-footer" style="padding: 0 16px;">
+                        <div class="ios-section-footer text-compact" style="padding: 0 16px;">
                             Select a YAKAP category for this new applicant.
                         </div>
                     </div>
 
                     <!-- Category Selection -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Category</div>
+                        <div class="ios-section-label text-compact">Category</div>
                         <div class="ios-card">
                             <div v-for="(opt, idx) in yakapCategoryOptions" :key="opt.value" class="ios-row"
                                 :class="{ 'ios-row-last': idx === yakapCategoryOptions.length - 1 }"
                                 style="cursor: pointer;" @click="selectedCategory = opt.value">
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <AppIcon :name="opt.icon" :size="16" style="color: #007AFF;" />
-                                    <span class="ios-row-label">{{ opt.label }}</span>
+                                    <span class="ios-row-label text-sm">{{ opt.label }}</span>
                                 </div>
                                 <AppIcon v-if="selectedCategory === opt.value" name="check" :size="14"
                                     style="color: #007AFF;" />
@@ -91,24 +91,24 @@ const resetForm = () => {
 
                     <!-- Municipality Selection for YAKAP Field -->
                     <div v-if="selectedCategory === 'yakap-field'" class="ios-section">
-                        <div class="ios-section-label">Municipality</div>
+                        <div class="ios-section-label text-compact">Municipality</div>
                         <div class="ios-card" style="padding: 12px;">
                             <MunicipalitySelect v-model="selectedLocation" placeholder="Select Municipality"
                                 class="w-full" :clearable="false" />
                         </div>
-                        <div class="ios-section-footer">
+                        <div class="ios-section-footer text-compact">
                             Select the municipality for YAKAP Field assignment.
                         </div>
                     </div>
 
                     <!-- School Selection for YAKAP School -->
                     <div v-if="selectedCategory === 'yakap-school'" class="ios-section">
-                        <div class="ios-section-label">School</div>
+                        <div class="ios-section-label text-compact">School</div>
                         <div class="ios-card" style="padding: 12px;">
                             <SchoolSelect v-model="selectedLocation" placeholder="Select School" class="w-full"
                                 :clearable="false" />
                         </div>
-                        <div class="ios-section-footer">
+                        <div class="ios-section-footer text-compact">
                             Select the school for YAKAP School assignment.
                         </div>
                     </div>

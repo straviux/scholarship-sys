@@ -207,24 +207,24 @@ watch(
 </script>
 
 <template>
-    <div class="interview-assessment-form">
+    <div class="interview-assessment-form [&_.ios-row-control_.p-select-label]:text-compact [&_.ios-row-control_.p-inputtext]:text-compact">
         <div v-if="showValidationSummary && validationSummary" class="ios-section ios-section-tight">
             <div class="ios-card ios-validation-summary">
                 <div class="ios-validation-summary-icon">
                     <AppIcon name="exclamation-triangle" :size="16" />
                 </div>
                 <div>
-                    <div class="ios-validation-summary-title">Review Required Fields</div>
-                    <p class="ios-validation-summary-text">{{ validationSummary }}</p>
+                    <div class="ios-validation-summary-title text-compact">Review Required Fields</div>
+                    <p class="ios-validation-summary-text text-xs">{{ validationSummary }}</p>
                 </div>
             </div>
         </div>
 
         <div class="ios-section">
-            <div class="ios-section-label">Applicant</div>
+            <div class="ios-section-label text-compact">Applicant</div>
             <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
                 <div class="ios-row">
-                    <div class="ios-row-label interview-assessment-form__name">
+                    <div class="ios-row-label interview-assessment-form__name text-sm text-nav">
                         {{ subjectName }}
                     </div>
                 </div>
@@ -237,87 +237,87 @@ watch(
         </div>
 
         <div class="ios-section">
-            <div class="ios-section-label">Academic Details</div>
+            <div class="ios-section-label text-compact">Academic Details</div>
             <div class="ios-card">
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="book-open" :size="13" style="color: #007AFF;" />
                         Program
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.program_id }]">
                             <ProgramSelect v-model="form.program" custom-placeholder="Select program"
-                                class="ios-select" :show-clear="false" :ios-compact="true" />
-                            <small v-if="errors.program_id" class="ios-field-error">{{ errors.program_id }}</small>
+                                class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :show-clear="false" :ios-compact="true" />
+                            <small v-if="errors.program_id" class="ios-field-error text-xs">{{ errors.program_id }}</small>
                         </div>
                     </div>
                 </div>
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
                         Course
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.course_id }]">
                             <CourseSelect v-model="form.course" :scholarship-program-id="selectedProgramId"
-                                :custom-placeholder="coursePlaceholder" class="ios-select" :show-clear="false"
+                                :custom-placeholder="coursePlaceholder" class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :show-clear="false"
                                 :ios-compact="true" />
-                            <small v-if="!selectedProgramId && !errors.course_id" class="ios-field-hint">
+                            <small v-if="!selectedProgramId && !errors.course_id" class="ios-field-hint text-xs">
                                 Select a program first to narrow the course list.
                             </small>
-                            <small v-if="errors.course_id" class="ios-field-error">{{ errors.course_id }}</small>
+                            <small v-if="errors.course_id" class="ios-field-error text-xs">{{ errors.course_id }}</small>
                         </div>
                     </div>
                 </div>
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="building-2" :size="13" style="color: #FF9500;" />
                         School
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.school_id }]">
-                            <SchoolSelect v-model="form.school" custom-placeholder="Select school" class="ios-select"
+                            <SchoolSelect v-model="form.school" custom-placeholder="Select school" class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact"
                                 :show-clear="false" :ios-compact="true" />
-                            <small v-if="errors.school_id" class="ios-field-error">{{ errors.school_id }}</small>
+                            <small v-if="errors.school_id" class="ios-field-error text-xs">{{ errors.school_id }}</small>
                         </div>
                     </div>
                 </div>
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="list-checks" :size="13" style="color: #5856D6;" />
                         Year Level
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.year_level }]">
-                            <YearLevelSelect v-model="form.year_level" class="ios-select" :show-clear="false"
+                            <YearLevelSelect v-model="form.year_level" class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :show-clear="false"
                                 :ios-compact="true" />
-                            <small v-if="errors.year_level" class="ios-field-error">{{ errors.year_level }}</small>
+                            <small v-if="errors.year_level" class="ios-field-error text-xs">{{ errors.year_level }}</small>
                         </div>
                     </div>
                 </div>
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="calendar" :size="13" style="color: #AF52DE;" />
                         Term
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.term }]">
-                            <TermSelect v-model="form.term" class="ios-select" :show-clear="false"
+                            <TermSelect v-model="form.term" class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :show-clear="false"
                                 :ios-compact="true" />
-                            <small v-if="errors.term" class="ios-field-error">{{ errors.term }}</small>
+                            <small v-if="errors.term" class="ios-field-error text-xs">{{ errors.term }}</small>
                         </div>
                     </div>
                 </div>
                 <div class="ios-row ios-row-last">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="calendar" :size="13" style="color: #0EA5E9;" />
                         Academic Year
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.academic_year }]">
-                            <AcademicYearSelect v-model="form.academic_year" class="ios-select" :show-clear="false"
+                            <AcademicYearSelect v-model="form.academic_year" class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :show-clear="false"
                                 :ios-compact="true" />
-                            <small v-if="errors.academic_year" class="ios-field-error">{{ errors.academic_year
+                            <small v-if="errors.academic_year" class="ios-field-error text-xs">{{ errors.academic_year
                                 }}</small>
                         </div>
                     </div>
@@ -326,47 +326,47 @@ watch(
         </div>
 
         <div class="ios-section">
-            <div class="ios-section-label">Interview Details</div>
+            <div class="ios-section-label text-compact">Interview Details</div>
             <div class="ios-card" style="overflow: visible;">
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="calendar-1" :size="13" style="color: #353839" />
                         Interview Date
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.interview_date }]">
                             <DatePicker v-model="form.interview_date" placeholder="Select interview date" showButtonBar
-                                dateFormat="M dd, yy" class="ios-datepicker" showIcon
+                                dateFormat="M dd, yy" class="ios-datepicker [&_.p-inputtext]:text-compact" showIcon
                                 iconDisplay="input" />
-                            <small v-if="errors.interview_date" class="ios-field-error">{{ errors.interview_date }}</small>
+                            <small v-if="errors.interview_date" class="ios-field-error text-xs">{{ errors.interview_date }}</small>
                         </div>
                     </div>
                 </div>
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="user-star" :size="13" style="color: #2e6f40" />
                         Interviewer
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.interviewer_id }]">
-                            <UserSelect v-model="form.interviewer_id" :users="interviewerOptions" class="ios-select"
+                            <UserSelect v-model="form.interviewer_id" :users="interviewerOptions" class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact"
                                 custom-placeholder="Select interviewer" :show-clear="false"
                                 :ios-compact="true" />
-                            <small v-if="errors.interviewer_id" class="ios-field-error">{{ errors.interviewer_id
+                            <small v-if="errors.interviewer_id" class="ios-field-error text-xs">{{ errors.interviewer_id
                                 }}</small>
                         </div>
                     </div>
                 </div>
                 <div class="ios-row ios-row-last">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="person-standing" :size="13" style="color:#FA5053;" />
                         Endorsed By
                     </div>
                     <div class="ios-row-control ios-row-control-validation">
                         <div :class="['ios-input-stack', { 'has-error': errors.endorsed_by }]">
                             <InputText v-model="form.endorsed_by" placeholder="Enter endorser name"
-                                class="ios-select" maxlength="255" />
-                            <small v-if="errors.endorsed_by" class="ios-field-error">{{ errors.endorsed_by }}</small>
+                                class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" maxlength="255" />
+                            <small v-if="errors.endorsed_by" class="ios-field-error text-xs">{{ errors.endorsed_by }}</small>
                         </div>
                     </div>
                 </div>
@@ -374,16 +374,16 @@ watch(
         </div>
 
         <div class="ios-section">
-            <div class="ios-section-label">Interview Assessment</div>
+            <div class="ios-section-label text-compact">Interview Assessment</div>
             <div class="ios-card" style="overflow: visible;">
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="graduation-cap" :size="13" style="color: #353839" />
                         Academic Potential
                     </div>
                     <div class="ios-segmented-control w-1/2">
                         <button v-for="option in academicPotentialOptions" :key="option.value" type="button"
-                            :class="['ios-segment', form.academic_potential === option.value && 'ios-segment-active']"
+                            :class="['ios-segment text-compact [&_.pi]:text-compact', form.academic_potential === option.value && 'ios-segment-active']"
                             @click="form.academic_potential = option.value">
                             <span class="text-xs">{{ option.label }}</span>
                             <span class="assessment-check-slot">
@@ -395,13 +395,13 @@ watch(
                     </div>
                 </div>
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="piggy-bank" :size="13" style="color: #353839" />
                         Financial Need
                     </div>
                     <div class="ios-segmented-control w-1/2">
                         <button v-for="option in financialNeedOptions" :key="option.value" type="button"
-                            :class="['ios-segment', form.financial_need_level === option.value && 'ios-segment-active']"
+                            :class="['ios-segment text-compact [&_.pi]:text-compact', form.financial_need_level === option.value && 'ios-segment-active']"
                             @click="form.financial_need_level = option.value">
                             <span class="text-xs">{{ option.label }}</span>
                             <span class="assessment-check-slot">
@@ -414,13 +414,13 @@ watch(
                     </div>
                 </div>
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="handshake" :size="13" style="color: #353839" />
                         Communication Skills
                     </div>
                     <div class="ios-segmented-control w-1/2">
                         <button v-for="option in communicationSkillsOptions" :key="option.value" type="button"
-                            :class="['ios-segment', form.communication_skills === option.value && 'ios-segment-active']"
+                            :class="['ios-segment text-compact [&_.pi]:text-compact', form.communication_skills === option.value && 'ios-segment-active']"
                             @click="form.communication_skills = option.value">
                             <span class="text-xs">{{ option.label }}</span>
                             <span class="assessment-check-slot">
@@ -433,13 +433,13 @@ watch(
                     </div>
                 </div>
                 <div class="ios-row">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="thumbs-up" :size="13" style="color: #353839" />
                         Recommendation
                     </div>
                     <div class="ios-segmented-control w-1/2">
                         <button v-for="option in recommendationOptions" :key="option.value" type="button"
-                            :class="['ios-segment', form.recommendation === option.value && 'ios-segment-active']"
+                            :class="['ios-segment text-compact [&_.pi]:text-compact', form.recommendation === option.value && 'ios-segment-active']"
                             @click="form.recommendation = option.value">
                             <span class="text-xs">{{ option.label }}</span>
                             <span class="assessment-check-slot">
@@ -451,7 +451,7 @@ watch(
                     </div>
                 </div>
                 <div class="ios-row ios-row-last">
-                    <div class="ios-row-label">
+                    <div class="ios-row-label text-sm">
                         <AppIcon name="heart-handshake" :size="13" style="color: #353839" />
                         Grant Provision
                     </div>
@@ -459,29 +459,29 @@ watch(
                         <div :class="['ios-input-stack', { 'has-error': errors.grant_provision }]">
                             <Select v-model="form.grant_provision" :options="grantProvisionOptions"
                                 optionLabel="label" optionValue="value" :placeholder="grantProvisionPlaceholder"
-                                class="ios-select" :pt="compactSelectPt" size="small"
+                                class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :pt="compactSelectPt" size="small"
                                 :disabled="!selectedProgramCode || !grantProvisionOptions.length" :showClear="false" />
-                            <small v-if="grantProvisionHint && !errors.grant_provision" class="ios-field-hint">
+                            <small v-if="grantProvisionHint && !errors.grant_provision" class="ios-field-hint text-xs">
                                 {{ grantProvisionHint }}
                             </small>
-                            <small v-if="errors.grant_provision" class="ios-field-error">
+                            <small v-if="errors.grant_provision" class="ios-field-error text-xs">
                                 {{ errors.grant_provision }}
                             </small>
                         </div>
                     </div>
                 </div>
             </div>
-            <div v-if="errors.academic_potential" class="ios-section-footer ios-error">{{ errors.academic_potential }}
+            <div v-if="errors.academic_potential" class="ios-section-footer ios-error text-compact">{{ errors.academic_potential }}
             </div>
-            <div v-if="errors.financial_need_level" class="ios-section-footer ios-error">{{ errors.financial_need_level
+            <div v-if="errors.financial_need_level" class="ios-section-footer ios-error text-compact">{{ errors.financial_need_level
                 }}</div>
-            <div v-if="errors.communication_skills" class="ios-section-footer ios-error">{{ errors.communication_skills
+            <div v-if="errors.communication_skills" class="ios-section-footer ios-error text-compact">{{ errors.communication_skills
                 }}</div>
-            <div v-if="errors.recommendation" class="ios-section-footer ios-error">{{ errors.recommendation }}</div>
+            <div v-if="errors.recommendation" class="ios-section-footer ios-error text-compact">{{ errors.recommendation }}</div>
         </div>
 
         <div class="ios-section">
-            <div class="ios-section-label">Remarks</div>
+            <div class="ios-section-label text-compact">Remarks</div>
             <div class="ios-card" style="overflow: visible;">
                 <div class="ios-row ios-row-stacked" style="gap: 0; padding: 0;">
                     <Editor v-model="form.interview_remarks" editorStyle="height: 120px"
@@ -503,7 +503,7 @@ watch(
                     </Editor>
                 </div>
             </div>
-            <div v-if="errors.interview_remarks" class="ios-section-footer ios-error">{{ errors.interview_remarks }}
+            <div v-if="errors.interview_remarks" class="ios-section-footer ios-error text-compact">{{ errors.interview_remarks }}
             </div>
         </div>
     </div>

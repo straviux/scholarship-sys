@@ -15,7 +15,7 @@ const props = defineProps({
     requirements: Array,
 });
 
-const { hasPermission } = usePermission();
+const { hasPermission, isAdmin } = usePermission();
 
 // Local reactive list
 const programsList = ref([...props.scholarshipPrograms]);
@@ -99,7 +99,7 @@ const closeDeleteModal = () => {
 
     <AdminLayout>
 
-        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+        <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
                     <AppIcon name="graduation-cap" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
@@ -139,7 +139,7 @@ const closeDeleteModal = () => {
                 <Column field="name" header="Program" sortable>
                     <template #body="{ data }">
                         <div class="font-semibold text-gray-800 text-sm">{{ data.name }}</div>
-                        <div class="text-[11px] text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
+                        <div class="text-2xs text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
                             [{{ data.shortname }}]
                         </div>
                     </template>
@@ -170,7 +170,7 @@ const closeDeleteModal = () => {
                 <Column field="is_active" header="Status" style="width: 100px">
                     <template #body="{ data }">
                         <span
-                            class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                            class="text-2xs font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
                             :style="data.is_active
                                 ? 'background: #d1f5e0; color: #187a3c;'
                                 : 'background: #fee2e2; color: #991b1b;'">
@@ -186,7 +186,7 @@ const closeDeleteModal = () => {
                                 size="small" rounded outlined v-tooltip.top="'Edit'" @click="openEdit(data)" />
                             <AppButton v-if="hasPermission('programs.manage')" icon="list" severity="warn" size="small"
                                 rounded outlined v-tooltip.top="'Requirements'" @click="openRequirements(data)" />
-                            <AppButton v-if="hasPermission('programs.delete')" icon="trash" severity="danger"
+                            <AppButton v-if="isAdmin()" icon="trash" severity="danger"
                                 size="small" rounded outlined v-tooltip.top="'Delete'"
                                 @click="confirmDeleteProgram(data)" />
                         </div>
@@ -223,16 +223,16 @@ const closeDeleteModal = () => {
 
                         <!-- Program Info -->
                         <div class="ios-section">
-                            <div class="ios-section-label">Program</div>
+                            <div class="ios-section-label text-compact">Program</div>
                             <div class="ios-card">
                                 <div class="ios-row">
-                                    <span class="ios-row-label">Name</span>
+                                    <span class="ios-row-label text-sm">Name</span>
                                     <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
                                         {{ selectedProgram.name }}
                                     </span>
                                 </div>
                                 <div class="ios-row ios-row-last">
-                                    <span class="ios-row-label">Shortname</span>
+                                    <span class="ios-row-label text-sm">Shortname</span>
                                     <span style="font-size: 13px; color: #8E8E93;">{{ selectedProgram.shortname
                                     }}</span>
                                 </div>

@@ -16,12 +16,12 @@
             </div>
 
             <div class="ios-form-group">
-                <label class="ios-label">Completion Date</label>
+                <label class="ios-label text-compact">Completion Date</label>
                 <DatePicker v-model="form.completion_date" dateFormat="yy-mm-dd" showIcon fluid />
             </div>
 
             <div class="ios-form-group">
-                <label class="ios-label">Completion Remarks</label>
+                <label class="ios-label text-compact">Completion Remarks</label>
                 <Textarea v-model="form.completion_remarks" rows="4" autoResize fluid
                     placeholder="Add completion notes for the semester" />
             </div>

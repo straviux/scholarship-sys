@@ -5,7 +5,7 @@
     <AdminLayout>
         <div class="ios-settings-form">
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-4 sm:!px-6 lg:!px-8 scholarship-toolbar">
+            <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-4 sm:!px-6 lg:!px-8 scholarship-toolbar">
                 <template #start>
                     <div class="flex min-w-0 items-center gap-3 scholarship-toolbar__brand">
                         <AppIcon name="users" :size="32" class="text-indigo-500" />
@@ -21,7 +21,7 @@
                 <template #end>
                     <div class="flex flex-wrap items-center justify-end gap-3 scholarship-toolbar__actions">
                         <AppButton icon="plus" @click="addRecordPopover.toggle($event)" severity="success"
-                            v-tooltip.bottom="'Add New Record'" v-if="hasPermission('applicants.create')" rounded
+                            v-tooltip.bottom="'Add New Record'" rounded
                             outlined />
                         <Popover ref="addRecordPopover">
                             <div class="flex flex-col gap-2 w-48">
@@ -44,9 +44,6 @@
                                     icon="graduation-cap" severity="warning" class="justify-start" />
                             </div>
                         </Popover>
-                        <AppButton icon="star" @click="showEndorseModal = true" severity="info"
-                            v-tooltip.bottom="'Endorse Profiles'" v-if="hasPermission('applicants.edit')" rounded
-                            outlined />
                     </div>
                 </template>
             </Toolbar>
@@ -161,7 +158,7 @@
                     <div class="flex w-full flex-wrap items-center justify-between gap-3 xl:w-auto xl:justify-end">
                         
                         <div class="flex items-center gap-2">
-                            <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
+                            <RecordsSelect v-model="records" label="label" class="w-16" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
                         </div>
                         <AppButton :icon="simpleView ? 'table' : 'list'" severity="secondary" rounded outlined
@@ -220,7 +217,7 @@
                         :first="first" @page="onPageChange" :lazy="true"
                         paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                         :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
-                        :rowHover="true" stripedRows class="compact-table" scrollable tableStyle="min-width: 84rem"
+                        :rowHover="true" stripedRows class="compact-table [&_.p-datatable-thead_th]:text-sm [&_.p-chip]:text-xs" scrollable tableStyle="min-width: 84rem"
                         @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
                         :globalFilter="globalFilter"
                         :rowClass="(row) => expandedRows.length && !expandedRows.some(r => r.profile_id === row.profile_id) ? 'row-blurred' : ''"
@@ -243,19 +240,14 @@
                                                 @contextmenu.prevent="openContextMenu($event, slotProps.data)">{{
                                                     getFullName(slotProps.data) }}</div>
                                             <span v-if="slotProps.data.is_graduated"
-                                                class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800 dark:bg-emerald-900/35 dark:text-emerald-200"
+                                                class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-semibold uppercase tracking-[0.12em] text-emerald-800 dark:bg-emerald-900/35 dark:text-emerald-200"
                                                 v-tooltip.bottom="slotProps.data.graduation_date ? `Graduated ${formatDate(slotProps.data.graduation_date)}` : 'Graduated'">
                                                 Graduated
                                             </span>
                                             <span v-if="slotProps.data.has_ongoing_ros"
-                                                class="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-800 dark:bg-sky-900/35 dark:text-sky-200"
+                                                class="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-2xs font-semibold uppercase tracking-[0.12em] text-sky-800 dark:bg-sky-900/35 dark:text-sky-200"
                                                 v-tooltip.bottom="slotProps.data.ros_start_date ? `ROS ongoing since ${formatDate(slotProps.data.ros_start_date)}` : 'ROS ongoing'">
                                                 ROS Ongoing
-                                            </span>
-                                            <span v-if="slotProps.data.is_endorsed"
-                                                class="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-800 dark:bg-violet-900/35 dark:text-violet-200"
-                                                v-tooltip.bottom="slotProps.data.endorsement_details || 'Endorsed to another scholarship'">
-                                                Endorsed
                                             </span>
                                             <Badge v-if="slotProps.data.needs_legacy_term_review" value="Needs Review"
                                                 severity="warn" size="small"
@@ -360,12 +352,12 @@
                                     <Chip v-if="slotProps.data.latest_scholarship_record.grant_provision"
                                         :label="getSystemOptionLabel('grant_provision', slotProps.data.latest_scholarship_record.grant_provision)"
                                         size="small" class="font-medium cursor-pointer"
-                                        @click="hasPermission('applicants.edit') && openGrantProvisionDialog(slotProps.data)" />
-                                    <AppButton v-else-if="hasPermission('applicants.edit')" icon="plus" label="Set"
+                                        @click="openGrantProvisionDialog(slotProps.data)" />
+                                    <AppButton v-else icon="plus" label="Set"
                                         size="small" severity="secondary" text
                                         @click="openGrantProvisionDialog(slotProps.data)" />
                                     <AppButton
-                                        v-if="slotProps.data.latest_scholarship_record.grant_provision && hasPermission('applicants.edit')"
+                                        v-if="slotProps.data.latest_scholarship_record.grant_provision"
                                         icon="pencil" size="small" severity="secondary" text rounded
                                         @click="openGrantProvisionDialog(slotProps.data)" v-tooltip.top="'Edit'" />
                                 </div>
@@ -492,7 +484,7 @@
         <IosModal :visible="showProfileDialog" width="900px" max-width="90vw" body-style="padding: 16px;"
             @update:visible="showProfileDialog = $event">
             <template #title>
-                <span class="ios-nav-title flex items-center gap-2">
+                <span class="ios-nav-title flex items-center gap-2 text-nav-title">
                     <AppIcon name="user" :size="18" class="text-blue-600" />
                     <span class="font-semibold">Profile Details</span>
                 </span>
@@ -699,8 +691,6 @@
         <!-- Graduate List Report Modal -->
         <GraduateListReportModal :show="showGraduateListModal" @update:show="showGraduateListModal = $event" />
 
-        <!-- Endorse Modal -->
-        <EndorseModal :show="showEndorseModal" @update:show="showEndorseModal = $event" @endorsed="onEndorsed" />
 
         <!-- Grant Provision Update Dialog -->
         <IosModal :visible="showGrantProvisionDialog" title="Update Grant Provision" width="calc(100vw - 2rem)"
@@ -770,17 +760,17 @@
             body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
             @update:visible="showTechvocReportPreview = $event">
             <template #header-left>
-                <button class="ios-nav-btn ios-nav-cancel" @click="goBackToTechvocFilters">
+                <button class="ios-nav-btn ios-nav-cancel text-nav" @click="goBackToTechvocFilters">
                     <AppIcon name="chevron-left" :size="16" /> Back
                 </button>
             </template>
-            <template #title><span class="ios-nav-title">TechVoc Report Preview</span></template>
+            <template #title><span class="ios-nav-title text-nav-title">TechVoc Report Preview</span></template>
             <template #header-right>
                 <div class="ios-nav-actions">
-                    <button class="ios-icon-btn" @click="doTechvocExportExcel" title="Export to Excel">
+                    <button class="ios-icon-btn text-sm" @click="doTechvocExportExcel" title="Export to Excel">
                         <AppIcon name="file-spreadsheet" :size="16" style="color: #34C759;" />
                     </button>
-                    <button class="ios-icon-btn" @click="doTechvocPrint" title="Print / Save as PDF">
+                    <button class="ios-icon-btn text-sm" @click="doTechvocPrint" title="Print / Save as PDF">
                         <AppIcon name="printer" :size="16" style="color: #007AFF;" />
                     </button>
                 </div>
@@ -854,7 +844,6 @@ import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import ReportWizardModal from './Modal/ReportWizardModal.vue';
 import GraduateListReportModal from './Modal/GraduateListReportModal.vue';
 import TechvocWizardModal from './Modal/TechvocWizardModal.vue';
-import EndorseModal from './Modal/EndorseModal.vue';
 import TechVocReportTemplate from './Reports/TechVocReportTemplate.vue';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
@@ -1071,7 +1060,6 @@ const selectedProfile = ref(null);
 
 // Modal states
 const showReportWizard = ref(false);
-const showEndorseModal = ref(false);
 const reportTypePopover = ref(null);
 const reportWizardMode = ref(''); // 'master-list' | 'approval-list' | 'summary'
 const showProgramSelectionModal = ref(false);
@@ -1250,18 +1238,17 @@ const contextMenuItems = computed(() => [
         }
     },
     {
-        separator: true,
-        visible: () => hasPermission('applicants.edit')
+        separator: true
     },
     {
         label: 'Grant Provision',
         icon: 'bookmark',
         command: () => {
-            if (selectedProfileForContext.value && hasPermission('applicants.edit')) {
+            if (selectedProfileForContext.value) {
                 openGrantProvisionDialog(selectedProfileForContext.value);
             }
         },
-        visible: () => hasPermission('applicants.edit') && selectedProfileForContext.value?.latest_scholarship_record
+        visible: () => selectedProfileForContext.value?.latest_scholarship_record
     },
     {
         separator: true,
@@ -1421,15 +1408,6 @@ const viewFullProfile = (profile) => {
 const confirmDeleteProfile = (profile) => {
     profileToDelete.value = profile;
     showDeleteConfirmDialog.value = true;
-};
-
-// ─── Endorse handler ───
-const onEndorsed = (result) => {
-    // Refresh the profiles table to reflect endorsement changes
-    refreshData();
-    if (result?.message) {
-        // Use toast if available, otherwise we just refresh
-    }
 };
 
 const deleteProfile = async () => {

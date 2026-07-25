@@ -50,7 +50,7 @@ const sortedSystemUpdates = computed(() => {
     <Head title="Home" />
     <AdminLayout>
         <!-- Toolbar -->
-        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+        <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
                     <AppIcon name="graduation-cap" :size="32" class="text-indigo-900" />

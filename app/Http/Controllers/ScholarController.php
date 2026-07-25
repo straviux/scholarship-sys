@@ -15,7 +15,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class ScholarController extends Controller
 {
@@ -30,11 +29,6 @@ class ScholarController extends Controller
      */
     public function store(CreateScholarshipProfileRequest $request): RedirectResponse
     {
-        // Check permission to create applicants (scholars are a type of applicant)
-        if (!Gate::allows('applicants.create')) {
-            abort(403, 'You do not have permission to create scholar profiles.');
-        }
-
         DB::beginTransaction();
 
         try {
@@ -87,11 +81,6 @@ class ScholarController extends Controller
      */
     public function update(UpdateScholarshipProfileRequest $request, $id): RedirectResponse
     {
-        // Check permission to edit applicants (scholars are a type of applicant)
-        if (!Gate::allows('applicants.edit')) {
-            abort(403, 'You do not have permission to edit scholar profiles.');
-        }
-
         DB::beginTransaction();
 
         try {

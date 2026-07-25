@@ -4,7 +4,7 @@
 
     <AdminLayout>
         <div>
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-4 sm:!px-6 lg:!px-8 scholarship-toolbar">
+            <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-4 sm:!px-6 lg:!px-8 scholarship-toolbar">
                 <template #start>
                     <div class="flex min-w-0 items-center gap-3 scholarship-toolbar__brand">
                         <div
@@ -137,7 +137,7 @@
                     </div>
                     <div class="flex w-full flex-wrap items-center justify-between gap-3 xl:w-auto xl:justify-end">
                         <div class="flex items-center gap-2">
-                            <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
+                            <RecordsSelect v-model="records" label="label" class="w-16" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
                         </div>
                     </div>
@@ -215,20 +215,20 @@
                         <!-- Badges -->
                         <div class="flex flex-wrap gap-1">
                             <Tag :severity="jpmStatus(profile).severity" rounded>
-                                <span class="text-[11px] font-semibold">{{ jpmStatus(profile).label }}</span>
+                                <span class="text-2xs font-semibold">{{ jpmStatus(profile).label }}</span>
                             </Tag>
                             <Tag v-if="jpmStatus(profile).detail" severity="contrast" rounded>
-                                <span class="text-[11px]">{{ jpmStatus(profile).detail }}</span>
+                                <span class="text-2xs">{{ jpmStatus(profile).detail }}</span>
                             </Tag>
                             <Tag v-if="profile.latest_scholarship_record?.unified_status"
                                 :severity="statusSeverity(profile.latest_scholarship_record.unified_status)" rounded>
-                                <span class="text-[11px] font-semibold">{{ statusLabel(profile.latest_scholarship_record.unified_status) }}</span>
+                                <span class="text-2xs font-semibold">{{ statusLabel(profile.latest_scholarship_record.unified_status) }}</span>
                             </Tag>
                         </div>
                         <!-- Family (above name) -->
-                        <div class="grid grid-cols-1 gap-x-2 text-[11px]">
+                        <div class="grid grid-cols-1 gap-x-2 text-2xs">
                             <div class="flex gap-1">
-                                <span class="font-semibold text-[10px] uppercase tracking-wide text-slate-400">Mother</span>
+                                <span class="font-semibold text-3xs uppercase tracking-wide text-slate-400">Mother</span>
                                 <p class="truncate text-slate-600">{{ presentText(profile.mother_name) }}</p>
                             </div>
                             <div class="flex gap-1">
@@ -236,13 +236,13 @@
                                 <p class="truncate text-slate-600">{{ presentText(profile.father_name) }}</p>
                             </div>
                             <div class="flex gap-1">
-                                <span class="font-semibold text-[10px] uppercase tracking-wide text-slate-400">Guardian</span>
+                                <span class="font-semibold text-3xs uppercase tracking-wide text-slate-400">Guardian</span>
                                 <p class="truncate text-slate-600">{{ presentText(profile.guardian_name) }}</p>
                             </div>
                         </div>
                         <!-- Remarks -->
                         <div v-if="previewText(profile.remarks) || previewText(profile.jpm_remarks)"
-                            class="border-t border-slate-100 pt-2 text-[11px] text-slate-600">
+                            class="border-t border-slate-100 pt-2 text-2xs text-slate-600">
                             <p v-if="previewText(profile.remarks)" class="line-clamp-2">
                                 <span class="font-semibold uppercase tracking-wide text-slate-400">Note: </span>{{ previewText(profile.remarks) }}
                             </p>
@@ -371,7 +371,7 @@ const props = defineProps({
     },
 });
 
-const { hasPermission } = usePermission();
+const { hasPermission, isAdmin } = usePermission();
 
 const {
     filters: filter,
@@ -542,7 +542,8 @@ const grantProvisionOptions = [
 ];
 
 const profileRows = computed(() => props.profiles?.data ?? []);
-const canManageJpm = computed(() => hasPermission('jpm.manage'));
+// JPM management is administrator-only
+const canManageJpm = computed(() => isAdmin());
 const showJpmModal = ref(false);
 const showReportModal = ref(false);
 const selectedProfileForJpm = ref(null);

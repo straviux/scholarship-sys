@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="ios-section">
-                <p class="ios-section-label">OBR Status</p>
+                <p class="ios-section-label text-compact">OBR Status</p>
                 <Select v-model="status" :options="statusOptions" placeholder="Select a status" class="w-full" />
             </div>
         </div>

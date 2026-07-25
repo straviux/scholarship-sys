@@ -70,7 +70,7 @@ const submit = () => {
                     <span v-else>Sign in</span>
                 </button>
 
-                <p class="text-[11px] text-center text-slate-500 mt-5">
+                <p class="text-2xs text-center text-slate-500 mt-5">
                     Restricted to <span class="text-slate-300">Administrators</span> and <span
                         class="text-slate-300">Program Managers</span> only.
                 </p>

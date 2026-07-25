@@ -224,7 +224,7 @@
                         </p>
                         <div class="flex flex-wrap gap-2">
                             <span v-for="token in disbursementTemplateTokens" :key="token"
-                                class="rounded-full bg-white border px-2 py-1 font-mono text-[11px] text-gray-700">
+                                class="rounded-full bg-white border px-2 py-1 font-mono text-2xs text-gray-700">
                                 {{ token }}
                             </span>
                         </div>

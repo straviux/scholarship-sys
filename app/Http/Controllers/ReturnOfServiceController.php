@@ -86,10 +86,6 @@ class ReturnOfServiceController extends Controller
      */
     public function storeBatch(Request $request)
     {
-        if (!Gate::allows('return-of-service.create')) {
-            abort(403, 'User does not have the right permissions');
-        }
-
         $validated = $request->validate([
             'batch_name' => 'required|string|max:255|unique:return_of_service_batches,batch_name',
             'description' => 'nullable|string',
@@ -136,10 +132,6 @@ class ReturnOfServiceController extends Controller
      */
     public function updateBatch(Request $request, ReturnOfServiceBatch $batch)
     {
-        if (!Gate::allows('return-of-service.edit')) {
-            abort(403, 'User does not have the right permissions');
-        }
-
         $validated = $request->validate([
             'batch_name' => 'required|string|max:255|unique:return_of_service_batches,batch_name,' . $batch->id,
             'description' => 'nullable|string',
@@ -186,7 +178,8 @@ class ReturnOfServiceController extends Controller
      */
     public function destroyBatch(ReturnOfServiceBatch $batch)
     {
-        if (!Gate::allows('return-of-service.delete')) {
+        // Deleting batches is administrator-only
+        if (!Gate::allows('admin')) {
             abort(403, 'User does not have the right permissions');
         }
 
@@ -276,10 +269,6 @@ class ReturnOfServiceController extends Controller
      */
     public function storeScholar(Request $request)
     {
-        if (!Gate::allows('return-of-service.create')) {
-            abort(403, 'User does not have the right permissions');
-        }
-
         $validated = $request->validate([
             'batch_id' => 'required|exists:return_of_service_batches,id',
             'profile_id' => 'required|exists:scholarship_profiles,profile_id',
@@ -324,10 +313,6 @@ class ReturnOfServiceController extends Controller
      */
     public function updateScholar(Request $request, ReturnOfService $record)
     {
-        if (!Gate::allows('return-of-service.edit')) {
-            abort(403, 'User does not have the right permissions');
-        }
-
         $validated = $request->validate([
             'years_of_service' => 'nullable|numeric|min:0',
             'service_start_date' => 'nullable|date',
@@ -355,9 +340,6 @@ class ReturnOfServiceController extends Controller
      */
     public function destroyScholar(ReturnOfService $record)
     {
-        if (!Gate::allows('return-of-service.delete')) {
-            abort(403, 'User does not have the right permissions');
-        }
 
         try {
             ActivityLogService::log(
@@ -394,7 +376,7 @@ class ReturnOfServiceController extends Controller
      */
     public function searchRecords(Request $request)
     {
-        if (!Gate::allows('return-of-service.create')) {
+        if (!Gate::allows('return-of-service.view')) {
             abort(403, 'User does not have the right permissions');
         }
 

@@ -2,11 +2,11 @@
     <IosModal :visible="visible" title="Budget Monitoring" width="99vw" max-width="1520px"
         body-style="padding: 20px;" @update:visible="val => emit('update:visible', val)">
         <template #header-right>
-            <button class="ios-nav-btn" style="right:58px;color:#34C759" @click="exportExcel"
+            <button class="ios-nav-btn text-nav" style="right:58px;color:#34C759" @click="exportExcel"
                 :disabled="summary.length === 0" v-tooltip.bottom="'Download Excel'">
                 <AppIcon name="file-excel" />
             </button>
-            <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="summary.length === 0"
+            <button class="ios-nav-btn ios-nav-action text-nav" @click="generateReport" :disabled="summary.length === 0"
                 v-tooltip.bottom="'Print Report'">
                 <AppIcon name="print" />
             </button>

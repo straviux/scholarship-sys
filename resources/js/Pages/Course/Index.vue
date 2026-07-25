@@ -15,7 +15,7 @@ const props = defineProps({
     scholarshipPrograms: Object,
 });
 
-const { hasPermission } = usePermission();
+const { hasPermission, isAdmin } = usePermission();
 
 // Local reactive copy of courses
 const coursesList = ref([...props.courses]);
@@ -123,7 +123,7 @@ const closeDeleteModal = () => {
 
     <AdminLayout>
 
-        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+        <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
                     <AppIcon name="book" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
@@ -134,7 +134,7 @@ const closeDeleteModal = () => {
                 </div>
             </template>
             <template #end>
-                <AppButton v-if="hasPermission('courses.manage')" icon="plus" label="Add Course" severity="success"
+                <AppButton icon="plus" label="Add Course" severity="success"
                     raised rounded size="small" @click="openCreate" />
             </template>
         </Toolbar>
@@ -166,7 +166,7 @@ const closeDeleteModal = () => {
                 <Column field="name" header="Course" sortable>
                     <template #body="{ data }">
                         <div class="font-semibold text-gray-800 text-sm">{{ data.name }}</div>
-                        <div class="text-[11px] text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
+                        <div class="text-2xs text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
                             [{{ data.shortname }}]
                         </div>
                     </template>
@@ -194,7 +194,7 @@ const closeDeleteModal = () => {
                 <Column field="is_active" header="Status" style="width: 100px">
                     <template #body="{ data }">
                         <span
-                            class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                            class="text-2xs font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
                             :style="data.is_active
                                 ? 'background: #d1f5e0; color: #187a3c;'
                                 : 'background: #fee2e2; color: #991b1b;'">
@@ -205,10 +205,10 @@ const closeDeleteModal = () => {
 
                 <Column header="Actions" style="width: 100px">
                     <template #body="{ data }">
-                        <div class="flex gap-1.5 justify-center" v-if="hasPermission('courses.manage')">
+                        <div class="flex gap-1.5 justify-center">
                             <AppButton icon="pencil" severity="info" size="small" rounded outlined
                                 v-tooltip.top="'Edit'" @click="openEdit(data)" />
-                            <AppButton v-if="hasPermission('courses.delete')" icon="trash" severity="danger"
+                            <AppButton v-if="isAdmin()" icon="trash" severity="danger"
                                 size="small" rounded outlined v-tooltip.top="'Delete'"
                                 @click="confirmDeleteCourse(data)" />
                         </div>
@@ -243,20 +243,20 @@ const closeDeleteModal = () => {
 
                         <!-- Course Info -->
                         <div class="ios-section">
-                            <div class="ios-section-label">Course</div>
+                            <div class="ios-section-label text-compact">Course</div>
                             <div class="ios-card">
                                 <div class="ios-row">
-                                    <span class="ios-row-label">Name</span>
+                                    <span class="ios-row-label text-sm">Name</span>
                                     <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
                                         {{ selectedCourse.name }}
                                     </span>
                                 </div>
                                 <div class="ios-row">
-                                    <span class="ios-row-label">Shortname</span>
+                                    <span class="ios-row-label text-sm">Shortname</span>
                                     <span style="font-size: 13px; color: #8E8E93;">{{ selectedCourse.shortname }}</span>
                                 </div>
                                 <div class="ios-row ios-row-last">
-                                    <span class="ios-row-label">Program</span>
+                                    <span class="ios-row-label text-sm">Program</span>
                                     <span style="font-size: 13px; color: #8E8E93;">{{ selectedCourse.program }}</span>
                                 </div>
                             </div>

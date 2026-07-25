@@ -12,7 +12,7 @@
             </template>
 
             <section class="ios-section">
-                <div class="ios-section-label">Update Details</div>
+                <div class="ios-section-label text-compact">Update Details</div>
                 <div class="max-w-4xl">
                     <!-- Loading State -->
                     <div v-if="loading" class="text-center py-12">
@@ -88,7 +88,8 @@
                                 <!-- Content Section -->
                                 <div class="mb-4 short:mb-2">
                                     <h3 class="text-lg font-semibold text-gray-900 mb-3">Content</h3>
-                                    <div class="ios-markdown-prose ios-markdown-prose--detail max-w-none">
+                                    <div
+                                        class="ios-markdown-prose ios-markdown-prose--detail max-w-none [&_h1]:text-[2em] [&_h2]:text-[1.5em] [&_h3]:text-[1.25em] [&_h4]:text-[1em] [&_h5]:text-[0.875em] [&_h6]:text-[0.875em] [&_code]:text-[0.9em] [&_pre_code]:text-[0.875em]">
                                         <!-- Markdown Content -->
                                         <div v-if="update.is_markdown && update.markdown_content"
                                             v-html="renderMarkdown(update.markdown_content)"></div>

@@ -56,10 +56,10 @@ const submit = () => {
         <div v-if="profile">
                     <!-- Applicant Info -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Applicant</div>
+                        <div class="ios-section-label text-compact">Applicant</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">{{ profile.last_name }}, {{ profile.first_name }}</span>
+                                <span class="ios-row-label text-sm">{{ profile.last_name }}, {{ profile.first_name }}</span>
                                 <span style="font-size: 13px; color: #8E8E93;">{{ profile.contact_no }}</span>
                             </div>
                         </div>
@@ -67,7 +67,7 @@ const submit = () => {
 
                     <!-- Remarks Input -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label text-compact">Remarks</div>
                         <div class="ios-card">
                             <Editor v-model="remarksForm.remarks" editorStyle="height: 150px">
                                 <template #toolbar>
@@ -86,7 +86,7 @@ const submit = () => {
                                 </template>
                             </Editor>
                         </div>
-                        <div v-if="remarksForm.errors.remarks" class="ios-section-footer ios-error">
+                        <div v-if="remarksForm.errors.remarks" class="ios-section-footer ios-error text-compact">
                             {{ remarksForm.errors.remarks }}
                         </div>
                     </div>

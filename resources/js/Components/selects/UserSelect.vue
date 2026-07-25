@@ -138,7 +138,7 @@ const selectPt = computed(() => {
         <template #option="slotProps">
             <div class="flex flex-col items-start leading-tight">
                 <div class="uppercase">{{ slotProps.option.name }}</div>
-                <div v-if="slotProps.option.email" class="text-[11px] text-surface-500 normal-case">
+                <div v-if="slotProps.option.email" class="text-2xs text-surface-500 normal-case">
                     {{ slotProps.option.email }}
                 </div>
             </div>

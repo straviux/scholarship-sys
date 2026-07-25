@@ -13,19 +13,19 @@
             <div class="ios-modal" :class="modalClass" :style="resolvedModalStyle">
                 <div class="ios-nav-bar" :class="headerClass" @pointerdown="handleDragStart">
                     <slot name="header-left">
-                        <button v-if="showClose" class="ios-nav-btn ios-nav-cancel" type="button" @click="handleClose">
+                        <button v-if="showClose" class="ios-nav-btn ios-nav-cancel text-nav" type="button" @click="handleClose">
                             <AppIcon :name="closeIcon" :size="iconSize" />
                         </button>
                     </slot>
 
                     <slot name="title">
-                        <span class="ios-nav-title" :class="titleClass">{{ title }}</span>
+                        <span class="ios-nav-title text-nav-title" :class="titleClass">{{ title }}</span>
                     </slot>
 
                     <slot name="header-right">
                         <button
                             v-if="showAction"
-                            class="ios-nav-btn ios-nav-action"
+                            class="ios-nav-btn ios-nav-action text-nav"
                             :class="actionClass"
                             type="button"
                             @click.stop="emit('action')"

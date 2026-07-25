@@ -675,7 +675,7 @@ const debouncedSaveOrder = () => {
             </template>
 
             <section class="ios-section">
-                <div class="ios-section-label">Menu Tree</div>
+                <div class="ios-section-label text-compact">Menu Tree</div>
                 <Card class="ios-page-panel">
                     <template #content>
                         <div class="space-y-4">

@@ -66,8 +66,11 @@ body {
   }
 }
 
+/* First page keeps a taller top margin for the report header, but MUST match
+   the left/right/bottom of other pages — otherwise the content width differs
+   per page and multi-page tables (width:100%) render inconsistent columns. */
 @page:first {
-  margin: 10mm 10mm 14mm 10mm;
+  margin: 10mm 8mm 8mm 8mm;
 }
 
 @media print {

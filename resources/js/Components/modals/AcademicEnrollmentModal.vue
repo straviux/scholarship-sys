@@ -12,15 +12,15 @@
         <div class="flex flex-col gap-4 pt-4 pb-8 px-2">
             <div class="flex flex-col gap-4 p-2">
                 <div class="ios-form-group">
-                    <label class="ios-label">Program</label>
+                    <label class="ios-label text-compact">Program</label>
                     <ProgramSelect v-model="form.program_id" />
                 </div>
                 <div class="ios-form-group">
-                    <label class="ios-label">Course</label>
+                    <label class="ios-label text-compact">Course</label>
                     <CourseSelect v-model="form.course_id" :scholarship-program-id="selectedProgramId" />
                 </div>
                 <div class="ios-form-group">
-                    <label class="ios-label">School *</label>
+                    <label class="ios-label text-compact">School *</label>
                     <SchoolSelect v-model="form.school_id" />
                 </div>
             </div>

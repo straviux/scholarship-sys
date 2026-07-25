@@ -70,14 +70,14 @@ const submit = () => {
         :action-disabled="!batchYakapForm.yakap_category" @action="submit" @update:visible="val => !val && close()">
                     <!-- Selection Summary -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Selection Summary</div>
+                        <div class="ios-section-label text-compact">Selection Summary</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label">Selected Applicants</span>
-                                <span class="ios-badge">{{ selectedRows.length }}</span>
+                                <span class="ios-row-label text-sm">Selected Applicants</span>
+                                <span class="ios-badge text-nav">{{ selectedRows.length }}</span>
                             </div>
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label" style="color: #8E8E93; font-size: 13px;">
+                                <span class="ios-row-label text-sm" style="color: #8E8E93; font-size: 13px;">
                                     Batch update will apply YAKAP category to all selected applicants
                                 </span>
                             </div>
@@ -86,10 +86,10 @@ const submit = () => {
 
                     <!-- Selected Applicants Preview -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Applicants</div>
+                        <div class="ios-section-label text-compact">Applicants</div>
                         <div class="ios-card ios-applicant-list">
                             <div v-for="(row, idx) in selectedRows.slice(0, 8)" :key="idx" class="ios-row">
-                                <span class="ios-row-label">{{ row.last_name }}, {{ row.first_name }}</span>
+                                <span class="ios-row-label text-sm">{{ row.last_name }}, {{ row.first_name }}</span>
                             </div>
                             <div v-if="selectedRows.length > 8" class="ios-row ios-row-last"
                                 style="color: #8E8E93; font-size: 13px; justify-content: center;">
@@ -100,11 +100,11 @@ const submit = () => {
 
                     <!-- YAKAP Category Selection -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Update Options</div>
+                        <div class="ios-section-label text-compact">Update Options</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label">YAKAP Category</span>
-                                <div class="ios-row-control ios-select">
+                                <span class="ios-row-label text-sm">YAKAP Category</span>
+                                <div class="ios-row-control ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact">
                                     <Select v-model="batchYakapForm.yakap_category" :options="yakapCategoryOptions"
                                         optionLabel="label" optionValue="value" placeholder="Select Category"
                                         @change="handleCategoryChange" />
@@ -113,8 +113,8 @@ const submit = () => {
 
                             <!-- Municipality (YAKAP Field) -->
                             <div v-if="batchYakapForm.yakap_category === 'yakap-field'" class="ios-row">
-                                <span class="ios-row-label">Municipality</span>
-                                <div class="ios-row-control ios-select">
+                                <span class="ios-row-label text-sm">Municipality</span>
+                                <div class="ios-row-control ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact">
                                     <MunicipalitySelect v-model="batchYakapForm.yakap_location"
                                         placeholder="Select Municipality" :clearable="false" />
                                 </div>
@@ -122,8 +122,8 @@ const submit = () => {
 
                             <!-- School (YAKAP School) -->
                             <div v-if="batchYakapForm.yakap_category === 'yakap-school'" class="ios-row">
-                                <span class="ios-row-label">School</span>
-                                <div class="ios-row-control ios-select">
+                                <span class="ios-row-label text-sm">School</span>
+                                <div class="ios-row-control ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact">
                                     <SchoolSelect v-model="batchYakapForm.yakap_location" placeholder="Select School"
                                         :clearable="false" />
                                 </div>
@@ -134,7 +134,7 @@ const submit = () => {
                                 <span style="font-size: 13px; color: #8E8E93;">No specific location required</span>
                             </div>
                         </div>
-                        <div class="ios-section-footer">
+                        <div class="ios-section-footer text-compact">
                             Select the YAKAP category to apply to all selected applicants
                         </div>
                     </div>

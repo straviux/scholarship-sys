@@ -54,15 +54,15 @@ const submit = async () => {
 
                     <!-- Program Info -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Program</div>
+                        <div class="ios-section-label text-compact">Program</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label">Name</span>
+                                <span class="ios-row-label text-sm">Name</span>
                                 <span style="font-size: 14px; color: #1c1c1e; font-weight: 600;">{{ program?.name
                                 }}</span>
                             </div>
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Shortname</span>
+                                <span class="ios-row-label text-sm">Shortname</span>
                                 <span style="font-size: 13px; color: #8E8E93;">{{ program?.shortname }}</span>
                             </div>
                         </div>
@@ -70,7 +70,7 @@ const submit = async () => {
 
                     <!-- Requirements Checklist -->
                     <div class="ios-section">
-                        <div class="ios-section-label">
+                        <div class="ios-section-label text-compact">
                             Requirements
                             <span style="color: #8E8E93; font-weight: 400; margin-left: 6px;">
                                 ({{ selectedIds.length }} selected)

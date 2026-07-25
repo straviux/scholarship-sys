@@ -304,7 +304,6 @@ class ScholarshipRecord extends Model
             'withdrawn' => ['label' => 'Withdrawn', 'color' => 'secondary'],
             'loa' => ['label' => 'Leave of Absence', 'color' => 'warning'],
             'suspended' => ['label' => 'Suspended', 'color' => 'danger'],
-            'endorsed' => ['label' => 'Endorsed', 'color' => 'secondary'],
             'unknown' => ['label' => 'Unknown', 'color' => 'secondary'],
         ];
         return $statusConfig[$this->unified_status] ?? null;
@@ -423,11 +422,6 @@ class ScholarshipRecord extends Model
     public function scopeCompleted($query)
     {
         return $query->where('unified_status', 'completed');
-    }
-
-    public function scopeEndorsed($query)
-    {
-        return $query->where('unified_status', 'endorsed');
     }
 
     public function scopeRenewalApplications($query)

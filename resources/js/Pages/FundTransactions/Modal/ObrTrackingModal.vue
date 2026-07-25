@@ -37,20 +37,20 @@
 
                         <!-- Form Fields -->
                         <div v-if="!isComplete" class="ios-section">
-                            <p class="ios-section-label">OBR Details</p>
+                            <p class="ios-section-label text-compact">OBR Details</p>
                             <div class="ios-card">
                                 <div class="ios-row">
-                                    <span class="ios-row-label">Fiscal Year *</span>
+                                    <span class="ios-row-label text-sm">Fiscal Year *</span>
                                     <InputText v-model.number="formData.fiscal_year" type="number"
                                         placeholder="e.g., 2025" class="w-48 text-right" />
                                 </div>
                                 <div class="ios-row">
-                                    <span class="ios-row-label">OBR Number *</span>
+                                    <span class="ios-row-label text-sm">OBR Number *</span>
                                     <InputText v-model="formData.obr_no" type="text" placeholder="e.g., 200-25-12-24188"
                                         class="w-48 text-right" />
                                 </div>
                                 <div class="ios-row" style="border-bottom: none;">
-                                    <span class="ios-row-label">Date Obligated</span>
+                                    <span class="ios-row-label text-sm">Date Obligated</span>
                                     <InputText v-model="formData.date_obligated" type="date" class="w-48" />
                                 </div>
                             </div>

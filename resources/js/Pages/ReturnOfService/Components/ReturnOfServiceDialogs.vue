@@ -4,81 +4,81 @@
         body-style="padding: 0 16px 24px;" @action="emit('submit-batch')"
         @update:visible="(visible) => { if (!visible) closeBatchDialog(); }">
                     <div class="ios-section">
-                        <div class="ios-section-label">Basic Info</div>
+                        <div class="ios-section-label text-compact">Basic Info</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-stacked">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="tag" :size="13" style="color: #007AFF;" />
                                     Batch Name <span style="color: #FF3B30; margin-left: 2px;">*</span>
                                 </div>
                                 <InputText v-model="batchForm.batch_name" placeholder="e.g., Batch 2025-A"
-                                    class="ios-full-input" :class="{ 'p-invalid': batchForm.errors.batch_name }" />
+                                    class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" :class="{ 'p-invalid': batchForm.errors.batch_name }" />
                             </div>
                             <div class="ios-row ios-row-stacked">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="align-left" :size="13" style="color: #8E8E93;" />
                                     Description
                                 </div>
                                 <Textarea v-model="batchForm.description" rows="2" placeholder="Notes about this batch"
-                                    class="ios-full-input" />
+                                    class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" />
                             </div>
                         </div>
-                        <div v-if="batchForm.errors.batch_name" class="ios-section-footer ios-error">
+                        <div v-if="batchForm.errors.batch_name" class="ios-section-footer ios-error text-compact">
                             {{ batchForm.errors.batch_name }}
                         </div>
                     </div>
 
                     <div class="ios-section">
-                        <div class="ios-section-label">Exam Period</div>
+                        <div class="ios-section-label text-compact">Exam Period</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     Date From
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="batchForm.exam_date_from" placeholder="Any" showIcon
-                                        iconDisplay="input" class="ios-datepicker" />
+                                        iconDisplay="input" class="ios-datepicker [&_.p-inputtext]:text-compact" />
                                 </div>
                             </div>
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     Date To
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="batchForm.exam_date_to" placeholder="Any" showIcon
-                                        iconDisplay="input" class="ios-datepicker" />
+                                        iconDisplay="input" class="ios-datepicker [&_.p-inputtext]:text-compact" />
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="ios-section">
-                        <div class="ios-section-label">Details</div>
+                        <div class="ios-section-label text-compact">Details</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar-x" :size="13" style="color: #AF52DE;" />
                                     Result Date
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="batchForm.result_date" placeholder="Any" showIcon
-                                        iconDisplay="input" class="ios-datepicker" />
+                                        iconDisplay="input" class="ios-datepicker [&_.p-inputtext]:text-compact" />
                                 </div>
                             </div>
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
                                     Course <span style="color: #FF3B30; margin-left: 2px;">*</span>
                                 </div>
                                 <div class="ios-row-control">
                                     <CourseSelect v-model="batchForm.course_id" customPlaceholder="Select"
-                                        class="ios-select" :load-all-when-no-program="true" />
+                                        class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :load-all-when-no-program="true" />
                                 </div>
                             </div>
                         </div>
-                        <div v-if="batchForm.errors.course_id" class="ios-section-footer ios-error">
+                        <div v-if="batchForm.errors.course_id" class="ios-section-footer ios-error text-compact">
                             {{ batchForm.errors.course_id }}
                         </div>
                     </div>
@@ -92,10 +92,10 @@
         body-style="padding: 0 16px 24px;" @action="emit('submit-scholar')"
         @update:visible="(visible) => { if (!visible) closeScholarDialog(); }">
                     <div class="ios-section">
-                        <div class="ios-section-label">Scholar</div>
+                        <div class="ios-section-label text-compact">Scholar</div>
                         <div class="ios-card">
                             <div v-if="scholarMode === 'edit'" class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="user" :size="13" style="color: #007AFF;" />
                                     Name
                                 </div>
@@ -104,95 +104,95 @@
                                 </span>
                             </div>
                             <div v-else class="ios-row ios-row-stacked">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="users" :size="13" style="color: #007AFF;" />
                                     Select Scholars <span style="color: #FF3B30; margin-left: 2px;">*</span>
                                 </div>
                                 <MultiSelect v-model="scholarForm.selectedProfile" :options="scholarshipRecords"
                                     optionLabel="label" placeholder="Search completed scholars..." :filter="true"
-                                    class="ios-full-input" @filter="(event) => emit('profile-filter', event)" />
+                                    class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" @filter="(event) => emit('profile-filter', event)" />
                                 <small class="text-gray-500 text-xs">Only completed records from Medicine and Medical
                                     Allied Courses program</small>
                             </div>
                         </div>
-                        <div v-if="scholarForm.errors.profile_id" class="ios-section-footer ios-error">
+                        <div v-if="scholarForm.errors.profile_id" class="ios-section-footer ios-error text-compact">
                             {{ scholarForm.errors.profile_id }}
                         </div>
                     </div>
 
                     <div class="ios-section">
-                        <div class="ios-section-label">Return of Service</div>
+                        <div class="ios-section-label text-compact">Return of Service</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #34C759;" />
                                     Start Date
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="scholarForm.service_start_date" placeholder="Select" showIcon
-                                        iconDisplay="input" class="ios-datepicker" />
+                                        iconDisplay="input" class="ios-datepicker [&_.p-inputtext]:text-compact" />
                                 </div>
                             </div>
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     End Date
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="scholarForm.service_end_date" placeholder="Select" showIcon
-                                        iconDisplay="input" class="ios-datepicker"
+                                        iconDisplay="input" class="ios-datepicker [&_.p-inputtext]:text-compact"
                                         :class="{ 'p-invalid': isEndDateInvalid }" />
                                 </div>
                             </div>
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="clock" :size="13" style="color: #5856D6;" />
                                     Years of Service
                                 </div>
                                 <div class="ios-row-control ios-years-row-control">
                                     <div class="ios-years-control">
-                                        <button type="button" class="ios-inline-action-btn"
+                                        <button type="button" class="ios-inline-action-btn text-xs"
                                             @click="emit('auto-calculate-years-of-service')">
                                             Auto Calculate
                                         </button>
                                         <InputNumber v-model="scholarForm.years_of_service" :min="0"
                                             :minFractionDigits="0" :maxFractionDigits="2" :step="0.01"
                                             :useGrouping="false" mode="decimal" placeholder="Manual"
-                                            class="ios-full-input ios-years-input" />
+                                            class="ios-full-input ios-years-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" />
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div v-if="isEndDateInvalid" class="ios-section-footer ios-error">
+                        <div v-if="isEndDateInvalid" class="ios-section-footer ios-error text-compact">
                             End date cannot be earlier than start date
                         </div>
-                        <div v-else class="ios-section-footer">
+                        <div v-else class="ios-section-footer text-compact">
                             Manual by default. Use Auto Calculate to apply completed scholarship terms or service dates.
                         </div>
                     </div>
 
                     <div class="ios-section">
-                        <div class="ios-section-label">
+                        <div class="ios-section-label text-compact">
                             Completion Status <span style="color: #FF3B30; margin-left: 2px;">*</span>
                         </div>
                         <div class="ios-card">
                             <div v-for="option in completionOptions" :key="option.value" class="ios-row">
-                                <div class="ios-row-label">{{ option.label }}</div>
+                                <div class="ios-row-label text-sm">{{ option.label }}</div>
                                 <RadioButton v-model="scholarForm.completion_status" :value="option.value"
                                     :inputId="`status_${option.value}`" />
                             </div>
                         </div>
-                        <div v-if="scholarForm.errors.completion_status" class="ios-section-footer ios-error">
+                        <div v-if="scholarForm.errors.completion_status" class="ios-section-footer ios-error text-compact">
                             {{ scholarForm.errors.completion_status }}
                         </div>
                     </div>
 
                     <div class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label text-compact">Remarks</div>
                         <div class="ios-card" style="overflow: visible;">
                             <div class="ios-row ios-row-stacked" style="gap: 0; padding: 0;">
                                 <Editor v-model="scholarForm.remarks" editorStyle="height: 120px"
-                                    class="ios-full-input">
+                                    class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact">
                                     <template #toolbar>
                                         <span class="ql-formats">
                                             <button class="ql-bold"></button>
@@ -225,7 +225,7 @@
                     <div class="ios-section">
                         <div class="ios-card scholar-banner-card">
                             <div class="ios-row scholar-banner-row">
-                                <div class="ios-row-label scholar-banner-label">
+                                <div class="ios-row-label scholar-banner-label text-sm text-nav">
                                     {{ viewingScholar.scholar_name }}
                                 </div>
                             </div>
@@ -233,19 +233,19 @@
                     </div>
 
                     <div class="ios-section">
-                        <div class="ios-section-label">Return of Service</div>
+                        <div class="ios-section-label text-compact">Return of Service</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="clock" :size="13" style="color: #5856D6;" />
                                     Years of Service
                                 </div>
-                                <span class="font-bold text-blue-600 scholar-stat-value">
+                                <span class="font-bold text-blue-600 scholar-stat-value text-base">
                                     {{ viewingScholar.years_of_service || 0 }}
                                 </span>
                             </div>
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="check-circle" :size="13" style="color: #34C759;" />
                                     Status
                                 </div>
@@ -253,7 +253,7 @@
                                     :severity="getCompletionSeverity(viewingScholar.completion_status)" />
                             </div>
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #34C759;" />
                                     Service Start
                                 </div>
@@ -262,7 +262,7 @@
                                 </span>
                             </div>
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     Service End
                                 </div>
@@ -274,7 +274,7 @@
                     </div>
 
                     <div v-if="viewingScholar.remarks" class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label text-compact">Remarks</div>
                         <div class="ios-card remarks-card">
                             <p class="text-sm text-gray-700" v-safe-html="viewingScholar.remarks"></p>
                         </div>
@@ -288,18 +288,18 @@
         :modal-content-style="{ height: '85vh' }" body-style="padding: 0 16px 24px;"
         @update:visible="(visible) => { if (!visible) emit('close-view-batch'); }">
         <template #title>
-            <span v-if="viewingBatch" class="ios-nav-title ios-nav-title--truncate"
+            <span v-if="viewingBatch" class="ios-nav-title ios-nav-title--truncate text-nav-title"
                 style="max-width: min(52vw, 560px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 {{ viewingBatch.batch_name }}
             </span>
         </template>
         <template #header-right>
             <div class="ios-nav-actions">
-                <button v-if="canExport" class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
+                <button v-if="canExport" class="ios-nav-btn ios-nav-action ios-nav-btn--inline text-nav"
                     @click="emit('open-report', viewingBatch)" v-tooltip.bottom="`Generate Report`">
                     <AppIcon name="file-text" :size="16" />
                 </button>
-                <button v-if="canCreate" class="ios-nav-btn ios-nav-action ios-nav-btn--inline"
+                <button v-if="canCreate" class="ios-nav-btn ios-nav-action ios-nav-btn--inline text-nav"
                     @click="emit('open-add-scholar')" v-tooltip.bottom="`Add Scholar`">
                     <AppIcon name="plus" :size="16" />
                 </button>
@@ -308,17 +308,17 @@
         </template>
         <div v-if="viewingBatch">
                     <div class="ios-section">
-                        <div class="ios-section-label">Batch Info</div>
+                        <div class="ios-section-label text-compact">Batch Info</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
                                     Course
                                 </div>
                                 <span class="text-sm font-medium text-gray-800">{{ viewingBatch.course_name }}</span>
                             </div>
                             <div v-if="viewingBatch.exam_date_from || viewingBatch.exam_date_to" class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     Exam Dates
                                 </div>
@@ -328,7 +328,7 @@
                                 </span>
                             </div>
                             <div v-if="viewingBatch.result_date" class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar-x" :size="13" style="color: #AF52DE;" />
                                     Result Date
                                 </div>
@@ -336,7 +336,7 @@
                                 }}</span>
                             </div>
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="user" :size="13" style="color: #8E8E93;" />
                                     Created By
                                 </div>
@@ -346,14 +346,14 @@
                     </div>
 
                     <div v-if="viewingBatch.description" class="ios-section">
-                        <div class="ios-section-label">Description</div>
+                        <div class="ios-section-label text-compact">Description</div>
                         <div class="ios-card remarks-card">
                             <p class="text-sm text-gray-600">{{ viewingBatch.description }}</p>
                         </div>
                     </div>
 
                     <div class="ios-section">
-                        <div class="ios-section-label">Scholars</div>
+                        <div class="ios-section-label text-compact">Scholars</div>
                         <div class="mb-2">
                             <InputText v-model="scholarSearchModel" placeholder="Search scholar name or status..."
                                 class="w-full" size="small" />
@@ -445,7 +445,7 @@
                         </div>
                     </div>
                     <div class="ios-section">
-                        <button class="ios-destructive-btn" @click="emit('delete-batch')">Delete Batch</button>
+                        <button class="ios-destructive-btn text-compact" @click="emit('delete-batch')">Delete Batch</button>
                     </div>
                     <div style="height: 24px;"></div>
     </IosModal>
@@ -471,7 +471,7 @@
                         </div>
                     </div>
                     <div class="ios-section">
-                        <button class="ios-destructive-btn" @click="emit('delete-scholar')">Remove from Batch</button>
+                        <button class="ios-destructive-btn text-compact" @click="emit('delete-scholar')">Remove from Batch</button>
                     </div>
                     <div style="height: 24px;"></div>
     </IosModal>
@@ -481,11 +481,11 @@
         body-style="padding: 0 16px 24px;" @action="submitReport"
         @update:visible="(visible) => { if (!visible) closeReportDialog(); }">
                     <div class="ios-section">
-                        <div class="ios-section-label">Output Format</div>
+                        <div class="ios-section-label text-compact">Output Format</div>
                         <div class="ios-card">
                             <div v-for="option in formatOptions" :key="option.value" class="ios-row">
                                 <div>
-                                    <div class="ios-row-label text-gray-800">{{ option.label }}</div>
+                                    <div class="ios-row-label text-gray-800 text-sm">{{ option.label }}</div>
                                     <div class="text-xs text-gray-500 mt-1">{{ option.description }}</div>
                                 </div>
                                 <RadioButton v-model="reportFormat" :inputId="`report-format-${option.value}`"
@@ -495,11 +495,11 @@
                     </div>
 
                     <div class="ios-section">
-                        <div class="ios-section-label">Report Scope</div>
+                        <div class="ios-section-label text-compact">Report Scope</div>
                         <div class="ios-card" v-if="reportContextBatch">
                             <div class="ios-row">
                                 <div>
-                                    <div class="ios-row-label text-gray-800">Current Batch</div>
+                                    <div class="ios-row-label text-gray-800 text-sm">Current Batch</div>
                                     <div class="text-xs text-gray-500 mt-1">
                                         {{ reportContextBatch.batch_name }} • {{ reportContextBatch.total_scholars || 0
                                         }} scholar(s)
@@ -510,7 +510,7 @@
                         </div>
                         <div class="ios-card" v-else>
                             <div v-for="option in availableReportScopeOptions" :key="option.value" class="ios-row">
-                                <div class="ios-row-label text-gray-800">{{ option.label }}</div>
+                                <div class="ios-row-label text-gray-800 text-sm">{{ option.label }}</div>
                                 <RadioButton v-model="reportScope" :inputId="`report-scope-${option.value}`"
                                     :value="option.value" />
                             </div>
@@ -518,15 +518,15 @@
                     </div>
 
                     <div v-if="!reportContextBatch && reportScope === 'batch'" class="ios-section">
-                        <div class="ios-section-label">Batch Selection</div>
+                        <div class="ios-section-label text-compact">Batch Selection</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-stacked">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="folder" :size="13" style="color: #007AFF;" />
                                     Batch
                                 </div>
                                 <Select v-model="reportBatchId" :options="reportBatchOptions" optionLabel="label"
-                                    optionValue="value" placeholder="Select batch" class="ios-full-input" />
+                                    optionValue="value" placeholder="Select batch" class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" />
                             </div>
                         </div>
                     </div>

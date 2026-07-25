@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ScholarshipProfileResource;
+use App\Models\ApplicantListEntry;
 use App\Models\ScholarshipProfile;
 use App\Models\ScholarshipProgram;
 use App\Models\ScholarshipProfileRequirement;
 use App\Models\Requirement;
 use App\Models\User;
+use App\Services\ApplicantListService;
 use App\Services\SequenceNumberCalculator;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
@@ -24,18 +26,14 @@ class ApplicantController extends Controller
     /**
      * Display the list of scholarship applicants
      */
-    public function index(Request $request, $action = null, $id = null): Response
+    public function index(Request $request, ApplicantListService $listService, $action = null, $id = null): Response
     {
         // Increase memory limit for large queries
         // Chunking approach used below prevents most memory exhaustion
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', '300');
 
-        if (!Gate::allows('applicants.create') && $action === 'create') {
-            $action = null;
-            $msg = ['error' => true, 'message' => 'You are not allowed to perform this action'];
-            abort(403, 'Unauthorized action.');
-        }
+        // Creating applicants is open to all authenticated roles (page-level access model)
 
         // OPTIMIZATION: Cache program lookup to avoid redundant database query
         $programId = null;
@@ -114,163 +112,12 @@ class ApplicantController extends Controller
             ->whereNull('scholarship_records.deleted_at')
             ->whereNotNull('scholarship_records.profile_id');
 
-        // Filter by program if specified
-        if ($programId) {
-            $query->where('scholarship_records.program_id', $programId);
-        }
+        // Tracking-list tabs (waiting/interview/endorsed hide from main; personal is additive).
+        $activeList = $request->get('list');
+        $this->applyApplicantListTabFilter($query, $activeList);
 
-        // Filter by date range (date_filed)
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereBetween('scholarship_records.date_filed', [$request->date_from, $request->date_to]);
-        } elseif ($request->filled('date_from')) {
-            $query->whereDate('scholarship_records.date_filed', '>=', $request->date_from);
-        } elseif ($request->filled('date_to')) {
-            $query->whereDate('scholarship_records.date_filed', '<=', $request->date_to);
-        }
-
-        // Filter by date encoded (created_at)
-        if ($request->filled('encoded_from') && $request->filled('encoded_to')) {
-            $query->whereBetween('scholarship_profiles.created_at', [$request->encoded_from, $request->encoded_to]);
-        } elseif ($request->filled('encoded_from')) {
-            $query->whereDate('scholarship_profiles.created_at', '>=', $request->encoded_from);
-        } elseif ($request->filled('encoded_to')) {
-            $query->whereDate('scholarship_profiles.created_at', '<=', $request->encoded_to);
-        }
-
-        // Filter by encoded by (user who created/encoded the profile)
-        if ($request->filled('encoded_by')) {
-            $encodedBy = $request->get('encoded_by');
-            $query->whereHas('createdBy', function ($q) use ($encodedBy) {
-                $q->where('name', 'like', '%' . $encodedBy . '%');
-            });
-        }
-
-        // Filter by school - use leftJoin to avoid duplicate rows
-        if ($request->filled('school')) {
-            $schools = is_array($request->school) ? $request->school : explode(',', $request->school);
-            $schools = array_filter(array_map('trim', $schools));
-
-            if (!empty($schools)) {
-                $query->leftJoin('schools', 'scholarship_records.school_id', '=', 'schools.id')
-                    ->where(function ($q) use ($schools) {
-                        foreach ($schools as $school) {
-                            $q->orWhere('schools.shortname', 'like', '%' . $school . '%')
-                                ->orWhere('schools.name', 'like', '%' . $school . '%');
-                        }
-                    });
-            }
-        }
-
-        // Filter by year_level - must ensure pending status is maintained
-        if ($request->filled('year_level')) {
-            $query->where('scholarship_records.year_level', 'like', '%' . $request->year_level . '%');
-        }
-
-        // Filter by yakap_category - must ensure pending status is maintained
-        if ($request->filled('yakap_category')) {
-            $query->where('scholarship_records.yakap_category', $request->yakap_category);
-        }
-
-        // Filter by priority_level
-        if ($request->filled('priority_level')) {
-            $query->where('scholarship_profiles.priority_level', $request->priority_level);
-        }
-
-        // Filter by course - use leftJoin to avoid duplicate rows
-        if ($request->filled('course')) {
-            $query->leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
-                ->where(function ($q) use ($request) {
-                    $q->where('courses.shortname', 'like', '%' . $request->course . '%')
-                        ->orWhere('courses.name', 'like', '%' . $request->course . '%');
-                });
-        }
-
-        // Filter by remarks
-        if ($request->filled('remarks')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('scholarship_profiles.remarks', 'like', '%' . $request->remarks . '%');
-            });
-        }
-
-        // Filter by municipality
-        if ($request->filled('municipality')) {
-            $query->where('scholarship_profiles.municipality', 'like', '%' . $request->municipality . '%');
-        }
-
-        // Filter by barangay
-        if ($request->filled('barangay')) {
-            $query->where('scholarship_profiles.barangay', 'like', '%' . $request->barangay . '%');
-        }
-
-        // Filter by name (first_name, last_name, or full name)
-        if ($request->filled('name')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('scholarship_profiles.first_name', 'like', '%' . $request->name . '%')
-                    ->orWhere('scholarship_profiles.last_name', 'like', '%' . $request->name . '%')
-                    ->orWhereRaw("CONCAT(scholarship_profiles.first_name, ' ', scholarship_profiles.last_name) LIKE ?", ['%' . $request->name . '%'])
-                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name) LIKE ?", ['%' . $request->name . '%'])
-                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name, ' ', scholarship_profiles.middle_name) LIKE ?", ['%' . $request->name . '%']);
-            });
-        }
-
-        // Filter by parent_name
-        if ($request->filled('parent_name')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('scholarship_profiles.father_name', 'like', '%' . $request->parent_name . '%')
-                    ->orWhere('scholarship_profiles.mother_name', 'like', '%' . $request->parent_name . '%')
-                    ->orWhere('scholarship_profiles.guardian_name', 'like', '%' . $request->parent_name . '%');
-            });
-        }
-
-        // Global search across multiple fields - simplified for performance
-        if ($request->filled('global_search')) {
-            $searchTerm = '%' . $request->global_search . '%';
-            $query->where(function ($q) use ($searchTerm) {
-                // Search in profile fields only (exclude relation searches for speed)
-                $q->where('scholarship_profiles.first_name', 'like', $searchTerm)
-                    ->orWhere('scholarship_profiles.last_name', 'like', $searchTerm)
-                    ->orWhere('scholarship_profiles.contact_no', 'like', $searchTerm)
-                    ->orWhere('scholarship_profiles.email', 'like', $searchTerm)
-                    ->orWhere('scholarship_profiles.municipality', 'like', $searchTerm)
-                    ->orWhere('scholarship_profiles.remarks', 'like', $searchTerm)
-                    ->orWhereRaw("CONCAT(scholarship_profiles.first_name, ' ', scholarship_profiles.last_name) LIKE ?", [$searchTerm])
-                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name) LIKE ?", [$searchTerm]);
-            });
-        }
-
-        // Filter to hide all tagged applicants (both JPM and Not JPM)
-        if ($request->filled('hide_all_tagged') && $request->hide_all_tagged) {
-            $query->where(function ($q) {
-                $q->where('is_jpm_member', false)
-                    ->where('is_father_jpm', false)
-                    ->where('is_mother_jpm', false)
-                    ->where('is_guardian_jpm', false)
-                    ->where('is_not_jpm', false);
-            });
-        }
-
-        // Default ordering by date_filed from scholarship_records (or created_at if no records)
-        $query->orderBy('scholarship_records.date_filed', $request->sort['date_filed'] ?? 'asc')
-            ->orderBy('scholarship_profiles.created_at', 'asc');
-
-        if ($request->filled('sort')) {
-            if (isset($request->sort['date_filed'])) {
-                $query->orderBy('scholarship_records.date_filed', $request->sort['date_filed'])
-                    ->orderBy('scholarship_profiles.created_at', 'asc');
-            }
-            if (isset($request->sort['last_name'])) {
-                $query->orderBy('scholarship_profiles.last_name', $request->sort['last_name']);
-            }
-            if (isset($request->sort['school'])) {
-                $query->orderBy('school', $request->sort['school']);
-            }
-            if (isset($request->sort['course'])) {
-                $query->orderBy('course', $request->sort['course']);
-            }
-            if (isset($request->sort['year_level'])) {
-                $query->orderBy('year_level', $request->sort['year_level']);
-            }
-        }
+        // Shared column/relationship filters + ordering (also used by the report endpoint).
+        $this->applyApplicantFilters($query, $request, $programId);
 
         $records = $request->get('records', 10);
 
@@ -438,6 +285,11 @@ class ApplicantController extends Controller
                     'completionStatuses' => config('scholarship.completion_statuses'),
                     'declineReasons' => config('scholarship.decline_reasons'),
                     'interviewers' => fn() => User::query()->select('id', 'name')->orderBy('name')->get(),
+                    'activeList' => $activeList ?: 'all',
+                    'listCounts' => fn() => $listService->counts(),
+                    'listMembership' => fn() => $listService->membershipFor(
+                        $profiles->getCollection()->pluck('profile_id')->all()
+                    ),
                 ]
             );
         }
@@ -483,8 +335,264 @@ class ApplicantController extends Controller
                 'declineReasons' => config('scholarship.decline_reasons'),
                 'completionStatuses' => config('scholarship.completion_statuses'),
                 'interviewers' => fn() => User::query()->select('id', 'name')->orderBy('name')->get(),
+                'activeList' => $activeList ?: 'all',
+                'listCounts' => fn() => $listService->counts(),
+                'listMembership' => fn() => $listService->membershipFor(
+                    $profiles->getCollection()->pluck('profile_id')->all()
+                ),
             ]
         );
+    }
+
+    /**
+     * Apply the tracking-list tab filter to an applicant query.
+     * Shared lists (waiting/interview/endorsed) hide the profile from the main
+     * tab; the personal list is additive. Shared by index() and reportData().
+     */
+    private function applyApplicantListTabFilter($query, ?string $activeList): void
+    {
+        $sharedLists = ApplicantListEntry::SHARED_LISTS;
+
+        if (in_array($activeList, $sharedLists, true)) {
+            $query->whereIn('scholarship_profiles.profile_id', function ($sub) use ($activeList) {
+                $sub->select('profile_id')->from('applicant_list_entries')->where('list_type', $activeList);
+            });
+        } elseif ($activeList === ApplicantListEntry::PERSONAL) {
+            $query->whereIn('scholarship_profiles.profile_id', function ($sub) {
+                $sub->select('profile_id')->from('applicant_list_entries')
+                    ->where('list_type', ApplicantListEntry::PERSONAL)
+                    ->where('user_id', Auth::id());
+            });
+        } else {
+            $query->whereNotIn('scholarship_profiles.profile_id', function ($sub) use ($sharedLists) {
+                $sub->select('profile_id')->from('applicant_list_entries')->whereIn('list_type', $sharedLists);
+            });
+        }
+    }
+
+    /**
+     * Apply the shared column/relationship filters + ordering to an applicant
+     * query. Used by both the paginated table (index) and the report endpoint
+     * (reportData) so the report can never drift from what the table shows.
+     */
+    private function applyApplicantFilters($query, Request $request, ?int $programId): void
+    {
+        // Filter by program if specified
+        if ($programId) {
+            $query->where('scholarship_records.program_id', $programId);
+        }
+
+        // Filter by date range (date_filed)
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('scholarship_records.date_filed', [$request->date_from, $request->date_to]);
+        } elseif ($request->filled('date_from')) {
+            $query->whereDate('scholarship_records.date_filed', '>=', $request->date_from);
+        } elseif ($request->filled('date_to')) {
+            $query->whereDate('scholarship_records.date_filed', '<=', $request->date_to);
+        }
+
+        // Filter by date encoded (created_at)
+        if ($request->filled('encoded_from') && $request->filled('encoded_to')) {
+            $query->whereBetween('scholarship_profiles.created_at', [$request->encoded_from, $request->encoded_to]);
+        } elseif ($request->filled('encoded_from')) {
+            $query->whereDate('scholarship_profiles.created_at', '>=', $request->encoded_from);
+        } elseif ($request->filled('encoded_to')) {
+            $query->whereDate('scholarship_profiles.created_at', '<=', $request->encoded_to);
+        }
+
+        // Filter by encoded by (user who created/encoded the profile)
+        if ($request->filled('encoded_by')) {
+            $encodedBy = $request->get('encoded_by');
+            $query->whereHas('createdBy', function ($q) use ($encodedBy) {
+                $q->where('name', 'like', '%' . $encodedBy . '%');
+            });
+        }
+
+        // Filter by school - use leftJoin to avoid duplicate rows
+        if ($request->filled('school')) {
+            $schools = is_array($request->school) ? $request->school : explode(',', $request->school);
+            $schools = array_filter(array_map('trim', $schools));
+
+            if (!empty($schools)) {
+                $query->leftJoin('schools', 'scholarship_records.school_id', '=', 'schools.id')
+                    ->where(function ($q) use ($schools) {
+                        foreach ($schools as $school) {
+                            $q->orWhere('schools.shortname', 'like', '%' . $school . '%')
+                                ->orWhere('schools.name', 'like', '%' . $school . '%');
+                        }
+                    });
+            }
+        }
+
+        // Filter by year_level - must ensure pending status is maintained
+        if ($request->filled('year_level')) {
+            $query->where('scholarship_records.year_level', 'like', '%' . $request->year_level . '%');
+        }
+
+        // Filter by yakap_category - must ensure pending status is maintained
+        if ($request->filled('yakap_category')) {
+            $query->where('scholarship_records.yakap_category', $request->yakap_category);
+        }
+
+        // Filter by priority_level
+        if ($request->filled('priority_level')) {
+            $query->where('scholarship_profiles.priority_level', $request->priority_level);
+        }
+
+        // Filter by course - use leftJoin to avoid duplicate rows
+        if ($request->filled('course')) {
+            $query->leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
+                ->where(function ($q) use ($request) {
+                    $q->where('courses.shortname', 'like', '%' . $request->course . '%')
+                        ->orWhere('courses.name', 'like', '%' . $request->course . '%');
+                });
+        }
+
+        // Filter by remarks
+        if ($request->filled('remarks')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('scholarship_profiles.remarks', 'like', '%' . $request->remarks . '%');
+            });
+        }
+
+        // Filter by municipality
+        if ($request->filled('municipality')) {
+            $query->where('scholarship_profiles.municipality', 'like', '%' . $request->municipality . '%');
+        }
+
+        // Filter by barangay
+        if ($request->filled('barangay')) {
+            $query->where('scholarship_profiles.barangay', 'like', '%' . $request->barangay . '%');
+        }
+
+        // Filter by name (first_name, last_name, or full name)
+        if ($request->filled('name')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('scholarship_profiles.first_name', 'like', '%' . $request->name . '%')
+                    ->orWhere('scholarship_profiles.last_name', 'like', '%' . $request->name . '%')
+                    ->orWhereRaw("CONCAT(scholarship_profiles.first_name, ' ', scholarship_profiles.last_name) LIKE ?", ['%' . $request->name . '%'])
+                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name) LIKE ?", ['%' . $request->name . '%'])
+                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name, ' ', scholarship_profiles.middle_name) LIKE ?", ['%' . $request->name . '%']);
+            });
+        }
+
+        // Filter by parent_name
+        if ($request->filled('parent_name')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('scholarship_profiles.father_name', 'like', '%' . $request->parent_name . '%')
+                    ->orWhere('scholarship_profiles.mother_name', 'like', '%' . $request->parent_name . '%')
+                    ->orWhere('scholarship_profiles.guardian_name', 'like', '%' . $request->parent_name . '%');
+            });
+        }
+
+        // Global search across multiple fields - simplified for performance
+        if ($request->filled('global_search')) {
+            $searchTerm = '%' . $request->global_search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('scholarship_profiles.first_name', 'like', $searchTerm)
+                    ->orWhere('scholarship_profiles.last_name', 'like', $searchTerm)
+                    ->orWhere('scholarship_profiles.contact_no', 'like', $searchTerm)
+                    ->orWhere('scholarship_profiles.email', 'like', $searchTerm)
+                    ->orWhere('scholarship_profiles.municipality', 'like', $searchTerm)
+                    ->orWhere('scholarship_profiles.remarks', 'like', $searchTerm)
+                    ->orWhereRaw("CONCAT(scholarship_profiles.first_name, ' ', scholarship_profiles.last_name) LIKE ?", [$searchTerm])
+                    ->orWhereRaw("CONCAT(scholarship_profiles.last_name, ', ', scholarship_profiles.first_name) LIKE ?", [$searchTerm]);
+            });
+        }
+
+        // Filter to hide all tagged applicants (both JPM and Not JPM)
+        if ($request->filled('hide_all_tagged') && $request->hide_all_tagged) {
+            $query->where(function ($q) {
+                $q->where('is_jpm_member', false)
+                    ->where('is_father_jpm', false)
+                    ->where('is_mother_jpm', false)
+                    ->where('is_guardian_jpm', false)
+                    ->where('is_not_jpm', false);
+            });
+        }
+
+        // Default ordering by date_filed from scholarship_records (or created_at if no records)
+        $query->orderBy('scholarship_records.date_filed', $request->sort['date_filed'] ?? 'asc')
+            ->orderBy('scholarship_profiles.created_at', 'asc');
+
+        if ($request->filled('sort')) {
+            if (isset($request->sort['date_filed'])) {
+                $query->orderBy('scholarship_records.date_filed', $request->sort['date_filed'])
+                    ->orderBy('scholarship_profiles.created_at', 'asc');
+            }
+            if (isset($request->sort['last_name'])) {
+                $query->orderBy('scholarship_profiles.last_name', $request->sort['last_name']);
+            }
+            if (isset($request->sort['school'])) {
+                $query->orderBy('school', $request->sort['school']);
+            }
+            if (isset($request->sort['course'])) {
+                $query->orderBy('course', $request->sort['course']);
+            }
+            if (isset($request->sort['year_level'])) {
+                $query->orderBy('year_level', $request->sort['year_level']);
+            }
+        }
+    }
+
+    /**
+     * Return all applicants matching the current filters (no pagination), for
+     * generating a full report. Same filters as the table, capped for safety.
+     */
+    public function reportData(Request $request, ApplicantListService $listService): JsonResponse
+    {
+        if (!Gate::allows('applicants.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        ini_set('memory_limit', '1024M');
+        ini_set('max_execution_time', '300');
+
+        $programId = null;
+        if ($request->filled('program')) {
+            $programId = ScholarshipProgram::where('shortname', $request->get('program'))
+                ->select('id')->first()?->id;
+        }
+
+        $query = ScholarshipProfile::distinct()
+            ->join('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+            ->with(['scholarshipGrant' => function ($q) {
+                $q->where('unified_status', 'pending')
+                    ->with(['program', 'school', 'course'])
+                    ->select('id', 'profile_id', 'program_id', 'school_id', 'course_id', 'unified_status', 'year_level', 'grant_provision', 'date_filed');
+            }])
+            ->select(
+                'scholarship_profiles.profile_id',
+                'scholarship_profiles.first_name',
+                'scholarship_profiles.last_name',
+                'scholarship_profiles.middle_name',
+                'scholarship_profiles.extension_name',
+                'scholarship_profiles.municipality',
+                'scholarship_profiles.barangay',
+                'scholarship_profiles.contact_no',
+                'scholarship_profiles.contact_no_2',
+                'scholarship_profiles.remarks',
+                'scholarship_profiles.created_at',
+                'scholarship_records.date_filed',
+                'scholarship_records.unified_status'
+            )
+            ->where('scholarship_records.unified_status', 'pending')
+            ->whereNull('scholarship_records.deleted_at')
+            ->whereNotNull('scholarship_records.profile_id');
+
+        $this->applyApplicantListTabFilter($query, $request->get('list'));
+        $this->applyApplicantFilters($query, $request, $programId);
+
+        // Cap well above the full pending set so an unfiltered "print all" isn't
+        // silently truncated, while still guarding against pathological loads.
+        $cap = 20000;
+        $profiles = $query->limit($cap)->get();
+
+        return response()->json([
+            'data' => ScholarshipProfileResource::collection($profiles),
+            'total' => $profiles->count(),
+            'capped' => $profiles->count() >= $cap,
+        ]);
     }
 
     /**
@@ -492,8 +600,8 @@ class ApplicantController extends Controller
      */
     public function updateJpmStatus($id, Request $request)
     {
-        // Check permission to edit applicants
-        if (!Gate::allows('applicants.edit')) {
+        // JPM management is administrator-only
+        if (!Gate::allows('admin')) {
             abort(403, 'You do not have permission to update JPM status.');
         }
 
@@ -538,8 +646,8 @@ class ApplicantController extends Controller
      */
     public function updateJpmRemarks($id, Request $request)
     {
-        // Check permission to edit applicants
-        if (!Gate::allows('applicants.edit')) {
+        // JPM management is administrator-only
+        if (!Gate::allows('admin')) {
             abort(403, 'You do not have permission to update JPM remarks.');
         }
 
@@ -576,8 +684,8 @@ class ApplicantController extends Controller
      */
     public function destroy($id)
     {
-        // Check permission to delete applicants
-        if (!Gate::allows('applicants.delete')) {
+        // Deleting applicants is administrator-only
+        if (!Gate::allows('admin')) {
             abort(403, 'You do not have permission to delete applicants.');
         }
 

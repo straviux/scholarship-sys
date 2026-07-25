@@ -3,6 +3,9 @@
         <!-- Notification Bell Button -->
         <AppButton type="button" icon="bell" @click="togglePopover" :severity="unreadCount > 0 ? 'info' : 'contrast'"
             :badge="(unreadCount > 99 ? '99+' : unreadCount).toString() || ''" size="small" text rounded
+            :class="unreadCount > 0
+                ? '[&_.p-button-icon]:text-amber-500 dark:[&_.p-button-icon]:text-amber-400'
+                : '[&_.p-button-icon]:text-blue-600 dark:[&_.p-button-icon]:text-blue-400'"
             v-tooltip.bottom="'System Updates Notifications'" />
 
         <!-- Popover Menu -->
@@ -130,7 +133,8 @@
             <div class="space-y-4">
                 <div>
                     <!-- Markdown content with v-html -->
-                    <div v-if="isMarkdownContent" class="ios-markdown-prose text-sm leading-relaxed"
+                    <div v-if="isMarkdownContent"
+                    class="ios-markdown-prose text-sm leading-relaxed [&_h1]:text-[1.5em] [&_h2]:text-[1.25em] [&_h3]:text-[1.125em] [&_h4]:text-[1em] [&_h5]:text-[0.875em] [&_h6]:text-[0.875em] [&_code]:text-[0.875em]"
                         v-html="renderedContent">
                     </div>
                     <!-- Regular text content -->

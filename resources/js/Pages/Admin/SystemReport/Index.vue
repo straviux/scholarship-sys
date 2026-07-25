@@ -13,12 +13,13 @@
             </template>
             <template #actions>
                 <AppButton @click="refreshReport" :loading="loading" icon="refresh" label="Refresh" severity="secondary"
-                    raised />
-                <AppButton @click="exportReport" icon="download" label="Export JSON" severity="success" raised />
+                    outlined rounded size="small" />
+                <AppButton @click="exportReport" icon="download" label="Export JSON" severity="info" rounded
+                    size="small" />
             </template>
 
             <section class="ios-section">
-                <div class="ios-section-label">Summary</div>
+                <div class="ios-section-label text-compact">Summary</div>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <div v-for="card in summaryCards" :key="card.label" class="ios-card px-5 py-4">
                         <div class="flex items-start justify-between gap-4">

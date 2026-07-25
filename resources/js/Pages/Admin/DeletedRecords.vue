@@ -1,53 +1,67 @@
-<template>
+﻿<template>
 
     <Head title="Review Deleted Records" />
     <AdminLayout>
         <AdminPageShell title="Deleted Records Management"
             description="Review soft-deleted profiles and scholarship grants, then restore or permanently remove them from the same iOS-styled recovery workspace."
             icon="trash" eyebrow="Recovery">
-            <template #meta>
-                <span>{{ filteredProfiles.length }} deleted profiles</span>
-                <span>{{ filteredRecords.length }} deleted grants</span>
+            <template #actions>
+                <div class="flex flex-wrap gap-3" role="tablist" aria-label="Deleted record types">
+                    <button type="button" role="tab" :aria-selected="activeTab === 'profiles'"
+                        class="cursor-pointer rounded-full px-4 py-[0.65rem] text-slate-700 transition-colors"
+                        :class="activeTab === 'profiles'
+                            ? 'bg-blue-400 !text-slate-50'
+                            : 'bg-white hover:border-blue-200'" @click="activeTab = 'profiles'">
+                        <div class="flex items-center gap-2">
+                            <AppIcon name="user" :size="14" />
+                            <span>Deleted Profiles</span>
+                            <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                                {{ filteredProfiles.length }}
+                            </span>
+                        </div>
+                    </button>
+                    <button type="button" role="tab" :aria-selected="activeTab === 'records'"
+                        class="cursor-pointer rounded-full px-4 py-[0.65rem] text-slate-700 transition-colors"
+                        :class="activeTab === 'records'
+                            ? 'bg-blue-400 !text-slate-50'
+                            : 'bg-white hover:border-blue-200'" @click="activeTab = 'records'">
+                        <div class="flex items-center gap-2">
+                            <AppIcon name="award" :size="14" />
+                            <span>Deleted Grants</span>
+                            <span
+                                class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                                {{ filteredRecords.length }}
+                            </span>
+                        </div>
+                    </button>
+                </div>
             </template>
 
-            <div class="space-y-4 short:space-y-2">
+            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                <!-- Stats strip -->
+                <div class="flex items-end gap-6 short:gap-3 short:mb-2 px-3 py-2 text-sm opacity-75">
+                    <span class="font-semibold text-blue-600">{{ filteredProfiles.length }} deleted profiles</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="font-semibold text-red-600">{{ filteredRecords.length }} deleted grants</span>
+                </div>
 
-                <!-- Search Filter -->
-                <section class="ios-section">
-                    <div class="ios-section-label">Search</div>
-                    <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-3">
-                        <AppIcon name="search" class="text-gray-500" />
-                        <InputText v-model="searchQuery" type="text" placeholder="Search by name..." class="flex-1" />
-                        <AppButton v-if="searchQuery" @click="searchQuery = ''" icon="times" severity="secondary"
-                            variant="text" size="small" />
+                <!-- Filters -->
+                <div class="flex items-end gap-3 short:gap-2 flex-wrap px-2 py-3 mb-4">
+                    <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Search</label>
+                        <IconField iconPosition="left">
+                            <InputIcon>
+                                <AppIcon name="search" :size="14" class="text-gray-400" />
+                            </InputIcon>
+                            <InputText v-model="searchQuery" placeholder="Search by name..." size="small"
+                                class="min-w-[260px]" />
+                        </IconField>
                     </div>
-                </section>
-
-                <!-- Tabs for switching between deleted profiles and records -->
-                <section class="ios-section">
-                    <div class="ios-section-label">Record Types</div>
-                    <div class="border-b border-gray-200">
-                        <nav class="flex gap-4">
-                            <button @click="activeTab = 'profiles'" :class="[
-                                'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
-                                activeTab === 'profiles'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                            ]">
-                                <AppIcon name="user" class="mr-2" />Deleted Profiles ({{ filteredProfiles.length }})
-                            </button>
-                            <button @click="activeTab = 'records'" :class="[
-                                'px-4 py-2 font-medium text-sm border-b-2 transition-colors',
-                                activeTab === 'records'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                            ]">
-                                <AppIcon name="award" class="mr-2" />Deleted Scholarship Grants ({{
-                                filteredRecords.length }})
-                            </button>
-                        </nav>
+                    <div class="ml-auto flex flex-wrap justify-end gap-2">
+                        <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
+                            size="xsmall" @click="searchQuery = ''" />
                     </div>
-                </section>
+                </div>
 
                 <!-- Info banner -->
                 <div v-if="activeTab === 'profiles'"
@@ -160,12 +174,13 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </Panel>
         </AdminPageShell>
 
         <!-- Delete Profile Confirmation Modal -->
         <IosModal :visible="showDeleteProfileConfirmDialog" title="Confirm Permanent Deletion" width="500px"
-            max-width="calc(100vw - 2rem)" body-style="padding: 16px;"
+            max-width="calc(100vw - 2rem)" body-style="padding: 16px;" :show-action="true"
+            action-label="Permanently Delete" action-class="ios-nav-destructive" @action="permanentlyDeleteProfile"
             @update:visible="showDeleteProfileConfirmDialog = $event" @close="profileToDelete = null">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
@@ -183,15 +198,12 @@
                     </p>
                 </div>
             </div>
-            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" @click="showDeleteProfileConfirmDialog = false" outlined size="small" />
-                <Button label="Permanently Delete" severity="danger" @click="permanentlyDeleteProfile" size="small" />
-            </div>
         </IosModal>
 
         <!-- Delete Record Confirmation Modal -->
         <IosModal :visible="showDeleteRecordConfirmDialog" title="Confirm Permanent Deletion" width="500px"
-            max-width="calc(100vw - 2rem)" body-style="padding: 16px;"
+            max-width="calc(100vw - 2rem)" body-style="padding: 16px;" :show-action="true"
+            action-label="Permanently Delete" action-class="ios-nav-destructive" @action="permanentlyDeleteRecord"
             @update:visible="showDeleteRecordConfirmDialog = $event" @close="recordToDelete = null">
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
@@ -206,10 +218,6 @@
                         <strong>Record:</strong> {{ recordToDelete ? recordToDelete.profile_name : 'N/A' }}
                     </p>
                 </div>
-            </div>
-            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" @click="showDeleteRecordConfirmDialog = false" outlined size="small" />
-                <Button label="Permanently Delete" severity="danger" @click="permanentlyDeleteRecord" size="small" />
             </div>
         </IosModal>
     </AdminLayout>

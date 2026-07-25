@@ -12,7 +12,7 @@
                             </div>
                         </div>
                         <div class="ios-section" style="margin-bottom: 16px;">
-                            <p class="ios-section-label">Remarks</p>
+                            <p class="ios-section-label text-compact">Remarks</p>
 
                             <Editor :modelValue="remarks" @update:modelValue="remarks = $event"
                                 class="ios-card h-48 text-lg">

@@ -43,49 +43,49 @@ const submit = () => {
 
                 <h1 class="mac-title text-[22px] font-semibold tracking-[-0.3px] m-0 mb-1 text-center">Create Account
                 </h1>
-                <p class="mac-subtitle text-[13px] mt-0 mb-7 font-normal">Join the scholarship portal</p>
+                <p class="mac-subtitle text-compact mt-0 mb-7 font-normal">Join the scholarship portal</p>
 
                 <form @submit.prevent="submit" class="w-full flex flex-col items-center gap-2.5">
                     <div class="w-full">
-                        <IconField class="mac-iconfield">
+                        <IconField class="mac-iconfield [&_.p-inputtext]:text-sm">
                             <InputIcon>
                                 <AppIcon name="user" :size="14" />
                             </InputIcon>
                             <InputText v-model="form.name" placeholder="Full Name" required autofocus
-                                autocomplete="name" class="mac-input" />
+                                autocomplete="name" class="mac-input text-sm" />
                         </IconField>
                         <InputError class="mt-1 pl-1 text-xs text-[#FF3B30]" :message="form.errors.name" />
                     </div>
 
                     <div class="w-full">
-                        <IconField class="mac-iconfield">
+                        <IconField class="mac-iconfield [&_.p-inputtext]:text-sm">
                             <InputIcon>
                                 <AppIcon name="at" :size="14" />
                             </InputIcon>
                             <InputText v-model="form.username" placeholder="Username" required autocomplete="username"
-                                class="mac-input" />
+                                class="mac-input text-sm" />
                         </IconField>
                         <InputError class="mt-1 pl-1 text-xs text-[#FF3B30]" :message="form.errors.username" />
                     </div>
 
                     <div class="w-full">
-                        <IconField class="mac-iconfield">
+                        <IconField class="mac-iconfield [&_.p-inputtext]:text-sm">
                             <InputIcon>
                                 <AppIcon name="lock" :size="14" />
                             </InputIcon>
                             <Password v-model="form.password" placeholder="Password" :feedback="false" toggleMask
-                                inputClass="mac-input" class="mac-password" required autocomplete="new-password" />
+                                inputClass="mac-input text-sm" class="mac-password" required autocomplete="new-password" />
                         </IconField>
                         <InputError class="mt-1 pl-1 text-xs text-[#FF3B30]" :message="form.errors.password" />
                     </div>
 
                     <div class="w-full">
-                        <IconField class="mac-iconfield">
+                        <IconField class="mac-iconfield [&_.p-inputtext]:text-sm">
                             <InputIcon>
                                 <AppIcon name="check-circle" :size="14" />
                             </InputIcon>
                             <Password v-model="form.password_confirmation" placeholder="Confirm Password"
-                                :feedback="false" toggleMask inputClass="mac-input" class="mac-password" required
+                                :feedback="false" toggleMask inputClass="mac-input text-sm" class="mac-password" required
                                 autocomplete="new-password" />
                         </IconField>
                         <InputError class="mt-1 pl-1 text-xs text-[#FF3B30]"
@@ -103,14 +103,14 @@ const submit = () => {
                     <div class="flex w-full items-center justify-between mt-2">
                         <AppButton :icon="isDark ? 'sun' : 'moon'" @click="toggleTheme"
                             :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'" text rounded
-                            class="mac-theme-toggle" />
+                            class="mac-theme-toggle text-xl [&_.p-button-icon]:text-xl" />
                         <AppButton type="submit" icon="arrow-right" :loading="form.processing"
                             :disabled="form.processing" rounded class="mac-submit" />
                     </div>
                 </form>
             </div>
 
-            <div class="mac-footer mt-10 flex items-center gap-1.5 text-[11px]">
+            <div class="mac-footer mt-10 flex items-center gap-1.5 text-2xs">
                 <span>Scholarship Management System</span>
                 <span class="text-sm leading-none">·</span>
                 <span>© {{ new Date().getFullYear() }}</span>

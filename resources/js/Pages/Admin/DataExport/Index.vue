@@ -9,7 +9,7 @@
             </template>
 
             <section class="ios-section">
-                <div class="ios-section-label">Export Controls</div>
+                <div class="ios-section-label text-compact">Export Controls</div>
                 <div class="max-w-7xl">
                     <div class="ios-card overflow-hidden">
                         <div class="p-4 short:p-3 bg-white border-b border-gray-200">

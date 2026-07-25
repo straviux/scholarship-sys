@@ -14,7 +14,7 @@ const props = defineProps({
     school: Object,
 });
 
-const { hasPermission } = usePermission();
+const { hasPermission, isAdmin } = usePermission();
 
 const showModal = ref(false);
 const editingSchool = ref(null);
@@ -73,7 +73,7 @@ const deleteSchool = () => {
 
     <AdminLayout>
 
-        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+        <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
                     <AppIcon name="building-2" class="text-blue-600 w-8 h-8 short:w-6 short:h-6" />
@@ -113,7 +113,7 @@ const deleteSchool = () => {
                 <Column field="name" header="School" sortable>
                     <template #body="{ data }">
                         <div class="font-semibold text-gray-800 text-sm">{{ data.name }}</div>
-                        <div class="text-[11px] text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
+                        <div class="text-2xs text-[#8e8e93] font-mono mt-0.5" v-if="data.shortname">
                             [{{ data.shortname }}]
                         </div>
                     </template>
@@ -134,7 +134,7 @@ const deleteSchool = () => {
                 <Column field="is_active" header="Status" style="width: 100px">
                     <template #body="{ data }">
                         <span
-                            class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                            class="text-2xs font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
                             :style="data.is_active
                                 ? 'background: #d1f5e0; color: #187a3c;'
                                 : 'background: #fee2e2; color: #991b1b;'">
@@ -148,7 +148,7 @@ const deleteSchool = () => {
                         <div class="flex gap-1.5 justify-center">
                             <AppButton v-if="hasPermission('schools.manage')" icon="pencil" severity="info" size="small"
                                 rounded outlined v-tooltip.top="'Edit'" @click="openEdit(data)" />
-                            <AppButton v-if="hasPermission('schools.delete')" icon="trash" severity="danger"
+                            <AppButton v-if="isAdmin()" icon="trash" severity="danger"
                                 size="small" rounded outlined v-tooltip.top="'Delete'" @click="confirmDelete(data)" />
                         </div>
                     </template>

@@ -2,17 +2,17 @@
     <IosModal :visible="show" width="560px" max-width="92vw" body-style="padding: 0;"
         @update:visible="handleClose">
         <template #header-left>
-            <button class="ios-nav-btn ios-nav-cancel" @click="handleClose">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="handleClose">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
 
         <template #title>
-            <span class="ios-nav-title">TechVoc — Approval List</span>
+            <span class="ios-nav-title text-nav-title">TechVoc — Approval List</span>
         </template>
 
         <template #header-right>
-            <button class="ios-nav-btn ios-nav-action" @click="generateReport" :disabled="generating">
+            <button class="ios-nav-btn ios-nav-action text-nav" @click="generateReport" :disabled="generating">
                 <AppIcon v-if="generating" name="spinner" :size="16" class="animate-spin" />
                 <template v-else>Generate</template>
             </button>
@@ -139,7 +139,7 @@
                                     class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
                             </div>
                         </div>
-                        <span class="block text-[10px] text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block.</span>
+                        <span class="block text-3xs text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block.</span>
                     </div>
                 </div>
             </div>

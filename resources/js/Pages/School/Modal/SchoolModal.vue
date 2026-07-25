@@ -66,80 +66,80 @@ const closeModal = () => emit('update:visible', false);
 
                     <!-- SCHOOL DETAILS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">School Details</div>
+                        <div class="ios-section-label text-compact">School Details</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="building-2" :size="13" style="color: #007AFF;" />
                                     Name
                                 </div>
                                 <div class="ios-row-control">
-                                    <InputText v-model="form.name" placeholder="School name" class="ios-row-input" />
+                                    <InputText v-model="form.name" placeholder="School name" class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                                 </div>
                             </div>
                             <div class="ios-row ios-row-last">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="tag" :size="13" style="color: #FF9500;" />
                                     Shortname
                                 </div>
                                 <div class="ios-row-control">
-                                    <InputText v-model="form.shortname" placeholder="e.g. UST" class="ios-row-input" />
+                                    <InputText v-model="form.shortname" placeholder="e.g. UST" class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                                 </div>
                             </div>
                         </div>
-                        <div v-if="form.errors.name" class="ios-section-footer ios-error">{{ form.errors.name }}</div>
-                        <div v-if="form.errors.shortname" class="ios-section-footer ios-error">{{ form.errors.shortname
+                        <div v-if="form.errors.name" class="ios-section-footer ios-error text-compact">{{ form.errors.name }}</div>
+                        <div v-if="form.errors.shortname" class="ios-section-footer ios-error text-compact">{{ form.errors.shortname
                             }}</div>
                     </div>
 
                     <!-- LOCATION SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Location</div>
+                        <div class="ios-section-label text-compact">Location</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="map-pin" :size="13" style="color: #34C759;" />
                                     Campus
                                 </div>
                                 <div class="ios-row-control">
                                     <InputText v-model="form.campus" placeholder="e.g. Main Campus"
-                                        class="ios-row-input" />
+                                        class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                                 </div>
                             </div>
                             <div class="ios-row ios-row-last ios-row-textarea">
-                                <div class="ios-row-label" style="align-self: flex-start; padding-top: 8px;">
+                                <div class="ios-row-label text-sm" style="align-self: flex-start; padding-top: 8px;">
                                     <AppIcon name="home" :size="13" style="color: #5856D6;" />
                                     Address
                                 </div>
                                 <Textarea v-model="form.address" placeholder="Full address" rows="2" autoResize
-                                    class="ios-textarea" />
+                                    class="ios-textarea text-compact" />
                             </div>
                         </div>
-                        <div v-if="form.errors.address" class="ios-section-footer ios-error">{{ form.errors.address }}
+                        <div v-if="form.errors.address" class="ios-section-footer ios-error text-compact">{{ form.errors.address }}
                         </div>
                     </div>
 
                     <!-- SCHEDULE SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Schedule</div>
+                        <div class="ios-section-label text-compact">Schedule</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-dates">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     Start Date
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="form.start_date" placeholder="Select date" showButtonBar
-                                        dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
+                                        dateFormat="M dd, yy" class="ios-datepicker [&_.p-inputtext]:text-compact" showIcon iconDisplay="input" />
                                 </div>
-                                <span class="ios-date-separator">—</span>
-                                <div class="ios-row-label">
+                                <span class="ios-date-separator text-sm">—</span>
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="calendar" :size="13" style="color: #FF3B30;" />
                                     End Date
                                 </div>
                                 <div class="ios-row-control">
                                     <DatePicker v-model="form.end_date" placeholder="Select date" showButtonBar
-                                        dateFormat="M dd, yy" class="ios-datepicker" showIcon iconDisplay="input" />
+                                        dateFormat="M dd, yy" class="ios-datepicker [&_.p-inputtext]:text-compact" showIcon iconDisplay="input" />
                                 </div>
                             </div>
                         </div>
@@ -147,7 +147,7 @@ const closeModal = () => emit('update:visible', false);
 
                     <!-- REMARKS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label text-compact">Remarks</div>
                         <div class="ios-card" style="padding: 0;">
                             <Editor v-model="form.remarks" editorStyle="height: 120px">
                                 <template #toolbar>
@@ -166,16 +166,16 @@ const closeModal = () => emit('update:visible', false);
                                 </template>
                             </Editor>
                         </div>
-                        <div v-if="form.errors.remarks" class="ios-section-footer ios-error">{{ form.errors.remarks }}
+                        <div v-if="form.errors.remarks" class="ios-section-footer ios-error text-compact">{{ form.errors.remarks }}
                         </div>
                     </div>
 
                     <!-- STATUS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Status</div>
+                        <div class="ios-section-label text-compact">Status</div>
                         <div class="ios-card">
                             <label class="ios-row ios-row-last" style="cursor: pointer;">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="check-circle" :size="13" style="color: #34C759;" />
                                     Active
                                 </div>

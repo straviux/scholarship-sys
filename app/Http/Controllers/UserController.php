@@ -14,6 +14,27 @@ use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
     /**
+     * Guard against privilege escalation: only administrators may manage
+     * administrator accounts or hand out the administrator role.
+     */
+    private function ensureCanManage(?User $target = null, ?string $roleBeingAssigned = null): void
+    {
+        $actor = auth()->user();
+
+        if ($actor->hasRole('administrator')) {
+            return;
+        }
+
+        if ($target && $target->hasRole('administrator')) {
+            abort(403, 'Only administrators can manage administrator accounts.');
+        }
+
+        if ($roleBeingAssigned === 'administrator') {
+            abort(403, 'Only administrators can assign the administrator role.');
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse
@@ -27,6 +48,7 @@ class UserController extends Controller
         ]);
 
         $getRole = $request->input('roles');
+        $this->ensureCanManage(roleBeingAssigned: $getRole['name'] ?? null);
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
@@ -66,6 +88,7 @@ class UserController extends Controller
 
         $oldData = $user->getAttributes();
         $getRole = $request->input('roles');
+        $this->ensureCanManage($user, $getRole['name'] ?? null);
         $user->update([
             'name' => $request->name,
             'username' => $request->username,
@@ -90,6 +113,8 @@ class UserController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
+        $this->ensureCanManage($user);
+
         try {
             $userData = $user->getAttributes();
             $user->delete();
@@ -117,6 +142,8 @@ class UserController extends Controller
      */
     public function changePassword(\App\Http\Requests\ChangeUserPasswordRequest $request, User $user): \Illuminate\Http\RedirectResponse
     {
+        $this->ensureCanManage($user);
+
         $user->password = Hash::make($request->password);
         $user->save();
 

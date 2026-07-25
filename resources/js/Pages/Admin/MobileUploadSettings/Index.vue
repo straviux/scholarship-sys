@@ -13,7 +13,7 @@
             </template>
 
             <section class="ios-section">
-                <div class="ios-section-label">Configuration</div>
+                <div class="ios-section-label text-compact">Configuration</div>
                 <Card class="ios-page-panel ios-settings-form">
                     <template #content>
                         <Tabs v-model:value="activeTab">

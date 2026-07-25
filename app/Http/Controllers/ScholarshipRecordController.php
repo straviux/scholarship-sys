@@ -141,8 +141,6 @@ class ScholarshipRecordController extends Controller
             Storage::delete($existing->file_path);
         }
 
-        // upload to google drive
-        Storage::disk('google')->putFileAs($record->profile_id, $request->file('file'), $request->file('file')->getClientOriginalName());
         // upload to local storage
         $path = $request->file('file')->store('public/scholarship_files');
 

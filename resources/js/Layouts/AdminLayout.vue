@@ -16,7 +16,8 @@ const { scrollToTop } = useSmoothScroll();
 const { theme, navDark, cycleTheme, getThemeIcon, getThemeLabel } = useTheme();
 const $page = usePage();
 const toggleMenu = ref(false);
-const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') === 'true');
+// Minimized by default; expands only when the user has explicitly chosen to.
+const sidebarMinimized = ref(localStorage.getItem('sidebarMinimized') !== 'false');
 const userMenuRef = ref(null);
 const minimizedMenuRef = ref(null);
 const activeMinimizedParent = ref(null);
@@ -622,7 +623,7 @@ watch(sidebarMinimized, (isMinimized) => {
 
         <!-- Floating Sidebar -->
         <aside
-            class="fixed z-30 md:z-20 top-0 left-0 md:top-20 md:left-4 flex flex-col dark:bg-[#222831] dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-96px)]"
+            class="fixed z-30 md:z-20 top-0 left-0 md:top-[var(--sidebar-top)] md:left-4 flex flex-col dark:bg-[#222831] dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-var(--sidebar-top)-1rem)]"
             :class="[
                 sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
                 toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -718,7 +719,7 @@ watch(sidebarMinimized, (isMinimized) => {
                 </div>
                 <!-- Dynamic Menu from API (Minimized Width) -->
                 <ul v-if="sidebarMinimized && (menuItems.length > 0 || !menuLoading)"
-                    class="menu space-y-3 mt-2 px-2 pb-20 w-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden relative"
+                    class="menu space-y-3 mt-2 pl-2 pb-20 w-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 items-center min-h-0 min-w-0 block flex-1 overflow-y-auto overflow-x-hidden relative"
                     :class="{ 'opacity-60 pointer-events-none': menuLoading }">
                     <template v-for="item in menuItems" :key="item.id">
                         <!-- Single menu item (minimized) -->
@@ -799,7 +800,7 @@ watch(sidebarMinimized, (isMinimized) => {
         </aside>
 
         <div class="w-full min-w-0 flex flex-col h-screen overflow-hidden">
-            <div class="flex-shrink-0 relative z-20 h-16 dark:bg-[#222831] dark:border-b dark:border-white/5 lg:py-2.5"
+            <div class="flex-shrink-0 relative z-20 h-[var(--app-header-h)] dark:bg-[#222831] dark:border-b dark:border-white/5 lg:py-2.5"
                 :class="{ dark: navDark }">
                 <div class="px-4 md:px-6 flex items-center justify-between space-x-2 md:space-x-4 h-full">
                     <!-- Mobile hamburger -->
@@ -855,12 +856,14 @@ watch(sidebarMinimized, (isMinimized) => {
 
                         <!-- Theme Toggle -->
                         <AppButton :icon="getThemeIcon()" severity="secondary" variant="text" size="large" rounded
+                            class="[&_.p-button-icon]:text-amber-500 dark:[&_.p-button-icon]:text-amber-400"
                             :aria-label="'Theme: ' + getThemeLabel()" :title="'Theme: ' + getThemeLabel()"
                             @click="cycleTheme" v-tooltip.bottom="'Switch Theme'" />
 
                         <!-- User Settings Menu -->
                         <div class="relative">
                             <AppButton icon="cog" severity="secondary" variant="text" size="large" rounded
+                                class="[&_.p-button-icon]:text-indigo-600 dark:[&_.p-button-icon]:text-indigo-400"
                                 aria-label="User Menu" @click="toggleUserMenu" v-tooltip.bottom="'User Menu'" />
 
                             <Popover ref="userMenuRef" class="w-56 !rounded-2xl">
@@ -921,7 +924,7 @@ watch(sidebarMinimized, (isMinimized) => {
             </div>
 
             <div ref="contentRef"
-                class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-6 short:pt-3 pb-10 short:pb-4 transition-[margin-left] duration-300"
+                class="content-scroll flex-1 overflow-y-auto px-4 md:px-6 pt-[var(--content-pt)] pb-10 short:pb-4 transition-[margin-left] duration-300"
                 :class="sidebarMinimized ? 'md:ml-[130px]' : 'md:ml-[240px]'">
                 <slot />
             </div>

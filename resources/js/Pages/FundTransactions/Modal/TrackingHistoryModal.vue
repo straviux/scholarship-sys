@@ -14,9 +14,9 @@
                                         <AppIcon name="check" :size="11" class="text-white" />
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-[13px] text-[#1c1c1e] dark:text-gray-200">{{ entry.trn_remarks ||
+                                        <p class="text-compact text-[#1c1c1e] dark:text-gray-200">{{ entry.trn_remarks ||
                                             entry.transaction_description || entry.description }}</p>
-                                        <p class="text-[12px] text-[#8E8E93] mt-[3px]">{{
+                                        <p class="text-xs text-[#8E8E93] mt-[3px]">{{
                                             formatDate(entry.trn_date || entry.transaction_date || entry.date)
                                         }}</p>
                                     </div>
@@ -30,7 +30,7 @@
 
                         <div v-else class="p-12 text-center text-[#8E8E93]">
                             <AppIcon name="spinner" :size="24" class="mb-2 block" />
-                            <p class="text-[13px]">Loading...</p>
+                            <p class="text-compact">Loading...</p>
                         </div>
         </div>
     </IosModal>

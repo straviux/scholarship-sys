@@ -186,9 +186,9 @@ const saveJpmData = () => {
         <div v-if="profile">
                     <!-- Applicant Info -->
                     <div class="ios-section">
-                        <div class="ios-section-label" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div class="ios-section-label text-compact" style="display: flex; align-items: center; justify-content: space-between;">
                             <span>{{ subjectLabel }} Information</span>
-                            <button class="ios-copy-btn" @click="resetAllJpmStatus"
+                            <button class="ios-copy-btn text-compact" @click="resetAllJpmStatus"
                                 :disabled="!hasAnyJpmMember && !jpmForm.is_not_jpm && !jpmForm.is_unrenewed_jpm"
                                 :class="isResetting ? 'animate-spin' : ''"
                                 v-tooltip.left="'Clear all JPM tags'">
@@ -198,42 +198,42 @@ const saveJpmData = () => {
                         <div class="ios-card">
                             <div class="ios-row">
                                
-                                <span class="ios-row-label" style="flex:1">{{ profile.last_name }}, {{ profile.first_name }}</span>
+                                <span class="ios-row-label text-sm" style="flex:1">{{ profile.last_name }}, {{ profile.first_name }}</span>
                                 
                                 <Checkbox v-model="jpmForm.is_jpm_member" class="mr-8" binary :disabled="jpmForm.is_not_jpm" v-tooltip.left="'Tag as JPM member'" />
-                                 <button class="ios-copy-btn" @click="copyToClipboard(`${profile.last_name}, ${profile.first_name}`, `${subjectLabel} name`)">
+                                 <button class="ios-copy-btn text-compact" @click="copyToClipboard(`${profile.last_name}, ${profile.first_name}`, `${subjectLabel} name`)">
                                     <AppIcon name="clipboard-copy" v-tooltip.left="'Copy'" :size="14" />
                                 </button>
                             </div>
                             <div v-if="hasFather" class="ios-row" :style="{ opacity: jpmForm.is_not_jpm ? 0.5 : 1 }">
                                 
-                                <span class="ios-row-label" style="flex:1"><span style="color: #8E8E93;">Father:</span> {{ profile.father_name }}</span>
+                                <span class="ios-row-label text-sm" style="flex:1"><span style="color: #8E8E93;">Father:</span> {{ profile.father_name }}</span>
                                 
                                 <Checkbox v-model="jpmForm.is_father_jpm" class="mr-8" binary :disabled="jpmForm.is_not_jpm" v-tooltip.left="'Tag as  JPM member'" />
-                                <button class="ios-copy-btn" @click="copyToClipboard(profile.father_name, 'Father name')">
+                                <button class="ios-copy-btn text-compact" @click="copyToClipboard(profile.father_name, 'Father name')">
                                     <AppIcon name="clipboard-copy" v-tooltip.left="'Copy'" :size="14" />
                                 </button>
                             </div>
                             <div v-if="hasMother" class="ios-row" :style="{ opacity: jpmForm.is_not_jpm ? 0.5 : 1 }">
                                 
-                                <span class="ios-row-label" style="flex:1"><span style="color: #8E8E93;">Mother:</span> {{ profile.mother_name }}</span>
+                                <span class="ios-row-label text-sm" style="flex:1"><span style="color: #8E8E93;">Mother:</span> {{ profile.mother_name }}</span>
                                
                                 <Checkbox v-model="jpmForm.is_mother_jpm" class="mr-8" binary :disabled="jpmForm.is_not_jpm" v-tooltip.left="'Tag as  JPM member'" />
-                                 <button class="ios-copy-btn" @click="copyToClipboard(profile.mother_name, 'Mother name')">
+                                 <button class="ios-copy-btn text-compact" @click="copyToClipboard(profile.mother_name, 'Mother name')">
                                     <AppIcon name="clipboard-copy" v-tooltip.left="'Copy'" :size="14" />
                                 </button>
                             </div>
                             <div v-if="hasGuardian" class="ios-row" :class="{ 'ios-row-last': !hasAddress }" :style="{ opacity: jpmForm.is_not_jpm ? 0.5 : 1 }">
                                
-                                <span class="ios-row-label" style="flex:1"><span style="color: #8E8E93;">Guardian:</span> {{ profile.guardian_name }}</span>
+                                <span class="ios-row-label text-sm" style="flex:1"><span style="color: #8E8E93;">Guardian:</span> {{ profile.guardian_name }}</span>
                                  
                                 <Checkbox v-model="jpmForm.is_guardian_jpm"  class="mr-8" binary :disabled="jpmForm.is_not_jpm" v-tooltip.left="'Tag as JPM member'" />
-                                <button class="ios-copy-btn" @click="copyToClipboard(profile.guardian_name, 'Guardian name')">
+                                <button class="ios-copy-btn text-compact" @click="copyToClipboard(profile.guardian_name, 'Guardian name')">
                                     <AppIcon name="clipboard-copy" v-tooltip.left="'Copy'" :size="14" />
                                 </button>
                             </div>
                             <div v-if="hasAddress" class="ios-row ios-row-last">
-                                <span class="ios-row-label" style="flex:1"><span style="color: #8E8E93;">Address:</span> {{ fullAddress }}</span>
+                                <span class="ios-row-label text-sm" style="flex:1"><span style="color: #8E8E93;">Address:</span> {{ fullAddress }}</span>
                             </div>
                         </div>
                     </div>
@@ -242,11 +242,11 @@ const saveJpmData = () => {
                     <div class="ios-section">
                         <div class="ios-card">
                             <div class="ios-row ios-row-last" :style="{ opacity: hasAnyJpmMember ? 0.5 : 1 }">
-                                <span class="ios-row-label" style="color: #FF9500;">Not a JPM Member</span>
+                                <span class="ios-row-label text-sm" style="color: #FF9500;">Not a JPM Member</span>
                                 <Checkbox v-model="jpmForm.is_not_jpm" binary :disabled="hasAnyJpmMember" />
                             </div>
                         </div>
-                        <div v-if="hasAnyJpmMember" class="ios-section-footer">
+                        <div v-if="hasAnyJpmMember" class="ios-section-footer text-compact">
                             Uncheck all JPM members above to enable this option
                         </div>
                     </div>
@@ -255,18 +255,18 @@ const saveJpmData = () => {
                     <div class="ios-section">
                         <div class="ios-card">
                             <div class="ios-row ios-row-last" :style="{ opacity: jpmForm.is_not_jpm ? 0.5 : 1 }">
-                                <span class="ios-row-label" style="color: #FF3B30;">Unrenewed JPM Member</span>
+                                <span class="ios-row-label text-sm" style="color: #FF3B30;">Unrenewed JPM Member</span>
                                 <Checkbox v-model="jpmForm.is_unrenewed_jpm" binary :disabled="jpmForm.is_not_jpm" />
                             </div>
                         </div>
-                        <div class="ios-section-footer">
+                        <div class="ios-section-footer text-compact">
                             Mark if a previously tagged JPM member did not renew.
                         </div>
                     </div>
 
                     <!-- Remarks -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label text-compact">Remarks</div>
                         <div class="ios-card">
                             <Editor v-model="jpmForm.jpm_remarks" editorStyle="height: 120px">
                                 <template #toolbar>
@@ -285,7 +285,7 @@ const saveJpmData = () => {
                                 </template>
                             </Editor>
                         </div>
-                        <div class="ios-section-footer">
+                        <div class="ios-section-footer text-compact">
                             Add any notes or verification details regarding JPM membership.
                         </div>
                     </div>

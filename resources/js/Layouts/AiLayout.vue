@@ -34,13 +34,13 @@ const logout = () => logoutForm.post(route('ai.logout'));
                 </div>
                 <div class="leading-tight">
                     <div class="font-semibold text-sm">YAKAP Scholar AI</div>
-                    <div class="text-[11px] text-slate-400">Scholarship Insights</div>
+                    <div class="text-2xs text-slate-400">Scholarship Insights</div>
                 </div>
             </Link>
 
             <div class="flex items-center gap-4">
                 <div v-if="aiStatus.provider"
-                    class="hidden md:flex items-center gap-2 text-[11px] px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700"
+                    class="hidden md:flex items-center gap-2 text-2xs px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700"
                     :title="`AI provider: ${aiStatus.provider} · ${aiStatus.model}`">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span class="uppercase tracking-wide text-slate-300">{{ aiStatus.provider }}</span>
@@ -49,7 +49,7 @@ const logout = () => logoutForm.post(route('ai.logout'));
                 </div>
                 <div v-if="user" class="text-right leading-tight hidden sm:block">
                     <div class="text-sm font-medium">{{ user.name }}</div>
-                    <div class="text-[11px] text-indigo-300">{{ primaryRole }}</div>
+                    <div class="text-2xs text-indigo-300">{{ primaryRole }}</div>
                 </div>
                 <button type="button" @click="logout"
                     class="text-sm px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">

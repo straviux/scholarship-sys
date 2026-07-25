@@ -20,6 +20,9 @@ yarn-error.log
 /.idea
 /.vscode
 
+# Claude Code
+.claude/
+
 # Upload folders
 /storage/app/public/profile-photos
 /storage/app/public/disbursements

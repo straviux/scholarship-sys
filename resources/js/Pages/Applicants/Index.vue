@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment'
@@ -66,8 +66,75 @@ const props = defineProps({
     interviewers: {
         type: Array,
         default: () => []
+    },
+    // Tracking lists (waiting / interview / endorsed / personal)
+    activeList: {
+        type: String,
+        default: 'all'
+    },
+    listCounts: {
+        type: Object,
+        default: () => ({})
+    },
+    listMembership: {
+        type: Object,
+        default: () => ({})
     }
 });
+
+// ============================================
+// TRACKING LISTS
+// ============================================
+const listTabs = [
+    { key: 'all', label: 'Applicants', icon: 'users', badgeClass: '' },
+    { key: 'waiting', label: 'Waiting', icon: 'clock', badgeClass: 'bg-amber-50 text-amber-700' },
+    { key: 'interview', label: 'Interview', icon: 'comments', badgeClass: 'bg-blue-50 text-blue-700' },
+    { key: 'endorsed', label: 'Endorsed', icon: 'share-2', badgeClass: 'bg-purple-50 text-purple-700' },
+    { key: 'personal', label: 'My List', icon: 'bookmark', badgeClass: 'bg-emerald-50 text-emerald-700' },
+];
+
+const activeListTab = computed(() => props.activeList || 'all');
+
+const switchListTab = (key) => {
+    if (key === activeListTab.value) return;
+
+    router.get(route('applicants.index'), key === 'all' ? {} : { list: key }, {
+        preserveScroll: true,
+        preserveState: false,
+    });
+};
+
+// Which lists the given profile currently belongs to
+const listsFor = (profile) => props.listMembership?.[profile?.profile_id] || [];
+
+const addToList = (profile, listType) => {
+    router.post(route('applicant-lists.store'), {
+        profile_ids: [profile.profile_id],
+        list_type: listType,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            const label = listTabs.find(t => t.key === listType)?.label || listType;
+            toast.success(`Added to ${label} list`);
+        },
+        onError: () => toast.error('Failed to add to list'),
+    });
+};
+
+const removeFromList = (profile, listType) => {
+    router.delete(route('applicant-lists.destroy'), {
+        data: {
+            profile_ids: [profile.profile_id],
+            list_type: listType,
+        },
+        preserveScroll: true,
+        onSuccess: () => {
+            const label = listTabs.find(t => t.key === listType)?.label || listType;
+            toast.success(`Removed from ${label} list`);
+        },
+        onError: () => toast.error('Failed to remove from list'),
+    });
+};
 
 // Filter management via composable
 const {
@@ -376,13 +443,6 @@ const editApplicant = (profile) => {
     showApplicationFormModal.value = true;
 }
 
-const viewFullProfile = (profile) => {
-    if (!profile?.profile_id) {
-        return;
-    }
-
-    router.visit(route('scholarship.profile.show', profile.profile_id));
-}
 
 const closeModal = () => {
     showApplicationFormModal.value = false;
@@ -540,13 +600,6 @@ const buildContextMenu = (rowData) => {
             icon: 'id-card',
             command: () => openProfileReviewModal(rowData)
         });
-        if (hasPermission('scholarships.view')) {
-            items.push({
-                label: 'View Full Profile',
-                icon: 'eye',
-                command: () => viewFullProfile(rowData)
-            });
-        }
         if (hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer')) {
             items.push({
                 label: 'Interview',
@@ -554,26 +607,75 @@ const buildContextMenu = (rowData) => {
                 command: () => handleProfileReviewInterview(rowData)
             });
         }
-        items.push({
-            label: 'Edit Requirements',
+    }
+
+    // Grouped edit actions
+    const editItems = [
+        {
+            label: 'Application',
+            icon: 'user-edit',
+            command: () => editApplicant(rowData)
+        },
+    ];
+
+    if (hasPermission('applicants.view')) {
+        editItems.push({
+            label: 'Requirements',
             icon: 'book-check',
             command: () => openRequirementsModal(rowData)
         });
     }
 
-    if (hasPermission('applicants.edit')) {
-        items.push(
-            {
-                label: 'Edit Applicant',
-                icon: 'user-edit',
-                command: () => editApplicant(rowData)
-            },
-            {
-                label: 'Update YAKAP Category',
-                icon: 'heart',
-                command: () => openUpdateYakapModal(rowData)
-            }
-        );
+    editItems.push(
+        {
+            label: 'YAKAP Category',
+            icon: 'heart',
+            command: () => openUpdateYakapModal(rowData)
+        },
+        {
+            label: 'Remarks',
+            icon: 'comment',
+            command: () => openRemarksModal(rowData)
+        }
+    );
+
+    items.push({
+        separator: true
+    });
+    items.push({
+        label: 'Edit',
+        icon: 'pencil',
+        items: editItems
+    });
+
+    // Add to / remove from tracking lists
+    const memberOf = listsFor(rowData);
+    const addTargets = listTabs
+        .filter(tab => tab.key !== 'all' && !memberOf.includes(tab.key))
+        .map(tab => ({
+            label: tab.label,
+            icon: tab.icon,
+            command: () => addToList(rowData, tab.key)
+        }));
+
+    if (addTargets.length > 0) {
+        items.push({
+            label: 'Add to',
+            icon: 'plus',
+            items: addTargets
+        });
+    }
+
+    if (memberOf.length > 0) {
+        items.push({
+            label: 'Remove from',
+            icon: 'minus',
+            items: memberOf.map(key => ({
+                label: listTabs.find(t => t.key === key)?.label || key,
+                icon: 'times',
+                command: () => removeFromList(rowData, key)
+            }))
+        });
     }
 
     if (hasPermission('priority.manage')) {
@@ -594,18 +696,7 @@ const buildContextMenu = (rowData) => {
         }
     }
 
-    if (hasPermission('applicants.edit')) {
-        items.push({
-            separator: true
-        });
-        items.push({
-            label: 'Add/Edit Remarks',
-            icon: 'comment',
-            command: () => openRemarksModal(rowData)
-        });
-    }
-
-    if (hasPermission('applicants.delete')) {
+    if (hasRole('administrator')) {
         items.push(
             {
                 separator: true
@@ -819,15 +910,53 @@ const closeRequirementsModal = () => {
     selectedApplicantForRequirements.value = null;
 };
 
-// Export Selected Rows Modal state
+// Export / report modal state
 const showExportModal = ref(false);
+const exportMode = ref('selected'); // 'selected' = checked rows, 'all' = full filtered set
+const reportRows = ref([]);
+const reportLoading = ref(false);
+
+// Rows fed to the export modal: the checked rows, or the fetched full set.
+const exportRows = computed(() => exportMode.value === 'all' ? reportRows.value : selectedRows.value);
 
 const openExportModal = () => {
     if (selectedRows.value.length === 0) {
         toast.warn('Please select at least one applicant');
         return;
     }
+    exportMode.value = 'selected';
     showExportModal.value = true;
+};
+
+// Generate a report of every applicant matching the current filters/tab,
+// not just the checked rows. Fetches the full set from the server first.
+const openReportModal = async () => {
+    if (reportLoading.value) return;
+    reportLoading.value = true;
+    try {
+        // Reuse the exact query string that produced the current view.
+        const qs = window.location.search || '';
+        const { data } = await axios.get(route('applicants.report-data') + qs);
+        const rows = data?.data ?? [];
+
+        if (!rows.length) {
+            toast.warn('No applicants match the current filters.');
+            return;
+        }
+
+        reportRows.value = rows;
+        exportMode.value = 'all';
+        showExportModal.value = true;
+
+        if (data?.capped) {
+            toast.warn('Report was capped at 20,000 records. Narrow the filters for a complete set.');
+        }
+    } catch (error) {
+        console.error('Failed to load report data:', error);
+        toast.error('Failed to load report data.');
+    } finally {
+        reportLoading.value = false;
+    }
 };
 
 // Utility functions for applicant data formatting (memoized)
@@ -925,7 +1054,7 @@ const truncateText = (text, maxLength = 80) => {
     <AdminLayout>
         <div class="ios-settings-form">
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
                         <div>
@@ -937,8 +1066,29 @@ const truncateText = (text, maxLength = 80) => {
                 </template>
 
                 <template #end>
-                    <div class="flex gap-3 items-center">
-                        <Button @click="openYakapCategoryModal" v-if="hasPermission('applicants.create')"
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <div class="flex flex-wrap gap-2" role="tablist" aria-label="Applicant lists">
+                            <button v-for="tab in listTabs" :key="tab.key" type="button" role="tab"
+                                :aria-selected="activeListTab === tab.key"
+                                class="cursor-pointer rounded-full px-3 py-2 text-slate-700 transition-colors"
+                                :class="activeListTab === tab.key
+                                    ? 'bg-blue-400 !text-slate-50'
+                                    : 'bg-white hover:border-blue-200'" @click="switchListTab(tab.key)">
+                                <div class="flex items-center gap-2">
+                                    <AppIcon :name="tab.icon" :size="14" />
+                                    <span class="text-compact">{{ tab.label }}</span>
+                                    <span v-if="tab.key !== 'all'"
+                                        class="rounded-full px-2 py-0.5 text-2xs font-semibold"
+                                        :class="activeListTab === tab.key ? 'bg-white/25 text-white' : tab.badgeClass">
+                                        {{ listCounts?.[tab.key] ?? 0 }}
+                                    </span>
+                                </div>
+                            </button>
+                        </div>
+                        <AppButton v-if="hasPermission('applicants.export')" icon="printer" label="Generate Report"
+                            severity="info" outlined rounded size="small" :loading="reportLoading"
+                            @click="openReportModal" v-tooltip.bottom="'Report all applicants matching current filters'" />
+                        <Button @click="openYakapCategoryModal"
                             severity="success" text rounded v-tooltip.bottom="'Add New Applicant'">
                             <template #icon>
                                 <AppIcon name="user-plus" :size="24" />
@@ -1057,7 +1207,7 @@ const truncateText = (text, maxLength = 80) => {
                     <div class="flex items-center gap-4">
                         
                         <div class="ml-auto flex items-center gap-2">
-                            <RecordsSelect v-model="records" label="label" class="w-28" size="small" />
+                            <RecordsSelect v-model="records" label="label" class="w-16" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
                         </div>
                         <AppButton :icon="simpleView ? 'table' : 'list'" severity="secondary" rounded outlined
@@ -1122,7 +1272,7 @@ const truncateText = (text, maxLength = 80) => {
                     <div class="flex gap-2">
                         <AppButton v-if="hasPermission('applicants.export')" icon="download" @click="openExportModal"
                             severity="info" label="Export Selected" outlined rounded />
-                        <AppButton v-if="hasPermission('applicants.edit')" icon="pencil" @click="openBatchYakapModal"
+                        <AppButton icon="pencil" @click="openBatchYakapModal"
                             severity="warning" label="Batch Update YAKAP" rounded />
                     </div>
                 </div>
@@ -1180,8 +1330,7 @@ const truncateText = (text, maxLength = 80) => {
                                                     {{ getApplicantInitials(slotProps.data) }}
                                                 </div>
                                             </div>
-                                            <div class="font-semibold text-sky-700 text-sm flex-1 min-w-0 cursor-pointer hover:text-sky-800 underline underline-offset-4 transition-all"
-                                                @click="openProfileReviewModal(slotProps.data)">
+                                            <div class="font-semibold text-gray-800 text-sm flex-1 min-w-0">
                                                 {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
                                                     slotProps.data.middle_name || '' }} {{
                                                     slotProps.data.extension_name || '' }}
@@ -1236,25 +1385,33 @@ const truncateText = (text, maxLength = 80) => {
                     </Column>
 
                     <!-- Academic Column -->
-                    <Column header="Academic" style="min-width: 200px">
+                    <Column header="Academic" style="min-width: 170px; max-width: 200px">
                         <template #body="slotProps">
-                            <div v-if="slotProps.data.scholarship_grant[0]" class="text-xs flex flex-col gap-0.5">
+                            <div v-if="slotProps.data.scholarship_grant[0]"
+                                class="text-xs flex flex-col gap-0.5 whitespace-normal break-words leading-snug">
                                 <div class="font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
                                     {{ slotProps.data.scholarship_grant[0].school.shortname }}
                                 </div>
                                 <div v-if="slotProps.data.scholarship_grant[0]?.course">
-                                    {{ slotProps.data.scholarship_grant[0].course.shortname }}
-                                </div>
-                                <div class="text-gray-600" v-if="slotProps.data.scholarship_grant[0]?.year_level">
-                                    Year: {{ slotProps.data.scholarship_grant[0].year_level }}
+                                    {{ slotProps.data.scholarship_grant[0].course.name ||
+                                        slotProps.data.scholarship_grant[0].course.shortname }}
                                 </div>
                             </div>
                             <span v-else class="text-gray-400">-</span>
                         </template>
                     </Column>
 
+                    <!-- Year Level Column -->
+                    <Column header="Year" style="width: 60px">
+                        <template #body="slotProps">
+                            <div class="text-xs text-center">
+                                {{ slotProps.data.scholarship_grant[0]?.year_level || '-' }}
+                            </div>
+                        </template>
+                    </Column>
+
                     <!-- Address Column -->
-                    <Column header="Address" style="min-width: 150px">
+                    <Column header="Address" style="min-width: 120px; max-width: 140px">
                         <template #body="slotProps">
 
                             <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 "
@@ -1271,7 +1428,7 @@ const truncateText = (text, maxLength = 80) => {
                         </template>
                     </Column>
 
-                    <Column header="Remarks" style="max-width: 200px">
+                    <Column header="Remarks" style="min-width: 260px; max-width: 320px">
                         <template #body="slotProps">
                             <div v-if="slotProps.data.remarks" v-safe-html="slotProps.data.remarks"
                                 class="text-xs prose prose-xs max-w-none line-clamp-3"></div>
@@ -1279,31 +1436,25 @@ const truncateText = (text, maxLength = 80) => {
                         </template>
                     </Column>
 
-                    <Column header="Created" style="min-width: 160px">
+                    <Column header="Created / Updated" style="min-width: 150px" v-if="!simpleView">
                         <template #body="slotProps">
-                            <div class="flex flex-col gap-1 text-[11px]">
-                                <div v-if="slotProps.data.created_by" class="text-slate-700">
-                                    {{ slotProps.data.created_by.name }}
+                            <div class="flex flex-col gap-1.5 text-xs leading-tight">
+                                <div v-if="slotProps.data.created_by || slotProps.data.created_at"
+                                    class="flex flex-col">
+                                    <span class="text-slate-700">{{ slotProps.data.created_by?.name }}</span>
+                                    <span v-if="slotProps.data.created_at" class="text-slate-400">
+                                        Created {{ formatDateFiled(slotProps.data.created_at) }}
+                                    </span>
                                 </div>
-                                <div v-if="slotProps.data.created_at" class="text-slate-400">
-                                    {{ formatDateFiled(slotProps.data.created_at) }}
+                                <div v-if="slotProps.data.updated_by || slotProps.data.updated_at"
+                                    class="flex flex-col">
+                                    <span class="text-slate-700">{{ slotProps.data.updated_by?.name }}</span>
+                                    <span v-if="slotProps.data.updated_at" class="text-slate-400">
+                                        Updated {{ formatDateFiled(slotProps.data.updated_at) }}
+                                    </span>
                                 </div>
-                                <span v-if="!slotProps.data.created_by && !slotProps.data.created_at"
-                                    class="text-gray-400">-</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column header="Updated" style="min-width: 160px">
-                        <template #body="slotProps">
-                            <div class="flex flex-col gap-1 text-[11px]">
-                                <div v-if="slotProps.data.updated_by" class="text-slate-700">
-                                    {{ slotProps.data.updated_by.name }}
-                                </div>
-                                <div v-if="slotProps.data.updated_at" class="text-slate-400">
-                                    {{ formatDateFiled(slotProps.data.updated_at) }}
-                                </div>
-                                <span v-if="!slotProps.data.updated_by && !slotProps.data.updated_at"
+                                <span
+                                    v-if="!slotProps.data.created_by && !slotProps.data.created_at && !slotProps.data.updated_by && !slotProps.data.updated_at"
                                     class="text-gray-400">-</span>
                             </div>
                         </template>
@@ -1330,14 +1481,12 @@ const truncateText = (text, maxLength = 80) => {
                     </Column>
 
                     <!-- Actions Column -->
-                    <Column header="Actions" style="width: 96px" v-if="!simpleView">
+                    <Column header="Actions" style="width: 64px" v-if="!simpleView">
                         <template #body="slotProps">
-                            <div class="flex items-center justify-center gap-1">
-                                <AppButton v-if="hasPermission('scholarships.view')" icon="eye" text severity="info"
-                                    @click="viewFullProfile(slotProps.data)" v-tooltip.top="'View full profile'" />
+                            <div class="flex items-center justify-center">
                                 <AppButton icon="ellipsis-vertical" text severity="secondary"
                                     @click="(event) => showRowContextMenu(event, slotProps.data)"
-                                    v-tooltip.top="'More actions'" />
+                                    v-tooltip.top="'Actions'" />
                             </div>
                         </template>
                     </Column>
@@ -1359,7 +1508,8 @@ const truncateText = (text, maxLength = 80) => {
         <!-- Integrated Profile & Review Modal -->
         <ProfileReviewModal v-model:visible="showProfileReviewModal" :applicant="selectedApplicantForReview"
             :applicants="applicants" @interview="handleProfileReviewInterview" @edit-profile="handleProfileReviewEdit"
-            @edit-requirements="openRequirementsModal" @closed="closeProfileReviewModal" />
+            @edit-requirements="openRequirementsModal" @edit-yakap="openUpdateYakapModal" @edit-remarks="openRemarksModal"
+            @assign-priority="openPriorityModal" @delete="confirmDeleteApplicant" @closed="closeProfileReviewModal" />
 
         <!-- YAKAP Category Modal - for selecting category when creating new applicant -->
         <YakapCategoryModal v-model:visible="showYakapCategoryModal" @selected="handleYakapCategorySelected" />
@@ -1392,8 +1542,8 @@ const truncateText = (text, maxLength = 80) => {
         <RequirementsChecklistModal :visible="showRequirementsChecklistModal"
             :applicant="selectedApplicantForRequirements" @update:visible="showRequirementsChecklistModal = $event" />
 
-        <!-- Export Selected Rows Modal -->
-        <ExportSelectedModal :show="showExportModal" :selected-rows="selectedRows"
+        <!-- Export / Report Modal (checked rows, or full filtered set) -->
+        <ExportSelectedModal :show="showExportModal" :selected-rows="exportRows" :mode="exportMode"
             @update:show="showExportModal = $event" />
     </AdminLayout>
 </template>

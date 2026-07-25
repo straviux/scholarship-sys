@@ -57,33 +57,33 @@ const closeModal = () => emit('update:visible', false);
 
                     <!-- REQUIREMENT DETAILS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Requirement Details</div>
+                        <div class="ios-section-label text-compact">Requirement Details</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="file-check" style="color: #007AFF; font-size: 13px;" />
                                     Name
                                 </div>
                                 <div class="ios-row-control">
                                     <InputText v-model="form.name" placeholder="Requirement name"
-                                        class="ios-row-input" />
+                                        class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                                 </div>
                             </div>
                             <div class="ios-row ios-row-last ios-row-textarea">
-                                <div class="ios-row-label" style="align-self: flex-start; padding-top: 8px;">
+                                <div class="ios-row-label text-sm" style="align-self: flex-start; padding-top: 8px;">
                                     <AppIcon name="list" style="color: #5856D6; font-size: 13px;" />
                                     Description
                                 </div>
                                 <Textarea v-model="form.description" placeholder="Brief description (optional)" rows="2"
-                                    autoResize class="ios-textarea" />
+                                    autoResize class="ios-textarea text-compact" />
                             </div>
                         </div>
-                        <div v-if="form.errors.name" class="ios-section-footer ios-error">{{ form.errors.name }}</div>
+                        <div v-if="form.errors.name" class="ios-section-footer ios-error text-compact">{{ form.errors.name }}</div>
                     </div>
 
                     <!-- REMARKS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label text-compact">Remarks</div>
                         <div class="ios-card" style="padding: 0;">
                             <Editor v-model="form.remarks" editorStyle="height: 120px">
                                 <template #toolbar>
@@ -102,16 +102,16 @@ const closeModal = () => emit('update:visible', false);
                                 </template>
                             </Editor>
                         </div>
-                        <div v-if="form.errors.remarks" class="ios-section-footer ios-error">{{ form.errors.remarks }}
+                        <div v-if="form.errors.remarks" class="ios-section-footer ios-error text-compact">{{ form.errors.remarks }}
                         </div>
                     </div>
 
                     <!-- STATUS SECTION -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Status</div>
+                        <div class="ios-section-label text-compact">Status</div>
                         <div class="ios-card">
                             <label class="ios-row ios-row-last" style="cursor: pointer;">
-                                <div class="ios-row-label">
+                                <div class="ios-row-label text-sm">
                                     <AppIcon name="check-circle" style="color: #34C759; font-size: 13px;" />
                                     Active
                                 </div>

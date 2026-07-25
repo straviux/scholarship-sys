@@ -82,19 +82,19 @@ const submit = async () => {
 
                     <!-- Program Details -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Program Details</div>
+                        <div class="ios-section-label text-compact">Program Details</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label">Name</span>
-                                <InputText v-model="form.name" placeholder="Program name" class="ios-row-input" />
+                                <span class="ios-row-label text-sm">Name</span>
+                                <InputText v-model="form.name" placeholder="Program name" class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                             </div>
                             <small v-if="errors.name"
                                 style="color:#FF3B30; padding: 2px 16px 6px; display:block; font-size:12px;">
                                 {{ errors.name[0] }}
                             </small>
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Shortname</span>
-                                <InputText v-model="form.shortname" placeholder="e.g. PROG" class="ios-row-input" />
+                                <span class="ios-row-label text-sm">Shortname</span>
+                                <InputText v-model="form.shortname" placeholder="e.g. PROG" class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                             </div>
                             <small v-if="errors.shortname"
                                 style="color:#FF3B30; padding: 2px 16px 6px; display:block; font-size:12px;">
@@ -105,7 +105,7 @@ const submit = async () => {
 
                     <!-- Description -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Description</div>
+                        <div class="ios-section-label text-compact">Description</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last" style="align-items: flex-start; padding: 10px 16px;">
                                 <Textarea v-model="form.description" placeholder="Program description..." autoResize
@@ -117,24 +117,24 @@ const submit = async () => {
 
                     <!-- Schedule -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Schedule</div>
+                        <div class="ios-section-label text-compact">Schedule</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label">Start Date</span>
+                                <span class="ios-row-label text-sm">Start Date</span>
                                 <DatePicker v-model="dateStart" dateFormat="M dd, yy" showIcon iconDisplay="input"
-                                    placeholder="Select date" class="ios-datepicker" style="flex: 1;" />
+                                    placeholder="Select date" class="ios-datepicker [&_.p-inputtext]:text-compact" style="flex: 1;" />
                             </div>
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">End Date</span>
+                                <span class="ios-row-label text-sm">End Date</span>
                                 <DatePicker v-model="dateEnd" dateFormat="M dd, yy" showIcon iconDisplay="input"
-                                    placeholder="Select date" class="ios-datepicker" style="flex: 1;" />
+                                    placeholder="Select date" class="ios-datepicker [&_.p-inputtext]:text-compact" style="flex: 1;" />
                             </div>
                         </div>
                     </div>
 
                     <!-- Remarks -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Remarks</div>
+                        <div class="ios-section-label text-compact">Remarks</div>
                         <div class="ios-card" style="padding: 8px 12px;">
                             <Editor v-model="form.remarks" editorStyle="height: 120px">
                                 <template #toolbar>
@@ -159,7 +159,7 @@ const submit = async () => {
                     <div class="ios-section">
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Active</span>
+                                <span class="ios-row-label text-sm">Active</span>
                                 <ToggleSwitch v-model="form.is_active" :trueValue="1" :falseValue="0" size="small"
                                     style="--p-toggleswitch-checked-background: #34C759;" />
                             </div>

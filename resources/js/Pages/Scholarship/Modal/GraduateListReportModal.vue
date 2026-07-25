@@ -2,17 +2,17 @@
     <IosModal :visible="show" width="640px" max-width="92vw" body-style="padding: 0;"
         @update:visible="emit('update:show', $event)">
         <template #header-left>
-            <button class="ios-nav-btn ios-nav-cancel" @click="close">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="close">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
 
         <template #title>
-            <span class="ios-nav-title">Graduate List Report</span>
+            <span class="ios-nav-title text-nav-title">Graduate List Report</span>
         </template>
 
         <template #header-right>
-            <button class="ios-nav-btn ios-nav-cancel" @click="close">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="close">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
@@ -20,7 +20,7 @@
         <div class="p-4 max-h-[75vh] overflow-y-auto">
             <!-- ── REPORT TITLE ── -->
             <div class="mb-4">
-                <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title <span class="text-gray-400 font-normal">(optional)</span></label>
+                <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title <span class="text-gray-400 font-normal">(optional)</span></label>
                 <InputText v-model="customReportTitle" placeholder="Leave blank for default title"
                     class="w-full [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
             </div>
@@ -28,25 +28,25 @@
             <!-- ── FILTERS ── -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program</label>
                     <ProgramSelect v-model="selectedPrograms" label="shortname"
                         custom-placeholder="All Programs" :multiple="true"
                         class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" />
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">School</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">School</label>
                     <SchoolSelect v-model="selectedSchools" label="shortname" custom-placeholder="All Schools"
                         :multiple="true"
                         class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" />
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Course</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Course</label>
                     <CourseSelect v-model="selectedCourses" label="shortname"
                         custom-placeholder="All Courses" :multiple="true" :load-all-when-no-program="true"
                         class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" />
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Year Graduated</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Year Graduated</label>
                     <Select v-model="selectedYearGraduated" :options="yearGraduatedOptions"
                         optionLabel="label" optionValue="value" placeholder="All Years" showClear
                         class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
@@ -56,7 +56,7 @@
             <!-- ── LAYOUT OPTIONS ── -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
                     <div class="flex gap-1.5">
                         <Select v-model="paperSize" :options="paperSizeOptions"
                             optionLabel="label" optionValue="value"
@@ -67,7 +67,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Remarks Options</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Remarks Options</label>
                     <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800">
                         <span>Show Remarks Column</span>
                         <ToggleSwitch v-model="showRemarks" />
@@ -83,21 +83,21 @@
             <div class="mb-4">
                 <div class="flex gap-2" style="align-items: flex-start;">
                     <div class="flex-1">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Prepared By</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Prepared By</label>
                         <InputText v-model="preparedBy" placeholder="Name (optional)"
                             class="w-full [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                         <InputText v-model="preparedByPosition" placeholder="Position (optional)"
                             class="mt-1.5 w-full [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                     </div>
                     <div class="flex-1">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Approved By</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Approved By</label>
                         <InputText v-model="approvedBy" placeholder="Name (optional)"
                             class="w-full [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                         <InputText v-model="approvedByPosition" placeholder="Position (optional)"
                             class="mt-1.5 w-full [&_.p-inputtext]:w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                     </div>
                 </div>
-                <span class="block text-[10px] text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block.</span>
+                <span class="block text-3xs text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block.</span>
             </div>
 
             <!-- ── ACTIONS ── -->
@@ -117,12 +117,12 @@
         body-style="padding: 0; flex: 1; display: flex; direction: column; overflow: hidden;"
         @update:visible="showPreview = $event">
         <template #header-left>
-            <button class="ios-nav-btn ios-nav-cancel" @click="showPreview = false">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="showPreview = false">
                 <AppIcon name="chevron-left" :size="13" /> Back
             </button>
         </template>
         <template #title>
-            <span class="ios-nav-title">Graduate List Preview</span>
+            <span class="ios-nav-title text-nav-title">Graduate List Preview</span>
         </template>
         <template #header-right>
             <div class="ios-nav-actions flex items-center gap-2">
@@ -139,10 +139,10 @@
                         <AppIcon name="plus" :size="10" />
                     </button>
                 </div>
-                <button class="ios-icon-btn" @click="doExportExcel" title="Export to Excel">
+                <button class="ios-icon-btn text-sm" @click="doExportExcel" title="Export to Excel">
                     <AppIcon name="file-spreadsheet" :size="16" style="color: #34C759;" />
                 </button>
-                <button class="ios-icon-btn" @click="doPrint" title="Print / Save as PDF">
+                <button class="ios-icon-btn text-sm" @click="doPrint" title="Print / Save as PDF">
                     <AppIcon name="printer" :size="16" style="color: #007AFF;" />
                 </button>
             </div>

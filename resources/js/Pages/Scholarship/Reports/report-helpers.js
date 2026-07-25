@@ -162,7 +162,6 @@ export function formatStatus(status) {
 		withdrawn: 'Withdrawn',
 		loa: 'Leave of Absence',
 		suspended: 'Suspended',
-		endorsed: 'Endorsed',
 	};
 	return map[status] || status || '—';
 }
@@ -181,7 +180,6 @@ export function getProfileReportLabel(status) {
 		withdrawn: 'WITHDRAWN SCHOLARS',
 		loa: 'LEAVE OF ABSENCE',
 		suspended: 'SUSPENDED SCHOLARS',
-		endorsed: 'ENDORSED',
 	};
 
 	return map[status] || formatStatus(status)?.toUpperCase() || 'SCHOLARSHIP PROFILES';

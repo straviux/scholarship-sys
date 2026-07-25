@@ -16,12 +16,12 @@
             </div>
 
             <div class="ios-form-group">
-                <label class="ios-label">Graduation Date *</label>
+                <label class="ios-label text-compact">Graduation Date *</label>
                 <DatePicker v-model="form.graduation_date" dateFormat="yy-mm-dd" showIcon fluid />
             </div>
 
             <div class="ios-form-group">
-                <label class="ios-label">Graduation Remarks</label>
+                <label class="ios-label text-compact">Graduation Remarks</label>
                 <Textarea v-model="form.graduation_remarks" rows="4" autoResize fluid
                     placeholder="Add graduation notes or supporting context" />
             </div>

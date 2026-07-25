@@ -43,10 +43,6 @@ class DocumentsController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Gate::allows('documents.upload')) {
-            abort(403, 'User does not have the right permissions');
-        }
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -87,10 +83,6 @@ class DocumentsController extends Controller
      */
     public function update(Request $request, Document $document)
     {
-        if (!Gate::allows('documents.edit')) {
-            abort(403, 'User does not have the right permissions');
-        }
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -138,7 +130,8 @@ class DocumentsController extends Controller
      */
     public function destroy(Document $document)
     {
-        if (!Gate::allows('documents.delete')) {
+        // Deleting documents is administrator-only
+        if (!Gate::allows('admin')) {
             abort(403, 'User does not have the right permissions');
         }
 

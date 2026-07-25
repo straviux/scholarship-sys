@@ -105,10 +105,10 @@ const submit = () => {
         <div v-if="profile">
                     <!-- Applicant Info -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Applicant</div>
+                        <div class="ios-section-label text-compact">Applicant</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">{{ profile.last_name }}, {{ profile.first_name }}</span>
+                                <span class="ios-row-label text-sm">{{ profile.last_name }}, {{ profile.first_name }}</span>
                                 <span style="font-size: 13px; color: #8E8E93;">{{ profile.contact_no }}</span>
                             </div>
                         </div>
@@ -116,11 +116,11 @@ const submit = () => {
 
                     <!-- YAKAP Category -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Category</div>
+                        <div class="ios-section-label text-compact">Category</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">YAKAP Category</span>
-                                <div class="ios-row-control ios-select">
+                                <span class="ios-row-label text-sm">YAKAP Category</span>
+                                <div class="ios-row-control ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact">
                                     <Select v-model="updateYakapForm.yakap_category" :options="yakapCategoryOptions"
                                         optionLabel="label" optionValue="value" placeholder="Select Category"
                                         @change="handleCategoryChange" />
@@ -131,11 +131,11 @@ const submit = () => {
 
                     <!-- Municipality (YAKAP Field) -->
                     <div v-if="updateYakapForm.yakap_category === 'yakap-field'" class="ios-section">
-                        <div class="ios-section-label">Location</div>
+                        <div class="ios-section-label text-compact">Location</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Municipality</span>
-                                <div class="ios-row-control ios-select">
+                                <span class="ios-row-label text-sm">Municipality</span>
+                                <div class="ios-row-control ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact">
                                     <MunicipalitySelect v-model="updateYakapForm.yakap_location"
                                         placeholder="Select Municipality" :clearable="false" />
                                 </div>
@@ -145,11 +145,11 @@ const submit = () => {
 
                     <!-- School (YAKAP School) -->
                     <div v-if="updateYakapForm.yakap_category === 'yakap-school'" class="ios-section">
-                        <div class="ios-section-label">Location</div>
+                        <div class="ios-section-label text-compact">Location</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">School</span>
-                                <div class="ios-row-control ios-select">
+                                <span class="ios-row-label text-sm">School</span>
+                                <div class="ios-row-control ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact">
                                     <SchoolSelect v-model="updateYakapForm.yakap_location" placeholder="Select School"
                                         :clearable="false" />
                                 </div>

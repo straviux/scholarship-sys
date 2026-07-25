@@ -293,7 +293,7 @@ onMounted(() => {
 
     <div>
         <!-- Toolbar -->
-        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+        <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
                     <AppIcon name="building-2" class="text-blue-500 w-8 h-8" />

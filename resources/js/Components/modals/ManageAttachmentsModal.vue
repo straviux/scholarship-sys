@@ -21,7 +21,7 @@
 
                     <!-- Existing Attachments -->
                     <div v-if="record && record.attachments && record.attachments.length > 0">
-                        <h4 class="ios-section-label">Existing Attachments</h4>
+                        <h4 class="ios-section-label text-compact">Existing Attachments</h4>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <div v-for="attachment in record.attachments" :key="attachment.attachment_id"
                                 class="ios-list-item">
@@ -38,15 +38,15 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-1">
-                                    <button class="ios-icon-btn" @click="viewAttachment(attachment)"
+                                    <button class="ios-icon-btn text-sm" @click="viewAttachment(attachment)"
                                         v-tooltip.top="'View'">
                                         <AppIcon name="eye" />
                                     </button>
-                                    <button class="ios-icon-btn" @click="downloadAttachment(attachment)"
+                                    <button class="ios-icon-btn text-sm" @click="downloadAttachment(attachment)"
                                         v-tooltip.top="'Download'">
                                         <AppIcon name="download" />
                                     </button>
-                                    <button v-if="hasEditPermission" class="ios-icon-btn ios-icon-btn-danger"
+                                    <button v-if="hasEditPermission" class="ios-icon-btn ios-icon-btn-danger text-sm"
                                         @click="deleteAttachment(attachment)" v-tooltip.top="'Delete'">
                                         <AppIcon name="trash" />
                                     </button>
@@ -57,29 +57,29 @@
 
                     <!-- Upload New Attachment -->
                     <div v-if="hasEditPermission" style="margin-top: 16px;">
-                        <h4 class="ios-section-label">Upload New Attachment</h4>
+                        <h4 class="ios-section-label text-compact">Upload New Attachment</h4>
                         <div class="ios-form-group">
-                            <label class="ios-label">Attachment Type *</label>
+                            <label class="ios-label text-compact">Attachment Type *</label>
                             <Select v-model="attachmentForm.attachment_name" :options="attachmentTypeOptions"
                                 optionLabel="label" optionValue="value" placeholder="Select attachment type"
                                 class="w-full" />
-                            <p class="ios-hint">Select the type of attachment you're uploading</p>
+                            <p class="ios-hint text-2xs">Select the type of attachment you're uploading</p>
                         </div>
                         <div v-if="attachmentForm.attachment_name === 'others'" class="ios-form-group">
-                            <label class="ios-label">Specify Attachment Type *</label>
+                            <label class="ios-label text-compact">Specify Attachment Type *</label>
                             <InputText v-model="attachmentForm.custom_attachment_name"
                                 placeholder="e.g., Medical Certificate, ID Photo" class="w-full" />
                         </div>
                         <div v-if="attachmentForm.attachment_name === 'contract'" class="ios-form-group">
-                            <label class="ios-label">Page Number (Optional)</label>
+                            <label class="ios-label text-compact">Page Number (Optional)</label>
                             <InputNumber v-model="attachmentForm.page_number" :min="1" placeholder="e.g., 1, 2, 3"
                                 class="w-full" />
                         </div>
                         <div class="ios-form-group">
-                            <label class="ios-label">File (PDF or Image) *</label>
+                            <label class="ios-label text-compact">File (PDF or Image) *</label>
                             <input type="file" ref="fileInput" @change="handleFileSelect" accept=".pdf,.jpg,.jpeg,.png"
                                 class="ios-file-input" />
-                            <p class="ios-hint">Accepted formats: PDF, JPG, PNG (Max 25MB)</p>
+                            <p class="ios-hint text-2xs">Accepted formats: PDF, JPG, PNG (Max 25MB)</p>
                         </div>
                         <div v-if="attachmentForm.file" class="ios-info-card">
                             <p class="text-sm text-gray-700 dark:text-gray-300">Selected: <span class="font-medium">{{

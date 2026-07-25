@@ -46,9 +46,11 @@ watch(() => props.modelValue, (val) => {
     localValue.value = val ? parseInt(val) : null;
 }, { immediate: true });
 
-// Emit changes to parent
+// Emit changes to parent (a per-page value always exists — never emit null)
 watch(localValue, (val) => {
-    emit('update:modelValue', val);
+    if (val !== null && val !== undefined) {
+        emit('update:modelValue', val);
+    }
 });
 
 onMounted(() => {
@@ -67,6 +69,8 @@ const resolvedSize = computed(() => {
 const selectPt = computed(() => {
     const basePt = {
         overlay: { class: 'records-select-overlay overflow-hidden' },
+        label: { class: 'text-compact !py-1 !pl-2 !pr-0' },
+        dropdown: { class: '!w-6' },
     };
 
     if (!props.iosCompact) {
@@ -84,7 +88,7 @@ const selectPt = computed(() => {
 
 <template>
     <Select v-model="localValue" :options="recordsOptions" optionLabel="label" optionValue="value"
-        :placeholder="customPlaceholder" :size="resolvedSize" :class="class" showClear :pt="selectPt" />
+        :placeholder="customPlaceholder" :size="resolvedSize" :class="class" :pt="selectPt" />
 </template>
 
 <style>

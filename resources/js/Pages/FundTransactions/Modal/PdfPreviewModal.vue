@@ -3,11 +3,11 @@
         :modal-content-style="{ maxHeight: '97vh', display: 'flex', flexDirection: 'column' }"
         @update:visible="val => emit('update:show', val)">
         <template #header-right>
-            <button v-if="onExcel" @click="onExcel" class="ios-nav-btn" style="right:58px;"
+            <button v-if="onExcel" @click="onExcel" class="ios-nav-btn text-nav" style="right:58px;"
                 v-tooltip.bottom="'Export Excel'">
                 <AppIcon name="file-excel" :size="20" class="text-purple-400" />
             </button>
-            <button class="ios-nav-btn ios-nav-action" @click="doPrint" v-tooltip.right="'Print or Save Document'">
+            <button class="ios-nav-btn ios-nav-action text-nav" @click="doPrint" v-tooltip.right="'Print or Save Document'">
                 <AppIcon name="print" :size="20" class="text-emerald-400" />
             </button>
         </template>

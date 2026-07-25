@@ -46,10 +46,10 @@
 
                             <!-- Mobile URL (for copying) -->
                             <div>
-                                <label class="ios-label">Or copy this link:</label>
+                                <label class="ios-label text-compact">Or copy this link:</label>
                                 <div class="flex gap-2">
                                     <InputText type="text" :value="qrData.url" readonly class="flex-1 text-xs" />
-                                    <button class="ios-icon-btn" @click="copyToClipboard(qrData.url)"
+                                    <button class="ios-icon-btn text-sm" @click="copyToClipboard(qrData.url)"
                                         v-tooltip.top="'Copy link'">
                                         <AppIcon name="copy" />
                                     </button>

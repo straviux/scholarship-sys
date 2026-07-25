@@ -11,7 +11,7 @@
                     :disabled="idx > activeStep && !canAdvancePast(idx)"
                     @click="goToStep(idx)"
                 >
-                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold"
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-2xs font-bold"
                         :class="stepNumberClass(idx)">
                         {{ idx + 1 }}
                     </span>
@@ -32,14 +32,14 @@
             <div v-show="activeStep === 0">
                 <!-- Report Title -->
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
                     <InputText v-model="form.report_title" placeholder="Recommendation list title"
                         class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                 </div>
 
                 <!-- Request Date -->
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Request Date</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Request Date</label>
                     <DatePicker v-model="form.request_date" showButtonBar showIcon iconDisplay="input"
                         dateFormat="M dd, yy" placeholder="Select request date"
                         class="[&_.p-datepicker]:w-full [&_.p-datepicker]:text-xs" />
@@ -47,7 +47,7 @@
 
                 <!-- Program & Budget -->
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program &amp; Budget</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program &amp; Budget</label>
                     <div class="space-y-2">
                         <ProgramSelect v-model="form.budget_program" custom-placeholder="Select program"
                             class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
@@ -57,13 +57,13 @@
                             <template #value="{ value, placeholder }">
                                 <div v-if="value" class="leading-tight">
                                     <div class="font-medium text-gray-700">{{ formatBudgetAllocationLabel(value) }}</div>
-                                    <div v-if="formatBudgetAllocationDescription(value)" class="text-[11px] text-gray-500">{{ formatBudgetAllocationDescription(value) }}</div>
+                                    <div v-if="formatBudgetAllocationDescription(value)" class="text-2xs text-gray-500">{{ formatBudgetAllocationDescription(value) }}</div>
                                 </div>
                                 <span v-else class="text-gray-400">{{ placeholder }}</span>
                             </template>
                         </Select>
                     </div>
-                    <div v-if="showBudgetFooter" class="text-[10px] mt-1" :class="showBudgetError ? 'text-red-500' : 'text-gray-400'">
+                    <div v-if="showBudgetFooter" class="text-3xs mt-1" :class="showBudgetError ? 'text-red-500' : 'text-gray-400'">
                         {{ budgetFooterMessage }}
                     </div>
                 </div>
@@ -72,10 +72,10 @@
             <!-- ═══ STEP 2: Signatories ═══ -->
             <div v-show="activeStep === 1">
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatories</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatories</label>
                     <div class="flex gap-2">
                         <div class="flex-1">
-                            <label class="block text-[10px] font-medium text-gray-500 mb-1">Prepared By</label>
+                            <label class="block text-3xs font-medium text-gray-500 mb-1">Prepared By</label>
                             <InputText v-model="form.prepared_by" placeholder="Name"
                                 class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5 mb-1.5" />
                             <InputText v-model="form.prepared_by_position" placeholder="Position"
@@ -84,7 +84,7 @@
                                 class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                         </div>
                         <div class="flex-1">
-                            <label class="block text-[10px] font-medium text-gray-500 mb-1">Approved By</label>
+                            <label class="block text-3xs font-medium text-gray-500 mb-1">Approved By</label>
                             <InputText v-model="form.approved_by" placeholder="Name"
                                 class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5 mb-1.5" />
                             <InputText v-model="form.approved_by_position" placeholder="Position"
@@ -98,7 +98,7 @@
             <div v-show="activeStep === 2">
                 <!-- Options -->
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Options</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Options</label>
                     <div class="flex flex-col gap-0.5">
                         <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-b border-gray-50 hover:text-gray-900">
                             <span>Highlight JPM Names</span>
@@ -125,7 +125,7 @@
 
                 <!-- Paper & Orientation -->
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
                     <div class="flex gap-2">
                         <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
                             class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />

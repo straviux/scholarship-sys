@@ -72,7 +72,6 @@
 }
 
 .ios-nav-title {
-	font-size: 17px;
 	font-weight: 600;
 	color: #000;
 	letter-spacing: -0.4px;
@@ -97,7 +96,6 @@
 	background: transparent !important;
 	border: 0 !important;
 	box-shadow: none !important;
-	font-size: 15px;
 	font-weight: 600;
 	line-height: 1;
 	color: #374151;
@@ -243,7 +241,6 @@
 }
 
 .ios-section-label {
-	font-size: 13px;
 	font-weight: 500;
 	color: #8e8e93;
 	text-transform: uppercase;
@@ -254,7 +251,6 @@
 }
 
 .ios-section-footer {
-	font-size: 13px;
 	color: #6d6d72;
 	padding: 6px 16px 0;
 	line-height: 1.3;
@@ -289,7 +285,6 @@
 }
 
 .ios-validation-summary-title {
-	font-size: 13px;
 	font-weight: 600;
 	color: #9a3412;
 	letter-spacing: -0.15px;
@@ -297,7 +292,6 @@
 
 .ios-validation-summary-text {
 	margin: 2px 0 0;
-	font-size: 12px;
 	line-height: 1.4;
 	color: #9a3412;
 }
@@ -356,7 +350,6 @@
 }
 
 .ios-page-eyebrow {
-	font-size: 11px;
 	font-weight: 700;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
@@ -365,7 +358,6 @@
 }
 
 .ios-page-title {
-	font-size: 28px;
 	line-height: 1.1;
 	font-weight: 700;
 	letter-spacing: -0.03em;
@@ -376,7 +368,6 @@
 .ios-page-description {
 	margin: 8px 0 0;
 	max-width: 780px;
-	font-size: 14px;
 	line-height: 1.6;
 	color: #6b7280;
 }
@@ -396,7 +387,6 @@
 	border-radius: 999px;
 	border: 0.5px solid #e5e5ea;
 	background: rgba(255, 255, 255, 0.9);
-	font-size: 12px;
 	font-weight: 600;
 	color: #6b7280;
 }
@@ -424,124 +414,6 @@
 
 .ios-page-panel .p-card-content {
 	padding: 0;
-}
-
-body.ios-admin-page .ios-page-shell .p-button,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button {
-	min-height: 2.75rem;
-	padding: 0.72rem 1.08rem;
-	gap: 0.55rem;
-	border-radius: 999px !important;
-	border: 1px solid rgba(148, 163, 184, 0.24);
-	background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
-	color: #0f172a;
-	font-size: 0.94rem;
-	font-weight: 600;
-	letter-spacing: -0.01em;
-	box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-	transition:
-		transform 0.18s ease,
-		box-shadow 0.18s ease,
-		background 0.18s ease,
-		border-color 0.18s ease;
-}
-
-body.ios-admin-page .ios-page-shell .p-button:not(.p-disabled):hover,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button:not(.p-disabled):hover {
-	transform: translateY(-1px);
-	box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
-	border-color: rgba(99, 102, 241, 0.26);
-}
-
-body.ios-admin-page .ios-page-shell .p-button:not(.p-disabled):active,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button:not(.p-disabled):active {
-	transform: translateY(0);
-	box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-}
-
-body.ios-admin-page .ios-page-shell .p-button.p-button-icon-only,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-icon-only {
-	width: 2.75rem;
-	padding: 0;
-	justify-content: center;
-}
-
-body.ios-admin-page .ios-page-shell .p-button .p-button-icon,
-body.ios-admin-page .ios-page-shell .p-button .p-button-icon-left,
-body.ios-admin-page .ios-page-shell .p-button .p-button-icon-right,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button .p-button-icon,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button .p-button-icon-left,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button .p-button-icon-right {
-	width: 18px !important;
-	height: 18px !important;
-	min-width: 18px;
-	font-size: 18px !important;
-	stroke-width: 2.05;
-	flex-shrink: 0;
-}
-
-body.ios-admin-page .ios-page-shell .p-button .p-button-label,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button .p-button-label {
-	font-weight: 600;
-	letter-spacing: -0.01em;
-}
-
-body.ios-admin-page .ios-page-shell .p-button.p-button-secondary,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-secondary,
-body.ios-admin-page .ios-page-shell .p-button.p-button-contrast,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-contrast {
-	background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-	color: #0f172a;
-	border-color: rgba(148, 163, 184, 0.3);
-}
-
-body.ios-admin-page .ios-page-shell .p-button.p-button-success,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-success {
-	background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
-	color: #ffffff;
-	border-color: rgba(16, 185, 129, 0.4);
-}
-
-body.ios-admin-page .ios-page-shell .p-button.p-button-info,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-info,
-body.ios-admin-page .ios-page-shell .p-button.p-button-help,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-help {
-	background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
-	color: #ffffff;
-	border-color: rgba(59, 130, 246, 0.34);
-}
-
-body.ios-admin-page .ios-page-shell .p-button.p-button-warning,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-warning,
-body.ios-admin-page .ios-page-shell .p-button.p-button-warn,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-warn {
-	background: linear-gradient(180deg, #fde68a 0%, #fbbf24 100%);
-	color: #78350f;
-	border-color: rgba(245, 158, 11, 0.4);
-}
-
-body.ios-admin-page .ios-page-shell .p-button.p-button-danger,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-danger {
-	background: linear-gradient(180deg, #fda4af 0%, #ef4444 100%);
-	color: #ffffff;
-	border-color: rgba(239, 68, 68, 0.36);
-}
-
-body.ios-admin-page .ios-page-shell .p-button.p-button-outlined,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-outlined {
-	background: rgba(255, 255, 255, 0.88);
-	color: #111827;
-	box-shadow: none;
-	border-color: rgba(203, 213, 225, 0.8);
-}
-
-body.ios-admin-page .ios-page-shell .p-button.p-button-text,
-body.ios-admin-page .p-dialog:not(.p-confirm-dialog) .p-button.p-button-text {
-	background: transparent;
-	border-color: transparent;
-	box-shadow: none;
-	color: #4b5563;
-	padding-inline: 0.8rem;
 }
 
 body.ios-admin-page .ios-page-shell .p-panel,
@@ -894,7 +766,6 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 	}
 
 	.ios-page-title {
-		font-size: 24px;
 	}
 
 	.ios-page-actions {
@@ -946,7 +817,6 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 	background: #007aff;
 	color: #fff;
 	font-weight: 600;
-	font-size: 15px;
 	padding: 1px 10px;
 	border-radius: 20px;
 	min-width: 28px;
@@ -1149,27 +1019,22 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 }
 
 .ios-markdown-prose h1 {
-	font-size: 1.5em;
 	border-bottom: 2px solid #e5e7eb;
 	padding-bottom: 0.3em;
 }
 
 .ios-markdown-prose h2 {
-	font-size: 1.25em;
 	border-bottom: 1px solid #e5e7eb;
 	padding-bottom: 0.3em;
 }
 
 .ios-markdown-prose h3 {
-	font-size: 1.125em;
 }
 
 .ios-markdown-prose h4 {
-	font-size: 1em;
 }
 
 .ios-markdown-prose :is(h5, h6) {
-	font-size: 0.875em;
 }
 
 .ios-markdown-prose p {
@@ -1189,7 +1054,6 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 	background-color: #f3f4f6;
 	padding: 0.125rem 0.25rem;
 	border-radius: 0.25rem;
-	font-size: 0.875em;
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
@@ -1273,15 +1137,12 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 }
 
 .ios-markdown-prose--detail h1 {
-	font-size: 2em;
 }
 
 .ios-markdown-prose--detail h2 {
-	font-size: 1.5em;
 }
 
 .ios-markdown-prose--detail h3 {
-	font-size: 1.25em;
 }
 
 .ios-markdown-prose--detail p {
@@ -1307,7 +1168,6 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 
 .ios-markdown-prose--detail code {
 	padding: 0.2rem 0.4rem;
-	font-size: 0.9em;
 	color: #e83e8c;
 }
 
@@ -1319,7 +1179,6 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 }
 
 .ios-markdown-prose--detail pre code {
-	font-size: 0.875em;
 }
 
 .ios-markdown-prose--detail blockquote {
@@ -1394,18 +1253,15 @@ div.ql-align-justify {
 }
 
 .ios-compact-controls .p-inputtext {
-	font-size: 13px;
 	padding: 6px 10px;
 	min-height: unset;
 }
 
 .ios-compact-controls .p-select {
-	font-size: 13px;
 	min-height: unset;
 }
 
 .ios-compact-controls .p-select-label {
-	font-size: 13px;
 	padding: 6px 10px;
 }
 
@@ -1420,7 +1276,6 @@ div.ql-align-justify {
 }
 
 .ios-compact-controls .p-button:not(.p-button-icon-only) {
-	font-size: 13px;
 	padding: 6px 12px;
 }
 
@@ -1430,7 +1285,6 @@ div.ql-align-justify {
 
 .ios-admin-user-form .p-error {
 	color: var(--red-500);
-	font-size: 0.875rem;
 	margin-top: 0.25rem;
 }
 
@@ -1442,7 +1296,6 @@ div.ql-align-justify {
 .ios-admin-user-form .p-inputtext {
 	border-radius: 8px;
 	padding: 0.75rem;
-	font-size: 0.875rem;
 	border: 2px solid #e5e7eb;
 	transition: all 0.2s ease;
 }
@@ -1459,7 +1312,6 @@ div.ql-align-justify {
 .ios-admin-user-form .p-password input {
 	border-radius: 8px;
 	padding: 0.75rem;
-	font-size: 0.875rem;
 	border: 2px solid #e5e7eb;
 	transition: all 0.2s ease;
 }
@@ -1617,7 +1469,6 @@ div.ql-align-justify {
 }
 
 .tbl-col-header {
-	font-size: 11px;
 	font-weight: 600;
 	color: #8e8e93;
 	text-transform: uppercase;
@@ -1625,7 +1476,6 @@ div.ql-align-justify {
 }
 
 .tbl-section-header {
-	font-size: 10px;
 	font-weight: 600;
 	color: #8e8e93;
 	text-transform: uppercase;
@@ -1635,12 +1485,10 @@ div.ql-align-justify {
 }
 
 .tbl-detail-label {
-	font-size: 10px;
 	color: #8e8e93;
 }
 
 .tbl-detail-value {
-	font-size: 12px;
 	color: #1c1c1e;
 	font-weight: 500;
 	margin-top: 1px;
@@ -1653,7 +1501,6 @@ div.ql-align-justify {
 	border: none;
 	border-radius: 10px;
 	padding: 6px 12px;
-	font-size: 12px;
 	font-weight: 500;
 	cursor: pointer;
 }
@@ -1747,7 +1594,6 @@ div.ql-align-justify {
 
 .ledger-other-assistance-editor .ql-container.ql-snow {
 	border: none;
-	font-size: 14px;
 	color: #1c1c1e;
 }
 
@@ -1765,7 +1611,6 @@ div.ql-align-justify {
 	background: transparent;
 	box-shadow: none;
 	padding: 0;
-	font-size: 14px;
 	color: #1c1c1e;
 	width: 100%;
 	outline: none;
@@ -1833,11 +1678,9 @@ div.ql-align-justify {
 
 .compact-table .p-datatable-thead > tr > th {
 	padding: 0.5rem 0.75rem;
-	font-size: 0.875rem;
 }
 
 .compact-table .p-chip {
-	font-size: 0.75rem;
 	padding: 0.25rem 0.5rem;
 }
 
@@ -1899,7 +1742,6 @@ div.ql-align-justify {
 	margin-bottom: 24px;
 	border-radius: 10px;
 	backdrop-filter: blur(20px);
-	font-size: 13px;
 	font-weight: 500;
 }
 
@@ -1918,7 +1760,6 @@ div.ql-align-justify {
 	border: 1px solid rgba(0, 0, 0, 0.1) !important;
 	border-radius: 10px !important;
 	color: #1d1d1f !important;
-	font-size: 14px;
 	height: 40px;
 	font-family: inherit;
 	backdrop-filter: blur(20px);
@@ -1993,12 +1834,10 @@ div.ql-align-justify {
 	border: none !important;
 	background: transparent !important;
 	color: #f5a623 !important;
-	font-size: 20px;
 	transition: all 0.3s ease;
 }
 
 .mac-theme-toggle.p-button .p-button-icon {
-	font-size: 20px;
 }
 
 .mac-theme-toggle.p-button:hover {
@@ -2149,7 +1988,6 @@ div.ql-align-justify {
 
 .dob-hide-label .p-datepicker-input::placeholder {
 	font-weight: 600;
-	font-size: 0.875rem;
 }
 
 .slide-address-enter-active,
@@ -2182,7 +2020,6 @@ div.ql-align-justify {
 	padding: 12px 16px;
 	border-radius: 10px;
 	border: none;
-	font-size: 15px;
 	font-weight: 600;
 	cursor: pointer;
 	display: flex;
@@ -2231,7 +2068,6 @@ div.ql-align-justify {
 	padding: 6px 16px;
 	background: #ffffff;
 	border-bottom: 0.5px solid #e5e5ea;
-	font-size: 13px;
 	text-align: center;
 	flex-shrink: 0;
 }
@@ -2285,13 +2121,11 @@ div.ql-align-justify {
 }
 
 .ios-info-label {
-	font-size: 11px;
 	color: #8e8e93;
 	display: block;
 }
 
 .ios-info-value {
-	font-size: 13px;
 	font-weight: 500;
 	color: #000;
 	display: block;
@@ -2321,7 +2155,6 @@ div.ql-align-justify {
 	padding: 10px 12px;
 	border-radius: 10px;
 	color: #1f2937;
-	font-size: 13px;
 	font-weight: 500;
 	text-align: left;
 	transition: background 0.15s ease;
@@ -2337,7 +2170,6 @@ div.ql-align-justify {
 }
 
 .interview-assessment-form__name {
-	font-size: 15px;
 	font-weight: 600;
 	color: #1d4ed8;
 }
@@ -2527,7 +2359,6 @@ div.ql-align-justify {
 	color: #007aff;
 	border-radius: 999px;
 	padding: 5px 12px;
-	font-size: 12px;
 	font-weight: 600;
 	cursor: pointer;
 }
@@ -2583,14 +2414,12 @@ div.ql-align-justify {
 
 .ios-profile-name {
 	color: #000;
-	font-size: 13px;
 	font-weight: 600;
 	line-height: 1.25;
 }
 
 .ios-profile-meta {
 	color: #8e8e93;
-	font-size: 12px;
 	line-height: 1.25;
 	margin-top: 2px;
 }
@@ -2599,7 +2428,6 @@ div.ql-align-justify {
 	padding: 14px;
 	border-top: 0.5px solid rgba(60, 60, 67, 0.08);
 	color: #8e8e93;
-	font-size: 13px;
 }
 
 .ios-years-control {
@@ -2638,13 +2466,11 @@ div.ql-align-justify {
 }
 
 .scholar-banner-label {
-	font-size: 15px;
 	font-weight: 600;
 	color: #1d4ed8;
 }
 
 .scholar-stat-value {
-	font-size: 16px;
 }
 
 .remarks-card {
@@ -2723,7 +2549,6 @@ div.ql-align-justify {
 	padding: 6px;
 	border-radius: 8px;
 	color: #007aff;
-	font-size: 14px;
 	transition: background 0.2s;
 	display: inline-flex;
 	align-items: center;
@@ -2741,7 +2566,6 @@ div.ql-align-justify {
 	cursor: pointer;
 	padding: 4px;
 	border-radius: 6px;
-	font-size: 13px;
 	transition: opacity 0.15s;
 }
 
@@ -2775,14 +2599,12 @@ div.ql-align-justify {
 }
 
 .ios-label {
-	font-size: 13px;
 	font-weight: 500;
 	color: #3c3c43;
 	padding-left: 2px;
 }
 
 .ios-hint {
-	font-size: 11px;
 	color: #8e8e93;
 	padding-left: 2px;
 }
@@ -2823,7 +2645,6 @@ div.ql-align-justify {
 	gap: 8px;
 	flex: 1;
 	min-width: 0;
-	font-size: 14px;
 	color: #555;
 	letter-spacing: -0.4px;
 	font-weight: 500;
@@ -2853,7 +2674,6 @@ div.ql-align-justify {
 	border-radius: 7px;
 	border: none;
 	background: transparent;
-	font-size: 13px;
 	font-weight: 500;
 	color: #000;
 	cursor: pointer;
@@ -2867,11 +2687,9 @@ div.ql-align-justify {
 
 .ios-segment-active .pi {
 	color: #34c759;
-	font-size: 13px;
 }
 
 .ios-segment .pi {
-	font-size: 13px;
 }
 
 /* ── Animations ── */
@@ -3510,7 +3328,6 @@ div.ql-align-justify {
 	color: #2563eb;
 	border-radius: 9999px;
 	padding: 6px 12px;
-	font-size: 12px;
 	font-weight: 600;
 	line-height: 1.2;
 	white-space: nowrap;
@@ -3537,7 +3354,6 @@ div.ql-align-justify {
 
 .ios-date-separator {
 	color: #8e8e93;
-	font-size: 14px;
 	flex-shrink: 0;
 }
 
@@ -3550,7 +3366,6 @@ div.ql-align-justify {
 	border-radius: 10px;
 	padding: 8px;
 	text-align: center;
-	font-size: 13px;
 	color: #ff3b30;
 	cursor: pointer;
 	letter-spacing: -0.4px;
@@ -3617,7 +3432,6 @@ div.ql-align-justify {
 	/* border: none !important; */
 	background: transparent !important;
 	box-shadow: none !important;
-	font-size: 13px;
 	color: #555;
 	text-align: left;
 	width: 100%;
@@ -3629,7 +3443,6 @@ div.ql-align-justify {
 	color: #555 !important;
 	text-align: left;
 	padding: 4px 2px 4px 8px;
-	font-size: 13px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -3651,7 +3464,6 @@ div.ql-align-justify {
 	box-shadow: none !important;
 	text-align: right;
 	color: #555;
-	font-size: 13px;
 	padding: 4px 24px 4px 8px;
 }
 
@@ -3664,7 +3476,6 @@ div.ql-align-justify {
 .interview-assessment-form .ios-row-control .p-select .p-select-label,
 .interview-assessment-form .ios-row-control .p-inputtext,
 .interview-assessment-form .ios-row-control .p-datepicker .p-inputtext {
-	font-size: 12.5px;
 	line-height: 1.2;
 }
 
@@ -3705,7 +3516,6 @@ div.ql-align-justify {
 	background: transparent !important;
 	text-align: right;
 	color: #1c1c1e !important;
-	font-size: 13px;
 	padding: 4px 2px 4px 8px;
 	width: 100%;
 }
@@ -3718,21 +3528,18 @@ div.ql-align-justify {
 
 .ios-full-input.p-inputtext,
 .ios-full-input .p-inputtext {
-	font-size: 13px;
 	border-radius: 8px;
 	width: 100%;
 }
 
 .ios-full-input.p-textarea,
 .ios-full-input .p-textarea {
-	font-size: 13px;
 	border-radius: 8px;
 	resize: none;
 	width: 100%;
 }
 
 .ios-full-input .p-inputnumber-input {
-	font-size: 13px;
 	border-radius: 8px;
 	width: 100%;
 }
@@ -3743,7 +3550,6 @@ div.ql-align-justify {
 .ios-full-input.p-select,
 .ios-full-input .p-datepicker,
 .ios-full-input.p-datepicker {
-	font-size: 13px;
 	border-radius: 8px;
 	width: 100%;
 }
@@ -3758,7 +3564,6 @@ div.ql-align-justify {
 
 .ios-field-hint {
 	margin-top: 4px;
-	font-size: 12px;
 	line-height: 1.25;
 	color: #8e8e93;
 	letter-spacing: -0.2px;
@@ -3766,7 +3571,6 @@ div.ql-align-justify {
 
 .ios-field-error {
 	margin-top: 4px;
-	font-size: 12px;
 	line-height: 1.25;
 	color: #ff3b30;
 	letter-spacing: -0.2px;
@@ -3777,7 +3581,6 @@ div.ql-align-justify {
 	box-shadow: none !important;
 	background: transparent !important;
 	color: #3a3a3c;
-	font-size: 13px;
 	flex: 1;
 	min-width: 0;
 	resize: none;
@@ -3839,7 +3642,6 @@ div.ql-align-justify {
 }
 
 .ios-nav-step-text {
-	font-size: 12px;
 	color: #8e8e93;
 	font-weight: 500;
 }
@@ -3870,7 +3672,6 @@ div.ql-align-justify {
 	background: #e5e5ea;
 	border: none;
 	border-radius: 10px;
-	font-size: 12px;
 	font-weight: 500;
 	color: #8e8e93;
 	cursor: pointer;
@@ -3882,7 +3683,6 @@ div.ql-align-justify {
 }
 
 .ios-step-btn i {
-	font-size: 16px;
 }
 
 .ios-step-active {
@@ -3910,7 +3710,6 @@ div.ql-align-justify {
 	padding: 9px 20px;
 	border: none;
 	border-radius: 10px;
-	font-size: 14px;
 	font-weight: 500;
 	cursor: pointer;
 	transition:

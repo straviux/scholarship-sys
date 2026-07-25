@@ -148,7 +148,12 @@ createInertiaApp({
 					options: {
 						prefix: 'p',
 						darkModeSelector: '.dark',
-						cssLayer: false,
+						// Layered so Tailwind utilities (utilities layer) can override
+						// PrimeVue theme styles. Order is established in app.css.
+						cssLayer: {
+							name: 'primevue',
+							order: 'theme, base, primevue, components, utilities',
+						},
 					},
 				},
 			})
@@ -227,8 +232,7 @@ router.on('invalid', (event) => {
 	if (event.detail.response.status === 419) {
 		event.preventDefault();
 		window.axios
-			.get('/sanctum/csrf-cookie')
-			.then(() => window.axios.get('/csrf-token'))
+			.get('/csrf-token')
 			.then(({ data }) => {
 				const meta = document.querySelector('meta[name="csrf-token"]');
 				if (meta && data.token) {

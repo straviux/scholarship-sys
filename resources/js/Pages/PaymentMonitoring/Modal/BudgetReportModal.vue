@@ -190,37 +190,37 @@ function handleOpen() {
                     <!-- Prompt -->
                     <template v-else>
                         <div class="ios-section py-4" style="max-width:520px;margin:0 auto">
-                            <div class="ios-section-label">Report Parameters</div>
+                            <div class="ios-section-label text-compact">Report Parameters</div>
                             <div class="ios-card mt-2">
 
                                 <!-- Program -->
                                 <div class="ios-row">
-                                    <div class="ios-row-label">
+                                    <div class="ios-row-label text-sm">
                                         <AppIcon name="bookmark-fill" style="color:#007AFF;font-size:13px" />
                                         Program
                                     </div>
                                     <div class="ios-row-control">
                                         <ProgramSelect v-model="chosenProgram" custom-placeholder="Select program"
-                                            class="ios-select" />
+                                            class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" />
                                     </div>
                                 </div>
 
                                 <!-- Fiscal Year -->
                                 <div class="ios-row">
-                                    <div class="ios-row-label">
+                                    <div class="ios-row-label text-sm">
                                         <AppIcon name="calendar" style="color:#FF9500;font-size:13px" />
                                         Fiscal Year
                                     </div>
                                     <div class="ios-row-control">
                                         <Select v-model="chosenFiscalYear" :options="fiscalYears"
-                                            placeholder="Select fiscal year" class="ios-select"
+                                            placeholder="Select fiscal year" class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact"
                                             :pt="{ root: { style: 'border-radius:1rem' } }" />
                                     </div>
                                 </div>
 
                                 <!-- Responsibility Center -->
                                 <div class="ios-row">
-                                    <div class="ios-row-label">
+                                    <div class="ios-row-label text-sm">
                                         <AppIcon name="building" style="color:#34C759;font-size:13px" />
                                         R. Center
                                     </div>
@@ -229,7 +229,7 @@ function handleOpen() {
                                             :placeholder="loadingRcs ? 'Loading...' : 'Select R. Center'"
                                             :loading="loadingRcs"
                                             :disabled="!chosenProgram || !chosenFiscalYear || loadingRcs"
-                                            class="ios-select" :pt="{ root: { style: 'border-radius:1rem' } }">
+                                            class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :pt="{ root: { style: 'border-radius:1rem' } }">
                                             <template #option="{ option }">
                                                 <span>{{ option.name }} <span style="opacity:.5">({{ option.code
                                                 }})</span></span>
@@ -240,7 +240,7 @@ function handleOpen() {
 
                                 <!-- Account Code / Particular -->
                                 <div class="ios-row ios-row-last">
-                                    <div class="ios-row-label">
+                                    <div class="ios-row-label text-sm">
                                         <AppIcon name="list" style="color:#AF52DE;font-size:13px" />
                                         Account Code
                                     </div>
@@ -249,7 +249,7 @@ function handleOpen() {
                                             optionLabel="name" dataKey="id"
                                             :placeholder="loadingParticulars ? 'Loading...' : 'Select particular'"
                                             :loading="loadingParticulars" :disabled="!chosenRc || loadingParticulars"
-                                            class="ios-select" :pt="{ root: { style: 'border-radius:1rem' } }">
+                                            class="ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact" :pt="{ root: { style: 'border-radius:1rem' } }">
                                             <template #option="{ option }">
                                                 <div>
                                                     <div>{{ option.name }}</div>
@@ -262,8 +262,8 @@ function handleOpen() {
                                 </div>
 
                             </div>
-                            <div v-if="error" class="ios-section-footer ios-error">{{ error }}</div>
-                            <div v-else class="ios-section-footer">
+                            <div v-if="error" class="ios-section-footer ios-error text-compact">{{ error }}</div>
+                            <div v-else class="ios-section-footer text-compact">
                                 Includes OBRs with status:
                                 <strong>PAID, CLAIMED</strong>.
                                 Amounts are shown in the Credit column.

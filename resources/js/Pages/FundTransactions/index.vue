@@ -1509,7 +1509,7 @@ onMounted(() => {
 
         <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 ios-settings-form">
             <!-- Header -->
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
                         <AppIcon name="credit-card" :size="32" class="text-indigo-900" />
@@ -1723,22 +1723,22 @@ onMounted(() => {
                                 <div class="ios-section">
                                     <div class="ios-card">
                                         <div class="ios-row">
-                                            <span class="ios-row-label">OBR Number</span>
+                                            <span class="ios-row-label text-sm">OBR Number</span>
                                             <span class="font-medium">{{ selectedVoucher.obr_no || '---' }}</span>
                                         </div>
                                         <div class="ios-row">
-                                            <span class="ios-row-label">Date Obligated</span>
+                                            <span class="ios-row-label text-sm">Date Obligated</span>
                                             <span>{{ selectedVoucher.date_obligated ?
                                                 formatDate(selectedVoucher.date_obligated)
                                                 : '---' }}</span>
                                         </div>
                                         <div class="ios-row">
-                                            <span class="ios-row-label">Disbursement Type</span>
+                                            <span class="ios-row-label text-sm">Disbursement Type</span>
                                             <span>{{ formatVoucherDocumentType(selectedVoucher.disbursement_type)
                                                 }}</span>
                                         </div>
                                         <div class="ios-row">
-                                            <span class="ios-row-label">Payee</span>
+                                            <span class="ios-row-label text-sm">Payee</span>
                                             <div class="text-right">
                                                 <p>{{ selectedVoucher.payee_name }}</p>
                                                 <p v-if="isPayeeSchool(selectedVoucher)"
@@ -1747,24 +1747,24 @@ onMounted(() => {
                                             </div>
                                         </div>
                                         <div class="ios-row">
-                                            <span class="ios-row-label">Amount</span>
+                                            <span class="ios-row-label text-sm">Amount</span>
                                             <span class="font-semibold">{{ formatAmount(selectedVoucher.amount)
                                             }}</span>
                                         </div>
                                         <div class="ios-row">
-                                            <span class="ios-row-label">Created By</span>
+                                            <span class="ios-row-label text-sm">Created By</span>
                                             <span>{{ selectedVoucher.creator?.name || '---' }}</span>
                                         </div>
                                         <div class="ios-row">
-                                            <span class="ios-row-label">Date</span>
+                                            <span class="ios-row-label text-sm">Date</span>
                                             <span>{{ formatDate(selectedVoucher.created_at) }}</span>
                                         </div>
                                         <div class="ios-row">
-                                            <span class="ios-row-label">OBR Type</span>
+                                            <span class="ios-row-label text-sm">OBR Type</span>
                                             <span>{{ formatObrTypeLabel(selectedVoucher.obr_type) }}</span>
                                         </div>
                                         <div class="ios-row [border-bottom:none]">
-                                            <span class="ios-row-label">OBR Status</span>
+                                            <span class="ios-row-label text-sm">OBR Status</span>
                                             <span
                                                 :class="['px-3 py-1 rounded-full text-xs font-medium inline-block', getStatusColor(selectedVoucher.obr_status)]">{{
                                                     selectedVoucher.obr_status || 'On Process' }}</span>
@@ -1773,7 +1773,7 @@ onMounted(() => {
                                 </div>
 
                                 <div v-if="selectedVoucher.remarks" class="ios-section">
-                                    <p class="ios-section-label">Remarks</p>
+                                    <p class="ios-section-label text-compact">Remarks</p>
                                     <div class="ios-card px-4 py-3">
                                         <div class="text-sm text-gray-900 dark:text-gray-100"
                                             v-safe-html="selectedVoucher.remarks">
@@ -1782,7 +1782,7 @@ onMounted(() => {
                                 </div>
 
                                 <div class="ios-section">
-                                    <p class="ios-section-label">Scholars ({{ selectedVoucher.scholar_ids?.length || 0
+                                    <p class="ios-section-label text-compact">Scholars ({{ selectedVoucher.scholar_ids?.length || 0
                                     }})</p>
                                     <div class="ios-card px-4 py-3">
                                         <div v-if="loadingScholars" class="text-center py-2">
@@ -1825,7 +1825,7 @@ onMounted(() => {
 
                             <TabPanel value="tracking">
                                 <div class="ios-section">
-                                    <p class="ios-section-label">Tracking</p>
+                                    <p class="ios-section-label text-compact">Tracking</p>
                                     <div class="ios-card px-4 py-3">
                                         <Button v-if="selectedVoucher?.fiscal_year && selectedVoucher?.obr_no"
                                             label="View Tracking History" @click="fetchTrackingHistory(selectedVoucher)"
@@ -1842,7 +1842,7 @@ onMounted(() => {
 
                             <TabPanel value="documents">
                                 <div class="ios-section">
-                                    <p class="ios-section-label">Uploaded Files</p>
+                                    <p class="ios-section-label text-compact">Uploaded Files</p>
                                     <div class="ios-card px-4 py-3 space-y-2">
                                         <div class="flex items-center justify-between text-sm">
                                             <span class="text-gray-700 dark:text-gray-300">OBR</span>
@@ -1910,7 +1910,7 @@ onMounted(() => {
                 <!-- Voucher Header -->
                 <div class="ios-section">
                     <div class="ios-card px-4 py-3 bg-blue-50 dark:bg-blue-950/30">
-                        <p class="text-[11px] font-semibold text-blue-700 dark:text-blue-400 uppercase mb-1">
+                        <p class="text-2xs font-semibold text-blue-700 dark:text-blue-400 uppercase mb-1">
                             Voucher</p>
                         <p class="text-sm font-semibold text-[#1e3a5f] dark:text-blue-200">{{
                             selectedVoucherForUpload.transaction_id }}</p>
@@ -1920,7 +1920,7 @@ onMounted(() => {
                 </div>
 
                 <div class="ios-section">
-                    <p class="ios-section-label">Instructions</p>
+                    <p class="ios-section-label text-compact">Instructions</p>
                     <div class="ios-card px-4 py-3">
                         <p class="text-sm text-gray-600 dark:text-gray-400">Upload up to four documents: OBR,
                             DV/Payroll, LOS,
@@ -1930,7 +1930,7 @@ onMounted(() => {
 
                 <!-- OBR Document -->
                 <div class="ios-section">
-                    <p class="ios-section-label">OBR — Obligation Request</p>
+                    <p class="ios-section-label text-compact">OBR — Obligation Request</p>
                     <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
@@ -1973,7 +1973,7 @@ onMounted(() => {
 
                 <!-- DV/Payroll Document -->
                 <div class="ios-section">
-                    <p class="ios-section-label">DV/Payroll — Disbursement Voucher or Payroll</p>
+                    <p class="ios-section-label text-compact">DV/Payroll — Disbursement Voucher or Payroll</p>
                     <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
@@ -2015,7 +2015,7 @@ onMounted(() => {
 
                 <!-- LOS Document -->
                 <div class="ios-section">
-                    <p class="ios-section-label">LOS — List of Scholars</p>
+                    <p class="ios-section-label text-compact">LOS — List of Scholars</p>
                     <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
@@ -2059,7 +2059,7 @@ onMounted(() => {
 
                 <!-- Cheque Document -->
                 <div class="ios-section mb-4">
-                    <p class="ios-section-label">Cheques — Cheque Copy or Payment Proof</p>
+                    <p class="ios-section-label text-compact">Cheques — Cheque Copy or Payment Proof</p>
                     <div class="ios-card px-4 py-3.5">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
@@ -2146,13 +2146,13 @@ onMounted(() => {
                 <div class="ios-section">
                     <div class="ios-card">
                         <div class="ios-row">
-                            <span class="ios-row-label">Filename</span>
-                            <span class="text-[13px] break-all text-right">{{
+                            <span class="ios-row-label text-sm">Filename</span>
+                            <span class="text-compact break-all text-right">{{
                                 previewData.filename }}</span>
                         </div>
                         <div class="ios-row [border-bottom:none]">
-                            <span class="ios-row-label">Type</span>
-                            <span class="text-[13px]">{{ previewData.docType }} | {{
+                            <span class="ios-row-label text-sm">Type</span>
+                            <span class="text-compact">{{ previewData.docType }} | {{
                                 previewData.mimeType }}</span>
                         </div>
                     </div>
@@ -2160,12 +2160,12 @@ onMounted(() => {
 
                 <!-- Zoom Controls for Images -->
                 <div v-if="previewData.mimeType && previewData.mimeType.startsWith('image/')" class="ios-section">
-                    <p class="ios-section-label">Zoom</p>
+                    <p class="ios-section-label text-compact">Zoom</p>
                     <div class="ios-card px-4 py-2.5">
                         <div class="flex items-center gap-2">
                             <AppButton icon="minus" @click="previewZoom -= 10" :disabled="previewZoom <= 50" text
                                 size="small" />
-                            <span class="text-[13px] font-medium w-12 text-center">{{
+                            <span class="text-compact font-medium w-12 text-center">{{
                                 previewZoom }}%</span>
                             <AppButton icon="plus" @click="previewZoom += 10" :disabled="previewZoom >= 200" text
                                 size="small" />
@@ -2197,7 +2197,7 @@ onMounted(() => {
                 <!-- PDF Preview -->
                 <div v-else-if="previewData.mimeType && previewData.mimeType.includes('pdf')" class="ios-section mb-4">
                     <div class="ios-card p-4">
-                        <p class="text-[13px] text-[#8E8E93] mb-3">PDFs open in a new
+                        <p class="text-compact text-[#8E8E93] mb-3">PDFs open in a new
                             window for best viewing experience</p>
                         <AppButton label="Open PDF in Viewer" @click="() => window.open(previewData.url, '_blank')"
                             icon="external-link" class="w-full" severity="info" />

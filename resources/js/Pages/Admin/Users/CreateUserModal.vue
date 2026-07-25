@@ -1,7 +1,7 @@
 <template>
     <IosModal :visible="show" title="Create New User" width="500px" max-width="calc(100vw - 2rem)"
         body-style="padding: 16px;" @update:visible="val => emit('update:show', val)">
-        <form @submit.prevent="submit" class="space-y-6 ios-admin-user-form">
+        <form @submit.prevent="submit" class="space-y-6 ios-admin-user-form [&_.p-error]:text-sm [&_.p-inputtext]:text-sm [&_.p-password_input]:text-sm">
             <!-- Name Field -->
             <div class="field">
                 <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full

@@ -17,7 +17,7 @@
 
                         <!-- Instructions -->
                         <div class="ios-section">
-                            <p class="ios-section-label">How to Use</p>
+                            <p class="ios-section-label text-compact">How to Use</p>
                             <div class="ios-card" style="padding: 14px 16px;">
                                 <ol style="font-size: 13px; color: #3c3c43; padding-left: 20px; line-height: 1.8;">
                                     <li>Scan this QR code with your mobile device</li>
@@ -41,7 +41,7 @@
 
                         <!-- Copy URL -->
                         <div class="ios-section" style="margin-bottom: 16px;">
-                            <p class="ios-section-label">Upload Link</p>
+                            <p class="ios-section-label text-compact">Upload Link</p>
                             <div class="ios-card" style="padding: 12px 16px;">
                                 <div class="flex gap-2">
                                     <InputText type="text" :value="modelValue.url" readonly class="flex-1" />

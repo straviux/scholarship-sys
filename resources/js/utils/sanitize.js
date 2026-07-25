@@ -6,7 +6,11 @@ import DOMPurify from 'dompurify';
  */
 export function sanitizeHtml(dirty) {
 	if (!dirty) return '';
-	return DOMPurify.sanitize(dirty, {
+	// Normalize broken non-breaking-space entities from legacy data so they
+	// render as spaces instead of literal text: "&amp;nbsp;" (double-encoded)
+	// and "&NBSP;" (entities are case-sensitive; uppercase is invalid).
+	const normalized = String(dirty).replace(/&(amp;)?nbsp;/gi, '&nbsp;');
+	return DOMPurify.sanitize(normalized, {
 		USE_PROFILES: { html: true, svg: true, svgFilters: true },
 	});
 }

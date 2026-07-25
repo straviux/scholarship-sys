@@ -3,64 +3,73 @@
 use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\AcademicEnrollmentController;
 use App\Http\Controllers\AcademicEnrollmentTermController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AiAssistantController;
+use App\Http\Controllers\ApplicantController;
+use App\Http\Controllers\ApplicantListController;
+use App\Http\Controllers\BudgetReportController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DataExportController;
+use App\Http\Controllers\DisbursementController;
+use App\Http\Controllers\DisbursementManagementController;
+use App\Http\Controllers\DocumentsController;
 use App\Http\Controllers\ErrorController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\JpmTaggingController;
+use App\Http\Controllers\MobileUploadController;
+use App\Http\Controllers\PaymentMonitoringController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PermissionManagementController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ScholarshipProgramController;
-use App\Http\Controllers\ScholarshipRecordController;
-use App\Http\Controllers\CourseController;
 use App\Http\Controllers\RequirementController;
-use App\Http\Controllers\ScholarshipProfileController;
+use App\Http\Controllers\ResponsibilityCenterController;
+use App\Http\Controllers\ReturnOfServiceController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ScholarController;
-use App\Http\Controllers\ApplicantController;
-use App\Http\Controllers\JpmTaggingController;
-use App\Http\Controllers\EndorseController;
+use App\Http\Controllers\ScholarshipProfileController;
+use App\Http\Controllers\ScholarshipProgramController;
+use App\Http\Controllers\ScholarshipRecordAttachmentController;
+use App\Http\Controllers\ScholarshipRecordController;
+use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\SystemOptionController;
 use App\Http\Controllers\SystemReportController;
 use App\Http\Controllers\SystemUpdateController;
-use App\Http\Controllers\SystemOptionController;
-use App\Http\Controllers\MobileUploadController;
-use App\Http\Controllers\HelpController;
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\UserActivityLogController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\MenuItemController;
+use App\Http\Controllers\Admin\MobileUploadSettingController;
+use App\Http\Controllers\Admin\RoleMenuController;
+use App\Http\Controllers\Api\MenuController;
+use App\Http\Controllers\Api\MunicipalityController;
 use App\Http\Controllers\User\ProfileController as UserProfileController;
 use App\Http\Controllers\User\SettingsController;
-use App\Http\Controllers\Admin\MobileUploadSettingController;
-use App\Http\Controllers\PaymentMonitoringController;
-use App\Http\Controllers\DisbursementManagementController;
-use App\Http\Controllers\BudgetReportController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Route;
 
-// Mobile upload routes (public, no auth required)
-// CSRF exclusion is handled in bootstrap/app.php via validateCsrfTokens(except:)
-Route::get('/mobile/upload/disbursement/{token}', [MobileUploadController::class, 'showDisbursementUpload'])
-    ->name('mobile.disbursement.upload');
-Route::post('/mobile/upload/disbursement/{token}', [MobileUploadController::class, 'uploadDisbursementFile'])
-    ->name('mobile.disbursement.upload.submit');
-Route::get('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'showScholarshipRecordUpload'])
-    ->name('mobile.scholarship-record.upload');
-Route::post('/mobile/upload/scholarship-record/{token}', [MobileUploadController::class, 'uploadScholarshipRecordFile'])
-    ->name('mobile.scholarship-record.upload.submit');
-Route::get('/mobile/upload/profile/{token}', [ProfileController::class, 'showMobileUpload'])
-    ->name('mobile.profile.upload');
-Route::post('/mobile/upload/profile/{token}', [ProfileController::class, 'processMobileUpload'])
-    ->name('mobile.profile.upload.submit');
-Route::get('/mobile/upload/requirement/{token}', [MobileUploadController::class, 'showRequirementUpload'])
-    ->name('mobile.requirement.upload');
-Route::post('/mobile/upload/requirement/{token}', [MobileUploadController::class, 'uploadRequirementFile'])
-    ->name('mobile.requirement.upload.submit');
-Route::get('/mobile/upload/fund-transaction/{token}', [MobileUploadController::class, 'showFundTransactionUpload'])
-    ->name('mobile.upload.fund-transaction');
-Route::get('/mobile/upload/fund-transaction/{token}/{doc_type}', [MobileUploadController::class, 'showFundTransactionUpload'])
-    ->name('mobile.upload.fund-transaction.with-type');
-Route::post('/mobile/upload/fund-transaction/{token}', [MobileUploadController::class, 'uploadFundTransactionFile'])
-    ->name('mobile.upload.fund-transaction.submit');
+/*
+|--------------------------------------------------------------------------
+| Public routes (no authentication)
+|--------------------------------------------------------------------------
+*/
 
-// Public API routes (no authentication required)
+// Mobile upload routes (token-based; CSRF exclusion in bootstrap/app.php)
+Route::controller(MobileUploadController::class)->prefix('mobile/upload')->group(function () {
+    Route::get('/disbursement/{token}', 'showDisbursementUpload')->name('mobile.disbursement.upload');
+    Route::post('/disbursement/{token}', 'uploadDisbursementFile')->name('mobile.disbursement.upload.submit');
+    Route::get('/scholarship-record/{token}', 'showScholarshipRecordUpload')->name('mobile.scholarship-record.upload');
+    Route::post('/scholarship-record/{token}', 'uploadScholarshipRecordFile')->name('mobile.scholarship-record.upload.submit');
+    Route::get('/profile/{token}', [ProfileController::class, 'showMobileUpload'])->name('mobile.profile.upload');
+    Route::post('/profile/{token}', [ProfileController::class, 'processMobileUpload'])->name('mobile.profile.upload.submit');
+    Route::get('/requirement/{token}', 'showRequirementUpload')->name('mobile.requirement.upload');
+    Route::post('/requirement/{token}', 'uploadRequirementFile')->name('mobile.requirement.upload.submit');
+    Route::get('/fund-transaction/{token}', 'showFundTransactionUpload')->name('mobile.upload.fund-transaction');
+    Route::get('/fund-transaction/{token}/{doc_type}', 'showFundTransactionUpload')->name('mobile.upload.fund-transaction.with-type');
+    Route::post('/fund-transaction/{token}', 'uploadFundTransactionFile')->name('mobile.upload.fund-transaction.submit');
+});
+
 Route::get('/api/server-time', function () {
     return response()->json([
         'timestamp' => now(),
@@ -75,15 +84,26 @@ Route::get('/csrf-token', function () {
     return response()->json(['token' => csrf_token()]);
 })->name('csrf.token');
 
-// TEST ROUTE: Create mock applicants (only in debug mode, auth required but CSRF exempt)
-Route::middleware(['auth'])->post('/test-add-applicants', [ApplicantController::class, 'testAddApplicants'])->name('applicants.testAddApplicants')->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+// Municipality / barangay reference data (also used by public mobile upload forms)
+Route::get('/api/municipalities', [MunicipalityController::class, 'index'])->name('api.municipalities.index');
+Route::get('/api/municipalities/{municipality}/barangays', [MunicipalityController::class, 'getBarangays'])->name('api.municipalities.barangays');
+
+// TEST ROUTE: Create mock applicants (registered only in local environment; also debug-guarded in the controller)
+if (app()->environment('local')) {
+    Route::middleware(['auth'])->post('/test-add-applicants', [ApplicantController::class, 'testAddApplicants'])->name('applicants.testAddApplicants')->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+}
 
 // Broadcasting Authentication
 Broadcast::routes(['middleware' => ['auth']]);
 
-// This file is part of the routes/web.php file for the Laravel application.
+/*
+|--------------------------------------------------------------------------
+| Core pages (auth + maintenance)
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'maintenance'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
+    // Alias kept because the "Home" menu item (menu_items.route) points at this name.
     Route::get('/home', [HomeController::class, 'index'])->name('home.index');
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('check.permission:dashboard.view')
@@ -98,8 +118,11 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
     Route::post('/user/settings/photo', [SettingsController::class, 'updatePhoto'])->name('user.settings.photo');
 });
 
-
-
+/*
+|--------------------------------------------------------------------------
+| Access control (user / role / permission management)
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->group(function () {
     // Unified Access Control Page
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
@@ -130,509 +153,105 @@ Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->g
     Route::delete('/roles/{role}/permissions/{permission}', [RoleController::class, 'detachPermission'])->middleware('check.permission:roles.manage')->name('roles.permissions.detach');
 });
 
-// Admin-only routes for system management
+/*
+|--------------------------------------------------------------------------
+| Administrator-only routes
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
-    // System Report Routes - Administrator Only
+    // System Report
     Route::get('/admin/system-report', [SystemReportController::class, 'index'])->name('admin.system-report');
     Route::get('/admin/system-report/export-json', [SystemReportController::class, 'exportJson'])->name('admin.system-report.export-json');
 
-    // Deleted Records Management Routes - Administrator Only
+    // Deleted Records Management
     Route::get('/admin/deleted-records', [AdminController::class, 'deletedRecords'])->name('admin.deleted-records');
-    Route::post('/admin/profiles/{id}/restore', [AdminController::class, 'restoreProfile'])->middleware('check.permission:applicants.delete')->name('admin.profiles.restore');
-    Route::delete('/admin/profiles/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteProfile'])->middleware('check.permission:applicants.delete')->name('admin.profiles.permanently-delete');
-    Route::post('/admin/scholarship-records/{id}/restore', [AdminController::class, 'restoreRecord'])->middleware('check.permission:scholarships.delete')->name('admin.records.restore');
-    Route::delete('/admin/scholarship-records/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteRecord'])->middleware('check.permission:scholarships.delete')->name('admin.records.permanently-delete');
+    Route::post('/admin/profiles/{id}/restore', [AdminController::class, 'restoreProfile'])->name('admin.profiles.restore');
+    Route::delete('/admin/profiles/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteProfile'])->name('admin.profiles.permanently-delete');
+    Route::post('/admin/scholarship-records/{id}/restore', [AdminController::class, 'restoreRecord'])->name('admin.records.restore');
+    Route::delete('/admin/scholarship-records/{id}/permanently-delete', [AdminController::class, 'permanentlyDeleteRecord'])->name('admin.records.permanently-delete');
 
-    // Maintenance Management Routes
+    // Maintenance Management
     Route::inertia('/admin/maintenance', 'Admin/Maintenance/Index')->name('admin.maintenance.index');
 
-    // Mobile Upload Settings Routes
+    // Mobile Upload Settings
     Route::get('/admin/mobile-upload-settings', [MobileUploadSettingController::class, 'index'])->name('admin.mobile-upload-settings.index');
     Route::post('/admin/mobile-upload-settings', [MobileUploadSettingController::class, 'update'])->name('admin.mobile-upload-settings.update');
 
-    // Role Permissions API Routes (used by AccessControl.vue)
+    // Role Permissions API (used by AccessControl.vue)
     Route::post('/permission-management/update-role', [PermissionManagementController::class, 'updateRolePermissions'])->middleware('check.permission:permissions.manage')->name('permissions.update-role');
     Route::post('/permission-management/toggle', [PermissionManagementController::class, 'togglePermission'])->middleware('check.permission:permissions.manage')->name('permissions.toggle');
 
-    // System Options Routes
+    // System Options
     Route::get('/system-options', [SystemOptionController::class, 'index'])->name('system-options.index');
-    Route::post('/system-options', [SystemOptionController::class, 'store'])->middleware('check.permission:system-options.manage')->name('system-options.store');
-    Route::put('/system-options/{systemOption}', [SystemOptionController::class, 'update'])->middleware('check.permission:system-options.manage')->name('system-options.update');
-    Route::delete('/system-options/{systemOption}', [SystemOptionController::class, 'destroy'])->middleware('check.permission:system-options.manage')->name('system-options.destroy');
-    Route::post('/system-options/{systemOption}/toggle-active', [SystemOptionController::class, 'toggleActive'])->middleware('check.permission:system-options.manage')->name('system-options.toggle-active');
-    Route::post('/system-options/reorder', [SystemOptionController::class, 'reorder'])->middleware('check.permission:system-options.manage')->name('system-options.reorder');
+    Route::post('/system-options', [SystemOptionController::class, 'store'])->name('system-options.store');
+    Route::put('/system-options/{systemOption}', [SystemOptionController::class, 'update'])->name('system-options.update');
+    Route::delete('/system-options/{systemOption}', [SystemOptionController::class, 'destroy'])->name('system-options.destroy');
+    Route::post('/system-options/{systemOption}/toggle-active', [SystemOptionController::class, 'toggleActive'])->name('system-options.toggle-active');
+    Route::post('/system-options/reorder', [SystemOptionController::class, 'reorder'])->name('system-options.reorder');
+
+    // Menu Item Management
+    Route::get('/admin/menu-items', [MenuItemController::class, 'index'])->name('admin.menu-items.index');
+    Route::post('/admin/menu-items', [MenuItemController::class, 'store'])->name('admin.menu-items.store');
+    Route::put('/admin/menu-items/{menuItem}', [MenuItemController::class, 'update'])->name('admin.menu-items.update');
+    Route::delete('/admin/menu-items/{menuItem}', [MenuItemController::class, 'destroy'])->name('admin.menu-items.destroy');
+    Route::post('/admin/menu-items/reorder', [MenuItemController::class, 'reorder'])->name('admin.menu-items.reorder');
+    Route::get('/api/menu-items', [MenuItemController::class, 'apiIndex'])->name('api.menu-items.index');
+
+    // Role Menu Management
+    Route::get('/admin/role-menus', [RoleMenuController::class, 'index'])->name('admin.role-menus.index');
+    Route::get('/admin/role-menus/{role}/menus', [RoleMenuController::class, 'getRoleMenus'])->name('admin.role-menus.get');
+    Route::post('/admin/role-menus/{role}/assign', [RoleMenuController::class, 'assignMenus'])->name('admin.role-menus.assign');
+    Route::post('/admin/role-menus/{role}/order', [RoleMenuController::class, 'updateOrder'])->name('admin.role-menus.order');
+
+    // System Updates admin pages
+    Route::get('/admin/system-updates', fn() => inertia('Admin/SystemUpdates'))->name('admin.system-updates');
+    Route::get('/admin/system-updates/{id}', fn($id) => inertia('Admin/SystemUpdateShow', ['id' => $id]))->name('admin.system-updates.show');
+
+    // Data Export (for migrating data to standalone app)
+    Route::get('/admin/data-export', [DataExportController::class, 'index'])->name('data-export.index');
+    Route::get('/admin/data-export/summary', [DataExportController::class, 'getExportSummary'])->name('data-export.summary');
+    Route::get('/admin/data-export/download', [DataExportController::class, 'exportToJson'])->name('data-export.download');
+    Route::post('/admin/data-export/import-jpm-csv', [DataExportController::class, 'importJpmCsv'])->name('data-export.import-jpm-csv');
+
+    // JPM Tagging (administrator-only)
+    Route::controller(JpmTaggingController::class)->group(function () {
+        Route::get('/jpm-tagging', 'index')->name('jpm-tagging.index');
+        Route::get('/jpm-tagging/report', 'report')->name('jpm-tagging.report');
+        Route::put('/jpm-tagging/{profile}', 'update')->name('jpm-tagging.update');
+    });
 });
 
-// Documents Routes - Available to all authenticated users
+/*
+|--------------------------------------------------------------------------
+| Authenticated application routes
+|--------------------------------------------------------------------------
+| Page access is gated by *.view permissions; edits are open to all
+| authenticated roles; destructive deletes are administrator-only.
+*/
 Route::middleware(['auth'])->group(function () {
-    Route::get('/documents', [\App\Http\Controllers\DocumentsController::class, 'index'])
+
+    // ── Documents ───────────────────────────────────────────────────────
+    Route::get('/documents', [DocumentsController::class, 'index'])
         ->middleware('check.permission:documents.view')
         ->name('documents.index');
-    Route::post('/documents', [\App\Http\Controllers\DocumentsController::class, 'store'])->middleware('check.permission:documents.upload')->name('documents.store');
-    Route::put('/documents/{document}', [\App\Http\Controllers\DocumentsController::class, 'update'])->middleware('check.permission:documents.edit')->name('documents.update');
-    Route::delete('/documents/{document}', [\App\Http\Controllers\DocumentsController::class, 'destroy'])->middleware('check.permission:documents.delete')->name('documents.destroy');
-    Route::get('/documents/{document}/download', [\App\Http\Controllers\DocumentsController::class, 'download'])
+    Route::post('/documents', [DocumentsController::class, 'store'])->name('documents.store');
+    Route::put('/documents/{document}', [DocumentsController::class, 'update'])->name('documents.update');
+    Route::delete('/documents/{document}', [DocumentsController::class, 'destroy'])->middleware('check.role:administrator')->name('documents.destroy');
+    Route::get('/documents/{document}/download', [DocumentsController::class, 'download'])
         ->middleware('check.permission:documents.view')
         ->name('documents.download');
 
-    // System Options API - accessible to all authenticated users for dropdowns
+    // ── System Options API (dropdown data) ──────────────────────────────
     Route::get('/api/system-options/{category}', [SystemOptionController::class, 'getByCategory'])->name('api.system-options.category');
-});
 
-// Menu Item Management Routes - Administrator Only
-Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
-    Route::get('/admin/menu-items', [App\Http\Controllers\Admin\MenuItemController::class, 'index'])->name('admin.menu-items.index');
-    Route::post('/admin/menu-items', [App\Http\Controllers\Admin\MenuItemController::class, 'store'])->name('admin.menu-items.store');
-    Route::put('/admin/menu-items/{menuItem}', [App\Http\Controllers\Admin\MenuItemController::class, 'update'])->name('admin.menu-items.update');
-    Route::delete('/admin/menu-items/{menuItem}', [App\Http\Controllers\Admin\MenuItemController::class, 'destroy'])->name('admin.menu-items.destroy');
-    Route::post('/admin/menu-items/reorder', [App\Http\Controllers\Admin\MenuItemController::class, 'reorder'])->name('admin.menu-items.reorder');
-    Route::get('/api/menu-items', [App\Http\Controllers\Admin\MenuItemController::class, 'apiIndex'])->name('api.menu-items.index');
-    Route::get('/api/menu-items/icons', [App\Http\Controllers\Admin\MenuItemController::class, 'getIcons'])->name('api.menu-items.icons');
+    // ── System Updates (user-facing pages + API) ────────────────────────
+    Route::get('/system-updates', fn() => inertia('SystemUpdates/Index'))->name('system-updates.index');
+    Route::get('/system-updates/{id}', fn($id) => inertia('SystemUpdates/Show', ['id' => $id]))->name('system-updates.show');
 
-    // Role Menu Management Routes
-    Route::get('/admin/role-menus', [App\Http\Controllers\Admin\RoleMenuController::class, 'index'])->name('admin.role-menus.index');
-    Route::get('/admin/role-menus/{role}/menus', [App\Http\Controllers\Admin\RoleMenuController::class, 'getRoleMenus'])->name('admin.role-menus.get');
-    Route::post('/admin/role-menus/{role}/assign', [App\Http\Controllers\Admin\RoleMenuController::class, 'assignMenus'])->name('admin.role-menus.assign');
-    Route::post('/admin/role-menus/{role}/order', [App\Http\Controllers\Admin\RoleMenuController::class, 'updateOrder'])->name('admin.role-menus.order');
-});
-
-// System Updates Management - Admin management pages restricted to administrators
-Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
-    // Admin page for managing system updates
-    Route::get('/admin/system-updates', function () {
-        return inertia('Admin/SystemUpdates');
-    })->name('admin.system-updates');
-
-    // Admin page for viewing single update details
-    Route::get('/admin/system-updates/{id}', function ($id) {
-        return inertia('Admin/SystemUpdateShow', ['id' => $id]);
-    })->name('admin.system-updates.show');
-});
-
-// System Updates - User-facing pages available to all authenticated users
-Route::middleware(['auth'])->group(function () {
-    // User-facing page to view all system updates
-    Route::get('/system-updates', function () {
-        return inertia('SystemUpdates/Index');
-    })->name('system-updates.index');
-
-    // User-facing page to view single update details
-    Route::get('/system-updates/{id}', function ($id) {
-        return inertia('SystemUpdates/Show', ['id' => $id]);
-    })->name('system-updates.show');
-});
-
-// User Reports Route - Display user encoded data summary
-Route::middleware(['auth'])->group(function () {
-    Route::get('/user/reports', [ProfileController::class, 'getUserSummaryReport'])->name('user.reports');
-    Route::put('/user/profile', [ProfileController::class, 'updateProfile'])->name('user.profile.update');
-    Route::post('/user/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
-    Route::post('/user/profile/generate-qr', [ProfileController::class, 'generateQrCode'])->name('profile.generate-qr');
-
-    // Calendar and encoding records routes
-    Route::get('/api/user/records-by-date', [ProfileController::class, 'getRecordsByDate'])->name('api.records.bydate');
-    Route::get('/api/user/records-summary-month', [ProfileController::class, 'getRecordsSummaryByMonth'])->name('api.records.summary-month');
-});
-
-Route::middleware(['auth'])->controller(ScholarshipProfileController::class)->group(function () {
-    Route::get('/profiles/generate-report', 'generateReport')->name('profile.generateReport');
-    Route::get('/profiles/graduate-list-report', 'graduateListReport')->name('profile.graduateListReport');
-    Route::post('/profiles/add-educational-background', 'addEducationBackgroundApi')->name('profile-api.addeducation');
-    Route::put('/profiles/update-educational-background/{id}', 'updateEducationBackgroundApi')->name('profile-api.updateeducation');
-    Route::delete('/profiles/delete-educational-background/{id}', 'deleteEducationBackgroundApi')->name('profile-api.deleteeducation');
-});
-
-Route::middleware(['auth'])->controller(JpmTaggingController::class)->group(function () {
-    Route::get('/jpm-tagging', 'index')
-        ->middleware('check.permission:jpm.view')
-        ->name('jpm-tagging.index');
-    Route::get('/jpm-tagging/report', 'report')
-        ->middleware('check.permission:jpm.view')
-        ->name('jpm-tagging.report');
-    Route::put('/jpm-tagging/{profile}', 'update')
-        ->middleware('check.permission:jpm.manage')
-        ->name('jpm-tagging.update');
-});
-
-// ENDORSE ROUTES
-Route::middleware(['auth'])->controller(EndorseController::class)->group(function () {
-    Route::post('/endorse', 'endorse')
-        ->middleware('check.permission:applicants.edit')
-        ->name('endorse.store');
-    Route::post('/endorse/unendorse', 'unendorse')
-        ->middleware('check.permission:applicants.edit')
-        ->name('endorse.unendorse');
-    Route::get('/endorse/preview', 'preview')
-        ->middleware('check.permission:applicants.view')
-        ->name('endorse.preview');
-});
-
-// APPLICANT ROUTES - Accessible to all authenticated users
-// Access is controlled via permission gates in the controller
-Route::middleware(['auth'])->group(function () {
-    // Dedicated routes for applicant management
-    // Specific routes MUST come before generic {action?}/{id?} route
-    Route::post('/applicants', [ScholarshipProfileController::class, 'storeApplicant'])->middleware('check.permission:applicants.create')->name('applicants.store');
-    Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->middleware('check.permission:applicants.edit')->name('applicants.update');
-    Route::delete('/applicants/{id}', [ApplicantController::class, 'destroy'])->middleware('check.permission:applicants.delete')->name('applicants.destroy');
-    Route::post('/applicants/requirement/generate-qr', [ApplicantController::class, 'generateRequirementQrCode'])->middleware('check.permission:applicants.view')->name('applicants.requirement.generate-qr');
-    // Generic route MUST come last to catch all remaining /applicants patterns
-    Route::get('/applicants/{action?}/{id?}', [ApplicantController::class, 'index'])->middleware('check.permission:applicants.view')->name('applicants.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
-
-    Route::get('/get-user-encoded-records', [ApplicantController::class, 'getUserEncodedRecords'])->name('applicants.getUserEncodedRecords');
-});
-
-// SCHOLAR ROUTES - Accessible to all authenticated users
-// Access is controlled via permission gates in the controller
-Route::middleware(['auth'])->group(function () {
-    // Dedicated routes for managing active scholars (not applicants)
-    // These routes create profiles with scholarship_status = 1 (approved/active)
-    Route::post('/scholars', [ScholarController::class, 'store'])->middleware('check.permission:scholars.create')->name('scholars.store');
-    Route::put('/scholars/{id}', [ScholarController::class, 'update'])->middleware('check.permission:scholars.edit')->name('scholars.update');
-});
-
-// API route for searching profiles by name
-Route::middleware(['auth'])->get('/api/profiles', [ScholarshipProfileController::class, 'apiSearch'])->name('api.profiles.search');
-Route::middleware(['auth'])->get('/api/existing', [ScholarshipProfileController::class, 'searchExistingProfile'])->name('api.profiles.existing');
-Route::middleware(['auth'])->post('/api/validate-name', [ScholarshipProfileController::class, 'validateName'])->name('api.profiles.validate-name');
-
-Route::middleware(['auth'])->controller(ScholarshipRecordController::class)->group(function () {
-    // API's
-    Route::post('/scholarship-records/{id}/approve', 'approveScholarshipRecord')->middleware('check.permission:scholarships.approve')->name('scholarship-record.approve');
-    Route::post('/scholarship-records/{id}/decline', 'declineScholarshipRecord')->middleware('check.permission:scholarships.approve')->name('scholarship-record.decline');
-    Route::delete('/scholarship-records/{id}', 'destroy')->middleware('check.permission:scholarships.delete')->name('scholarship-record.destroy');
-    Route::put('/scholarship-records/{id}/grant-provision', 'updateGrantProvision')->middleware('check.permission:scholarships.edit')->name('scholarship-record.update-grant-provision');
-    Route::put('/scholarship-records/{id}/yakap', 'updateYakapCategory')->middleware('check.permission:scholarships.edit')->name('scholarship-record.update-yakap');
-    Route::get('/scholarship-records/profile/{profile_id}/get-or-create', 'getOrCreateForProfile')->name('scholarship-record.get-or-create');
-    Route::post('/scholarship-records/batch/yakap', 'batchUpdateYakapCategory')->middleware('check.permission:scholarships.edit')->name('scholarship-record.batch-update-yakap');
-
-    // Requirements Checklist Routes (Profile-based) - under ApplicantController
-    Route::get('/scholarship-profiles/{profile}/requirements-checklist', [ApplicantController::class, 'getProfileRequirementsChecklist'])->middleware('check.permission:applicants.view')->name('scholarship.profile.requirements-checklist');
-    Route::post('/scholarship-profiles/{profile}/check-requirement', [ApplicantController::class, 'checkProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.check-requirement');
-    Route::post('/scholarship-profiles/{profile}/uncheck-requirement', [ApplicantController::class, 'uncheckProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.uncheck-requirement');
-    Route::post('/scholarship-profiles/{profile}/upload-requirement', [ApplicantController::class, 'uploadProfileRequirement'])->middleware('check.permission:applicants.edit')->name('scholarship.profile.upload-requirement');
-});
-
-// Enhanced Scholarship Workflow Routes
-Route::middleware(['auth'])->group(function () {
-    // Profiles routes
-    Route::get('/scholarship/profiles', [ScholarshipProfileController::class, 'profiles'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.profiles');
-
-    Route::get('/scholarship/profile/{profile}', [ScholarshipProfileController::class, 'show'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.profile.show');
-
-    Route::put('/scholarship/profile/{profile}/ledger', [ScholarshipProfileController::class, 'updateLedger'])
-        ->middleware('check.permission:scholarships.edit')
-        ->name('scholarship.profile.ledger.update');
-
-    Route::get('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'show'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('academic-enrollments.show');
-    Route::post('/scholarship/profile/{profile}/academic-enrollments', [AcademicEnrollmentController::class, 'store'])
-        ->middleware('check.permission:scholarships.create')
-        ->name('academic-enrollments.store');
-    Route::put('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'update'])
-        ->middleware('check.permission:scholarships.edit')
-        ->name('academic-enrollments.update');
-    Route::delete('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'destroy'])
-        ->middleware('check.permission:scholarships.delete')
-        ->name('academic-enrollments.destroy');
-    Route::put('/academic-enrollments/{academicEnrollment}/graduation', [AcademicEnrollmentController::class, 'graduate'])
-        ->middleware('check.permission:scholarships.edit')
-        ->name('academic-enrollments.graduate');
-
-    Route::get('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'show'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('academic-enrollment-terms.show');
-    Route::post('/academic-enrollments/{academicEnrollment}/terms', [AcademicEnrollmentTermController::class, 'store'])
-        ->middleware('check.permission:scholarships.create')
-        ->name('academic-enrollment-terms.store');
-    Route::put('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'update'])
-        ->middleware('check.permission:scholarships.edit')
-        ->name('academic-enrollment-terms.update');
-    Route::delete('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'destroy'])
-        ->middleware('check.permission:scholarships.delete')
-        ->name('academic-enrollment-terms.destroy');
-    Route::put('/academic-enrollment-terms/{academicEnrollmentTerm}/complete', [AcademicEnrollmentTermController::class, 'complete'])
-        ->middleware('check.permission:scholarships.edit')
-        ->name('academic-enrollment-terms.complete');
-
-    Route::put('/scholarship-profiles/{profile}', [ScholarshipProfileController::class, 'update'])
-        ->name('scholarship-profiles.update');
-
-    Route::get('/scholarship/profile/{profile_id}/records', [ScholarshipProfileController::class, 'getScholarshipRecords'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.profile.records');
-
-    Route::get('/scholarship/profile/{profile_id}/history', [ScholarshipProfileController::class, 'profileHistory'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.profile.history');
-
-    // Disbursement and Cheque routes
-    Route::get('/scholarship/profile/{profile_id}/disbursements', [App\Http\Controllers\DisbursementController::class, 'index'])
-        ->middleware('check.permission:disbursements.view')
-        ->name('disbursements.index');
-    Route::post('/disbursements', [App\Http\Controllers\DisbursementController::class, 'store'])
-        ->middleware('check.permission:disbursements.create')->name('disbursements.store');
-    Route::put('/disbursements/{id}', [App\Http\Controllers\DisbursementController::class, 'update'])
-        ->middleware('check.permission:disbursements.edit')->name('disbursements.update');
-    Route::delete('/disbursements/{id}', [App\Http\Controllers\DisbursementController::class, 'destroy'])
-        ->middleware('check.permission:disbursements.delete')->name('disbursements.destroy');
-    Route::post('/disbursements/{disbursement_id}/cheques', [App\Http\Controllers\DisbursementController::class, 'addCheque'])
-        ->middleware('check.permission:disbursements.edit')->name('disbursements.cheques.store');
-    Route::put('/cheques/{cheque_id}', [App\Http\Controllers\DisbursementController::class, 'updateCheque'])
-        ->middleware('check.permission:disbursements.edit')->name('cheques.update');
-    Route::delete('/cheques/{cheque_id}', [App\Http\Controllers\DisbursementController::class, 'destroyCheque'])
-        ->middleware('check.permission:disbursements.delete')->name('cheques.destroy');
-
-    // Disbursement attachment routes
-    Route::post('/disbursements/{disbursement_id}/attachments', [App\Http\Controllers\DisbursementController::class, 'uploadAttachment'])
-        ->middleware('check.permission:disbursements.edit')->name('disbursements.attachments.upload');
-    Route::delete('/disbursement-attachments/{attachment_id}', [App\Http\Controllers\DisbursementController::class, 'deleteAttachment'])
-        ->middleware('check.permission:disbursements.delete')->name('disbursements.attachments.delete');
-    Route::get('/disbursement-attachments/{attachment_id}/download', [App\Http\Controllers\DisbursementController::class, 'downloadAttachment'])
-        ->middleware('check.permission:disbursements.view')
-        ->name('disbursements.attachments.download');
-    Route::get('/disbursement-attachments/{attachment_id}/view', [App\Http\Controllers\DisbursementController::class, 'viewAttachment'])
-        ->middleware('check.permission:disbursements.view')
-        ->name('disbursements.attachments.view');
-    Route::post('/disbursements/{disbursement_id}/generate-qr', [App\Http\Controllers\DisbursementController::class, 'generateQrCode'])
-        ->name('disbursements.generate-qr');
-
-    // Scholarship record attachment routes
-    Route::post('/scholarship-records/{scholarship_record_id}/attachments', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'upload'])
-        ->middleware('check.permission:scholarships.edit')->name('scholarship.records.attachments.upload');
-    Route::delete('/scholarship-attachments/{attachment_id}', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'delete'])
-        ->middleware('check.permission:scholarships.delete')->name('scholarship.records.attachments.delete');
-    Route::get('/scholarship-attachments/{attachment_id}/download', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'download'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.records.attachments.download');
-    Route::get('/scholarship-attachments/{attachment_id}/view', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'view'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.records.attachments.view');
-    Route::match(['get', 'post'], '/scholarship-records/{scholarship_record_id}/generate-qr', [App\Http\Controllers\ScholarshipRecordAttachmentController::class, 'generateQrCode'])
-        ->name('scholarship.records.generate-qr');
-
-    Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])
-        ->name('scholarship.record.approve');
-
-    Route::post('/scholarship/{record}/decline', [ScholarshipProfileController::class, 'decline'])
-        ->name('scholarship.record.decline');
-
-    Route::post('/scholarship/{record}/update-interview', [ScholarshipProfileController::class, 'updateInterview'])
-        ->name('scholarship.record.update-interview');
-
-    // Fund Transactions routes
-    Route::get('/fund-transactions', function () {
-        return inertia('FundTransactions/index');
-    })->middleware('check.permission:fund_transactions.view')
-        ->name('fund_transactions.index');
-
-    // Payment Monitoring routes
-    Route::get('/payment-monitoring', [PaymentMonitoringController::class, 'index'])
-        ->middleware('check.permission:payment-monitoring.view')
-        ->name('payment-monitoring.index');
-
-    // Budget Report
-    Route::get('/api/budget-report', [BudgetReportController::class, 'api'])
-        ->middleware('check.permission:payment-monitoring.view')
-        ->name('budget-report.api');
-    Route::get('/api/budget-report/rcenters', [BudgetReportController::class, 'rcenters'])
-        ->middleware('check.permission:payment-monitoring.view')
-        ->name('budget-report.rcenters');
-    Route::get('/api/budget-report/particulars', [BudgetReportController::class, 'particulars'])
-        ->middleware('check.permission:payment-monitoring.view')
-        ->name('budget-report.particulars');
-
-    // Disbursement Management routes (temporary mapping interface)
-    Route::get('/disbursement-management', [DisbursementManagementController::class, 'index'])
-        ->middleware('check.permission:payment-monitoring.view')
-        ->name('disbursement-management.index');
-    Route::get('/disbursement-management/{obrNo}', [DisbursementManagementController::class, 'show'])
-        ->middleware('check.permission:payment-monitoring.view')
-        ->name('disbursement-management.show');
-    Route::post('/disbursement-management', [DisbursementManagementController::class, 'store'])
-        ->middleware('check.permission:payment-monitoring.view')
-        ->name('disbursement-management.store');
-
-    Route::patch('/scholarship/{record}/update-status', [ScholarshipProfileController::class, 'updateStatus'])
-        ->name('scholarship.record.update-status');
-
-    Route::get('/interviewed-applicants', [ScholarshipProfileController::class, 'showInterviewedApplicants'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.interviewed-applicants');
-
-    Route::post('/interviewed-applicants/recommendation-lists', [ScholarshipProfileController::class, 'storeRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.store');
-
-    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}', [ScholarshipProfileController::class, 'updateRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.update');
-
-    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}/approve', [ScholarshipProfileController::class, 'approveRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.approve');
-
-    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}/revert-approval', [ScholarshipProfileController::class, 'revertRecommendationListApproval'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.revert-approval');
-
-    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}/refresh', [ScholarshipProfileController::class, 'refreshRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.refresh');
-
-    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}/records/{scholarshipRecord}', [ScholarshipProfileController::class, 'removeRecordFromRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.remove-record');
-
-    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}', [ScholarshipProfileController::class, 'destroyRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.destroy');
-
-    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationListId}/force-delete', [ScholarshipProfileController::class, 'forceDeleteRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.force-delete');
-
-    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationListId}/restore', [ScholarshipProfileController::class, 'restoreRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.restore');
-
-    // Approval history and statistics
-    Route::get('/scholarship/{record}/history', [ScholarshipProfileController::class, 'getApprovalHistory'])
-        ->name('scholarship.history');
-
-    Route::get('/api/scholarship/stats', [ScholarshipProfileController::class, 'getApprovalStats'])
-        ->name('api.scholarship.stats');
-
-    // Priority management routes
-    Route::post('/applicants/{id}/assign-priority', [ScholarshipProfileController::class, 'assignPriority'])
-        ->name('applicants.assign-priority');
-
-    Route::delete('/applicants/{id}/remove-priority', [ScholarshipProfileController::class, 'removePriority'])
-        ->name('applicants.remove-priority');
-
-    // Soft delete and restore routes for profiles
-    Route::post('/applicants/{id}/restore', [ScholarshipProfileController::class, 'restore'])
-        ->name('applicants.restore');
-    Route::delete('/applicants/{id}', [ScholarshipProfileController::class, 'destroy'])
-        ->name('applicants.destroy');
-
-    // Applicant remarks route
-    Route::post('/applicants/{profile_id}/update-remarks', [ScholarshipProfileController::class, 'updateApplicantRemarks'])
-        ->name('applicants.update-remarks');
-
-    // Activity Logs routes
-    Route::get('/activity-logs/{profileId}', [App\Http\Controllers\ActivityLogController::class, 'profileActivities'])
-        ->name('activity-logs.profile');
-    Route::get('/activity-logs/{profileId}/approval-history', [App\Http\Controllers\ActivityLogController::class, 'approvalHistory'])
-        ->name('activity-logs.approval-history');
-    Route::get('/activity-logs/{profileId}/status-timeline', [App\Http\Controllers\ActivityLogController::class, 'statusTimeline'])
-        ->name('activity-logs.status-timeline');
-
-    // User Activity Logs routes (API)
-    Route::get('/api/user/activity-logs/recent', [App\Http\Controllers\UserActivityLogController::class, 'recentActivities'])
-        ->name('user-activity-logs.recent');
-    Route::post('/api/user/activity-logs/mark-all-viewed', [App\Http\Controllers\UserActivityLogController::class, 'markAllAsViewed'])
-        ->name('user-activity-logs.mark-all-viewed');
-    Route::get('/api/user/activity-logs/unviewed-count', [App\Http\Controllers\UserActivityLogController::class, 'getUnviewedCount'])
-        ->name('user-activity-logs.unviewed-count');
-    Route::get('/api/user/activity-logs', [App\Http\Controllers\UserActivityLogController::class, 'userActivityLogs'])
-        ->name('user-activity-logs.data');
-
-    // Scholars API for Obligations & Disbursements
-    Route::get('/api/scholars', [App\Http\Controllers\ScholarshipProfileController::class, 'getScholarsForVoucher'])
-        ->name('api.scholars');
-
-    // Menu API routes
-    Route::prefix('api/menu')->group(function () {
-        Route::get('/main', [\App\Http\Controllers\Api\MenuController::class, 'mainMenu'])->name('api.menu.main');
-        Route::get('/sidebar', [\App\Http\Controllers\Api\MenuController::class, 'sidebarMenu'])->name('api.menu.sidebar');
-        Route::get('/category/{category}', [\App\Http\Controllers\Api\MenuController::class, 'getByCategory'])->name('api.menu.category');
-        Route::get('/', [\App\Http\Controllers\Api\MenuController::class, 'index'])->name('api.menu.index');
-        Route::get('/breadcrumbs', [\App\Http\Controllers\Api\MenuController::class, 'breadcrumbs'])->name('api.menu.breadcrumbs');
-        Route::post('/{id}/toggle', [\App\Http\Controllers\Api\MenuController::class, 'toggle'])->middleware('can:manage-menu-items')->name('api.menu.toggle');
-    });
-
-    // User Activity Logs page
-    Route::get('/user/activity-logs', function () {
-        return inertia('User/ActivityLogs');
-    })->name('user-activity-logs.index');
-});
-Route::middleware(['auth'])->controller(ScholarshipProgramController::class)->group(function () {
-    Route::get('/scholarshipprograms/get-active-list', 'getActiveProgramsApi')->name('scholarshipprograms.getactivelist');
-    Route::get('/scholarshipprograms/{action?}/{id?}', 'index')->name('scholarshipprograms.index');
-    // Route::get('/scholarshipprograms/create', 'create')->name('scholarshipprograms.create');
-    Route::post('/scholarshipprograms', 'store')->middleware('check.permission:programs.create')->name('scholarshipprograms.store');
-    // Route::get('/scholarshipprograms/{scholarshipProgram}', 'show')->name('scholarshipprograms.show');
-    // Route::get('/scholarshipprograms/{scholarshipProgram}/edit', 'edit')->name('scholarshipprograms.edit');
-    Route::put('/scholarshipprograms/{scholarshipProgram}', 'update')->middleware('check.permission:programs.edit')->name('scholarshipprograms.update');
-    Route::put('/scholarshipprograms-update-requirement/{scholarshipProgram}', 'updateRequirement')->middleware('check.permission:programs.edit')->name('scholarshipprograms.update-requirement');
-    Route::delete('/scholarshipprograms/{scholarshipProgram}', 'destroy')->middleware('check.permission:programs.delete')->name('scholarshipprograms.destroy');
-});
-
-Route::middleware(['auth'])->controller(CourseController::class)->group(function () {
-
-    Route::get('/courses/find-by-program', [CourseController::class, 'findCourseByProgramApi'])->name('courses-api.findbyprogram');
-    Route::get('/courses-list-api/{scholarship_program_id?}', [CourseController::class, 'getCoursesApi'])->name('courses-api.list');
-    Route::get('/courses/{action?}/{id?}', 'index')->name('courses.index');
-    Route::post('/courses', 'store')->middleware('check.permission:courses.create')->name('courses.store');
-    Route::put('/courses/{course}', 'update')->middleware('check.permission:courses.manage')->name('courses.update');
-    Route::delete('/courses/{course}', 'destroy')->middleware('check.permission:courses.delete')->name('courses.destroy');
-});
-
-
-Route::middleware(['auth'])->controller(RequirementController::class)->group(function () {
-    Route::get('/program_requirements/{action?}/{id?}', 'index')->name('program_requirements.index');
-    Route::post('/program_requirements', 'store')->middleware('check.permission:requirements.manage')->name('program_requirements.store');
-    Route::put('/program_requirements/{program_requirement}', 'update')->middleware('check.permission:requirements.manage')->name('program_requirements.update');
-    Route::delete('/program_requirements/{program_requirement}', 'destroy')->middleware('check.permission:requirements.manage')->name('program_requirements.destroy');
-    // Route::resource('/program_requirements', ProgramRequirementController::class);
-
-    Route::get('/program_requirements-list-api', 'getRequirementsApi')->name('program_requirements-api.list');
-});
-
-// Add API route for adding applied_course to scholarship record
-Route::middleware(['auth'])->post('/profiles/add-applied-course', [ScholarshipProfileController::class, 'addAppliedCourseToRecord'])->name('profile.addappliedcourse');
-
-// School routes
-Route::middleware(['auth'])->controller(App\Http\Controllers\SchoolController::class)->group(function () {
-    Route::get('/schools/get-active-list', 'getActiveSchoolsApi')->name('schools.getactivelist');
-    Route::get('/schools/{action?}/{id?}', 'index')->name('school.index');
-    Route::post('/schools', 'store')->middleware('check.permission:schools.create')->name('school.store');
-    Route::put('/schools/{school}', 'update')->middleware('check.permission:schools.edit')->name('school.update');
-    Route::delete('/schools/{school}', 'destroy')->middleware('check.permission:schools.delete')->name('school.destroy');
-});
-
-// Responsibility Center routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/responsibility-centers', function () {
-        return inertia('ResponsibilityCenter/index');
-    })->middleware('check.permission:responsibility-centers.view')
-        ->name('responsibility-centers.index');
-
-    // API routes for responsibility centers
-    Route::get('/api/responsibility-centers', [App\Http\Controllers\ResponsibilityCenterController::class, 'index']);
-    Route::post('/api/responsibility-centers', [App\Http\Controllers\ResponsibilityCenterController::class, 'store']);
-    Route::put('/api/responsibility-centers/{id}', [App\Http\Controllers\ResponsibilityCenterController::class, 'update']);
-    Route::delete('/api/responsibility-centers/{id}', [App\Http\Controllers\ResponsibilityCenterController::class, 'destroy']);
-
-    // Particulars routes
-    Route::post('/api/responsibility-centers/{id}/particulars', [App\Http\Controllers\ResponsibilityCenterController::class, 'storeParticular']);
-    Route::put('/api/responsibility-centers/{id}/particulars/{particulerId}', [App\Http\Controllers\ResponsibilityCenterController::class, 'updateParticular']);
-    Route::delete('/api/responsibility-centers/{id}/particulars/{particulerId}', [App\Http\Controllers\ResponsibilityCenterController::class, 'destroyParticular']);
-});
-
-// System Updates API Routes
-Route::middleware(['auth'])->group(function () {
     Route::get('/api/system-updates', [SystemUpdateController::class, 'index']);
     Route::get('/api/system-updates/unread-count', [SystemUpdateController::class, 'getUnreadCount']);
     Route::post('/api/system-updates/mark-all-read', [SystemUpdateController::class, 'markAllAsRead']);
 
-    // Admin routes for managing system updates
     Route::middleware(['check-roles:administrator|program_manager'])->group(function () {
         Route::get('/api/admin/system-updates', [SystemUpdateController::class, 'adminIndex']);
         Route::post('/api/system-updates', [SystemUpdateController::class, 'store']);
@@ -643,13 +262,303 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/api/system-updates/{systemUpdate}/deactivate', [SystemUpdateController::class, 'deactivate'])->middleware('check-roles:administrator|program_manager')->name('system-updates.deactivate');
     Route::put('/api/system-updates/{systemUpdate}/reactivate', [SystemUpdateController::class, 'reactivate'])->middleware('check-roles:administrator|program_manager')->name('system-updates.reactivate');
     Route::delete('/api/system-updates/{systemUpdate}', [SystemUpdateController::class, 'destroy'])->middleware('check-roles:administrator|program_manager')->name('system-updates.destroy');
+
+    // ── User reports & QR ───────────────────────────────────────────────
+    Route::get('/user/reports', [ProfileController::class, 'getUserSummaryReport'])->name('user.reports');
+    Route::post('/user/profile/generate-qr', [ProfileController::class, 'generateQrCode'])->name('profile.generate-qr');
+
+    // ── Profile reports & educational background ────────────────────────
+    Route::controller(ScholarshipProfileController::class)->group(function () {
+        Route::get('/profiles/generate-report', 'generateReport')->name('profile.generateReport');
+        Route::get('/profiles/graduate-list-report', 'graduateListReport')->name('profile.graduateListReport');
+        Route::post('/profiles/add-educational-background', 'addEducationBackgroundApi')->name('profile-api.addeducation');
+        Route::put('/profiles/update-educational-background/{id}', 'updateEducationBackgroundApi')->name('profile-api.updateeducation');
+        Route::delete('/profiles/delete-educational-background/{id}', 'deleteEducationBackgroundApi')->name('profile-api.deleteeducation');
+    });
+
+    // ── Applicants ──────────────────────────────────────────────────────
+    // Specific routes MUST come before the generic {action?}/{id?} route
+    Route::post('/applicants', [ScholarshipProfileController::class, 'storeApplicant'])->name('applicants.store');
+    Route::put('/applicants/{id}', [ScholarshipProfileController::class, 'updateApplicant'])->name('applicants.update');
+    Route::delete('/applicants/{id}', [ApplicantController::class, 'destroy'])->middleware('check.role:administrator')->name('applicants.destroy');
+    Route::post('/applicants/requirement/generate-qr', [ApplicantController::class, 'generateRequirementQrCode'])->middleware('check.permission:applicants.view')->name('applicants.requirement.generate-qr');
+    Route::post('/applicants/{id}/assign-priority', [ScholarshipProfileController::class, 'assignPriority'])->name('applicants.assign-priority');
+    Route::delete('/applicants/{id}/remove-priority', [ScholarshipProfileController::class, 'removePriority'])->name('applicants.remove-priority');
+    Route::post('/applicants/{id}/restore', [ScholarshipProfileController::class, 'restore'])->name('applicants.restore');
+    Route::post('/applicants/{profile_id}/update-remarks', [ScholarshipProfileController::class, 'updateApplicantRemarks'])->name('applicants.update-remarks');
+
+    // Applicant tracking lists (waiting / interview / endorsed / personal)
+    Route::post('/applicant-lists', [ApplicantListController::class, 'store'])->name('applicant-lists.store');
+    Route::delete('/applicant-lists', [ApplicantListController::class, 'destroy'])->name('applicant-lists.destroy');
+
+    // Full filtered applicant set for report generation (all pages, no pagination)
+    Route::get('/api/applicants/report-data', [ApplicantController::class, 'reportData'])
+        ->middleware('check.permission:applicants.view')
+        ->name('applicants.report-data');
+    // Generic route MUST come last to catch all remaining /applicants patterns
+    Route::get('/applicants/{action?}/{id?}', [ApplicantController::class, 'index'])->middleware('check.permission:applicants.view')->name('applicants.index'); // Accepts filter values via query string: ?applied_course=...&municipality=...&name=...&per_page=...
+
+    // ── Scholars (create profiles with active scholarship status) ───────
+    Route::post('/scholars', [ScholarController::class, 'store'])->name('scholars.store');
+    Route::put('/scholars/{id}', [ScholarController::class, 'update'])->name('scholars.update');
+
+    // ── Profile search APIs ─────────────────────────────────────────────
+    Route::get('/api/profiles', [ScholarshipProfileController::class, 'apiSearch'])->name('api.profiles.search');
+    Route::get('/api/existing', [ScholarshipProfileController::class, 'searchExistingProfile'])->name('api.profiles.existing');
+    Route::post('/api/validate-name', [ScholarshipProfileController::class, 'validateName'])->name('api.profiles.validate-name');
+    Route::get('/api/scholars', [ScholarshipProfileController::class, 'getScholarsForVoucher'])->name('api.scholars');
+
+    // ── Scholarship records ─────────────────────────────────────────────
+    Route::controller(ScholarshipRecordController::class)->group(function () {
+        Route::delete('/scholarship-records/{id}', 'destroy')->middleware('check.role:administrator')->name('scholarship-record.destroy');
+        Route::put('/scholarship-records/{id}/grant-provision', 'updateGrantProvision')->name('scholarship-record.update-grant-provision');
+        Route::put('/scholarship-records/{id}/yakap', 'updateYakapCategory')->name('scholarship-record.update-yakap');
+        Route::get('/scholarship-records/profile/{profile_id}/get-or-create', 'getOrCreateForProfile')->middleware('check.permission:applicants.view')->name('scholarship-record.get-or-create');
+        Route::post('/scholarship-records/batch/yakap', 'batchUpdateYakapCategory')->name('scholarship-record.batch-update-yakap');
+    });
+
+    // ── Requirements checklist (profile-based) ──────────────────────────
+    Route::get('/scholarship-profiles/{profile}/requirements-checklist', [ApplicantController::class, 'getProfileRequirementsChecklist'])->middleware('check.permission:applicants.view')->name('scholarship.profile.requirements-checklist');
+    Route::post('/scholarship-profiles/{profile}/check-requirement', [ApplicantController::class, 'checkProfileRequirement'])->name('scholarship.profile.check-requirement');
+    Route::post('/scholarship-profiles/{profile}/uncheck-requirement', [ApplicantController::class, 'uncheckProfileRequirement'])->name('scholarship.profile.uncheck-requirement');
+    Route::post('/scholarship-profiles/{profile}/upload-requirement', [ApplicantController::class, 'uploadProfileRequirement'])->name('scholarship.profile.upload-requirement');
+
+    // ── Scholarship profiles & workflow ─────────────────────────────────
+    Route::get('/scholarship/profiles', [ScholarshipProfileController::class, 'profiles'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.profiles');
+    Route::get('/scholarship/profile/{profile}', [ScholarshipProfileController::class, 'show'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.profile.show');
+    Route::put('/scholarship/profile/{profile}/ledger', [ScholarshipProfileController::class, 'updateLedger'])->name('scholarship.profile.ledger.update');
+    Route::put('/scholarship-profiles/{profile}', [ScholarshipProfileController::class, 'update'])->name('scholarship-profiles.update');
+    Route::get('/scholarship/profile/{profile_id}/records', [ScholarshipProfileController::class, 'getScholarshipRecords'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.profile.records');
+    Route::get('/scholarship/profile/{profile_id}/history', [ScholarshipProfileController::class, 'profileHistory'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.profile.history');
+
+    // Approvals / interview updates (gated by applicants.approve in the controller)
+    Route::post('/scholarship/{record}/approve', [ScholarshipProfileController::class, 'approve'])->name('scholarship.record.approve');
+    Route::post('/scholarship/{record}/decline', [ScholarshipProfileController::class, 'decline'])->name('scholarship.record.decline');
+    Route::post('/scholarship/{record}/update-interview', [ScholarshipProfileController::class, 'updateInterview'])->name('scholarship.record.update-interview');
+    Route::patch('/scholarship/{record}/update-status', [ScholarshipProfileController::class, 'updateStatus'])->name('scholarship.record.update-status');
+
+    // ── Academic enrollments & terms ────────────────────────────────────
+    Route::get('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'show'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('academic-enrollments.show');
+    Route::post('/scholarship/profile/{profile}/academic-enrollments', [AcademicEnrollmentController::class, 'store'])->name('academic-enrollments.store');
+    Route::put('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'update'])->name('academic-enrollments.update');
+    Route::delete('/academic-enrollments/{academicEnrollment}', [AcademicEnrollmentController::class, 'destroy'])->name('academic-enrollments.destroy');
+    Route::put('/academic-enrollments/{academicEnrollment}/graduation', [AcademicEnrollmentController::class, 'graduate'])->name('academic-enrollments.graduate');
+
+    Route::get('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'show'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('academic-enrollment-terms.show');
+    Route::post('/academic-enrollments/{academicEnrollment}/terms', [AcademicEnrollmentTermController::class, 'store'])->name('academic-enrollment-terms.store');
+    Route::put('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'update'])->name('academic-enrollment-terms.update');
+    Route::delete('/academic-enrollment-terms/{academicEnrollmentTerm}', [AcademicEnrollmentTermController::class, 'destroy'])->name('academic-enrollment-terms.destroy');
+    Route::put('/academic-enrollment-terms/{academicEnrollmentTerm}/complete', [AcademicEnrollmentTermController::class, 'complete'])->name('academic-enrollment-terms.complete');
+
+    // ── Disbursements, cheques & attachments ────────────────────────────
+    Route::get('/scholarship/profile/{profile_id}/disbursements', [DisbursementController::class, 'index'])
+        ->middleware('check.permission:disbursements.view')
+        ->name('disbursements.index');
+    Route::post('/disbursements', [DisbursementController::class, 'store'])->name('disbursements.store');
+    Route::put('/disbursements/{id}', [DisbursementController::class, 'update'])->name('disbursements.update');
+    Route::delete('/disbursements/{id}', [DisbursementController::class, 'destroy'])->middleware('check.role:administrator')->name('disbursements.destroy');
+    Route::post('/disbursements/{disbursement_id}/cheques', [DisbursementController::class, 'addCheque'])->name('disbursements.cheques.store');
+    Route::put('/cheques/{cheque_id}', [DisbursementController::class, 'updateCheque'])->name('cheques.update');
+    Route::delete('/cheques/{cheque_id}', [DisbursementController::class, 'destroyCheque'])->name('cheques.destroy');
+
+    Route::post('/disbursements/{disbursement_id}/attachments', [DisbursementController::class, 'uploadAttachment'])->name('disbursements.attachments.upload');
+    Route::delete('/disbursement-attachments/{attachment_id}', [DisbursementController::class, 'deleteAttachment'])->name('disbursements.attachments.delete');
+    Route::get('/disbursement-attachments/{attachment_id}/download', [DisbursementController::class, 'downloadAttachment'])
+        ->middleware('check.permission:disbursements.view')
+        ->name('disbursements.attachments.download');
+    Route::get('/disbursement-attachments/{attachment_id}/view', [DisbursementController::class, 'viewAttachment'])
+        ->middleware('check.permission:disbursements.view')
+        ->name('disbursements.attachments.view');
+    Route::post('/disbursements/{disbursement_id}/generate-qr', [DisbursementController::class, 'generateQrCode'])->name('disbursements.generate-qr');
+
+    // ── Scholarship record attachments ──────────────────────────────────
+    Route::post('/scholarship-records/{scholarship_record_id}/attachments', [ScholarshipRecordAttachmentController::class, 'upload'])->name('scholarship.records.attachments.upload');
+    Route::delete('/scholarship-attachments/{attachment_id}', [ScholarshipRecordAttachmentController::class, 'delete'])->name('scholarship.records.attachments.delete');
+    Route::get('/scholarship-attachments/{attachment_id}/download', [ScholarshipRecordAttachmentController::class, 'download'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.records.attachments.download');
+    Route::get('/scholarship-attachments/{attachment_id}/view', [ScholarshipRecordAttachmentController::class, 'view'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.records.attachments.view');
+    Route::post('/scholarship-records/{scholarship_record_id}/generate-qr', [ScholarshipRecordAttachmentController::class, 'generateQrCode'])->name('scholarship.records.generate-qr');
+
+    // ── Interviewed applicants & recommendation lists ───────────────────
+    Route::get('/interviewed-applicants', [ScholarshipProfileController::class, 'showInterviewedApplicants'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.interviewed-applicants');
+
+    // Write actions are gated by applicants.approve in the controller
+    Route::post('/interviewed-applicants/recommendation-lists', [ScholarshipProfileController::class, 'storeRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.store');
+    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}', [ScholarshipProfileController::class, 'updateRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.update');
+    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}/approve', [ScholarshipProfileController::class, 'approveRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.approve');
+    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}/revert-approval', [ScholarshipProfileController::class, 'revertRecommendationListApproval'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.revert-approval');
+    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}/refresh', [ScholarshipProfileController::class, 'refreshRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.refresh');
+    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}/records/{scholarshipRecord}', [ScholarshipProfileController::class, 'removeRecordFromRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.remove-record');
+    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}', [ScholarshipProfileController::class, 'destroyRecommendationList'])
+        ->middleware('check.role:administrator')
+        ->name('scholarship.recommendation-lists.destroy');
+    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationListId}/force-delete', [ScholarshipProfileController::class, 'forceDeleteRecommendationList'])
+        ->middleware('check.role:administrator')
+        ->name('scholarship.recommendation-lists.force-delete');
+    Route::patch('/interviewed-applicants/recommendation-lists/{recommendationListId}/restore', [ScholarshipProfileController::class, 'restoreRecommendationList'])
+        ->middleware('check.permission:scholarships.view')
+        ->name('scholarship.recommendation-lists.restore');
+
+    // ── Activity logs ───────────────────────────────────────────────────
+    Route::get('/activity-logs/{profileId}', [ActivityLogController::class, 'profileActivities'])
+        ->middleware('check.permission:applicants.view')
+        ->name('activity-logs.profile');
+    Route::get('/activity-logs/{profileId}/approval-history', [ActivityLogController::class, 'approvalHistory'])
+        ->middleware('check.permission:applicants.view')
+        ->name('activity-logs.approval-history');
+    Route::get('/activity-logs/{profileId}/status-timeline', [ActivityLogController::class, 'statusTimeline'])
+        ->middleware('check.permission:applicants.view')
+        ->name('activity-logs.status-timeline');
+
+    // User activity logs (page + API)
+    Route::get('/user/activity-logs', fn() => inertia('User/ActivityLogs'))->name('user-activity-logs.index');
+    Route::get('/api/user/activity-logs/recent', [UserActivityLogController::class, 'recentActivities'])->name('user-activity-logs.recent');
+    Route::post('/api/user/activity-logs/mark-all-viewed', [UserActivityLogController::class, 'markAllAsViewed'])->name('user-activity-logs.mark-all-viewed');
+    Route::get('/api/user/activity-logs/unviewed-count', [UserActivityLogController::class, 'getUnviewedCount'])->name('user-activity-logs.unviewed-count');
+    Route::get('/api/user/activity-logs', [UserActivityLogController::class, 'userActivityLogs'])->name('user-activity-logs.data');
+
+    // ── Sidebar menu API ────────────────────────────────────────────────
+    Route::get('/api/menu/sidebar', [MenuController::class, 'sidebarMenu'])->name('api.menu.sidebar');
+
+    // ── Fund transactions, payment monitoring & budget reports ──────────
+    Route::get('/fund-transactions', fn() => inertia('FundTransactions/index'))
+        ->middleware('check.permission:fund_transactions.view')
+        ->name('fund_transactions.index');
+
+    Route::get('/payment-monitoring', [PaymentMonitoringController::class, 'index'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('payment-monitoring.index');
+
+    Route::get('/api/budget-report', [BudgetReportController::class, 'api'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('budget-report.api');
+    Route::get('/api/budget-report/rcenters', [BudgetReportController::class, 'rcenters'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('budget-report.rcenters');
+    Route::get('/api/budget-report/particulars', [BudgetReportController::class, 'particulars'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('budget-report.particulars');
+
+    // Disbursement Management (temporary mapping interface)
+    Route::get('/disbursement-management', [DisbursementManagementController::class, 'index'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('disbursement-management.index');
+    Route::get('/disbursement-management/{obrNo}', [DisbursementManagementController::class, 'show'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('disbursement-management.show');
+    Route::post('/disbursement-management', [DisbursementManagementController::class, 'store'])
+        ->middleware('check.permission:payment-monitoring.view')
+        ->name('disbursement-management.store');
+
+    // ── Scholarship programs ────────────────────────────────────────────
+    Route::controller(ScholarshipProgramController::class)->group(function () {
+        Route::get('/scholarshipprograms/get-active-list', 'getActiveProgramsApi')->name('scholarshipprograms.getactivelist');
+        Route::get('/scholarshipprograms/{action?}/{id?}', 'index')->name('scholarshipprograms.index');
+        Route::post('/scholarshipprograms', 'store')->name('scholarshipprograms.store');
+        Route::put('/scholarshipprograms/{scholarshipProgram}', 'update')->name('scholarshipprograms.update');
+        Route::put('/scholarshipprograms-update-requirement/{scholarshipProgram}', 'updateRequirement')->name('scholarshipprograms.update-requirement');
+        Route::delete('/scholarshipprograms/{scholarshipProgram}', 'destroy')->middleware('check.role:administrator')->name('scholarshipprograms.destroy');
+    });
+
+    // ── Courses ─────────────────────────────────────────────────────────
+    Route::controller(CourseController::class)->group(function () {
+        Route::get('/courses/find-by-program', 'findCourseByProgramApi')->name('courses-api.findbyprogram');
+        Route::get('/courses-list-api/{scholarship_program_id?}', 'getCoursesApi')->name('courses-api.list');
+        Route::get('/courses/{action?}/{id?}', 'index')->name('courses.index');
+        Route::post('/courses', 'store')->name('courses.store');
+        Route::put('/courses/{course}', 'update')->name('courses.update');
+        Route::delete('/courses/{course}', 'destroy')->middleware('check.role:administrator')->name('courses.destroy');
+    });
+
+    // ── Program requirements ────────────────────────────────────────────
+    Route::controller(RequirementController::class)->group(function () {
+        Route::get('/program_requirements/{action?}/{id?}', 'index')->name('program_requirements.index');
+        Route::post('/program_requirements', 'store')->name('program_requirements.store');
+        Route::put('/program_requirements/{program_requirement}', 'update')->name('program_requirements.update');
+        Route::delete('/program_requirements/{program_requirement}', 'destroy')->middleware('check.role:administrator')->name('program_requirements.destroy');
+    });
+
+    // ── Schools ─────────────────────────────────────────────────────────
+    Route::controller(SchoolController::class)->group(function () {
+        Route::get('/schools/get-active-list', 'getActiveSchoolsApi')->name('schools.getactivelist');
+        Route::get('/schools/{action?}/{id?}', 'index')->name('school.index');
+        Route::post('/schools', 'store')->name('school.store');
+        Route::put('/schools/{school}', 'update')->name('school.update');
+        Route::delete('/schools/{school}', 'destroy')->middleware('check.role:administrator')->name('school.destroy');
+    });
+
+    // ── Responsibility centers ──────────────────────────────────────────
+    Route::get('/responsibility-centers', fn() => inertia('ResponsibilityCenter/index'))
+        ->middleware('check.permission:responsibility-centers.view')
+        ->name('responsibility-centers.index');
+
+    // GET also feeds the voucher wizard on the fund transactions page.
+    // Edits are open to all authenticated roles; deleting a center is admin-only.
+    Route::get('/api/responsibility-centers', [ResponsibilityCenterController::class, 'index']);
+    Route::post('/api/responsibility-centers', [ResponsibilityCenterController::class, 'store']);
+    Route::put('/api/responsibility-centers/{id}', [ResponsibilityCenterController::class, 'update']);
+    Route::delete('/api/responsibility-centers/{id}', [ResponsibilityCenterController::class, 'destroy'])->middleware('check.role:administrator');
+    Route::post('/api/responsibility-centers/{id}/particulars', [ResponsibilityCenterController::class, 'storeParticular']);
+    Route::put('/api/responsibility-centers/{id}/particulars/{particulerId}', [ResponsibilityCenterController::class, 'updateParticular']);
+    Route::delete('/api/responsibility-centers/{id}/particulars/{particulerId}', [ResponsibilityCenterController::class, 'destroyParticular']);
+
+    // ── Return of Service ───────────────────────────────────────────────
+    Route::get('/return-of-service', [ReturnOfServiceController::class, 'index'])
+        ->middleware('check.permission:return-of-service.view')
+        ->name('return-of-service.index');
+    Route::post('/return-of-service/batch', [ReturnOfServiceController::class, 'storeBatch'])->name('return-of-service.batch.store');
+    Route::put('/return-of-service/batch/{batch}', [ReturnOfServiceController::class, 'updateBatch'])->name('return-of-service.batch.update');
+    Route::delete('/return-of-service/batch/{batch}', [ReturnOfServiceController::class, 'destroyBatch'])
+        ->middleware('check.role:administrator')
+        ->name('return-of-service.batch.destroy');
+    Route::get('/api/return-of-service/batch/{batch}', [ReturnOfServiceController::class, 'batchShow'])
+        ->middleware('check.permission:return-of-service.view')
+        ->name('return-of-service.batch.show');
+    Route::post('/return-of-service/scholar', [ReturnOfServiceController::class, 'storeScholar'])->name('return-of-service.scholar.store');
+    Route::put('/return-of-service/scholar/{record}', [ReturnOfServiceController::class, 'updateScholar'])->name('return-of-service.scholar.update');
+    Route::delete('/return-of-service/scholar/{record}', [ReturnOfServiceController::class, 'destroyScholar'])->name('return-of-service.scholar.destroy');
+    Route::get('/api/return-of-service/search-records', [ReturnOfServiceController::class, 'searchRecords'])
+        ->middleware('check.permission:return-of-service.view')
+        ->name('return-of-service.search-records');
+    Route::get('/return-of-service/export/csv', [ReturnOfServiceController::class, 'export'])
+        ->middleware('check.permission:return-of-service.export')
+        ->name('return-of-service.export');
 });
 
-// ────────────────────────────────────────────────────────────────────
-// AI Assistant (separate login/layout, admin & program_manager only)
-// ────────────────────────────────────────────────────────────────────
-use App\Http\Controllers\AiAssistantController;
-
+/*
+|--------------------------------------------------------------------------
+| AI Assistant (separate login/layout)
+|--------------------------------------------------------------------------
+*/
 Route::prefix('ai')->name('ai.')->group(function () {
     Route::get('/login', [AiAssistantController::class, 'showLogin'])->name('login');
     Route::post('/login', [AiAssistantController::class, 'login'])
@@ -672,110 +581,11 @@ Route::prefix('ai')->name('ai.')->group(function () {
     });
 });
 
-// Test route for debugging notifications
-Route::middleware(['auth'])->get('/test-notifications', function () {
-    $user = request()->user();
-    $unreadCount = $user->getUnreadNotificationsCount();
-    $systemUpdates = \App\Models\SystemUpdate::all();
-
-    return response()->json([
-        'user_id' => $user->id,
-        'user_name' => $user->name,
-        'unread_count' => $unreadCount,
-        'total_system_updates' => $systemUpdates->count(),
-        'system_updates' => $systemUpdates->take(3)->map(function ($update) {
-            return [
-                'id' => $update->id,
-                'title' => $update->title,
-                'is_active' => $update->is_active,
-                'is_global' => $update->is_global,
-            ];
-        }),
-    ]);
-});
-
-// API Routes for Municipalities and Barangays
-Route::get('/api/municipalities', [\App\Http\Controllers\Api\MunicipalityController::class, 'index'])->name('api.municipalities.index');
-Route::get('/api/municipalities/{municipality}/barangays', [\App\Http\Controllers\Api\MunicipalityController::class, 'getBarangays'])->name('api.municipalities.barangays');
-
-// Data Export Routes - Administrator Only (for migrating data to standalone app)
-Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
-    Route::get('/admin/data-export', [\App\Http\Controllers\DataExportController::class, 'index'])->name('data-export.index');
-    Route::get('/admin/data-export/summary', [\App\Http\Controllers\DataExportController::class, 'getExportSummary'])->name('data-export.summary');
-    Route::get('/admin/data-export/download', [\App\Http\Controllers\DataExportController::class, 'exportToJson'])->name('data-export.download');
-    Route::post('/admin/data-export/import-jpm-csv', [\App\Http\Controllers\DataExportController::class, 'importJpmCsv'])
-        ->middleware('check.permission:jpm.manage')
-        ->name('data-export.import-jpm-csv');
-});
-
-// Return of Service (ROS) Routes - Batch-first approach
-Route::middleware(['auth'])->group(function () {
-    // Main ROS page with batches
-    Route::get('/return-of-service', [App\Http\Controllers\ReturnOfServiceController::class, 'index'])
-        ->middleware('check.permission:return-of-service.view')
-        ->name('return-of-service.index');
-
-    // Batch operations
-    Route::post('/return-of-service/batch', [App\Http\Controllers\ReturnOfServiceController::class, 'storeBatch'])
-        ->middleware('check.permission:return-of-service.create')
-        ->name('return-of-service.batch.store');
-
-    Route::put('/return-of-service/batch/{batch}', [App\Http\Controllers\ReturnOfServiceController::class, 'updateBatch'])
-        ->middleware('check.permission:return-of-service.edit')
-        ->name('return-of-service.batch.update');
-
-    Route::delete('/return-of-service/batch/{batch}', [App\Http\Controllers\ReturnOfServiceController::class, 'destroyBatch'])
-        ->middleware('check.permission:return-of-service.delete')
-        ->name('return-of-service.batch.destroy');
-
-    Route::get('/api/return-of-service/batch/{batch}', [App\Http\Controllers\ReturnOfServiceController::class, 'batchShow'])
-        ->middleware('check.permission:return-of-service.view')
-        ->name('return-of-service.batch.show');
-
-    // Scholar operations
-    Route::post('/return-of-service/scholar', [App\Http\Controllers\ReturnOfServiceController::class, 'storeScholar'])
-        ->middleware('check.permission:return-of-service.create')
-        ->name('return-of-service.scholar.store');
-
-    Route::put('/return-of-service/scholar/{record}', [App\Http\Controllers\ReturnOfServiceController::class, 'updateScholar'])
-        ->middleware('check.permission:return-of-service.edit')
-        ->name('return-of-service.scholar.update');
-
-    Route::delete('/return-of-service/scholar/{record}', [App\Http\Controllers\ReturnOfServiceController::class, 'destroyScholar'])
-        ->middleware('check.permission:return-of-service.delete')
-        ->name('return-of-service.scholar.destroy');
-
-    // API endpoints
-    Route::get('/api/return-of-service/search-records', [App\Http\Controllers\ReturnOfServiceController::class, 'searchRecords'])
-        ->middleware('check.permission:return-of-service.create')
-        ->name('return-of-service.search-records');
-
-    Route::get('/return-of-service/export/csv', [App\Http\Controllers\ReturnOfServiceController::class, 'export'])
-        ->middleware('check.permission:return-of-service.export')
-        ->name('return-of-service.export');
-});
-
-// Fallback routes for backward compatibility (old form-templates.* routes)
-// These routes delegate to the new DocumentsController with matching permissions
-Route::middleware(['auth'])->group(function () {
-    Route::get('/form-templates', [\App\Http\Controllers\DocumentsController::class, 'index'])
-        ->middleware('check.permission:documents.view')
-        ->name('form-templates.index');
-    Route::post('/form-templates', [\App\Http\Controllers\DocumentsController::class, 'store'])
-        ->middleware('check.permission:documents.upload')
-        ->name('form-templates.store');
-    Route::put('/form-templates/{document}', [\App\Http\Controllers\DocumentsController::class, 'update'])
-        ->middleware('check.permission:documents.edit')
-        ->name('form-templates.update');
-    Route::delete('/form-templates/{document}', [\App\Http\Controllers\DocumentsController::class, 'destroy'])
-        ->middleware('check.permission:documents.delete')
-        ->name('form-templates.destroy');
-    Route::get('/form-templates/{document}/download', [\App\Http\Controllers\DocumentsController::class, 'download'])
-        ->middleware('check.permission:documents.view')
-        ->name('form-templates.download');
-});
-
-// Error pages
+/*
+|--------------------------------------------------------------------------
+| Error pages
+|--------------------------------------------------------------------------
+*/
 Route::get('/403', [ErrorController::class, 'forbidden'])->name('error.forbidden');
 Route::get('/404', [ErrorController::class, 'notFound'])->name('error.notFound');
 Route::get('/500', [ErrorController::class, 'serverError'])->name('error.serverError');

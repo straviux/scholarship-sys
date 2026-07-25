@@ -126,7 +126,7 @@ return [
     ],
 
     'aliases' => Facade::defaultAliases()->merge([
-        'LaravelFileViewer' => Vish4395\LaravelFileViewer\LaravelFileViewerFacade::class,
+        //
     ])->toArray(),
 
 

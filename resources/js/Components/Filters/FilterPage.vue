@@ -42,8 +42,9 @@
 
         <!-- Per Page Selector -->
         <div v-if="showPerPage" class="ml-auto flex items-center gap-2">
-            <RecordsSelect v-model="internalPerPage" size="small" class="w-auto" />
-            <span class="text-sm text-gray-600 dark:text-gray-400">/ <strong>{{ filteredTotal }}</strong></span>
+            <RecordsSelect v-model="internalPerPage" size="small" class="w-16" />
+            <span class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">/ <strong>{{ filteredTotal
+                    }}</strong></span>
         </div>
     </div>
 </template>

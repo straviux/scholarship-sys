@@ -5,7 +5,7 @@
 
         <div class="ios-settings-form">
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 short:mb-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] short:mb-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
                         <AppIcon name="message-square-more" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
@@ -28,7 +28,7 @@
                                     <AppIcon name="clipboard-list" :size="14" />
                                     <span>Interviewed Applicants</span>
                                     <span
-                                        class="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                                        class="rounded-full bg-blue-50 px-2 py-0.5 text-2xs font-semibold text-blue-700">
                                         {{ filteredList.length }}
                                     </span>
                                 </div>
@@ -42,7 +42,7 @@
                                     <AppIcon name="list-checks" :size="14" />
                                     <span>Recommendation Lists</span>
                                     <span
-                                        class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                        class="rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700">
                                         {{ recommendationLists.length }}
                                     </span>
                                 </div>
@@ -207,7 +207,7 @@
                                                 slotProps.data.profile.first_name
                                             }}
                                         </div>
-                                        <div class="text-[11px] mono text-gray-500">{{
+                                        <div class="text-2xs mono text-gray-500">{{
                                             slotProps.data.profile.contact_no
                                             }}</div>
 
@@ -227,7 +227,7 @@
                                 </Column>
                                 <Column field="course.shortname" header="Course" sortable>
                                     <template #body="slotProps">
-                                        <span class="text-[10px] font-semibold"> {{ slotProps.data.course?.name ||
+                                        <span class="text-3xs font-semibold"> {{ slotProps.data.course?.name ||
                                             'N/A'
                                             }}</span>
                                     </template>
@@ -264,11 +264,11 @@
                                     <template #body="slotProps">
                                         <div class="flex flex-col gap-1">
                                             <span
-                                                :class="['text-[11px] font-semibold', getRecommendationTextClass(slotProps.data.recommendation)]">
+                                                :class="['text-2xs font-semibold', getRecommendationTextClass(slotProps.data.recommendation)]">
                                                 {{ formatRecommendation(slotProps.data.recommendation) }}
                                             </span>
                                             <span v-if="slotProps.data.is_in_recommendation_list"
-                                                class="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                class="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-3xs font-semibold text-amber-700">
                                                 Already in Recommendation List
                                             </span>
                                         </div>
@@ -306,19 +306,19 @@
                                                     </tr>
                                                     <tr class="bg-white">
                                                         <th
-                                                            class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-2xs font-medium uppercase tracking-wide text-slate-500">
                                                             Terms</th>
                                                         <th
-                                                            class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-2xs font-medium uppercase tracking-wide text-slate-500">
                                                             Expense</th>
                                                         <th
-                                                            class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-2xs font-medium uppercase tracking-wide text-slate-500">
                                                             Completion</th>
                                                         <th
-                                                            class="border-b border-l border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            class="border-b border-l border-slate-200 px-3 py-2 text-left text-2xs font-medium uppercase tracking-wide text-slate-500">
                                                             Interview Date</th>
                                                         <th
-                                                            class="border-b border-slate-200 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                                            class="border-b border-slate-200 px-3 py-2 text-left text-2xs font-medium uppercase tracking-wide text-slate-500">
                                                             Interviewed By</th>
                                                     </tr>
                                                 </thead>
@@ -459,13 +459,13 @@
                                     bodyClass="min-w-[160px]">
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
-                                        <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
+                                        <div class="text-2xs text-slate-500">{{ slotProps.data.report_title }}</div>
                                         <div class="mt-2 flex flex-wrap items-center gap-2">
                                             <span
-                                                :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
+                                                :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-3xs font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
                                                 {{ getRecommendationListApprovalLabel(slotProps.data) }}
                                             </span>
-                                            <span v-if="slotProps.data.approved_at" class="text-[10px] text-slate-500">
+                                            <span v-if="slotProps.data.approved_at" class="text-3xs text-slate-500">
                                                 {{ formatDateTime(slotProps.data.approved_at) }}
                                             </span>
                                         </div>
@@ -476,7 +476,7 @@
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ slotProps.data.record_count }}
                                         </div>
-                                        <div class="text-[11px] text-green-700 font-semibold">Recommended for Approval
+                                        <div class="text-2xs text-green-700 font-semibold">Recommended for Approval
                                         </div>
                                     </template>
                                 </Column>
@@ -495,7 +495,7 @@
                                             <div class="font-semibold text-slate-800">{{
                                                 formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
                                             <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
-                                                class="text-[11px] text-slate-500">
+                                                class="text-2xs text-slate-500">
                                                 {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation)
                                                 }}
                                             </div>
@@ -509,7 +509,7 @@
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ slotProps.data.prepared_by || 'N/A'
                                         }}</div>
-                                        <div class="text-[11px] text-slate-500">{{ slotProps.data.prepared_by_position
+                                        <div class="text-2xs text-slate-500">{{ slotProps.data.prepared_by_position
                                             || 'Position not set' }}</div>
                                     </template>
                                 </Column>
@@ -518,7 +518,7 @@
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{
                                             formatDateTime(slotProps.data.created_at) }}</div>
-                                        <div class="text-[11px] text-slate-500">{{ slotProps.data.creator?.name ||
+                                        <div class="text-2xs text-slate-500">{{ slotProps.data.creator?.name ||
                                             'Unknown user' }}</div>
                                     </template>
                                 </Column>
@@ -675,10 +675,10 @@
                                     bodyClass="min-w-[170px]">
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
-                                        <div class="text-[11px] text-slate-500">{{ slotProps.data.report_title }}</div>
+                                        <div class="text-2xs text-slate-500">{{ slotProps.data.report_title }}</div>
                                         <div class="mt-2 flex flex-wrap items-center gap-2">
                                             <span
-                                                :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
+                                                :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-3xs font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
                                                 {{ getRecommendationListApprovalLabel(slotProps.data) }}
                                             </span>
                                         </div>
@@ -689,7 +689,7 @@
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ slotProps.data.record_count }}
                                         </div>
-                                        <div class="text-[11px] text-slate-500">Stored snapshot</div>
+                                        <div class="text-2xs text-slate-500">Stored snapshot</div>
                                     </template>
                                 </Column>
                                 <Column header="Budget Allocation" headerClass="min-w-[260px]"
@@ -699,7 +699,7 @@
                                             <div class="font-semibold text-slate-800">{{
                                                 formatBudgetAllocationTitle(slotProps.data.budget_allocation) }}</div>
                                             <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
-                                                class="text-[11px] text-slate-500">
+                                                class="text-2xs text-slate-500">
                                                 {{ formatBudgetAllocationDescription(slotProps.data.budget_allocation)
                                                 }}
                                             </div>
@@ -783,7 +783,7 @@
             max-width="450px" body-style="padding: 16px;">
             <template #header-right>
                 <button
-                    class="ios-nav-btn ios-nav-action"
+                    class="ios-nav-btn ios-nav-action text-nav"
                     type="button"
                     @click="handleConfirmDialogAccept"
                 >
@@ -801,7 +801,7 @@
         <IosModal v-model:visible="showUpdateListModal" :title="'Update List: ' + (editingRecommendationList?.list_number || '')"
             width="calc(100vw - 2rem)" max-width="1100px" body-style="padding: 16px;">
             <template #header-right>
-                <button class="ios-nav-btn ios-nav-action"
+                <button class="ios-nav-btn ios-nav-action text-nav"
                     type="button"
                     @click="showAddApplicantsModal = true">
                     <AppIcon name="user-round-plus" :size="18" />
@@ -880,7 +880,7 @@
         <IosModal v-model:visible="showAddApplicantsModal" title="Add Applicants" width="calc(100vw - 2rem)"
             max-width="900px" body-style="padding: 16px;">
             <template #header-right>
-                <button class="ios-nav-btn ios-nav-action"
+                <button class="ios-nav-btn ios-nav-action text-nav"
                     type="button"
                     :disabled="updateListSelectedIds.length === 0"
                     @click="addSelectedUpdateListApplicants">
@@ -894,7 +894,7 @@
                         <InputIcon><AppIcon name="search" :size="14" class="text-gray-400" /></InputIcon>
                         <InputText v-model="updateListSearch" placeholder="Search by name..." size="small" class="w-full" />
                     </IconField>
-                    <button class="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium text-gray-500 rounded-full cursor-pointer border-none bg-transparent hover:bg-gray-100"
+                    <button class="inline-flex items-center gap-1 px-3 py-1.5 text-2xs font-medium text-gray-500 rounded-full cursor-pointer border-none bg-transparent hover:bg-gray-100"
                         @click="updateListSelectedIds = []">Clear</button>
                 </div>
                 <div v-if="availableForUpdateList.length === 0" class="py-6 text-center text-xs text-gray-400">

@@ -1,6 +1,5 @@
-<script setup>
+﻿<script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import AdminPageShell from "@/Components/admin/AdminPageShell.vue";
 import AppIcon from "@/Components/ui/AppIcon.vue";
 import AppButton from "@/Components/ui/AppButton.vue";
 import { Head, useForm, router } from "@inertiajs/vue3";
@@ -19,6 +18,53 @@ const props = defineProps({
 });
 
 // ============================================
+// TABS
+// ============================================
+const activeTab = ref('users');
+
+// ============================================
+// CONTEXT MENU (row actions, guide-style)
+// ============================================
+const contextMenu = ref(null);
+const contextMenuItems = ref([]);
+
+const openUserContextMenu = (event, user) => {
+    contextMenuItems.value = [
+        { label: 'Edit User', icon: 'pen-to-square', command: () => editUser(user.id) },
+        { label: 'Change Password', icon: 'shield', command: () => openChangePasswordModal(user) },
+        { separator: true },
+        { label: 'Delete User', icon: 'trash', command: () => confirmDeleteUser(user.id, user.name, user.username) },
+    ];
+    contextMenu.value.show(event);
+};
+
+const openRoleContextMenu = (event, role) => {
+    const items = [
+        { label: 'Assign Permissions', icon: 'shield-check', command: () => openPermissionAssignmentModal(role) },
+    ];
+
+    if (!isProtectedRole(role.name)) {
+        items.push(
+            { label: 'Edit Role', icon: 'pen-to-square', command: () => openEditRoleModal(role) },
+            { separator: true },
+            { label: 'Delete Role', icon: 'trash', command: () => confirmDeleteRole(role) },
+        );
+    }
+
+    contextMenuItems.value = items;
+    contextMenu.value.show(event);
+};
+
+const openPermissionContextMenu = (event, permission) => {
+    contextMenuItems.value = [
+        { label: 'Edit Permission', icon: 'pen-to-square', command: () => openEditPermissionModal(permission) },
+        { separator: true },
+        { label: 'Delete Permission', icon: 'trash', command: () => confirmDeletePermission(permission) },
+    ];
+    contextMenu.value.show(event);
+};
+
+// ============================================
 // USERS TAB
 // ============================================
 const userGlobalFilter = ref('');
@@ -31,6 +77,14 @@ const userFilters = ref({
 watch(userGlobalFilter, (newValue) => {
     userFilters.value.global.value = newValue;
 });
+
+const clearUserFilters = () => {
+    userGlobalFilter.value = '';
+};
+
+const usersWithoutRole = computed(() =>
+    (props.users || []).filter(user => !user.roles || user.roles.length === 0).length
+);
 
 // Change Password Modal
 const showChangePasswordModal = ref(false);
@@ -148,6 +202,10 @@ const filteredRoles = computed(() => {
     const query = roleSearchFilter.value.toLowerCase();
     return (props.roles || []).filter(role => role.name.toLowerCase().includes(query));
 });
+
+const protectedRoleCount = computed(() =>
+    (props.roles || []).filter(role => isProtectedRole(role.name)).length
+);
 
 // Initialize role-permission mapping
 const initializeRolePermissions = (role, force = false) => {
@@ -508,6 +566,18 @@ watch(permissionGlobalFilter, (newValue) => {
     permissionFilters.value.global.value = newValue;
 });
 
+const clearPermissionFilters = () => {
+    permissionGlobalFilter.value = '';
+};
+
+const permissionGroupCount = computed(() => {
+    const groups = new Set();
+    (props.permissions || []).forEach(permission => {
+        groups.add(permission.name.split('.')[0]);
+    });
+    return groups.size;
+});
+
 // Permissions data
 const allPermissions = ref(props.permissions || []);
 
@@ -646,293 +716,356 @@ const runCleanup = async () => {
 </script>
 
 <template>
-
-    <Head title="Access Control" />
-
     <AdminLayout>
-        <AdminPageShell title="Access Control"
-            description="Manage users, roles, permissions, and cleanup workflows from one iOS-styled security workspace."
-            icon="lock" eyebrow="Security">
-            <template #meta>
-                <span>{{ users.length }} users</span>
-                <span>{{ roles.length }} roles</span>
-                <span>{{ permissions.length }} permissions</span>
-            </template>
 
-            <section class="ios-section">
-                <div class="ios-section-label">Control Center</div>
-                <div class="mt-2">
-                    <Tabs value="0">
-                        <TabList>
-                            <Tab value="0">
+        <Head title="Access Control" />
+
+        <div class="ios-settings-form">
+            <!-- Toolbar -->
+            <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] short:mb-2 !rounded-4xl !px-8">
+                <template #start>
+                    <div class="flex items-center gap-3">
+                        <AppIcon name="lock" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
+                        <div>
+                            <h1 class="text-2xl short:text-xl font-bold text-gray-700">Access Control</h1>
+                            <p class="text-sm text-gray-600 short:text-xs">Manage users, roles, and permissions</p>
+                        </div>
+                    </div>
+                </template>
+                <template #end>
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <div class="flex flex-wrap gap-3" role="tablist" aria-label="Access control views">
+                            <button type="button" role="tab" :aria-selected="activeTab === 'users'"
+                                class="cursor-pointer rounded-full px-4 py-[0.65rem] text-slate-700 transition-colors"
+                                :class="activeTab === 'users'
+                                    ? 'bg-blue-400 !text-slate-50'
+                                    : 'bg-white hover:border-blue-200'" @click="activeTab = 'users'">
                                 <div class="flex items-center gap-2">
-                                    <AppIcon name="users" />
+                                    <AppIcon name="users" :size="14" />
                                     <span>Users</span>
-                                    <Tag :value="`${users.length}`" severity="info" rounded />
+                                    <span
+                                        class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                                        {{ users.length }}
+                                    </span>
                                 </div>
-                            </Tab>
-                            <Tab value="1">
+                            </button>
+                            <button type="button" role="tab" :aria-selected="activeTab === 'roles'"
+                                class="cursor-pointer rounded-full px-4 py-[0.65rem] text-slate-700 transition-colors"
+                                :class="activeTab === 'roles'
+                                    ? 'bg-blue-400 !text-slate-50'
+                                    : 'bg-white hover:border-blue-200'" @click="activeTab = 'roles'">
                                 <div class="flex items-center gap-2">
-                                    <AppIcon name="shield" />
-                                    <span>Roles & Permissions</span>
-                                    <Tag :value="`${roles.length} roles`" severity="success" rounded />
+                                    <AppIcon name="shield" :size="14" />
+                                    <span>Roles</span>
+                                    <span
+                                        class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                                        {{ roles.length }}
+                                    </span>
                                 </div>
-                            </Tab>
-                            <Tab value="2">
+                            </button>
+                            <button type="button" role="tab" :aria-selected="activeTab === 'permissions'"
+                                class="cursor-pointer rounded-full px-4 py-[0.65rem] text-slate-700 transition-colors"
+                                :class="activeTab === 'permissions'
+                                    ? 'bg-blue-400 !text-slate-50'
+                                    : 'bg-white hover:border-blue-200'" @click="activeTab = 'permissions'">
                                 <div class="flex items-center gap-2">
-                                    <AppIcon name="key" />
+                                    <AppIcon name="key" :size="14" />
                                     <span>Permissions</span>
-                                    <Tag :value="`${permissions.length} perms`" severity="secondary" rounded />
+                                    <span
+                                        class="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                                        {{ permissions.length }}
+                                    </span>
                                 </div>
-                            </Tab>
-                        </TabList>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </Toolbar>
 
-                        <TabPanels>
-                            <!-- USERS TAB -->
-                            <TabPanel value="0">
+            <Tabs v-model:value="activeTab" class="!bg-transparent">
+                <TabPanels class="!bg-transparent !p-0">
 
-                                <!-- Users Search and Actions -->
-                                <div class="flex justify-between items-center mb-4">
-                                    <div class="flex-1 max-w-md">
-                                        <IconField iconPosition="left">
-                                            <InputIcon>
-                                                <AppIcon name="search" :size="14" />
-                                            </InputIcon>
-                                            <InputText v-model="userGlobalFilter" placeholder="Search users..."
-                                                class="w-full" />
-                                        </IconField>
-                                    </div>
-                                    <AppButton label="New User" icon="user-plus" severity="success" raised
+                    <!-- USERS TAB -->
+                    <TabPanel value="users" class="!bg-transparent !p-0">
+                        <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                            <!-- Stats strip -->
+                            <div class="flex items-end gap-6 short:gap-3 short:mb-2 px-3 py-2 text-sm opacity-75">
+                                <span class="font-semibold text-blue-600">{{ users.length }} users</span>
+                                <span class="text-gray-300">|</span>
+                                <span class="font-semibold text-green-600">{{ roles.length }} roles</span>
+                                <span class="text-gray-300">|</span>
+                                <span class="font-semibold text-amber-600">{{ usersWithoutRole }} without role</span>
+                            </div>
+
+                            <!-- Filters above table -->
+                            <div class="flex items-end gap-3 short:gap-2 flex-wrap px-2 py-3 mb-4">
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Search</label>
+                                    <IconField iconPosition="left">
+                                        <InputIcon>
+                                            <AppIcon name="search" :size="14" class="text-gray-400" />
+                                        </InputIcon>
+                                        <InputText v-model="userGlobalFilter" placeholder="Search by name or username..."
+                                            size="small" class="min-w-[260px]" />
+                                    </IconField>
+                                </div>
+                                <div class="ml-auto flex flex-wrap justify-end gap-2">
+                                    <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
+                                        size="xsmall" @click="clearUserFilters" />
+                                    <AppButton icon="user-plus" label="New User" severity="info" rounded size="small"
                                         @click="openCreateUserModal" />
                                 </div>
+                            </div>
 
-                                <!-- Users DataTable -->
-                                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="users"
-                                    stripedRows showGridlines responsiveLayout="scroll" :emptyMessage="'No users found'"
-                                    :globalFilterFields="['name', 'username']" v-model:filters="userFilters" paginator
-                                    :rows="userRows" v-model:first="userFirst" :rowsPerPageOptions="[5, 10, 20, 50]"
-                                    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="users"
+                                class="text-sm ios-interviewed-table ios-datatable-clean" dataKey="id" showGridlines
+                                stripedRows scrollable responsiveLayout="scroll" :emptyMessage="'No users found'"
+                                :globalFilterFields="['name', 'username']" v-model:filters="userFilters" paginator
+                                :rows="userRows" v-model:first="userFirst" :rowsPerPageOptions="[5, 10, 20, 50]"
+                                paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                                :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
+                                @rowContextmenu="(event) => openUserContextMenu(event.originalEvent, event.data)"
+                                contextMenu>
 
-                                    <Column field="id" header="#" style="width: 50px">
-                                        <template #body="slotProps">
-                                            <div class="text-center font-mono text-sm text-gray-500">
-                                                {{ userFirst + slotProps.index + 1 }}
-                                            </div>
-                                        </template>
-                                    </Column>
-
-                                    <Column field="name" header="User Details">
-                                        <template #body="slotProps">
-                                            <div class="flex items-center gap-3">
-                                                <Avatar v-if="slotProps.data.has_profile_photo"
-                                                    :image="slotProps.data.profile_photo_url"
-                                                    class="border-2 border-gray-200" shape="circle" size="large" />
-                                                <Avatar v-else :label="slotProps.data.name.charAt(0).toUpperCase()"
-                                                    class="bg-blue-500 text-white" shape="circle" size="large" />
-                                                <div>
-                                                    <div class="font-semibold text-gray-800">{{ slotProps.data.name }}
-                                                    </div>
-                                                    <div class="text-sm text-gray-500">@{{ slotProps.data.username }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </Column>
-
-                                    <Column field="roles" header="Role" style="min-width: 150px">
-                                        <template #body="slotProps">
-                                            <span v-if="slotProps.data.roles && slotProps.data.roles.length > 0"
-                                                class="font-medium text-gray-700">
-                                                {{ formatRoleName(slotProps.data.roles[0].name) }}
-                                            </span>
-                                            <span v-else class="text-gray-400 italic">
-                                                No Role
-                                            </span>
-                                        </template>
-                                    </Column>
-
-                                    <Column header="Actions" style="width: 160px">
-                                        <template #body="slotProps">
-                                            <div class="flex gap-2 justify-center">
-                                                <AppButton icon="pen-to-square" severity="info" size="small" rounded
-                                                    outlined v-tooltip.top="'Edit User'"
-                                                    @click="editUser(slotProps.data.id)" />
-                                                <AppButton icon="shield" severity="warn" size="small" rounded outlined
-                                                    v-tooltip.top="'Change Password'"
-                                                    @click="openChangePasswordModal(slotProps.data)" />
-                                                <AppButton icon="trash" severity="danger" size="small" rounded outlined
-                                                    v-tooltip.top="'Delete User'"
-                                                    @click="confirmDeleteUser(slotProps.data.id, slotProps.data.name, slotProps.data.username)" />
-                                            </div>
-                                        </template>
-                                    </Column>
-                                </DataTable>
-                            </TabPanel>
-
-                            <!-- ROLES & PERMISSIONS TAB -->
-                            <TabPanel value="1">
-                                <div class="space-y-4">
-                                    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                        <div>
-                                            <h3 class="font-semibold text-gray-700">Available Roles</h3>
-                                            <p class="mt-1 text-sm text-gray-500">
-                                                Manage roles from the table. Permission assignment and role create/edit
-                                                open
-                                                in
-                                                modals.
-                                            </p>
+                                <Column field="id" header="#" headerClass="w-12" bodyClass="w-12">
+                                    <template #body="slotProps">
+                                        <div class="text-center font-mono text-xs text-gray-500">
+                                            {{ userFirst + slotProps.index + 1 }}
                                         </div>
+                                    </template>
+                                </Column>
 
-                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                            <div class="w-full sm:w-72">
-                                                <IconField iconPosition="left">
-                                                    <InputIcon>
-                                                        <AppIcon name="search" :size="14" />
-                                                    </InputIcon>
-                                                    <InputText v-model="roleSearchFilter" placeholder="Search roles..."
-                                                        class="w-full text-sm" />
-                                                </IconField>
+                                <Column field="name" header="Name" sortable>
+                                    <template #body="slotProps">
+                                        <div class="flex items-center gap-3">
+                                            <Avatar v-if="slotProps.data.has_profile_photo"
+                                                :image="slotProps.data.profile_photo_url"
+                                                class="border-2 border-gray-200" shape="circle" />
+                                            <Avatar v-else :label="slotProps.data.name.charAt(0).toUpperCase()"
+                                                class="bg-blue-500 text-white" shape="circle" />
+                                            <div>
+                                                <div class="font-medium">{{ slotProps.data.name }}</div>
+                                                <div class="text-xs mono text-gray-500">@{{ slotProps.data.username
+                                                    }}</div>
                                             </div>
-
-                                            <AppButton label="New Role" icon="plus" severity="success" raised
-                                                @click="openCreateRoleModal" />
                                         </div>
-                                    </div>
+                                    </template>
+                                </Column>
 
-                                    <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
-                                        :value="filteredRoles" stripedRows showGridlines responsiveLayout="scroll"
-                                        :emptyMessage="'No roles found'">
-                                        <Column field="id" header="#" style="width: 50px">
-                                            <template #body="slotProps">
-                                                <div class="text-center font-mono text-sm text-gray-500">
-                                                    {{ slotProps.index + 1 }}
-                                                </div>
-                                            </template>
-                                        </Column>
+                                <Column field="office_designation" header="Office" sortable>
+                                    <template #body="slotProps">
+                                        <span class="text-xs">{{ slotProps.data.office_designation || 'N/A' }}</span>
+                                    </template>
+                                </Column>
 
-                                        <Column field="name" header="Role" style="min-width: 260px">
-                                            <template #body="slotProps">
-                                                <div>
-                                                    <div class="flex flex-wrap items-center gap-2">
-                                                        <span class="font-semibold text-gray-800">
-                                                            {{ formatRoleName(slotProps.data.name) }}
-                                                        </span>
-                                                        <Tag v-if="isProtectedRole(slotProps.data.name)"
-                                                            value="Protected" severity="contrast" size="small"
-                                                            rounded />
-                                                    </div>
-                                                    <p class="mt-1 text-xs font-mono text-gray-500">
-                                                        {{ slotProps.data.name }}
-                                                    </p>
-                                                </div>
-                                            </template>
-                                        </Column>
+                                <Column field="roles" header="Role" headerClass="min-w-[150px]"
+                                    bodyClass="min-w-[150px]">
+                                    <template #body="slotProps">
+                                        <span v-if="slotProps.data.roles && slotProps.data.roles.length > 0"
+                                            class="text-xs font-semibold">
+                                            {{ formatRoleName(slotProps.data.roles[0].name) }}
+                                        </span>
+                                        <span v-else class="text-xs text-gray-400 italic">No Role</span>
+                                    </template>
+                                </Column>
 
-                                        <Column header="Assigned Permissions" style="width: 180px">
-                                            <template #body="slotProps">
-                                                <div class="flex items-center gap-2">
-                                                    <Tag :value="`${slotProps.data.permissions?.length || 0}`"
-                                                        severity="info" rounded />
-                                                    <span class="text-sm text-gray-600">assigned</span>
-                                                </div>
-                                            </template>
-                                        </Column>
+                                <Column header="Actions" :style="{ width: '80px' }">
+                                    <template #body="slotProps">
+                                        <AppButton icon="ellipsis-vertical"
+                                            @click="openUserContextMenu($event, slotProps.data)" text rounded
+                                            size="small" v-tooltip.top="'Actions'" />
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </Panel>
+                    </TabPanel>
 
-                                        <Column header="Actions" style="min-width: 80px">
-                                            <template #body="slotProps">
-                                                <div class="flex flex-wrap gap-2">
-                                                    <AppButton icon="shield-check" v-tooltip="'Assign Permissions'"
-                                                        severity="info" rounded
-                                                        @click="openPermissionAssignmentModal(slotProps.data)" />
-                                                    <AppButton v-if="!isProtectedRole(slotProps.data.name)"
-                                                        icon="pen-to-square" severity="warn" outlined rounded
-                                                        v-tooltip="'Edit Role'"
-                                                        @click="openEditRoleModal(slotProps.data)" />
-                                                    <AppButton v-if="!isProtectedRole(slotProps.data.name)" icon="trash"
-                                                        severity="danger" outlined rounded
-                                                        @click="confirmDeleteRole(slotProps.data)" />
-                                                </div>
-                                            </template>
-                                        </Column>
-                                    </DataTable>
+                    <!-- ROLES TAB -->
+                    <TabPanel value="roles" class="!bg-transparent !p-0">
+                        <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                            <!-- Stats strip -->
+                            <div class="flex items-end gap-6 short:gap-3 short:mb-2 px-3 py-2 text-sm opacity-75">
+                                <span class="font-semibold text-blue-600">{{ roles.length }} roles</span>
+                                <span class="text-gray-300">|</span>
+                                <span class="font-semibold text-green-600">{{ permissions.length }} permissions</span>
+                                <span class="text-gray-300">|</span>
+                                <span class="font-semibold text-amber-600">{{ protectedRoleCount }} protected</span>
+                            </div>
+
+                            <!-- Filters above table -->
+                            <div class="flex items-end gap-3 short:gap-2 flex-wrap px-2 py-3 mb-4">
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Search</label>
+                                    <IconField iconPosition="left">
+                                        <InputIcon>
+                                            <AppIcon name="search" :size="14" class="text-gray-400" />
+                                        </InputIcon>
+                                        <InputText v-model="roleSearchFilter" placeholder="Search roles..." size="small"
+                                            class="min-w-[260px]" />
+                                    </IconField>
                                 </div>
-                            </TabPanel>
-
-                            <!-- PERMISSIONS MANAGEMENT TAB -->
-                            <TabPanel value="2">
-                                <!-- Permissions Search and Actions -->
-                                <div class="flex justify-between items-center mb-4 gap-4">
-                                    <div class="flex-1 max-w-md">
-                                        <IconField iconPosition="left">
-                                            <InputIcon>
-                                                <AppIcon name="search" :size="14" />
-                                            </InputIcon>
-                                            <InputText v-model="permissionGlobalFilter"
-                                                placeholder="Search permissions..." class="w-full" />
-                                        </IconField>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <AppButton label="Cleanup Permissions" icon="wrench" severity="warning" raised
-                                            @click="openConfirmCleanupModal"
-                                            v-tooltip.top="'Fix orphaned and duplicate permission records'" />
-                                        <AppButton label="New Permission" icon="plus" severity="success" raised
-                                            @click="openCreatePermissionModal" />
-                                    </div>
+                                <div class="ml-auto flex flex-wrap justify-end gap-2">
+                                    <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
+                                        size="xsmall" @click="roleSearchFilter = ''" />
+                                    <AppButton icon="plus" label="New Role" severity="info" rounded size="small"
+                                        @click="openCreateRoleModal" />
                                 </div>
+                            </div>
 
-                                <!-- Permissions DataTable -->
-                                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="permissions"
-                                    stripedRows showGridlines responsiveLayout="scroll"
-                                    :emptyMessage="'No permissions found'" :globalFilterFields="['name', 'description']"
-                                    v-model:filters="permissionFilters" paginator :rows="permissionRows"
-                                    v-model:first="permissionFirst" :rowsPerPageOptions="[5, 10, 20, 50]"
-                                    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'">
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="filteredRoles"
+                                class="text-sm ios-interviewed-table ios-datatable-clean" dataKey="id" showGridlines
+                                stripedRows scrollable responsiveLayout="scroll" :emptyMessage="'No roles found'"
+                                @rowContextmenu="(event) => openRoleContextMenu(event.originalEvent, event.data)"
+                                contextMenu>
 
-                                    <Column field="id" header="#" style="width: 50px">
-                                        <template #body="slotProps">
-                                            <div class="text-center font-mono text-sm text-gray-500">
-                                                {{ permissionFirst + slotProps.index + 1 }}
-                                            </div>
-                                        </template>
-                                    </Column>
+                                <Column field="id" header="#" headerClass="w-12" bodyClass="w-12">
+                                    <template #body="slotProps">
+                                        <div class="text-center font-mono text-xs text-gray-500">
+                                            {{ slotProps.index + 1 }}
+                                        </div>
+                                    </template>
+                                </Column>
 
-                                    <Column field="name" header="Permission Name">
-                                        <template #body="slotProps">
-                                            <div class="font-mono text-sm text-gray-700">
-                                                {{ slotProps.data.name }}
-                                            </div>
-                                        </template>
-                                    </Column>
+                                <Column field="name" header="Role" sortable headerClass="min-w-[260px]"
+                                    bodyClass="min-w-[260px]">
+                                    <template #body="slotProps">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="font-medium">{{ formatRoleName(slotProps.data.name) }}</span>
+                                            <span v-if="isProtectedRole(slotProps.data.name)"
+                                                class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                                                Protected
+                                            </span>
+                                        </div>
+                                        <div class="text-xs mono text-gray-500">{{ slotProps.data.name }}</div>
+                                    </template>
+                                </Column>
 
-                                    <Column field="description" header="Description">
-                                        <template #body="slotProps">
-                                            <div class="text-sm text-gray-600">
-                                                {{ slotProps.data.description || '-' }}
-                                            </div>
-                                        </template>
-                                    </Column>
+                                <Column header="Assigned Permissions" headerClass="min-w-[180px]"
+                                    bodyClass="min-w-[180px]">
+                                    <template #body="slotProps">
+                                        <span
+                                            class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                                            {{ slotProps.data.permissions?.length || 0 }} of {{ permissions.length }}
+                                        </span>
+                                    </template>
+                                </Column>
 
-                                    <Column header="Actions" style="width: 100px">
-                                        <template #body="slotProps">
-                                            <div class="flex gap-2">
-                                                <AppButton icon="pencil" severity="warning" size="small" rounded text
-                                                    @click="openEditPermissionModal(slotProps.data)"
-                                                    v-tooltip.top="'Edit permission'" />
-                                                <AppButton icon="trash" severity="danger" size="small" rounded text
-                                                    @click="confirmDeletePermission(slotProps.data)"
-                                                    v-tooltip.top="'Delete permission'" />
-                                            </div>
-                                        </template>
-                                    </Column>
-                                </DataTable>
-                            </TabPanel>
-                        </TabPanels>
-                    </Tabs>
-                </div>
-            </section>
-        </AdminPageShell>
+                                <Column header="Actions" :style="{ width: '140px' }">
+                                    <template #body="slotProps">
+                                        <div class="flex items-center gap-1">
+                                            <AppButton icon="shield-check" severity="info" text rounded size="small"
+                                                v-tooltip.top="'Assign Permissions'"
+                                                @click="openPermissionAssignmentModal(slotProps.data)" />
+                                            <AppButton icon="ellipsis-vertical" text rounded size="small"
+                                                v-tooltip.top="'Actions'"
+                                                @click="openRoleContextMenu($event, slotProps.data)" />
+                                        </div>
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </Panel>
+                    </TabPanel>
+
+                    <!-- PERMISSIONS TAB -->
+                    <TabPanel value="permissions" class="!bg-transparent !p-0">
+                        <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                            <!-- Stats strip -->
+                            <div class="flex items-end gap-6 short:gap-3 short:mb-2 px-3 py-2 text-sm opacity-75">
+                                <span class="font-semibold text-blue-600">{{ permissions.length }} permissions</span>
+                                <span class="text-gray-300">|</span>
+                                <span class="font-semibold text-green-600">{{ permissionGroupCount }} groups</span>
+                            </div>
+
+                            <!-- Filters above table -->
+                            <div class="flex items-end gap-3 short:gap-2 flex-wrap px-2 py-3 mb-4">
+                                <div class="flex flex-col">
+                                    <label class="text-xs font-medium text-gray-600 mb-1">Search</label>
+                                    <IconField iconPosition="left">
+                                        <InputIcon>
+                                            <AppIcon name="search" :size="14" class="text-gray-400" />
+                                        </InputIcon>
+                                        <InputText v-model="permissionGlobalFilter"
+                                            placeholder="Search permissions..." size="small" class="min-w-[260px]" />
+                                    </IconField>
+                                </div>
+                                <div class="ml-auto flex flex-wrap justify-end gap-2">
+                                    <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
+                                        size="xsmall" @click="clearPermissionFilters" />
+                                    <AppButton icon="wrench" label="Cleanup" severity="warning" outlined rounded
+                                        size="small" @click="openConfirmCleanupModal"
+                                        v-tooltip.top="'Fix orphaned and duplicate permission records'" />
+                                    <AppButton icon="plus" label="New Permission" severity="info" rounded size="small"
+                                        @click="openCreatePermissionModal" />
+                                </div>
+                            </div>
+
+                            <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="permissions"
+                                class="text-sm ios-interviewed-table ios-datatable-clean" dataKey="id" showGridlines
+                                stripedRows scrollable responsiveLayout="scroll" :emptyMessage="'No permissions found'"
+                                :globalFilterFields="['name', 'description']" v-model:filters="permissionFilters"
+                                paginator :rows="permissionRows" v-model:first="permissionFirst"
+                                :rowsPerPageOptions="[5, 10, 20, 50]"
+                                paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                                :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
+                                @rowContextmenu="(event) => openPermissionContextMenu(event.originalEvent, event.data)"
+                                contextMenu>
+
+                                <Column field="id" header="#" headerClass="w-12" bodyClass="w-12">
+                                    <template #body="slotProps">
+                                        <div class="text-center font-mono text-xs text-gray-500">
+                                            {{ permissionFirst + slotProps.index + 1 }}
+                                        </div>
+                                    </template>
+                                </Column>
+
+                                <Column field="name" header="Permission" sortable headerClass="min-w-[220px]"
+                                    bodyClass="min-w-[220px]">
+                                    <template #body="slotProps">
+                                        <div class="font-medium">{{ formatPermissionAction(slotProps.data.name) }}
+                                        </div>
+                                        <div class="text-xs mono text-gray-500">{{ slotProps.data.name }}</div>
+                                    </template>
+                                </Column>
+
+                                <Column header="Group" headerClass="min-w-[140px]" bodyClass="min-w-[140px]">
+                                    <template #body="slotProps">
+                                        <span
+                                            class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
+                                            {{ formatPermissionGroupName(slotProps.data.name.split('.')[0]) }}
+                                        </span>
+                                    </template>
+                                </Column>
+
+                                <Column field="description" header="Description">
+                                    <template #body="slotProps">
+                                        <span class="text-xs text-gray-600">{{ slotProps.data.description || '-'
+                                            }}</span>
+                                    </template>
+                                </Column>
+
+                                <Column header="Actions" :style="{ width: '80px' }">
+                                    <template #body="slotProps">
+                                        <AppButton icon="ellipsis-vertical"
+                                            @click="openPermissionContextMenu($event, slotProps.data)" text rounded
+                                            size="small" v-tooltip.top="'Actions'" />
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </Panel>
+                    </TabPanel>
+                </TabPanels>
+            </Tabs>
+        </div>
+
+        <!-- Context Menu (row actions) -->
+        <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
+            <template #item="{ item, props }">
+                <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
+                    <AppIcon v-if="item.icon" :name="item.icon" :size="14" />
+                    <span>{{ item.label }}</span>
+                </a>
+            </template>
+        </ContextMenu>
 
         <!-- ============================================ -->
         <!-- USER MODALS -->
@@ -990,7 +1123,7 @@ const runCleanup = async () => {
 
         <!-- Permission Assignment Modal -->
         <IosModal :visible="showPermissionAssignmentModal"
-            :title="selectedRole ? `Assign Permissions · ${formatRoleName(selectedRole.name)}` : 'Assign Permissions'"
+            :title="selectedRole ? `Assign Permissions Â· ${formatRoleName(selectedRole.name)}` : 'Assign Permissions'"
             width="min(1200px, 96vw)" :show-action="true" action-label="Save Changes"
             :loading="savingPermissionAssignments" :action-disabled="!hasPendingPermissionChanges"
             @action="savePermissionAssignments" @close="closePermissionAssignmentModal"
@@ -1398,4 +1531,3 @@ const runCleanup = async () => {
         </IosModal>
     </AdminLayout>
 </template>
-

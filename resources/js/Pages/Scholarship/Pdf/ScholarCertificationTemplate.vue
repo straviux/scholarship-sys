@@ -45,7 +45,7 @@
                 This is to certify that, <strong>{{ honorific }} {{ fullNameCaps }}</strong>, a {{ displayCourseName }}
                 student of {{
                     schoolName }},
-                , is a recipient of the Medical Scholarship of Akbay sa Mag-Aaral Yaman Ng Kinabukasan Scholarship
+                , is a recipient of the Medical Scholarship of YAKAP SA EDUKASYON Scholarship
                 Program of the Provincial Government of Palawan.
             </p>
 

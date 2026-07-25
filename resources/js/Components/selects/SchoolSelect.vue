@@ -175,11 +175,11 @@ onMounted(fetchData);
         <template #option="slotProps">
             <div class="flex items-start uppercase">
                 <div v-if="slotProps.option.isNullOption">
-                    <span class="text-[12px]">{{ slotProps.option.name }}</span>
+                    <span class="text-xs">{{ slotProps.option.name }}</span>
                 </div>
                 <div v-else>
-                    <span class="text-[12px]">{{ slotProps.option.name }}</span><br>
-                    <span class="text-[10px] font-bold">[{{ slotProps.option.shortname }}]</span>
+                    <span class="text-xs">{{ slotProps.option.name }}</span><br>
+                    <span class="text-3xs font-bold">[{{ slotProps.option.shortname }}]</span>
                 </div>
             </div>
         </template>
@@ -200,11 +200,11 @@ onMounted(fetchData);
         <template #option="slotProps">
             <div class="flex items-start uppercase">
                 <div v-if="slotProps.option.isNullOption">
-                    <span class="text-[12px]">{{ slotProps.option.name }}</span>
+                    <span class="text-xs">{{ slotProps.option.name }}</span>
                 </div>
                 <div v-else>
-                    <span class="text-[12px]">{{ slotProps.option.name }}</span><br>
-                    <span class="text-[10px] font-bold">[{{ slotProps.option.shortname }}]</span>
+                    <span class="text-xs">{{ slotProps.option.name }}</span><br>
+                    <span class="text-3xs font-bold">[{{ slotProps.option.shortname }}]</span>
                 </div>
             </div>
         </template>

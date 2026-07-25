@@ -161,10 +161,10 @@ const formatDate = (date) => {
         <div v-if="applicant">
                     <!-- Applicant Info -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Applicant</div>
+                        <div class="ios-section-label text-compact">Applicant</div>
                         <div class="ios-card">
                             <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">{{ applicant.last_name }}, {{ applicant.first_name }}</span>
+                                <span class="ios-row-label text-sm">{{ applicant.last_name }}, {{ applicant.first_name }}</span>
                                 <span style="font-size: 13px; color: #8E8E93;">{{ applicant.contact_no }}</span>
                             </div>
                         </div>
@@ -172,7 +172,7 @@ const formatDate = (date) => {
 
                     <!-- Priority Level Selection -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Priority Level</div>
+                        <div class="ios-section-label text-compact">Priority Level</div>
                         <div class="ios-card">
                             <div v-for="(option, index) in priorityOptions" :key="option.value" class="ios-row"
                                 :class="{ 'ios-row-last': index === priorityOptions.length - 1 }"
@@ -181,7 +181,7 @@ const formatDate = (date) => {
                                     <span class="ios-priority-dot"
                                         :style="{ background: getPriorityDot(option.value) }"></span>
                                     <div>
-                                        <span class="ios-row-label">{{ option.label }}</span>
+                                        <span class="ios-row-label text-sm">{{ option.label }}</span>
                                         <div style="font-size: 12px; color: #8E8E93;">{{ option.description }}</div>
                                     </div>
                                 </div>
@@ -189,30 +189,30 @@ const formatDate = (date) => {
                                     style="color: #007AFF;" />
                             </div>
                         </div>
-                        <div v-if="errors.priority_level" class="ios-section-footer ios-error">
+                        <div v-if="errors.priority_level" class="ios-section-footer ios-error text-compact">
                             {{ errors.priority_level }}
                         </div>
                     </div>
 
                     <!-- Priority Reason -->
                     <div class="ios-section">
-                        <div class="ios-section-label">Reason</div>
+                        <div class="ios-section-label text-compact">Reason</div>
                         <div class="ios-card" style="padding: 12px;">
                             <Textarea v-model="formData.priority_reason" class="w-full border-none shadow-none" rows="4"
                                 placeholder="Explain why this applicant should receive priority status..."
                                 style="background: transparent; resize: vertical; font-size: 14px;" />
                         </div>
-                        <div v-if="errors.priority_reason" class="ios-section-footer ios-error">
+                        <div v-if="errors.priority_reason" class="ios-section-footer ios-error text-compact">
                             {{ errors.priority_reason }}
                         </div>
                     </div>
 
                     <!-- Current Priority (if exists) -->
                     <div v-if="applicant.priority_level && applicant.priority_level !== 'normal'" class="ios-section">
-                        <div class="ios-section-label">Current Status</div>
+                        <div class="ios-section-label text-compact">Current Status</div>
                         <div class="ios-card">
                             <div class="ios-row">
-                                <span class="ios-row-label">Level</span>
+                                <span class="ios-row-label text-sm">Level</span>
                                 <div style="display: flex; align-items: center; gap: 6px;">
                                     <span class="ios-priority-dot"
                                         :style="{ background: getPriorityDot(applicant.priority_level) }"></span>
@@ -221,12 +221,12 @@ const formatDate = (date) => {
                                 </div>
                             </div>
                             <div v-if="applicant.priority_reason" class="ios-row">
-                                <span class="ios-row-label">Reason</span>
+                                <span class="ios-row-label text-sm">Reason</span>
                                 <span style="font-size: 13px; color: #8E8E93; max-width: 60%; text-align: right;">{{
                                     applicant.priority_reason }}</span>
                             </div>
                             <div v-if="applicant.priority_assigned_at" class="ios-row ios-row-last">
-                                <span class="ios-row-label">Assigned</span>
+                                <span class="ios-row-label text-sm">Assigned</span>
                                 <span style="font-size: 13px; color: #8E8E93;">{{
                                     formatDate(applicant.priority_assigned_at) }}</span>
                             </div>

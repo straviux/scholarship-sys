@@ -294,14 +294,14 @@ const onSelectHide = () => {
         <template #option="slotProps">
             <div class="uppercase" :title="getCourseOptionTitle(slotProps.option)">
                 <div v-if="slotProps.option.isNullOption">
-                    <span class="text-[12px]">{{ slotProps.option.name }}</span>
+                    <span class="text-xs">{{ slotProps.option.name }}</span>
                 </div>
                 <div v-else>
-                    <div class="text-[12px] font-bold leading-snug">{{ getCoursePrimaryLabel(slotProps.option) }}</div>
-                    <div class="text-[10px] text-gray-600 leading-snug"
+                    <div class="text-xs font-bold leading-snug">{{ getCoursePrimaryLabel(slotProps.option) }}</div>
+                    <div class="text-3xs text-gray-600 leading-snug"
                         v-if="slotProps.option.name && slotProps.option.name !== getCoursePrimaryLabel(slotProps.option)">
                         {{ slotProps.option.name }}</div>
-                    <div v-if="slotProps.option.field_of_study" class="text-[10px] text-gray-400 leading-snug">{{
+                    <div v-if="slotProps.option.field_of_study" class="text-3xs text-gray-400 leading-snug">{{
                         slotProps.option.field_of_study }}</div>
                 </div>
             </div>
@@ -321,7 +321,7 @@ const onSelectHide = () => {
         <template #value="slotProps">
             <div v-if="slotProps.value" class="uppercase truncate">
                 {{ getCoursePrimaryLabel(slotProps.value) }}<span v-if="getCourseSecondaryLabel(slotProps.value)"
-                    class="text-gray-500 font-normal text-[11px]"> — {{ getCourseSecondaryLabel(slotProps.value)
+                    class="text-gray-500 font-normal text-2xs"> — {{ getCourseSecondaryLabel(slotProps.value)
                     }}</span>
             </div>
             <span v-else>{{ slotProps.placeholder }}</span>
@@ -329,14 +329,14 @@ const onSelectHide = () => {
         <template #option="slotProps">
             <div class="uppercase" :title="getCourseOptionTitle(slotProps.option)">
                 <div v-if="slotProps.option.isNullOption">
-                    <span class="text-[12px]">{{ slotProps.option.name }}</span>
+                    <span class="text-xs">{{ slotProps.option.name }}</span>
                 </div>
                 <div v-else>
-                    <div class="text-[12px] font-bold leading-snug">{{ getCoursePrimaryLabel(slotProps.option) }}</div>
-                    <div class="text-[10px] text-gray-600 leading-snug"
+                    <div class="text-xs font-bold leading-snug">{{ getCoursePrimaryLabel(slotProps.option) }}</div>
+                    <div class="text-3xs text-gray-600 leading-snug"
                         v-if="slotProps.option.name && slotProps.option.name !== getCoursePrimaryLabel(slotProps.option)">
                         {{ slotProps.option.name }}</div>
-                    <div v-if="slotProps.option.field_of_study" class="text-[10px] text-gray-400 leading-snug">{{
+                    <div v-if="slotProps.option.field_of_study" class="text-3xs text-gray-400 leading-snug">{{
                         slotProps.option.field_of_study }}</div>
                 </div>
             </div>

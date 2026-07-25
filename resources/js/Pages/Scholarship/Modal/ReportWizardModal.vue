@@ -2,17 +2,17 @@
     <IosModal :visible="show" width="760px" max-width="92vw" body-style="padding: 0;"
         @update:visible="handleWizardVisibleUpdate">
         <template #header-left>
-            <button class="ios-nav-btn ios-nav-cancel" @click="handleWizardBack">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="handleWizardBack">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
 
         <template #title>
-            <span class="ios-nav-title">{{ modeTitle || 'Report Wizard' }}</span>
+            <span class="ios-nav-title text-nav-title">{{ modeTitle || 'Report Wizard' }}</span>
         </template>
 
         <template #header-right>
-            <button class="ios-nav-btn ios-nav-cancel" @click="handleWizardBack">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="handleWizardBack">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
@@ -74,7 +74,7 @@
             <!-- ═══ STEP 1: REPORT TYPE ═══ -->
             <div v-show="currentStep === 1" class="py-2">
                 <div class="mb-3" v-if="!mode">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Type</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Type</label>
                     <div class="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
                         <button :class="['flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs font-medium border-none cursor-pointer transition-colors',
                             reportType === 'list' ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
@@ -97,10 +97,10 @@
             <!-- ═══ STEP 2: FILTERS ═══ -->
             <div v-show="currentStep === 2" class="py-2">
                 <div class="mb-3">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Status</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Status</label>
                     <div class="flex flex-wrap gap-1">
                         <button v-for="opt in statusChoices" :key="opt.value"
-                            :class="['inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-full border cursor-pointer transition-colors',
+                            :class="['inline-flex items-center gap-1 px-2.5 py-1 text-2xs font-medium rounded-full border cursor-pointer transition-colors',
                                 selectedStatus === opt.value ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold' : 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600']"
                             @click="selectedStatus = opt.value">
                             <span v-if="opt.color" class="w-2 h-2 rounded-full flex-shrink-0" :style="{ background: opt.color }"></span>
@@ -111,33 +111,33 @@
 
                 <div class="grid grid-cols-2 gap-2.5">
                     <div class="min-w-0">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program</label>
                         <ProgramSelect v-model="selectedPrograms" label="shortname"
                             custom-placeholder="All Programs" class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" :multiple="true" />
                     </div>
                     <div class="min-w-0">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">School</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">School</label>
                         <SchoolSelect v-model="selectedSchools" label="shortname" custom-placeholder="All Schools"
                             class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" :multiple="true" />
                     </div>
                     <div class="min-w-0">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Course</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Course</label>
                         <CourseSelect v-model="selectedCourses" :scholarship-program-id="selectedPrograms?.[0]?.id"
                             label="shortname" custom-placeholder="All Courses" :multiple="true"
                             class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" />
                     </div>
                     <div class="min-w-0">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Municipality</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Municipality</label>
                         <MunicipalitySelect v-model="selectedMunicipalities" custom-placeholder="All Municipalities"
                             class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" :multiple="true" />
                     </div>
                     <div class="min-w-0">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Year Level</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Year Level</label>
                         <YearLevelSelect v-model="selectedYearLevels" custom-placeholder="All Year Levels"
                             class="[&_.p-dropdown]:w-full [&_.p-multiselect]:w-full [&_.p-inputtext]:w-full [&_.p-dropdown]:text-xs [&_.p-multiselect]:text-xs [&_.p-inputtext]:text-xs [&_.p-dropdown]:py-1.5 [&_.p-multiselect]:py-1.5 [&_.p-inputtext]:py-1.5" :multiple="true" />
                     </div>
                     <div class="min-w-0">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Grant Provision</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Grant Provision</label>
                         <MultiSelect v-model="selectedGrantProvisions" :options="grantProvisionOptions"
                             optionLabel="label" optionValue="value" placeholder="All Provisions" showClear filter
                             :filterFields="['label', 'value']" :maxSelectedLabels="3"
@@ -147,7 +147,7 @@
                 </div>
 
                 <div class="mb-3 mt-3">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Date Range</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Date Range</label>
                     <div class="flex items-center gap-2">
                         <DatePicker v-model="dateFrom" placeholder="From date"
                             showButtonBar dateFormat="M dd, yy"
@@ -157,13 +157,13 @@
                             showButtonBar dateFormat="M dd, yy"
                             class="flex-1 [&_.p-datepicker]:w-full [&_.p-datepicker]:text-xs" showIcon iconDisplay="input" />
                     </div>
-                    <div v-if="isDateToInvalid" class="text-[11px] text-red-500 mt-1">
+                    <div v-if="isDateToInvalid" class="text-2xs text-red-500 mt-1">
                         End date must be after start date
                     </div>
                 </div>
 
                 <div v-if="activeFiltersCount > 0" class="mt-2.5 pt-2.5 border-t border-gray-100 dark:border-gray-700">
-                    <button class="inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md px-2.5 py-1 cursor-pointer transition-colors hover:bg-red-100 dark:hover:bg-red-900/40"
+                    <button class="inline-flex items-center gap-1 text-2xs font-medium text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md px-2.5 py-1 cursor-pointer transition-colors hover:bg-red-100 dark:hover:bg-red-900/40"
                         @click="clearAllFilters">
                         <AppIcon name="x" :size="12" /> Clear {{ activeFiltersCount }} filter(s)
                     </button>
@@ -173,7 +173,7 @@
             <!-- ═══ STEP 3: LAYOUT & FORMATTING ═══ -->
             <div v-show="currentStep === 3" class="py-2">
                 <div class="mb-3">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
                     <Editor v-model="customReportTitle" editorStyle="height: 100px">
                         <template v-slot:toolbar>
                             <span class="ql-formats">
@@ -183,11 +183,11 @@
                             </span>
                         </template>
                     </Editor>
-                    <span class="block text-[10px] text-gray-400 mt-1">Leave blank to use "{{ defaultReportTitle }}"</span>
+                    <span class="block text-3xs text-gray-400 mt-1">Leave blank to use "{{ defaultReportTitle }}"</span>
                 </div>
 
                 <div class="mb-3">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
                     <div class="flex gap-2 w-1/2">
                         <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
                             class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
@@ -197,7 +197,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Group &amp; Sort</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Group &amp; Sort</label>
                     <div class="flex gap-2">
                         <div class="flex-1">
                             <Select v-model="groupBy" :options="groupByOptions" optionLabel="label" optionValue="value"
@@ -228,7 +228,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatory Style</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatory Style</label>
                     <label class="flex items-center gap-4 py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer">
                         <span>For Approval Layout</span>
                         <ToggleSwitch v-model="useInterviewedSignatories" />
@@ -238,7 +238,7 @@
                 <div class="mb-3">
                     <div class="flex gap-2" style="align-items: flex-start;">
                         <div class="flex-1">
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Prepared By</label>
+                            <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Prepared By</label>
                             <InputText v-model="preparedBy" placeholder="Name (optional)"
                                 class="w-full [&_.p-inputtext]:w-full" />
                             <InputText v-model="preparedByTitle"
@@ -248,7 +248,7 @@
                                 class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
                         </div>
                         <div class="flex-1">
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{{ useInterviewedSignatories ? 'Approved By' : 'Noted By' }}</label>
+                            <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{{ useInterviewedSignatories ? 'Approved By' : 'Noted By' }}</label>
                             <InputText v-model="signatoryName" placeholder="Name (optional)"
                                 class="w-full [&_.p-inputtext]:w-full" />
                             <InputText v-model="signatoryTitle"
@@ -256,7 +256,7 @@
                                 class="mt-1.5 w-full [&_.p-inputtext]:w-full" />
                         </div>
                     </div>
-                    <span class="block text-[10px] text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block at the bottom of the report.</span>
+                    <span class="block text-3xs text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block at the bottom of the report.</span>
                 </div>
             </div>
 
@@ -265,7 +265,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="min-w-0">
                         <div class="mb-3">
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Options</label>
+                            <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Options</label>
                             <div class="flex flex-col gap-0.5">
                                 <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
                                     <span>Include Projected Expense</span>
@@ -291,7 +291,7 @@
 
                     <div class="min-w-0">
                         <div class="mb-3">
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Show / Hide Fields</label>
+                            <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Show / Hide Fields</label>
                             <div class="flex flex-col gap-0.5">
                                 <label v-if="!activeGroupFields.has('municipality')" class="flex items-center justify-between py-1.5 text-xs text-gray-700 dark:text-gray-300 cursor-pointer border-b border-gray-50 dark:border-gray-800 hover:text-gray-900 dark:hover:text-gray-100">
                                     <span>Address</span>
@@ -367,13 +367,13 @@
         body-style="padding: 0; flex: 1; display: flex; direction: column; overflow: hidden;"
         @update:visible="showPreview = $event">
         <template #header-left>
-            <button class="ios-nav-btn ios-nav-cancel" @click="showPreview = false">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="showPreview = false">
                 <AppIcon name="chevron-left" :size="13" /> Back
             </button>
         </template>
 
         <template #title>
-            <span class="ios-nav-title">Report Preview</span>
+            <span class="ios-nav-title text-nav-title">Report Preview</span>
         </template>
 
         <template #header-right>
@@ -391,10 +391,10 @@
                         <AppIcon name="plus" :size="10" />
                     </button>
                 </div>
-                <button class="ios-icon-btn" @click="doExportExcel" title="Export to Excel">
+                <button class="ios-icon-btn text-sm" @click="doExportExcel" title="Export to Excel">
                     <AppIcon name="file-spreadsheet" :size="16" style="color: #34C759;" />
                 </button>
-                <button class="ios-icon-btn" @click="doPrint" title="Print / Save as PDF">
+                <button class="ios-icon-btn text-sm" @click="doPrint" title="Print / Save as PDF">
                     <AppIcon name="printer" :size="16" style="color: #007AFF;" />
                 </button>
             </div>
@@ -571,7 +571,6 @@ const statusChoices = computed(() => {
         { value: 'withdrawn', label: 'Withdrawn', color: '#8B5CF6' },
         { value: 'loa', label: 'Leave of Absence', color: '#D97706' },
         { value: 'suspended', label: 'Suspended', color: '#DC2626' },
-        { value: 'endorsed', label: 'Endorsed', color: '#7C3AED' },
     ];
     return configs;
 });

@@ -1,3 +1,7 @@
+/* Establish CSS layer order up front: PrimeVue's theme sits below Tailwind's
+   components/utilities so inline utility classes can override component styles. */
+@layer theme, base, primevue, components, utilities;
+
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 /* @plugin '@tailwindcss/forms'; */
@@ -9,12 +13,69 @@
 
 @custom-variant short (@media (max-height: 800px));
 
+/* ── Layout alignment contract ──────────────────────────────────────
+   The page header Toolbar's top edge must land exactly on the fixed
+   sidebar's top. Every participant derives from these tokens:
+
+       toolbar top = app header height + content padding − toolbar pull
+                   = var(--sidebar-top)
+
+   Used via arbitrary values: h-[var(--app-header-h)],
+   pt-[var(--content-pt)], -mt-[var(--toolbar-pull)],
+   md:top-[var(--sidebar-top)]. Change them here, never inline. */
+:root {
+	--app-header-h: 4rem;
+	/* AdminLayout top bar (was h-16) */
+	--content-pt: 1.5rem;
+	/* content area top padding (was pt-6) */
+	--toolbar-pull: 0.5rem;
+	/* page toolbar pull-up (was -mt-2) */
+	--sidebar-top: calc(var(--app-header-h) + var(--content-pt) - var(--toolbar-pull));
+}
+
+@media (max-height: 800px) {
+	:root {
+		--content-pt: 1.25rem;
+		/* keeps a 12px gap below the app bar on short/scaled displays */
+
+		/* Denser type on short/scaled displays. Hierarchy preserved:
+		   3xs < 2xs < xs < compact < sm < nav < nav-title */
+		--text-2xs: 0.65625rem;
+		/* 11px -> 10.5px */
+		--text-xs: 0.6875rem;
+		/* 12px -> 11px */
+		--text-compact: 0.71875rem;
+		/* 13px -> 11.5px */
+		--text-sm: 0.78125rem;
+		/* 14px -> 12.5px */
+		--text-nav: 0.84375rem;
+		/* 15px -> 13.5px */
+		--text-nav-title: 0.9375rem;
+		/* 17px -> 15px */
+	}
+}
+
 /* Class-based dark mode — apply .dark on <html> to activate */
 @custom-variant dark (&:is(.dark, .dark *));
 
 @theme {
 	--font-sans: Figtree, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
 		'Segoe UI Symbol', 'Noto Color Emoji';
+
+	/* ── Font size tokens ─────────────────────────────────────────
+	   Named sizes for the app's recurring iOS-style type scale.
+	   Use these instead of arbitrary values (text-[13px] etc.):
+	     text-3xs       10px  tiny badges / pill labels
+	     text-2xs       11px  table sublines, mono keys
+	     text-compact   13px  iOS control & label size (most common)
+	     text-nav       15px  nav buttons, toolbar badges
+	     text-nav-title 17px  bar / modal titles
+	   Standard text-xs (12px) and text-sm (14px) fill the gaps. */
+	--text-3xs: 0.625rem;
+	--text-2xs: 0.6875rem;
+	--text-compact: 0.8125rem;
+	--text-nav: 0.9375rem;
+	--text-nav-title: 1.0625rem;
 
 	/* Custom wiggle animation */
 	--ease-wiggle: linear;

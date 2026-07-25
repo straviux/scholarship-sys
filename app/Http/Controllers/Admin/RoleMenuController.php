@@ -28,7 +28,9 @@ class RoleMenuController extends Controller
     {
         $this->checkAdmin();
 
-        $roles = Role::orderBy('name')->get();
+        // Administrators always see every active menu (MenuService bypasses
+        // role-menu assignments for them), so managing their menu here is a no-op.
+        $roles = Role::where('name', '!=', 'administrator')->orderBy('name')->get();
         $menuItems = MenuItem::whereNull('parent_id')
             ->where('is_active', true)
             ->with(['children' => function ($query) {
@@ -66,6 +68,13 @@ class RoleMenuController extends Controller
     public function assignMenus(Request $request, Role $role)
     {
         $this->checkAdmin();
+
+        if ($role->name === 'administrator') {
+            return response()->json([
+                'success' => false,
+                'message' => 'The administrator role always sees every menu and cannot be modified.',
+            ], 422);
+        }
 
         $validated = $request->validate([
             'menu_ids' => 'array',
@@ -110,6 +119,13 @@ class RoleMenuController extends Controller
     public function updateOrder(Request $request, Role $role)
     {
         $this->checkAdmin();
+
+        if ($role->name === 'administrator') {
+            return response()->json([
+                'success' => false,
+                'message' => 'The administrator role always sees every menu and cannot be modified.',
+            ], 422);
+        }
 
         $validated = $request->validate([
             'menu_orders' => 'required|array',

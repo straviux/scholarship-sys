@@ -313,7 +313,7 @@ const groupedData = computed(() => {
 
         <div>
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 short:mb-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] short:mb-2 !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
                         <AppIcon name="dollar" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />

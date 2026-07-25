@@ -6,7 +6,7 @@
 
         <div>
             <!-- Toolbar -->
-            <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+            <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
                 <template #start>
                     <div class="flex items-center gap-3">
                         <AppIcon name="graduation-cap" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
@@ -21,7 +21,7 @@
                     <div class="flex gap-2">
                         <AppButton v-if="hasPermission('return-of-service.export')" icon="file-text" label="Report"
                             severity="secondary" outlined rounded size="small" @click="openReportDialog()" />
-                        <AppButton v-if="hasPermission('return-of-service.create')" icon="plus" outlined
+                        <AppButton icon="plus" outlined
                             severity="success" rounded size="large" @click="openNewBatchDialog" />
                     </div>
                 </template>
@@ -130,15 +130,15 @@
                             <div class="flex gap-1.5 flex-wrap border-t border-gray-100 pt-3">
                                 <AppButton icon="eye" label="View Batch" severity="secondary" text size="small" rounded
                                     @click="openViewBatchDialog(batch)" />
-                                <AppButton v-if="hasPermission('return-of-service.edit')" icon="pencil" label="Edit"
+                                <AppButton icon="pencil" label="Edit"
                                     severity="warning" text size="small" rounded @click="openEditBatchDialog(batch)" />
-                                <AppButton v-if="hasPermission('return-of-service.create')" icon="plus"
+                                <AppButton icon="plus"
                                     label="Add Scholar" severity="success" text size="small" rounded
                                     @click="openAddScholarDialog(batch)" />
                                 <AppButton v-if="hasPermission('return-of-service.export')" icon="file-text"
                                     label="Report" severity="info" text size="small" rounded
                                     @click="openReportDialog(batch)" />
-                                <AppButton v-if="hasPermission('return-of-service.delete')" icon="trash"
+                                <AppButton v-if="isAdmin()" icon="trash"
                                     severity="danger" text size="small" rounded @click="confirmDeleteBatch(batch)"
                                     v-tooltip.top="`Delete`" />
                             </div>
@@ -152,7 +152,7 @@
                         <AppIcon name="inbox" class="text-2xl text-gray-400" />
                     </div>
                     <p class="text-gray-500 mb-4">No ROS batches created yet.</p>
-                    <AppButton v-if="hasPermission('return-of-service.create')" icon="plus" label="Create First Batch"
+                    <AppButton icon="plus" label="Create First Batch"
                         severity="success" rounded @click="openNewBatchDialog" />
                 </div>
 
@@ -178,8 +178,8 @@
             :completion-options="props.completionOptions" :scholarship-records="scholarshipRecords"
             :is-end-date-invalid="isEndDateInvalid" :viewing-scholar="viewingScholar" :viewing-batch="viewingBatch"
             :filtered-scholars="filteredScholars" :scholar-search="scholarSearch" :batch-to-delete="batchToDelete"
-            :scholar-to-delete="scholarToDelete" :can-create="hasPermission('return-of-service.create')"
-            :can-edit="hasPermission('return-of-service.edit')" :can-delete="hasPermission('return-of-service.delete')"
+            :scholar-to-delete="scholarToDelete" :can-create="true"
+            :can-edit="true" :can-delete="true"
             :can-export="hasPermission('return-of-service.export')" :report-batch-options="reportBatchOptions"
             :report-context-batch="reportContextBatch" :filtered-batch-count="filteredBatches.length"
             :total-batch-count="batches.length" :format-date-long="formatDateLong"
@@ -227,7 +227,7 @@ const props = defineProps({
     completionOptions: Array,
 });
 
-const { hasPermission } = usePermission();
+const { hasPermission, isAdmin } = usePermission();
 const toast = useToast();
 const { printHtml } = usePdfPrint();
 

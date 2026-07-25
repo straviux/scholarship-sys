@@ -1,16 +1,27 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { toast } from '@/utils/toast';
 import { exportSelectedApplicantsExcel, printSelectedApplicantsReport } from '../Reports/selectedApplicantsExport';
-import IosModal from '@/Components/ui/IosModal.vue';
+import AppIcon from '@/Components/ui/AppIcon.vue';
+import Dialog from 'primevue/dialog';
+import Select from 'primevue/select';
 
 const props = defineProps({
     show: Boolean,
     selectedRows: {
         type: Array,
         default: () => []
+    },
+    // 'selected' = checked rows, 'all' = full filtered report set
+    mode: {
+        type: String,
+        default: 'selected'
     }
 });
+
+const isAllMode = computed(() => props.mode === 'all');
+const modalTitle = computed(() => isAllMode.value ? 'Generate Report' : 'Export Selected');
+const countLabel = computed(() => isAllMode.value ? 'applicant(s) in report' : 'selected');
 
 const emit = defineEmits(['update:show', 'export']);
 
@@ -18,15 +29,16 @@ const emit = defineEmits(['update:show', 'export']);
 const reportType = ref('list');
 const paperSize = ref('A4');
 const orientation = ref('landscape');
-const includeRemarks = ref(false);
-const includeGrantProvision = ref(true);
+// 'none' = no column, 'values' = remarks with data, 'blank' = empty column to fill in by hand
+const remarksMode = ref('none');
+// Rich-text (Quill) HTML; empty = use the default report title
+const customTitle = ref('');
 const generating = ref(false);
 
 // Options
 const paperSizeOptions = [
     { label: 'A4', value: 'A4' },
-    { label: 'Letter', value: 'Letter' },
-    { label: 'Legal', value: 'Legal' },
+    { label: 'Long (8.5×13in)', value: 'Legal' },
 ];
 
 const orientationOptions = [
@@ -34,11 +46,17 @@ const orientationOptions = [
     { label: 'Landscape', value: 'landscape' },
 ];
 
+const remarksOptions = [
+    { label: 'No Remarks', value: 'none' },
+    { label: 'With Values', value: 'values' },
+    { label: 'Blank Column', value: 'blank' },
+];
+
 const close = () => {
     emit('update:show', false);
 };
 
-const exportAs = (format) => {
+const exportAs = async (format) => {
     if (props.selectedRows.length === 0) {
         toast.error('No applicants selected');
         return;
@@ -53,8 +71,8 @@ const exportAs = (format) => {
                 reportType: reportType.value,
                 paperSize: paperSize.value,
                 orientation: orientation.value,
-                includeRemarks: includeRemarks.value,
-                includeGrantProvision: includeGrantProvision.value,
+                remarksMode: remarksMode.value,
+                customTitle: customTitle.value,
             });
 
             if (!opened) {
@@ -62,11 +80,11 @@ const exportAs = (format) => {
                 return;
             }
         } else if (format === 'excel') {
-            exportSelectedApplicantsExcel({
+            await exportSelectedApplicantsExcel({
                 selectedRows: props.selectedRows,
                 reportType: reportType.value,
-                includeRemarks: includeRemarks.value,
-                includeGrantProvision: includeGrantProvision.value,
+                remarksMode: remarksMode.value,
+                customTitle: customTitle.value,
             });
         }
 
@@ -82,102 +100,98 @@ const exportAs = (format) => {
 </script>
 
 <template>
-    <IosModal :visible="show" title="Export Selected" width="680px" max-width="95vw"
-        body-style="padding: 0 16px;" @update:visible="val => !val && close()">
-                    <!-- Selection Summary -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">Selection</div>
-                        <div class="ios-card">
-                            <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Selected Applicants</span>
-                                <span style="font-size: 15px; font-weight: 600; color: #007AFF;">{{ selectedRows.length
-                                    }}</span>
-                            </div>
-                        </div>
-                    </div>
+    <Dialog :visible="show" :modal="true" :draggable="true" :closable="false"
+        :style="{ width: '420px' }" :breakpoints="{ '640px': '90vw' }"
+        @update:visible="val => !val && close()">
+        <template #header>
+            <div class="flex items-center gap-2">
+                <button class="p-1 !rounded-full !bg-transparent hover:!bg-gray-100 !border-none cursor-pointer" @click="close">
+                    <AppIcon name="x" :size="16" />
+                </button>
+                <div>
+                    <div class="text-lg font-semibold leading-tight">{{ modalTitle }}</div>
+                    <div class="text-2xs text-gray-400">{{ selectedRows.length }} {{ countLabel }}</div>
+                </div>
+            </div>
+        </template>
 
-                    <!-- Report Type -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">Report Type</div>
-                        <div class="ios-card">
-                            <div class="ios-row" style="cursor: pointer;" @click="reportType = 'list'">
-                                <span class="ios-row-label">Detailed List</span>
-                                <AppIcon v-if="reportType === 'list'" name="check" :size="14" style="color: #007AFF;" />
-                            </div>
-                            <div class="ios-row ios-row-last" style="cursor: pointer;" @click="reportType = 'summary'">
-                                <span class="ios-row-label">Summary</span>
-                                <AppIcon v-if="reportType === 'summary'" name="check" :size="14"
-                                    style="color: #007AFF;" />
-                            </div>
-                        </div>
-                    </div>
+        <!-- Filter note + how it works (Generate Report mode) -->
+        <div v-if="isAllMode" class="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5">
+            <div class="flex items-start gap-2 text-2xs leading-relaxed text-blue-800">
+                <AppIcon name="info-circle" :size="14" class="mt-px shrink-0" />
+                <div>
+                    <p><span class="font-semibold">Based on current filters.</span> This report includes all applicants matching the filters applied on the table.</p>
+                    <p class="mt-1 text-blue-600">To export specific records only, tick their checkboxes in the table and use <span class="font-semibold">Export Selected</span> instead.</p>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Document Settings -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">Document Settings</div>
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <span class="ios-row-label">Paper Size</span>
-                                <div class="ios-row-control ios-row-control--compact ios-select">
-                                    <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label"
-                                        optionValue="value" class="w-full" />
-                                </div>
-                            </div>
-                            <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Orientation</span>
-                                <div class="ios-row-control ios-row-control--compact ios-select">
-                                    <Select v-model="orientation" :options="orientationOptions" optionLabel="label"
-                                        optionValue="value" class="w-full" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Report Title -->
+        <div class="mb-4">
+            <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
+            <Editor v-model="customTitle" editorStyle="height: 90px" class="report-title-editor">
+                <template #toolbar>
+                    <span class="ql-formats">
+                        <button class="ql-bold"></button>
+                        <button class="ql-italic"></button>
+                        <button class="ql-underline"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-clean"></button>
+                    </span>
+                </template>
+            </Editor>
+            <p class="mt-1 text-2xs text-gray-400">Leave blank to use the default title.</p>
+        </div>
 
-                    <!-- Options -->
-                    <div class="ios-section">
-                        <div class="ios-section-label">Options</div>
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <span class="ios-row-label">Include Remarks</span>
-                                <InputSwitch v-model="includeRemarks" />
-                            </div>
-                            <div class="ios-row ios-row-last">
-                                <span class="ios-row-label">Include Grant Provision</span>
-                                <InputSwitch v-model="includeGrantProvision" />
-                            </div>
-                        </div>
-                    </div>
+        <!-- Report Type -->
+        <div class="mb-4">
+            <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Type</label>
+            <div class="flex border border-gray-300 rounded-lg overflow-hidden">
+                <button :class="['flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium border-none cursor-pointer transition-colors',
+                    reportType === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50']"
+                    @click="reportType = 'list'">
+                    <AppIcon name="list" :size="13" /> Detailed List
+                </button>
+                <button :class="['flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium border-none cursor-pointer transition-colors',
+                    reportType === 'summary' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50']"
+                    @click="reportType = 'summary'">
+                    <AppIcon name="bar-chart-3" :size="13" /> Summary
+                </button>
+            </div>
+        </div>
 
-                    <!-- Preview List -->
-                    <div class="ios-section" v-if="selectedRows.length > 0">
-                        <div class="ios-section-label">Preview</div>
-                        <div class="ios-card" style="max-height: 120px; overflow-y: auto;">
-                            <div v-for="(row, idx) in selectedRows.slice(0, 10)" :key="idx" class="ios-row"
-                                :class="{ 'ios-row-last': idx === Math.min(selectedRows.length, 10) - 1 }">
-                                <span style="font-size: 13px; color: #000;">{{ row.last_name }}, {{ row.first_name
-                                    }}</span>
-                            </div>
-                            <div v-if="selectedRows.length > 10" class="ios-row ios-row-last"
-                                style="justify-content: center;">
-                                <span style="font-size: 12px; color: #8E8E93; font-style: italic;">... and {{
-                                    selectedRows.length - 10 }} more</span>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Paper & Orientation -->
+        <div class="mb-4">
+            <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
+            <div class="flex gap-2">
+                <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
+                    class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                <Select v-model="orientation" :options="orientationOptions" optionLabel="label" optionValue="value"
+                    class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+            </div>
+        </div>
 
-                    <!-- Export Buttons -->
-                    <div class="ios-section">
-                        <div class="ios-export-buttons">
-                            <button class="ios-export-btn ios-export-pdf" @click="exportAs('pdf')" :disabled="generating">
-                                <AppIcon name="file-pdf" :size="16" /> Export as PDF
-                            </button>
-                            <button class="ios-export-btn ios-export-excel" @click="exportAs('excel')" :disabled="generating">
-                                <AppIcon name="file-excel" :size="16" /> Export as Excel
-                            </button>
-                        </div>
-                    </div>
+        <!-- Options -->
+        <div class="mb-4">
+            <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Remarks</label>
+            <Select v-model="remarksMode" :options="remarksOptions" optionLabel="label" optionValue="value"
+                class="w-full [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+            <p v-if="remarksMode === 'blank'" class="mt-1 text-2xs text-gray-400">
+                Adds an empty Remarks column to fill in by hand.
+            </p>
+        </div>
 
-                    <div style="height: 20px;"></div>
-    </IosModal>
+        <!-- Export Buttons -->
+        <div class="flex gap-2 pt-3 mt-2 border-t border-gray-100">
+            <button class="flex-1 inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-red-500 px-4 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="exportAs('pdf')" :disabled="generating">
+                <AppIcon name="file-pdf" :size="14" /> PDF
+            </button>
+            <button class="flex-1 inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-green-500 px-4 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="exportAs('excel')" :disabled="generating">
+                <AppIcon name="file-excel" :size="14" /> Excel
+            </button>
+        </div>
+    </Dialog>
 </template>
-

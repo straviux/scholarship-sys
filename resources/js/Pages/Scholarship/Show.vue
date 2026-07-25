@@ -26,10 +26,10 @@
                         class="!font-medium text-gray-700 dark:text-gray-300" @click="showCertPicker = true"
                         v-tooltip.top="'Generate Certification'" />
                     <div class="w-px h-6 bg-gray-200 mx-0.5 self-center flex-shrink-0"></div>
-                    <AppButton v-if="hasPermission('applicants.edit')" icon="user" label="Edit Personal" size="small"
+                    <AppButton icon="user" label="Edit Personal" size="small"
                         rounded text class="!font-medium text-gray-700 dark:text-gray-300"
                         @click="showPersonalInfoModal = true" v-tooltip.top="'Edit Personal Information'" />
-                    <AppButton v-if="hasPermission('applicants.edit')" icon="home" label="Edit Family" size="small"
+                    <AppButton icon="home" label="Edit Family" size="small"
                         rounded text class="!font-medium text-gray-700 dark:text-gray-300"
                         @click="showFamilyInfoModal = true" v-tooltip.top="'Edit Family Information'" />
                 </div>
@@ -318,7 +318,7 @@
                                                     {{ enrollment.program?.name || 'N/A' }}
                                                 </p>
                                                 <p v-if="isTechVocProgram(enrollment.program)"
-                                                    class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
+                                                    class="text-2xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
                                                     Tech-Voc
                                                 </p>
                                                 <p class="text-lg font-medium text-gray-700 dark:text-gray-300">
@@ -342,7 +342,7 @@
                                                     </div>
                                                     <div class="min-w-0 text-center">
                                                         <p
-                                                            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+                                                            class="text-2xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
                                                             Graduated
                                                         </p>
                                                         <p class="text-sm font-semibold">
@@ -360,7 +360,7 @@
                                                     </div>
                                                     <div class="min-w-0 text-center">
                                                         <p
-                                                            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
+                                                            class="text-2xs font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
                                                             Needs Review
                                                         </p>
                                                         <p class="text-sm font-semibold">
@@ -885,28 +885,28 @@
             max-width="calc(100vw - 24px)">
             <template #header-right>
                 <div class="ios-nav-actions">
-                    <button v-if="hasPermission('scholarships.edit')"
-                        class="ios-nav-btn ios-nav-cancel ios-nav-btn--inline" type="button" :disabled="ledgerSaving"
+                    <button
+                        class="ios-nav-btn ios-nav-cancel ios-nav-btn--inline text-nav" type="button" :disabled="ledgerSaving"
                         @click.stop="saveLedger">
                         <AppIcon v-if="ledgerSaving" name="spinner" :size="14" class="animate-spin" />
                         <span v-else>Save</span>
                     </button>
-                    <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline" type="button"
+                    <button class="ios-nav-btn ios-nav-action ios-nav-btn--inline text-nav" type="button"
                         :disabled="ledgerSaving" @click.stop="generateLedger">
                         <span>Generate</span>
                     </button>
                 </div>
             </template>
             <div class="ios-section">
-                <div class="ios-section-footer">Year levels are fixed, including 6th Year, PGI, and Review. Encode
+                <div class="ios-section-footer text-compact">Year levels are fixed, including 6th Year, PGI, and Review. Encode
                     the academic year, term, date obligated, OBR no., type of payment, amount, and ROS.
                     Use Add Term at the bottom of each year level for trimester or extra rows.</div>
-                <div class="ios-section-footer italic">Rows without encoded details are skipped when
+                <div class="ios-section-footer italic text-compact">Rows without encoded details are skipped when
                     generating
                     the PDF.</div>
             </div>
             <div class="ios-section">
-                <div class="ios-section-label">
+                <div class="ios-section-label text-compact">
                     <AppIcon name="file-text" :size="11" style="color: #007AFF; margin-right: 4px;" />
                     Ledger Details
                 </div>
@@ -917,7 +917,7 @@
                                 <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
                                     <div
                                         style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                                        <span class="ios-row-label">Scholarship Coverage</span>
+                                        <span class="ios-row-label text-sm">Scholarship Coverage</span>
                                         <button type="button"
                                             style="border: 0; background: transparent; color: #007AFF; font-size: 12px; font-weight: 600; padding: 0; cursor: pointer;"
                                             @click="showLedgerScholarshipCoverageEditor = !showLedgerScholarshipCoverageEditor">
@@ -950,7 +950,7 @@
                                 <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
                                     <div
                                         style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                                        <span class="ios-row-label">Other Assistance</span>
+                                        <span class="ios-row-label text-sm">Other Assistance</span>
                                         <button type="button"
                                             style="border: 0; background: transparent; color: #007AFF; font-size: 12px; font-weight: 600; padding: 0; cursor: pointer;"
                                             @click="showLedgerOtherAssistanceEditor = !showLedgerOtherAssistanceEditor">
@@ -958,7 +958,7 @@
                                         </button>
                                     </div>
                                     <Editor v-if="showLedgerOtherAssistanceEditor" v-model="ledgerOtherAssistance"
-                                        editorStyle="height: 120px" class="ledger-other-assistance-editor">
+                                        editorStyle="height: 120px" class="ledger-other-assistance-editor [&_.ql-container]:text-sm">
                                         <template #toolbar>
                                             <span class="ql-formats">
                                                 <button class="ql-bold"></button>
@@ -983,9 +983,9 @@
                     <div class="ios-card">
                         <div class="ios-row">
                             <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
-                                <span class="ios-row-label">Licensure Examination Result</span>
+                                <span class="ios-row-label text-sm">Licensure Examination Result</span>
                                 <DatePicker v-model="ledgerLicensureExaminationResult" dateFormat="MM dd, yy"
-                                    placeholder="April 08, 2026" class="w-full ledger-licensure-datepicker" />
+                                    placeholder="April 08, 2026" class="w-full ledger-licensure-datepicker [&_.p-inputtext]:text-sm [&_.p-datepicker-input]:text-sm" />
                             </div>
                         </div>
                     </div>
@@ -993,7 +993,7 @@
             </div>
 
             <div class="ios-section">
-                <div class="ios-section-label">
+                <div class="ios-section-label text-compact">
                     <AppIcon name="book" :size="11" style="color: #34C759; margin-right: 4px;" />
                     Manual Ledger Entries
                 </div>
@@ -1001,7 +1001,7 @@
             </div>
 
             <div v-for="section in ledgerSections" :key="section.yearLevel" class="ios-section">
-                <div class="ios-section-label">{{ formatYearLevel(section.yearLevel) }}</div>
+                <div class="ios-section-label text-compact">{{ formatYearLevel(section.yearLevel) }}</div>
                 <div class="ios-card" style="overflow: auto;">
                     <table style="width: 100%; min-width: 960px; border-collapse: collapse;">
                         <thead>
@@ -1113,7 +1113,7 @@
                 <div style="width: 60px;"></div>
             </template>
             <div class="ios-section">
-                <div class="ios-section-label">Course Name <span
+                <div class="ios-section-label text-compact">Course Name <span
                         style="color: #8e8e93; font-weight: 400;">(optional)</span>
                 </div>
                 <div class="ios-card">
@@ -1122,12 +1122,12 @@
                             style="border: none; background: transparent; box-shadow: none; padding: 0; font-size: 14px; color: #1c1c1e; width: 100%; outline: none;" />
                     </div>
                 </div>
-                <div class="ios-section-footer">Leave blank to use the course from the scholar's profile.
+                <div class="ios-section-footer text-compact">Leave blank to use the course from the scholar's profile.
                 </div>
             </div>
 
             <div class="ios-section">
-                <div class="ios-section-label">Certification Type</div>
+                <div class="ios-section-label text-compact">Certification Type</div>
                 <div class="ios-card">
                     <div class="ios-row" style="cursor: pointer; border-bottom: 0.5px solid #e5e5ea;"
                         @click="generateCertification('review')">
@@ -1704,18 +1704,18 @@ const canManageAcademicTerm = (term) => {
         && normalizeAcademicEntityId(term?.id) !== null;
 };
 
-const canCreateAcademicEnrollment = computed(() => supportsAcademicEnrollmentCrud.value && hasPermission('scholarships.create'));
-const canCreateAcademicTerm = computed(() => hasPermission('scholarships.create'));
-const canEditAcademicEnrollmentDetails = computed(() => hasPermission('scholarships.edit'));
-const canDeleteAcademicEnrollmentDetails = computed(() => hasPermission('scholarships.delete'));
-const canEditAcademicTermDetails = computed(() => hasPermission('scholarships.edit'));
-const canEditLegacyAcademicRecordDetails = computed(() => hasPermission('scholars.edit'));
-const canDeleteAcademicTermDetails = computed(() => hasPermission('scholarships.delete'));
+const canCreateAcademicEnrollment = computed(() => supportsAcademicEnrollmentCrud.value);
+const canCreateAcademicTerm = computed(() => true);
+const canEditAcademicEnrollmentDetails = computed(() => true);
+const canDeleteAcademicEnrollmentDetails = computed(() => true);
+const canEditAcademicTermDetails = computed(() => true);
+const canEditLegacyAcademicRecordDetails = computed(() => true);
+const canDeleteAcademicTermDetails = computed(() => true);
 const hasAcademicTermActionsPermission = computed(() => {
     return canEditAcademicTermDetails.value || canEditLegacyAcademicRecordDetails.value || canDeleteAcademicTermDetails.value;
 });
 const canViewScholarshipAttachments = computed(() => hasPermission('scholarships.view'));
-const canEditScholarshipAttachments = computed(() => hasPermission('scholarships.edit'));
+const canEditScholarshipAttachments = computed(() => true);
 
 const canManageAcademicEnrollmentActions = (enrollment) => {
     return canManageAcademicEnrollment(enrollment) && (
@@ -2111,10 +2111,6 @@ const buildLedgerPayload = () => ({
 });
 
 const persistLedger = async ({ showSuccessToast = true } = {}) => {
-    if (!hasPermission('scholarships.edit')) {
-        return true;
-    }
-
     ledgerSaving.value = true;
 
     try {

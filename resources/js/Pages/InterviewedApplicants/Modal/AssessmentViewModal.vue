@@ -9,7 +9,7 @@
         @update:visible="value => { if (!value) close(); }"
     >
         <template #header-left>
-            <button type="button" class="ios-nav-btn ios-nav-cancel" @click="backOrClose"
+            <button type="button" class="ios-nav-btn ios-nav-cancel text-nav" @click="backOrClose"
                 v-tooltip.bottom="activeMode === 'view' ? `Close` : `Back`">
                 <AppIcon :name="activeMode === 'view' ? 'x' : 'arrow-left'" :size="16" />
             </button>
@@ -17,19 +17,19 @@
 
         <template #header-right>
             <button v-if="activeMode === 'edit'" type="button"
-                class="ios-nav-btn ios-nav-action assessment-nav-action" @click="submitEdit"
+                class="ios-nav-btn ios-nav-action assessment-nav-action text-nav" @click="submitEdit"
                 :disabled="editSubmitting" v-tooltip.bottom="'Save Changes'">
                 <AppIcon v-if="editSubmitting" name="spinner" :size="16" />
                 <AppIcon v-else name="check" :size="16" style="color: #2563eb;" />
             </button>
             <button v-else-if="activeMode === 'approve'" type="button"
-                class="ios-nav-btn ios-nav-action assessment-nav-action" @click="$emit('confirm-approve')"
+                class="ios-nav-btn ios-nav-action assessment-nav-action text-nav" @click="$emit('confirm-approve')"
                 :disabled="approvalForm?.processing" v-tooltip.bottom="'Approve Application'">
                 <AppIcon v-if="approvalForm?.processing" name="spinner" :size="16" />
                 <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
             </button>
             <button v-else-if="activeMode === 'deny'" type="button"
-                class="ios-nav-btn ios-nav-action assessment-nav-action" @click="$emit('confirm-deny')"
+                class="ios-nav-btn ios-nav-action assessment-nav-action text-nav" @click="$emit('confirm-deny')"
                 :disabled="denyForm?.processing" v-tooltip.bottom="'Confirm Deny'">
                 <AppIcon v-if="denyForm?.processing" name="spinner" :size="16" />
                 <AppIcon v-else name="x" :size="16" style="color: #dc2626;" />
@@ -43,17 +43,17 @@
                             <div class="assessment-grid  py-6">
                                 <div class="assessment-column">
                                     <div class="ios-section ">
-                                        <div class="ios-section-label">Applicant</div>
+                                        <div class="ios-section-label text-compact">Applicant</div>
                                         <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
                                             <div class="ios-row">
-                                                <div class="ios-row-label interview-assessment-form__name">
+                                                <div class="ios-row-label interview-assessment-form__name text-sm text-nav">
                                                     {{ localRecord.profile.last_name }}, {{
                                                         localRecord.profile.first_name
                                                     }}
                                                 </div>
                                             </div>
                                             <div class="ios-row">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="book-open" :size="13" style="color: #007AFF;" />
                                                     Program
                                                 </div>
@@ -61,7 +61,7 @@
                                                     'N/A' }}</span>
                                             </div>
                                             <div class="ios-row">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
                                                     Course
                                                 </div>
@@ -69,7 +69,7 @@
                                                     'N/A' }}</span>
                                             </div>
                                             <div class="ios-row">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="wallet" :size="13" style="color: #007AFF;" />
                                                     Grant Provision
                                                 </div>
@@ -79,7 +79,7 @@
                                                 }}</span>
                                             </div>
                                             <div class="ios-row">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="calendar" :size="13" style="color: #8E8E93;" />
                                                     Interview Date
                                                 </div>
@@ -87,7 +87,7 @@
                                                     formatDate(localRecord.interviewed_at) }}</span>
                                             </div>
                                             <div class="ios-row">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="user" :size="13" style="color: #8E8E93;" />
                                                     Interviewed By
                                                 </div>
@@ -95,7 +95,7 @@
                                                     'N/A' }}</span>
                                             </div>
                                             <div class="ios-row ios-row-last">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="user" :size="13" style="color: #34C759;" />
                                                     Endorsed By
                                                 </div>
@@ -106,10 +106,10 @@
                                     </div>
 
                                     <div class="ios-section">
-                                        <div class="ios-section-label">Recommendation</div>
+                                        <div class="ios-section-label text-compact">Recommendation</div>
                                         <div class="ios-card">
                                             <div class="ios-row assessment-row-tall">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="check-circle" :size="13" style="color: #34C759;" />
                                                     Decision
                                                 </div>
@@ -122,10 +122,10 @@
 
                                 <div class="assessment-column">
                                     <div class="ios-section">
-                                        <div class="ios-section-label">Interviewer's Assessment</div>
+                                        <div class="ios-section-label text-compact">Interviewer's Assessment</div>
                                         <div class="ios-card">
                                             <div class="ios-row">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="star" :size="13" style="color: #FF9500;" />
                                                     Academic Potential
                                                 </div>
@@ -133,7 +133,7 @@
                                                     :severity="getRatingSeverity(localRecord.academic_potential)" />
                                             </div>
                                             <div class="ios-row">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="wallet" :size="13" style="color: #FF3B30;" />
                                                     Financial Need
                                                 </div>
@@ -141,7 +141,7 @@
                                                     :severity="getRatingSeverity(localRecord.financial_need_level)" />
                                             </div>
                                             <div class="ios-row">
-                                                <div class="ios-row-label">
+                                                <div class="ios-row-label text-sm">
                                                     <AppIcon name="message-square-more" :size="13"
                                                         style="color: #5856D6;" />
                                                     Communication
@@ -153,7 +153,7 @@
                                     </div>
 
                                     <div class="ios-section">
-                                        <div class="ios-section-label">Remarks</div>
+                                        <div class="ios-section-label text-compact">Remarks</div>
                                         <div class="ios-card assessment-remarks-card">
                                             <p v-if="localRecord.interview_remarks" class="text-sm text-gray-700" v-safe-html="localRecord.interview_remarks.replace(/\n/g, '<br>')">
                                                 
@@ -178,8 +178,8 @@
                                         <AppIcon name="exclamation-triangle" :size="16" />
                                     </div>
                                     <div>
-                                        <div class="ios-validation-summary-title">Review Before Approval</div>
-                                        <p class="ios-validation-summary-text">{{ approvalValidationSummary }}</p>
+                                        <div class="ios-validation-summary-title text-compact">Review Before Approval</div>
+                                        <p class="ios-validation-summary-text text-xs">{{ approvalValidationSummary }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -195,15 +195,15 @@
                             </div>
 
                             <div class="ios-section">
-                                <div class="ios-section-label">Applicant Summary</div>
+                                <div class="ios-section-label text-compact">Applicant Summary</div>
                                 <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
                                     <div class="ios-row">
-                                        <div class="ios-row-label interview-assessment-form__name">
+                                        <div class="ios-row-label interview-assessment-form__name text-sm text-nav">
                                             {{ localRecord.profile.last_name }}, {{ localRecord.profile.first_name }}
                                         </div>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="phone" :size="13" style="color: #34C759;" />
                                             Contact
                                         </div>
@@ -211,7 +211,7 @@
                                             }}</span>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="message-square-more" :size="13" style="color: #6366F1;" />
                                             Recommendation
                                         </div>
@@ -219,7 +219,7 @@
                                             :severity="getRecommendationSeverity(localRecord.recommendation)" />
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="calendar" :size="13" style="color: #8E8E93;" />
                                             Interview Date
                                         </div>
@@ -227,7 +227,7 @@
                                             }}</span>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="user" :size="13" style="color: #007AFF;" />
                                             Interviewed By
                                         </div>
@@ -235,7 +235,7 @@
                                             }}</span>
                                     </div>
                                     <div class="ios-row ios-row-last">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="user" :size="13" style="color: #34C759;" />
                                             Endorsed By
                                         </div>
@@ -246,10 +246,10 @@
                             </div>
 
                             <div class="ios-section">
-                                <div class="ios-section-label">Academic Summary</div>
+                                <div class="ios-section-label text-compact">Academic Summary</div>
                                 <div class="ios-card">
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="book-open" :size="13" style="color: #007AFF;" />
                                             Program
                                         </div>
@@ -257,7 +257,7 @@
                                             }}</span>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
                                             Course
                                         </div>
@@ -265,7 +265,7 @@
                                             localRecord.course?.name || 'N/A' }}</span>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="building-2" :size="13" style="color: #FF9500;" />
                                             School
                                         </div>
@@ -273,7 +273,7 @@
                                             localRecord.school?.name || 'N/A' }}</span>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="list-checks" :size="13" style="color: #5856D6;" />
                                             Year Level
                                         </div>
@@ -281,7 +281,7 @@
                                             localRecord.year_level, 'N/A') }}</span>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="calendar" :size="13" style="color: #AF52DE;" />
                                             Term
                                         </div>
@@ -289,7 +289,7 @@
                                             localRecord.term, 'N/A') }}</span>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="calendar" :size="13" style="color: #0EA5E9;" />
                                             Academic Year
                                         </div>
@@ -297,7 +297,7 @@
                                             }}</span>
                                     </div>
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="wallet" :size="13" style="color: #007AFF;" />
                                             Grant Provision
                                         </div>
@@ -305,7 +305,7 @@
                                             localRecord.grant_provision, 'N/A') }}</span>
                                     </div>
                                     <div class="ios-row ios-row-last">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="calendar" :size="13" style="color: #8E8E93;" />
                                             Date Filed
                                         </div>
@@ -316,10 +316,10 @@
                             </div>
 
                             <div class="ios-section">
-                                <div class="ios-section-label">Approval Date</div>
+                                <div class="ios-section-label text-compact">Approval Date</div>
                                 <div class="ios-card">
                                     <div class="ios-row">
-                                        <div class="ios-row-label">
+                                        <div class="ios-row-label text-sm">
                                             <AppIcon name="calendar-plus" :size="13" style="color: #34C759;" />
                                             Approval Date <span class="ios-required-mark">*</span>
                                         </div>
@@ -327,9 +327,9 @@
                                             <div
                                                 :class="['ios-input-stack', { 'has-error': approvalForm?.errors?.date_approved }]">
                                                 <Calendar v-model="approvalForm.date_approved" showIcon
-                                                    iconDisplay="input" :maxDate="new Date()" class="ios-full-input" />
+                                                    iconDisplay="input" :maxDate="new Date()" class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" />
                                                 <small v-if="approvalForm?.errors?.date_approved"
-                                                    class="ios-field-error">
+                                                    class="ios-field-error text-xs">
                                                     {{ approvalForm.errors.date_approved }}
                                                 </small>
                                             </div>
@@ -365,28 +365,28 @@
                             </div>
 
                             <div class="ios-section">
-                                <div class="ios-section-label">Denial Reason <span class="ios-required-mark">*</span>
+                                <div class="ios-section-label text-compact">Denial Reason <span class="ios-required-mark">*</span>
                                 </div>
                                 <div class="ios-card">
                                     <div class="ios-row ios-row-stacked" style="padding: 10px 16px;">
                                         <Select v-model="denyForm.reason" :options="declineReasons" optionLabel="label"
-                                            optionValue="value" placeholder="Select a reason" class="ios-full-input" />
+                                            optionValue="value" placeholder="Select a reason" class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" />
                                     </div>
                                 </div>
-                                <div v-if="denyForm?.errors?.reason" class="ios-section-footer ios-error">
+                                <div v-if="denyForm?.errors?.reason" class="ios-section-footer ios-error text-compact">
                                     {{ denyForm.errors.reason }}
                                 </div>
                             </div>
 
                             <div class="ios-section">
-                                <div class="ios-section-label">Details <span class="ios-required-mark">*</span></div>
+                                <div class="ios-section-label text-compact">Details <span class="ios-required-mark">*</span></div>
                                 <div class="ios-card">
                                     <div class="ios-row ios-row-stacked" style="padding: 10px 16px;">
                                         <Textarea v-model="denyForm.details" rows="3"
-                                            placeholder="Provide specific details..." class="ios-full-input" />
+                                            placeholder="Provide specific details..." class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" />
                                     </div>
                                 </div>
-                                <div v-if="denyForm?.errors?.details" class="ios-section-footer ios-error">
+                                <div v-if="denyForm?.errors?.details" class="ios-section-footer ios-error text-compact">
                                     {{ denyForm.errors.details }}
                                 </div>
                             </div>

@@ -13,21 +13,21 @@
             <div class="rounded-4xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cumulative List</div>
+                    <div class="text-2xs font-semibold uppercase tracking-wide text-slate-500">Cumulative List</div>
                     <div class="mt-1 text-sm text-slate-600">
                         Review the names behind the calendar-year cumulative count before generating any report.
                     </div>
                 </div>
 
                 <div class="rounded-3xl bg-slate-100 px-4 py-3 text-left sm:min-w-[132px] sm:text-right">
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Counted</div>
+                    <div class="text-3xs font-semibold uppercase tracking-wide text-slate-500">Counted</div>
                     <div class="mt-1 text-xl font-semibold text-slate-800">{{ selectedBudgetAllocationApprovedCount.toLocaleString() }}</div>
                 </div>
             </div>
 
             <div class="mt-4 grid gap-3 md:grid-cols-5">
                 <div class="md:col-span-3">
-                    <div class="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <div class="mb-2 flex items-center gap-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">
                         <AppIcon name="wallet" :size="12" style="color: #34C759;" />
                         Budget Allocation
                     </div>
@@ -39,13 +39,13 @@
                         :placeholder="budgetAllocationOptions.length ? 'Select allocation' : 'No allocation available'"
                         :disabled="budgetAllocationOptions.length === 0"
                         appendTo="body"
-                        class="ios-select w-full"
+                        class="ios-select w-full text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact"
                         showClear
                     >
                         <template #value="{ value, placeholder }">
                             <div v-if="findBudgetAllocationOption(value)" class="leading-tight">
                                 <div class="font-medium text-slate-700">{{ findBudgetAllocationOption(value)?.label }}</div>
-                                <div v-if="findBudgetAllocationOption(value)?.description" class="text-[11px] text-slate-500">
+                                <div v-if="findBudgetAllocationOption(value)?.description" class="text-2xs text-slate-500">
                                     {{ findBudgetAllocationOption(value)?.description }}
                                 </div>
                             </div>
@@ -54,7 +54,7 @@
                         <template #option="{ option }">
                             <div class="py-1 leading-tight">
                                 <div class="font-medium text-slate-700">{{ option.label }}</div>
-                                <div v-if="option.description" class="text-[11px] text-slate-500">
+                                <div v-if="option.description" class="text-2xs text-slate-500">
                                     {{ option.description }}
                                 </div>
                             </div>
@@ -63,7 +63,7 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Search</div>
+                    <div class="mb-2 text-2xs font-semibold uppercase tracking-wide text-slate-500">Search</div>
                     <InputText
                         v-model="cumulativeScholarSearchQuery"
                         class="w-full"
@@ -90,7 +90,7 @@
             <div class="border-b border-slate-200 px-4 py-3">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cumulative Scholar Names</div>
+                        <div class="text-2xs font-semibold uppercase tracking-wide text-slate-500">Cumulative Scholar Names</div>
                         <div class="mt-1 text-sm text-slate-600">
                             <template v-if="showCumulativeScholarMissingDetails">
                                 Detailed rows are unavailable on this calendar-year snapshot.
@@ -127,7 +127,7 @@
                                 <div class="mt-1 text-xs text-slate-500">Program: {{ scholar.program || 'N/A' }}</div>
                             </div>
 
-                            <div class="shrink-0 text-right text-[11px] text-slate-500">
+                            <div class="shrink-0 text-right text-2xs text-slate-500">
                                 <div>{{ formatDate(scholar.date_approved) }}</div>
                                 <div class="mt-1 font-medium text-slate-700">{{ formatScholarStatus(scholar.status) }}</div>
                             </div>

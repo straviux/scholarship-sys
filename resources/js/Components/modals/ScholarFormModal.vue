@@ -10,7 +10,7 @@
     >
         <template #header-right>
             <div class="ios-nav-right">
-                <span class="ios-nav-step-text">{{ activeStep }} of 3</span>
+                <span class="ios-nav-step-text text-xs">{{ activeStep }} of 3</span>
                 <button class="ios-nav-maximize" @click="isMaximized = !isMaximized"
                     v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
                     <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
@@ -169,22 +169,22 @@
         </div>
 
         <div class="ios-footer mt-4">
-            <button v-if="activeStep !== '1'" class="ios-footer-btn ios-footer-back"
+            <button v-if="activeStep !== '1'" class="ios-footer-btn ios-footer-back text-sm"
                 @click="activeStep = String(Number(activeStep) - 1)">
                 <AppIcon name="arrow-left" :size="12" /> Back
             </button>
             <span v-else></span>
-            <button v-if="activeStep === '1'" class="ios-footer-btn ios-footer-next" @click="handleNextStep1"
+            <button v-if="activeStep === '1'" class="ios-footer-btn ios-footer-next text-sm" @click="handleNextStep1"
                 :disabled="!canProceedStep1 || isValidating" v-tooltip.top="step1TooltipMessage">
                 {{ isValidating ? 'Checking...' : 'Next' }}
                 <AppIcon name="arrow-right" :size="12" />
             </button>
-            <button v-else-if="activeStep === '2'" class="ios-footer-btn ios-footer-next"
+            <button v-else-if="activeStep === '2'" class="ios-footer-btn ios-footer-next text-sm"
                 @click="activeStep = '3'">
                 Next
                 <AppIcon name="arrow-right" :size="12" />
             </button>
-            <button v-else class="ios-footer-btn ios-footer-submit" @click="handleSubmit"
+            <button v-else class="ios-footer-btn ios-footer-submit text-sm" @click="handleSubmit"
                 :disabled="form.processing || !canSubmit" v-tooltip.top="submitTooltipMessage">
                 <AppIcon name="check" :size="12" />
                 {{ form.processing ? 'Saving...' : (mode === 'edit' ? 'Update' : 'Add Scholar') }}

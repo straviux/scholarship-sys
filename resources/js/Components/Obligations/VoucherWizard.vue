@@ -1398,7 +1398,7 @@ onMounted(async () => {
     isOpen.value = true;
 });
 
-// GSAP: step transition â€” slide in direction of travel
+// GSAP: step transition — slide in direction of travel
 watch(step, (newStep, oldStep) => {
     if (!shouldAnimate()) return;
     const dir = newStep > oldStep ? 1 : -1;
@@ -1423,25 +1423,25 @@ const wizardModalStyle = computed(() => ({
     <IosModal v-model:visible="isOpen" :title="getStepTitle()" :modal-content-style="wizardModalStyle"
         body-style="padding: 0;" @close="closeWizard">
         <template #header-left>
-            <button v-if="step === 1" class="ios-nav-btn ios-nav-cancel" @click="closeWizard">
+            <button v-if="step === 1" class="ios-nav-btn ios-nav-cancel text-nav" @click="closeWizard">
                 <AppIcon name="times" />
             </button>
-            <button v-else class="ios-nav-btn ios-nav-cancel" @click="previousStep">
+            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="previousStep">
                 <AppIcon name="arrow-left" :size="13" />
             </button>
         </template>
         <template #header-right>
-            <button v-if="step < 5" class="ios-nav-btn ios-nav-action" @click="nextStep"
+            <button v-if="step < 5" class="ios-nav-btn ios-nav-action text-nav" @click="nextStep"
                 :disabled="step === 1 && selectedCount === 0">
                 <AppIcon name="arrow-right" :size="13" />
             </button>
-            <button v-else class="ios-nav-btn ios-nav-action" @click="handleSubmit" :disabled="loading">
+            <button v-else class="ios-nav-btn ios-nav-action text-nav" @click="handleSubmit" :disabled="loading">
                 <AppIcon v-if="loading" name="spinner" :size="12" style="margin-right: 3px;" />
                 <AppIcon v-else-if="props.mode === 'edit'" name="save" :size="13" />
                 <AppIcon v-else name="check" :size="13" />
             </button>
         </template>
-        <div ref="wizardContentRef" class="ios-body ios-compact-controls">
+        <div ref="wizardContentRef" class="ios-body ios-compact-controls [&_.p-inputtext]:text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact [&_.p-button:not(.p-button-icon-only)]:text-compact">
             <div class="space-y-4 short:space-y-2" style="padding-top: 12px; padding-bottom: 24px;">
                 <!-- Progress Bar -->
                 <div class="space-y-2">

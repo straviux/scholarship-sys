@@ -3,6 +3,7 @@
         <!-- Activity Logs Bell Button -->
         <AppButton type="button" icon="history" @click="togglePopover" :severity="'contrast'"
             :badge="(badgeCount > 99 ? '99+' : badgeCount).toString() || ''" size="small" text rounded
+            class="[&_.p-button-icon]:text-violet-600 dark:[&_.p-button-icon]:text-violet-400"
             v-tooltip.bottom="'Your Activity Logs'" />
 
         <!-- Popover Menu -->

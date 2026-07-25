@@ -11,7 +11,7 @@
             <div class="min-h-screen py-8 bg-gradient-to-br from-[#f5f7fa] to-[#c3cfe2]">
                 <!-- Status Overview -->
                 <section class="ios-section">
-                    <div class="ios-section-label">Status Overview</div>
+                    <div class="ios-section-label text-compact">Status Overview</div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 short:gap-2">
                         <!-- Current Status Card -->
                         <div class="bg-white rounded-lg shadow-md overflow-hidden">
@@ -60,7 +60,7 @@
 
                 <!-- Two Column Layout -->
                 <section class="ios-section">
-                    <div class="ios-section-label">Control Center</div>
+                    <div class="ios-section-label text-compact">Control Center</div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 short:gap-2">
                         <!-- Left Column - Configuration Form -->
                         <div class="lg:col-span-2">

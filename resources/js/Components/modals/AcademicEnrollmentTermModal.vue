@@ -5,13 +5,13 @@
         <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 0;">
             <div class="grid grid-cols-2 gap-4">
                 <div class="ios-form-group">
-                    <label class="ios-label">Year Level <span v-if="isTechVocProgram"
+                    <label class="ios-label text-compact">Year Level <span v-if="isTechVocProgram"
                             class="text-xs text-gray-500 dark:text-gray-400">(Optional for Tech-Voc)</span><span
                             v-else>*</span></label>
                     <YearLevelSelect v-model="form.year_level" />
                 </div>
                 <div class="ios-form-group">
-                    <label class="ios-label">Status</label>
+                    <label class="ios-label text-compact">Status</label>
                     <Select v-model="form.unified_status" :options="statusOptions" optionLabel="label"
                         optionValue="value" placeholder="Select Status" fluid />
                 </div>
@@ -19,13 +19,13 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div class="ios-form-group">
-                    <label class="ios-label">Academic Year <span v-if="isOptionalTerm"
+                    <label class="ios-label text-compact">Academic Year <span v-if="isOptionalTerm"
                             class="text-xs text-gray-500 dark:text-gray-400">{{ isTechVocProgram ? `(Optional for
                             Tech - Voc)` : '(Optional for G12)' }}</span><span v-else>*</span></label>
                     <AcademicYearSelect v-model="form.academic_year" />
                 </div>
                 <div class="ios-form-group">
-                    <label class="ios-label">Term <span v-if="isOptionalTerm"
+                    <label class="ios-label text-compact">Term <span v-if="isOptionalTerm"
                             class="text-xs text-gray-500 dark:text-gray-400">{{ isTechVocProgram ? `(Optional for
                             Tech - Voc)` : '(Optional for G12)' }}</span><span v-else>*</span></label>
                     <TermSelect v-model="form.term" />
@@ -34,45 +34,45 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div class="ios-form-group">
-                    <label class="ios-label">Date Filed</label>
+                    <label class="ios-label text-compact">Date Filed</label>
                     <DatePicker v-model="form.date_filed" dateFormat="yy-mm-dd" showIcon fluid />
                 </div>
                 <div class="ios-form-group">
-                    <label class="ios-label">Date Approved</label>
+                    <label class="ios-label text-compact">Date Approved</label>
                     <DatePicker v-model="form.date_approved" dateFormat="yy-mm-dd" showIcon fluid />
                 </div>
             </div>
 
             <div v-if="isTechVocProgram" class="grid grid-cols-2 gap-4">
                 <div class="ios-form-group">
-                    <label class="ios-label">No. of Hours</label>
+                    <label class="ios-label text-compact">No. of Hours</label>
                     <InputNumber v-model="form.no_of_hours" :useGrouping="false" :min="1" fluid />
                 </div>
                 <div class="ios-form-group">
-                    <label class="ios-label">No. of Days</label>
+                    <label class="ios-label text-compact">No. of Days</label>
                     <InputNumber v-model="form.no_of_days" :useGrouping="false" :min="1" fluid />
                 </div>
             </div>
 
             <div v-if="isTechVocProgram" class="grid grid-cols-2 gap-4">
                 <div class="ios-form-group">
-                    <label class="ios-label">Start Date</label>
+                    <label class="ios-label text-compact">Start Date</label>
                     <DatePicker v-model="form.start_date" dateFormat="yy-mm-dd" showIcon fluid />
                 </div>
                 <div class="ios-form-group">
-                    <label class="ios-label">End Date</label>
+                    <label class="ios-label text-compact">End Date</label>
                     <DatePicker v-model="form.end_date" dateFormat="yy-mm-dd" showIcon fluid />
                 </div>
             </div>
 
             <div class="ios-form-group">
-                <label class="ios-label">Grant Provision</label>
+                <label class="ios-label text-compact">Grant Provision</label>
                 <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
                     optionValue="value" placeholder="Select Grant Provision" fluid showClear />
             </div>
 
             <div class="ios-form-group">
-                <label class="ios-label">Remarks</label>
+                <label class="ios-label text-compact">Remarks</label>
                 <Editor v-model="form.remarks" editorStyle="height: 120px">
                     <template #toolbar>
                         <span class="ql-formats">

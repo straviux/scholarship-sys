@@ -63,7 +63,8 @@
                             </div>
 
                             <!-- Content Section -->
-                            <div class="ios-markdown-prose ios-markdown-prose--detail max-w-none">
+                            <div
+                                class="ios-markdown-prose ios-markdown-prose--detail max-w-none [&_h1]:text-[2em] [&_h2]:text-[1.5em] [&_h3]:text-[1.25em] [&_h4]:text-[1em] [&_h5]:text-[0.875em] [&_h6]:text-[0.875em] [&_code]:text-[0.9em] [&_pre_code]:text-[0.875em]">
                                 <!-- Markdown Content -->
                                 <div v-if="update.is_markdown && update.markdown_content"
                                     v-html="renderMarkdown(update.markdown_content)"></div>

@@ -64,7 +64,7 @@
             <!-- ═══ STEP 1: FILTERS ═══ -->
             <div v-show="currentStep === 1">
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Type</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Type</label>
                     <div class="flex border border-gray-300 rounded-lg overflow-hidden">
                         <button :class="['flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium border-none cursor-pointer transition-colors',
                             reportType === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50']"
@@ -82,23 +82,23 @@
                 <!-- Filters -->
                 <div class="grid grid-cols-2 gap-2.5 mb-4">
                     <div>
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Recommendation</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Recommendation</label>
                         <Select v-model="selectedRecommendation" :options="recommendationOptions"
                             optionLabel="label" optionValue="value" placeholder="All" showClear
                             class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program</label>
                         <ProgramSelect v-model="selectedProgram" label="shortname" custom-placeholder="All"
                             class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">School</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">School</label>
                         <SchoolSelect v-model="selectedSchool" label="shortname" custom-placeholder="All"
                             class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" :multiple="false" />
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Course</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Course</label>
                         <CourseSelect v-model="selectedCourse" :scholarship-program-id="selectedProgram?.id"
                             label="shortname" custom-placeholder="All"
                             class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
@@ -107,7 +107,7 @@
 
                 <!-- Date Range -->
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Interview Date Range</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Interview Date Range</label>
                     <div class="flex items-center gap-2">
                         <DatePicker v-model="dateFrom" placeholder="From date" showButtonBar dateFormat="M dd, yy"
                             class="flex-1 [&_.p-datepicker]:w-full [&_.p-datepicker]:text-xs" showIcon iconDisplay="input" />
@@ -115,18 +115,18 @@
                         <DatePicker v-model="dateTo" placeholder="To date" showButtonBar dateFormat="M dd, yy"
                             class="flex-1 [&_.p-datepicker]:w-full [&_.p-datepicker]:text-xs" showIcon iconDisplay="input" />
                     </div>
-                    <div v-if="dateTo && dateFrom && isDateToInvalid" class="text-[11px] text-red-500 mt-1">Date To must be after Date From</div>
+                    <div v-if="dateTo && dateFrom && isDateToInvalid" class="text-2xs text-red-500 mt-1">Date To must be after Date From</div>
                 </div>
 
                 <div v-if="activeFiltersCount > 0" class="pt-2 border-t border-gray-100">
-                    <button class="inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-red-50 border border-red-200 rounded-md px-2.5 py-1 cursor-pointer hover:bg-red-100"
+                    <button class="inline-flex items-center gap-1 text-2xs font-medium text-red-500 bg-red-50 border border-red-200 rounded-md px-2.5 py-1 cursor-pointer hover:bg-red-100"
                         @click="clearAllFilters">Clear {{ activeFiltersCount }} filter(s)</button>
                 </div>
             </div>
 
             <!-- ═══ STEP 2: PROFILES ═══ -->
             <div v-show="currentStep === 2 && reportType === 'list'">
-                <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Profiles To Print</label>
+                <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Profiles To Print</label>
                 <div class="border border-gray-200 rounded-lg p-3">
                     <div class="flex items-center justify-between mb-2">
                         <InputText v-model="profileSearchQuery" placeholder="Search name, program, school…" class="flex-1 mr-2 [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
@@ -154,7 +154,7 @@
                         {{ filteredApplicants.length === 0 ? 'No interviewed applicants match the current filters.' : 'No profiles match the current search.' }}
                     </div>
                 </div>
-                <div class="mt-1 text-[11px] text-gray-400">
+                <div class="mt-1 text-2xs text-gray-400">
                     {{ selectedDetailedRecords.length }} of {{ filteredApplicants.length }} profile(s) selected.
                     <span v-if="profileSearchQuery.trim()">· {{ visibleProfiles.length }} search result(s).</span>
                 </div>
@@ -163,15 +163,15 @@
             <!-- ═══ STEP 3: DETAILS ═══ -->
             <div v-show="currentStep === 3">
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
                     <InputText v-model="reportTitleInput" placeholder="INTERVIEWED APPLICANTS REPORT"
                         class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
-                    <span class="block text-[10px] text-gray-400 mt-1">Leave blank to use the default title.</span>
+                    <span class="block text-3xs text-gray-400 mt-1">Leave blank to use the default title.</span>
                 </div>
 
                 <div class="mb-4">
                     <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">Budget Allocation</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500">Budget Allocation</label>
                         <ToggleSwitch v-model="showBudgetAllocation" />
                     </div>
                     <template v-if="showBudgetAllocation">
@@ -183,7 +183,7 @@
                             <template #value="{ value, placeholder }">
                                 <div v-if="findBudgetAllocationOption(value)" class="leading-tight">
                                     <div class="font-medium text-gray-700">{{ findBudgetAllocationOption(value)?.label }}</div>
-                                    <div v-if="findBudgetAllocationOption(value)?.description" class="text-[11px] text-gray-500">{{ findBudgetAllocationOption(value)?.description }}</div>
+                                    <div v-if="findBudgetAllocationOption(value)?.description" class="text-2xs text-gray-500">{{ findBudgetAllocationOption(value)?.description }}</div>
                                 </div>
                                 <span v-else class="text-gray-400">{{ placeholder }}</span>
                             </template>
@@ -197,13 +197,13 @@
 
                 <div class="mb-4">
                     <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">Signatories</label>
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500">Signatories</label>
                         <ToggleSwitch v-model="showSignatories" />
                     </div>
                     <template v-if="showSignatories">
                         <div class="flex gap-2">
                             <div class="flex-1">
-                                <label class="block text-[10px] font-medium text-gray-500 mb-1">Prepared By</label>
+                                <label class="block text-3xs font-medium text-gray-500 mb-1">Prepared By</label>
                                 <InputText v-model="preparedBy" placeholder="Name"
                                     class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5 mb-1.5" />
                                 <InputText v-model="preparedByPosition" placeholder="Position"
@@ -212,14 +212,14 @@
                                     class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                             </div>
                             <div class="flex-1">
-                                <label class="block text-[10px] font-medium text-gray-500 mb-1">Approved By</label>
+                                <label class="block text-3xs font-medium text-gray-500 mb-1">Approved By</label>
                                 <InputText v-model="approvedBy" placeholder="Name"
                                     class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5 mb-1.5" />
                                 <InputText v-model="approvedByPosition" placeholder="Position"
                                     class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                             </div>
                         </div>
-                        <span class="block text-[10px] text-gray-400 mt-1">Leave all fields blank to hide signature block.</span>
+                        <span class="block text-3xs text-gray-400 mt-1">Leave all fields blank to hide signature block.</span>
                     </template>
                 </div>
             </div>
@@ -227,13 +227,13 @@
             <!-- ═══ STEP 4: LAYOUT ═══ -->
             <div v-show="currentStep === 4">
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Group By</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Group By</label>
                     <Select v-model="groupBy" :options="groupByOptions" optionLabel="label" optionValue="value"
                         class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
                     <div class="flex gap-2">
                         <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
                             class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
@@ -243,7 +243,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Options</label>
+                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Options</label>
                     <div class="flex flex-col gap-0.5">
                         <label v-if="reportType === 'list'" class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-b border-gray-50 hover:text-gray-900">
                             <span>Show Interview Columns</span>

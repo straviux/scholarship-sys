@@ -8,17 +8,21 @@
             </template>
             <template #actions>
                 <AppButton v-if="hasRole('administrator')" @click="showCreateModal = true" label="Create Update"
-                    icon="plus" severity="success" raised />
+                    icon="plus" severity="info" rounded size="small" />
             </template>
 
-            <section class="ios-section">
-                <div class="ios-section-label">Update Feed</div>
-                <div class="max-w-7xl">
-                    <Panel header="System Updates" class="w-full">
-                        <div v-if="updates.length === 0" class="text-center py-8">
-                            <Message severity="info" :closable="false">
-                                <p>No system updates found.</p>
-                            </Message>
+            <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                <!-- Stats strip -->
+                <div class="flex items-end gap-6 short:gap-3 short:mb-2 px-3 py-2 text-sm opacity-75">
+                    <span class="font-semibold text-blue-600">{{ updates.length }} updates</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="font-semibold text-green-600">{{updates.filter(u => u.is_active).length}}
+                        active</span>
+                </div>
+
+                <div class="px-2 pb-3">
+                        <div v-if="updates.length === 0" class="text-center py-8 text-gray-500">
+                            No system updates found
                         </div>
 
                         <div v-else class="space-y-4">
@@ -53,22 +57,23 @@
                                         <div class="flex items-center space-x-2 ml-4" @click.stop>
                                             <Tag :value="update.is_active ? 'Active' : 'Inactive'"
                                                 :severity="update.is_active ? 'success' : 'danger'" />
-                                            <div v-if="hasRole('administrator')" class="flex items-center space-x-1">
-                                                <Button v-if="update.is_active" @click="deactivateUpdate(update)"
-                                                    label="Deactivate" severity="warning" size="small" outlined />
-                                                <Button v-else @click="reactivateUpdate(update)" label="Reactivate"
-                                                    severity="success" size="small" outlined />
-                                                <Button @click="deleteUpdate(update)" label="Delete" severity="danger"
-                                                    size="small" outlined />
+                                            <div v-if="hasRole('administrator')" class="flex items-center gap-1">
+                                                <AppButton v-if="update.is_active" @click="deactivateUpdate(update)"
+                                                    icon="power-off" label="Deactivate" severity="warning" outlined
+                                                    rounded size="small" />
+                                                <AppButton v-else @click="reactivateUpdate(update)" icon="rotate-ccw"
+                                                    label="Reactivate" severity="success" outlined rounded
+                                                    size="small" />
+                                                <AppButton @click="deleteUpdate(update)" icon="trash" severity="danger"
+                                                    outlined rounded size="small" v-tooltip.top="'Delete'" />
                                             </div>
                                         </div>
                                     </div>
                                 </template>
                             </Card>
                         </div>
-                    </Panel>
                 </div>
-            </section>
+            </Panel>
         </AdminPageShell>
 
         <!-- Create Update Dialog -->

@@ -69,7 +69,7 @@ const deleteRequirement = () => {
 
     <AdminLayout>
 
-        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+        <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
                     <AppIcon name="file-check" class="text-blue-600 text-[2rem] short:text-[1.5rem]" />
@@ -121,7 +121,7 @@ const deleteRequirement = () => {
                 <Column field="is_active" header="Status" style="width: 100px">
                     <template #body="{ data }">
                         <span
-                            class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                            class="text-2xs font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
                             :style="data.is_active
                                 ? 'background: #d1f5e0; color: #187a3c;'
                                 : 'background: #fee2e2; color: #991b1b;'">

@@ -8,7 +8,7 @@
         </template>
 
         <!-- Toolbar -->
-        <Toolbar class="mb-4 -mt-2 !rounded-4xl !px-8">
+        <Toolbar class="mb-4 -mt-[var(--toolbar-pull)] !rounded-4xl !px-8">
             <template #start>
                 <div class="flex items-center gap-3">
                     <AppIcon name="file" class="text-blue-600 w-8 h-8 short:w-6 short:h-6" />
@@ -19,7 +19,7 @@
                 </div>
             </template>
             <template #end>
-                <AppButton v-if="hasPermission('documents.upload')" icon="upload" label="Upload File" severity="success"
+                <AppButton icon="upload" label="Upload File" severity="success"
                     raised rounded size="small" @click="openUploadDialog" />
             </template>
         </Toolbar>
@@ -79,7 +79,7 @@
                         <Column field="is_active" header="Status" style="width: 100px">
                             <template #body="slotProps">
                                 <span
-                                    class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                                    class="text-2xs font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
                                     :style="slotProps.data.is_active
                                         ? 'background: #d1f5e0; color: #187a3c;'
                                         : 'background: #fee2e2; color: #991b1b;'">
@@ -96,10 +96,10 @@
                                     <AppButton v-if="hasPermission('documents.download')" icon="download"
                                         severity="info" size="small" rounded outlined
                                         @click="downloadDocument(slotProps.data)" v-tooltip.top="'Download'" />
-                                    <AppButton v-if="hasPermission('documents.edit')" icon="pencil" severity="warn"
+                                    <AppButton icon="pencil" severity="warn"
                                         size="small" rounded outlined @click="openEditDialog(slotProps.data)"
                                         v-tooltip.top="'Edit'" />
-                                    <AppButton v-if="hasPermission('documents.delete')" icon="trash" severity="danger"
+                                    <AppButton v-if="isAdmin()" icon="trash" severity="danger"
                                         size="small" rounded outlined @click="confirmDelete(slotProps.data)"
                                         v-tooltip.top="'Delete'" />
                                 </div>
@@ -141,7 +141,7 @@
                         <Column field="is_active" header="Status" style="width: 100px">
                             <template #body="slotProps">
                                 <span
-                                    class="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
+                                    class="text-2xs font-semibold px-[9px] py-[3px] rounded-[20px] inline-block whitespace-nowrap"
                                     :style="slotProps.data.is_active
                                         ? 'background: #d1f5e0; color: #187a3c;'
                                         : 'background: #fee2e2; color: #991b1b;'">
@@ -158,10 +158,10 @@
                                     <AppButton v-if="hasPermission('documents.download')" icon="download"
                                         severity="info" size="small" rounded outlined
                                         @click="downloadDocument(slotProps.data)" v-tooltip.top="'Download'" />
-                                    <AppButton v-if="hasPermission('documents.edit')" icon="pencil" severity="warn"
+                                    <AppButton icon="pencil" severity="warn"
                                         size="small" rounded outlined @click="openEditDialog(slotProps.data)"
                                         v-tooltip.top="'Edit'" />
-                                    <AppButton v-if="hasPermission('documents.delete')" icon="trash" severity="danger"
+                                    <AppButton v-if="isAdmin()" icon="trash" severity="danger"
                                         size="small" rounded outlined @click="confirmDelete(slotProps.data)"
                                         v-tooltip.top="'Delete'" />
                                 </div>
@@ -180,13 +180,13 @@
 
                         <!-- File Details -->
                         <div class="ios-section">
-                            <div class="ios-section-label">File Details</div>
+                            <div class="ios-section-label text-compact">File Details</div>
                             <div class="ios-card">
                                 <div class="ios-row">
-                                    <span class="ios-row-label">Title</span>
+                                    <span class="ios-row-label text-sm">Title</span>
                                     <div class="ios-row-control">
                                         <InputText v-model="form.title" placeholder="Document title"
-                                            class="ios-row-input" />
+                                            class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" />
                                     </div>
                                 </div>
                                 <small v-if="form.errors.title"
@@ -194,8 +194,8 @@
                                     {{ form.errors.title }}
                                 </small>
                                 <div class="ios-row ios-row-last">
-                                    <span class="ios-row-label">Category</span>
-                                    <div class="ios-row-control ios-select">
+                                    <span class="ios-row-label text-sm">Category</span>
+                                    <div class="ios-row-control ios-select text-compact [&_.p-select]:text-compact [&_.p-select-label]:text-compact">
                                         <Select v-model="form.category" :options="categories" optionLabel="label"
                                             optionValue="value" placeholder="Select category" showClear />
                                     </div>
@@ -209,7 +209,7 @@
 
                         <!-- Description -->
                         <div class="ios-section">
-                            <div class="ios-section-label">Description</div>
+                            <div class="ios-section-label text-compact">Description</div>
                             <div class="ios-card">
                                 <div class="ios-row ios-row-last" style="align-items: flex-start; padding: 10px 16px;">
                                     <Textarea v-model="form.description" placeholder="Optional description..."
@@ -225,7 +225,7 @@
 
                         <!-- File Upload -->
                         <div class="ios-section">
-                            <div class="ios-section-label">
+                            <div class="ios-section-label text-compact">
                                 File {{ dialogMode === 'edit' ? '(leave empty to keep current)' : '*' }}
                             </div>
                             <div class="ios-card">
@@ -248,7 +248,7 @@
 
                         <!-- Current File (edit mode) -->
                         <div class="ios-section" v-if="dialogMode === 'edit' && editingDocument">
-                            <div class="ios-section-label">Current File</div>
+                            <div class="ios-section-label text-compact">Current File</div>
                             <div class="ios-card">
                                 <div class="ios-row ios-row-last" style="padding: 12px 16px; gap: 10px;">
                                     <AppIcon :name="getFileIcon(editingDocument.file_type)" :size="22"
@@ -262,12 +262,12 @@
 
                         <!-- Settings -->
                         <div class="ios-section">
-                            <div class="ios-section-label">Settings</div>
+                            <div class="ios-section-label text-compact">Settings</div>
                             <div class="ios-card">
                                 <div class="ios-row">
-                                    <span class="ios-row-label">Sort Order</span>
+                                    <span class="ios-row-label text-sm">Sort Order</span>
                                     <div class="ios-row-control">
-                                        <InputNumber v-model="form.sort_order" class="ios-row-input" :min="0" />
+                                        <InputNumber v-model="form.sort_order" class="ios-row-input text-compact [&_.p-inputnumber-input]:text-compact" :min="0" />
                                     </div>
                                 </div>
                                 <small v-if="form.errors.sort_order"
@@ -275,7 +275,7 @@
                                     {{ form.errors.sort_order }}
                                 </small>
                                 <div class="ios-row ios-row-last">
-                                    <span class="ios-row-label">Active</span>
+                                    <span class="ios-row-label text-sm">Active</span>
                                     <ToggleSwitch v-model="form.is_active" :trueValue="true" :falseValue="false"
                                         size="small" style="--p-toggleswitch-checked-background: #34C759;" />
                                 </div>
@@ -309,16 +309,16 @@
                             </div>
                         </div>
                         <div class="ios-section">
-                            <div class="ios-section-label">Document</div>
+                            <div class="ios-section-label text-compact">Document</div>
                             <div class="ios-card">
                                 <div class="ios-row">
-                                    <span class="ios-row-label">Title</span>
+                                    <span class="ios-row-label text-sm">Title</span>
                                     <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
                                         {{ documentToDelete.title }}
                                     </span>
                                 </div>
                                 <div class="ios-row ios-row-last">
-                                    <span class="ios-row-label">File</span>
+                                    <span class="ios-row-label text-sm">File</span>
                                     <span style="font-size: 13px; color: #8E8E93; font-family: monospace;">
                                         {{ documentToDelete.file_name }}
                                     </span>
@@ -431,7 +431,7 @@ const props = defineProps({
     categories: Array,
 });
 
-const { hasPermission } = usePermission();
+const { hasPermission, isAdmin } = usePermission();
 const activeTabIndex = ref(0);
 const showDialog = ref(false);
 const showDeleteDialog = ref(false);

@@ -20,12 +20,49 @@ const props = defineProps({
     },
 });
 
-const includeRemarks = computed(() => props.options?.includeRemarks === true);
-const includeGrantProvision = computed(() => props.options?.includeGrantProvision !== false);
+// 'none' = no column, 'values' = remarks with data, 'blank' = empty column to fill in by hand
+const remarksMode = computed(() => props.options?.remarksMode ?? 'none');
+const includeRemarks = computed(() => remarksMode.value === 'values' || remarksMode.value === 'blank');
+const blankRemarks = computed(() => remarksMode.value === 'blank');
 
-const reportTitle = computed(() => props.reportType === 'summary'
+// Column definitions with relative weights. Widths are normalized to
+// percentages that sum to exactly 100% so, with table-layout:fixed, columns
+// stay identical on every printed page.
+const listColumns = computed(() => {
+    const cols = [
+        { key: 'seq', label: '#', align: 'center', weight: 26 },
+        { key: 'name', label: 'Name', align: 'left', weight: 160 },
+        { key: 'muni', label: 'Municipality & Contact', align: 'left', weight: 110 },
+        { key: 'program', label: 'Program', align: 'left', weight: 60 },
+        { key: 'school', label: 'School', align: 'left', weight: 60 },
+        { key: 'course', label: 'Course', align: 'left', weight: 70 },
+        { key: 'level', label: 'Level', align: 'center', weight: 42 },
+    ];
+
+    cols.push({ key: 'date', label: 'Date Filed', align: 'center', weight: 64 });
+
+    if (includeRemarks.value) {
+        cols.push({ key: 'remarks', label: 'Remarks', align: 'left', weight: 140 });
+    }
+
+    const total = cols.reduce((sum, col) => sum + col.weight, 0);
+    return cols.map(col => ({ ...col, width: `${(col.weight / total * 100).toFixed(4)}%` }));
+});
+
+
+const defaultReportTitle = computed(() => props.reportType === 'summary'
     ? 'SELECTED APPLICANTS SUMMARY REPORT'
     : 'SELECTED APPLICANTS REPORT');
+
+// Custom title is authored in a rich-text editor (Quill) → HTML. When empty
+// or unset, fall back to the default plain-text title.
+const customTitleHtml = computed(() => {
+    const html = (props.options?.customTitle ?? '').toString().trim();
+    // Quill emits "<p><br></p>" for an empty editor — treat that as no title.
+    const textOnly = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    return textOnly ? html : '';
+});
+const reportTitleHtml = computed(() => customTitleHtml.value || null);
 
 const summaryCards = computed(() => [
     { label: 'Total Records', value: props.records.length },
@@ -68,21 +105,17 @@ function formatApplicantName(record) {
 
 <template>
     <div style="font-family: Arial, Helvetica, sans-serif; color: #111827; font-size: 9pt; line-height: 1.4;">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16pt; border-bottom: 1.25pt solid #000; padding-bottom: 10pt; margin-bottom: 10pt;">
-            <img src="/images/pgp-logo.svg" alt="PGP Logo" style="width: 44pt; height: 44pt; object-fit: contain;" />
-            <div style="flex: 1; text-align: center;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12pt; border-bottom: 1.25pt solid #000; padding-bottom: 10pt; margin-bottom: 10pt;">
+            <img src="/images/pgp-logo.svg" alt="PGP Logo" style="width: 64pt; height: 64pt; object-fit: contain;" />
+            <div style="flex: 0 1 auto; text-align: center;">
                 <div style="font-size: 11pt; font-weight: 700;">Republic of the Philippines</div>
                 <div style="font-size: 11pt; font-weight: 700;">Provincial Government of Palawan</div>
-                <div style="font-size: 10pt;">Akbay sa Mag-aaral Yaman ng kinabukasan</div>
-                <div style="font-size: 10pt;">(Programang Pang-Edukasyon para sa Palaweño)</div>
-                <div style="font-size: 9pt; margin-top: 6pt; font-weight: 700; letter-spacing: 0.6pt;">{{ reportTitle }}</div>
+                <div style="font-size: 10pt;">YAKAP SA EDUKASYON</div>
+                <div style="font-size: 10pt;">Scholarship Program</div>
+                <div v-if="reportTitleHtml" style="font-size: 9pt; margin-top: 6pt; font-weight: 700; letter-spacing: 0.6pt;" v-html="reportTitleHtml"></div>
+                <div v-else style="font-size: 9pt; margin-top: 6pt; font-weight: 700; letter-spacing: 0.6pt;">{{ defaultReportTitle }}</div>
             </div>
-            <img src="/images/yakap-logo.svg" alt="YAKAP Logo" style="width: 44pt; height: 44pt; object-fit: contain;" />
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10pt; font-size: 8pt; color: #4b5563;">
-            <span>Generated: {{ generatedAt || '—' }}</span>
-            <span>Total Selected: {{ records.length }}</span>
+            <img src="/images/yakap-logo.svg" alt="YAKAP Logo" style="width: 64pt; height: 64pt; object-fit: contain;" />
         </div>
 
         <div v-if="records.length === 0" style="text-align: center; padding: 24pt 0; color: #6b7280; font-style: italic;">
@@ -121,29 +154,25 @@ function formatApplicantName(record) {
         </template>
 
         <template v-else>
+            <!-- Single table. Native browser print repeats the thead on every -->
+            <!-- page and keeps table-layout:fixed columns identical across pages. -->
             <table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8pt;">
-                <thead>
+                <colgroup>
+                    <col v-for="col in listColumns" :key="col.key" :style="{ width: col.width }" />
+                </colgroup>
+                <thead style="display: table-header-group;">
                     <tr>
-                        <th style="width: 26pt; padding: 5pt 4pt; text-align: center; border: 0.75pt solid #9ca3af; background: #f3f4f6;">#</th>
-                        <th style="width: 160pt; padding: 5pt 6pt; text-align: left; border: 0.75pt solid #9ca3af; background: #f3f4f6;">Name</th>
-                        <th style="width: 110pt; padding: 5pt 6pt; text-align: left; border: 0.75pt solid #9ca3af; background: #f3f4f6;">Municipality & Contact</th>
-                        <th style="width: 60pt; padding: 5pt 6pt; text-align: left; border: 0.75pt solid #9ca3af; background: #f3f4f6;">Program</th>
-                        <th style="width: 60pt; padding: 5pt 6pt; text-align: left; border: 0.75pt solid #9ca3af; background: #f3f4f6;">School</th>
-                        <th style="width: 70pt; padding: 5pt 6pt; text-align: left; border: 0.75pt solid #9ca3af; background: #f3f4f6;">Course</th>
-                        <th style="width: 42pt; padding: 5pt 6pt; text-align: center; border: 0.75pt solid #9ca3af; background: #f3f4f6;">Level</th>
-                        <th v-if="includeGrantProvision" style="width: 90pt; padding: 5pt 6pt; text-align: left; border: 0.75pt solid #9ca3af; background: #f3f4f6;">Grant Provision</th>
-                        <th v-if="includeRemarks" style="width: 140pt; padding: 5pt 6pt; text-align: left; border: 0.75pt solid #9ca3af; background: #f3f4f6;">Remarks</th>
-                        <th style="width: 64pt; padding: 5pt 6pt; text-align: center; border: 0.75pt solid #9ca3af; background: #f3f4f6;">Date Filed</th>
+                        <th v-for="col in listColumns" :key="col.key"
+                            :style="{ width: col.width, padding: '5pt 6pt', textAlign: col.align, border: '0.75pt solid #9ca3af', background: '#f3f4f6' }">
+                            {{ col.label }}
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="record in records" :key="record.profile_id">
+                    <tr v-for="record in records" :key="record.profile_id" style="break-inside: avoid; page-break-inside: avoid;">
                         <td style="padding: 4pt; border: 0.75pt solid #d1d5db; text-align: center; color: #374151;">{{ record.overall_sequence }}</td>
-                        <td style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db; vertical-align: top;">
+                        <td style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db; vertical-align: middle;">
                             <div style="font-weight: 700;">{{ formatApplicantName(record) }}</div>
-                            <div style="font-size: 7pt; color: #6b7280; margin-top: 2pt;">
-                                Prog.#{{ record.program_sequence }} | Sch.#{{ record.school_sequence }} | Course.#{{ record.course_sequence }}
-                            </div>
                         </td>
                         <td style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db; vertical-align: top;">
                             <div>{{ record.municipality }}</div>
@@ -153,9 +182,8 @@ function formatApplicantName(record) {
                         <td style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db;">{{ record.school_name }}</td>
                         <td style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db;">{{ record.course_name }}</td>
                         <td style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db; text-align: center;">{{ record.year_level }}</td>
-                        <td v-if="includeGrantProvision" style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db;">{{ record.grant_provision_label }}</td>
-                        <td v-if="includeRemarks" style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db;">{{ record.remarks }}</td>
                         <td style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db; text-align: center;">{{ record.date_filed_label }}</td>
+                        <td v-if="includeRemarks" style="padding: 4pt 6pt; border: 0.75pt solid #d1d5db;">{{ blankRemarks ? '' : record.remarks }}</td>
                     </tr>
                 </tbody>
             </table>

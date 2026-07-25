@@ -15,30 +15,30 @@
                 <!-- Total -->
                 <div
                     class="flex flex-col items-center bg-[#f0f4ff] border-[0.5px] border-[#c7d2fe] rounded-xl py-[7px] px-4 min-w-[110px]">
-                    <span class="text-[10px] font-semibold text-[#6366f1] uppercase tracking-[0.4px]">Total</span>
-                    <span class="text-[15px] font-bold text-[#3730a3] mt-px tabular-nums whitespace-nowrap">{{
+                    <span class="text-3xs font-semibold text-[#6366f1] uppercase tracking-[0.4px]">Total</span>
+                    <span class="text-nav font-bold text-[#3730a3] mt-px tabular-nums whitespace-nowrap">{{
                         formatCurrency(totalAmount) }}</span>
                 </div>
                 <!-- On Process -->
                 <div v-if="pendingCount > 0"
                     class="flex flex-col items-center bg-[#fffbeb] border-[0.5px] border-[#fcd34d] rounded-xl py-[7px] px-4 min-w-[110px]"
                     v-tooltip.top="`${pendingCount} record(s) not yet settled`">
-                    <span class="text-[10px] font-semibold text-[#d97706] uppercase tracking-[0.4px]">On Process</span>
-                    <span class="text-[15px] font-bold text-[#92400e] mt-px tabular-nums whitespace-nowrap">{{
+                    <span class="text-3xs font-semibold text-[#d97706] uppercase tracking-[0.4px]">On Process</span>
+                    <span class="text-nav font-bold text-[#92400e] mt-px tabular-nums whitespace-nowrap">{{
                         formatCurrency(pendingAmount) }}</span>
                 </div>
                 <!-- Settled -->
                 <div v-if="settledAmount > 0"
                     class="flex flex-col items-center bg-[#f0fdf4] border-[0.5px] border-[#86efac] rounded-xl py-[7px] px-4 min-w-[110px]">
-                    <span class="text-[10px] font-semibold text-[#16a34a] uppercase tracking-[0.4px]">Settled</span>
-                    <span class="text-[15px] font-bold text-[#14532d] mt-px tabular-nums whitespace-nowrap">{{
+                    <span class="text-3xs font-semibold text-[#16a34a] uppercase tracking-[0.4px]">Settled</span>
+                    <span class="text-nav font-bold text-[#14532d] mt-px tabular-nums whitespace-nowrap">{{
                         formatCurrency(settledAmount) }}</span>
                 </div>
             </div>
 
             <!-- Right: Actions -->
             <div class="flex-shrink-0 gap-2">
-                <AppButton v-if="hasPermission('applicants.edit')" icon="plus" label="Add Disbursement"
+                <AppButton icon="plus" label="Add Disbursement"
                     @click="showAddModal = true" severity="success" size="small" raised disabled />
                 <p class="text-xs text-gray-400 dark:text-gray-300 p-2">Adding disbursement is temporarily disabled. Use
                     Fund
@@ -63,12 +63,12 @@
                 <thead>
                     <tr class="bg-[#f9f9fb] border-b-[0.5px] border-[#e5e5ea]">
                         <th class="w-9 py-[7px] px-3"></th>
-                        <th class="tbl-col-header py-[7px] px-3 text-left w-[130px]">Date / OBR</th>
-                        <th class="tbl-col-header py-[7px] px-3 text-left w-[160px]">Year / Term</th>
-                        <th class="tbl-col-header py-[7px] px-3 text-left w-[220px]">Payee</th>
-                        <th class="tbl-col-header py-[7px] px-3 text-left w-[185px]">Encoder</th>
-                        <th class="tbl-col-header py-[7px] pl-6 pr-3 text-left w-[110px]">Status</th>
-                        <th class="tbl-col-header py-[7px] px-3 text-right w-[120px]">Amount</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-left w-[130px] text-2xs">Date / OBR</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-left w-[160px] text-2xs">Year / Term</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-left w-[220px] text-2xs">Payee</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-left w-[185px] text-2xs">Encoder</th>
+                        <th class="tbl-col-header py-[7px] pl-6 pr-3 text-left w-[110px] text-2xs">Status</th>
+                        <th class="tbl-col-header py-[7px] px-3 text-right w-[120px] text-2xs">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -81,7 +81,7 @@
                                         group.year }}</span>
                                     <span class="text-xs text-gray-600">{{ group.items.length }} record{{
                                         group.items.length !== 1 ? 's' : '' }} · <span
-                                            class="text-[12px] text-gray-700 font-bold">{{
+                                            class="text-xs text-gray-700 font-bold">{{
                                                 formatCurrency(group.total)
                                             }}</span></span>
                                 </div>
@@ -103,36 +103,36 @@
 
                                 <!-- Date / OBR No. -->
                                 <td class="py-[11px] px-3 w-[130px]">
-                                    <div class="text-[13px] text-[#1c1c1e] font-medium">
+                                    <div class="text-compact text-[#1c1c1e] font-medium">
                                         {{ item.date_obligated ? formatDate(item.date_obligated) : '—' }}
                                     </div>
                                     <div v-if="item.obr_no" class="mt-[3px]">
                                         <span
-                                            class="text-[10px] font-semibold text-[#1d4ed8] bg-[#dbeafe] rounded-[6px] px-[6px] py-[2px] tracking-[0.2px]">{{
+                                            class="text-3xs font-semibold text-[#1d4ed8] bg-[#dbeafe] rounded-[6px] px-[6px] py-[2px] tracking-[0.2px]">{{
                                                 item.obr_no }}</span>
                                     </div>
                                     <span v-if="item.is_legacy"
-                                        class="text-[10px] bg-[#e5e5ea] text-[#636366] rounded px-[5px] py-px inline-block mt-0.5">Legacy</span>
+                                        class="text-3xs bg-[#e5e5ea] text-[#636366] rounded px-[5px] py-px inline-block mt-0.5">Legacy</span>
                                 </td>
 
                                 <!-- Year Level / Semester -->
                                 <td class="py-[11px] px-3 w-[160px]">
-                                    <div class="text-[13px] text-[#1c1c1e]">{{ item.year_level || '—' }}</div>
-                                    <div class="text-[11px] text-[#8e8e93] mt-px">{{ item.semester || '—' }}</div>
+                                    <div class="text-compact text-[#1c1c1e]">{{ item.year_level || '—' }}</div>
+                                    <div class="text-2xs text-[#8e8e93] mt-px">{{ item.semester || '—' }}</div>
                                 </td>
 
                                 <!-- Payee / Type -->
                                 <td class="py-[11px] px-3 w-[220px]">
-                                    <div class="text-[13px] text-[#1c1c1e] truncate">{{ item.payee || '—' }}</div>
-                                    <div v-if="item.disbursement_type" class="text-[11px] text-[#8e8e93] mt-px">{{
+                                    <div class="text-compact text-[#1c1c1e] truncate">{{ item.payee || '—' }}</div>
+                                    <div v-if="item.disbursement_type" class="text-2xs text-[#8e8e93] mt-px">{{
                                         formatDisbursementType(item.disbursement_type) }}</div>
                                 </td>
 
                                 <!-- Encoder -->
                                 <td class="py-[11px] px-3 w-[185px]">
-                                    <div class="text-[10px] text-[#3a3a3c] truncate">{{ item.encoder || '—' }}</div>
+                                    <div class="text-3xs text-[#3a3a3c] truncate">{{ item.encoder || '—' }}</div>
                                     <div v-if="item.encoder_designation"
-                                        class="text-[10px] text-[#8e8e93] truncate mt-px">
+                                        class="text-3xs text-[#8e8e93] truncate mt-px">
                                         {{ item.encoder_designation }}
                                     </div>
                                 </td>
@@ -140,7 +140,7 @@
                                 <!-- Status -->
                                 <td class="py-[11px] pl-6 pr-3 w-[110px]">
                                     <span v-if="item.obr_status"
-                                        class="text-[11px] font-semibold py-[3px] px-[9px] rounded-[20px] inline-block whitespace-nowrap"
+                                        class="text-2xs font-semibold py-[3px] px-[9px] rounded-[20px] inline-block whitespace-nowrap"
                                         :style="getObrStatusIosStyle(item.obr_status)">
                                         {{ item.obr_status }}
                                     </span>
@@ -165,34 +165,34 @@
                                             <div>
                                                 <!-- Academic subsection -->
                                                 <div class="mb-[14px]">
-                                                    <div class="tbl-section-header mb-[7px]">
+                                                    <div class="tbl-section-header mb-[7px] text-3xs">
                                                         <AppIcon name="book" :size="12" class="mr-1 text-[#007AFF]" />
                                                         Academic
                                                     </div>
                                                     <div class="flex flex-wrap gap-4">
                                                         <div v-if="item.academic_year">
-                                                            <div class="tbl-detail-label">Academic Year</div>
-                                                            <div class="tbl-detail-value">{{ item.academic_year }}</div>
+                                                            <div class="tbl-detail-label text-3xs">Academic Year</div>
+                                                            <div class="tbl-detail-value text-xs">{{ item.academic_year }}</div>
                                                         </div>
                                                         <div v-if="item.year_level">
-                                                            <div class="tbl-detail-label">Year Level</div>
-                                                            <div class="tbl-detail-value">{{ item.year_level }}</div>
+                                                            <div class="tbl-detail-label text-3xs">Year Level</div>
+                                                            <div class="tbl-detail-value text-xs">{{ item.year_level }}</div>
                                                         </div>
                                                         <div v-if="item.semester">
-                                                            <div class="tbl-detail-label">Semester</div>
-                                                            <div class="tbl-detail-value">{{ item.semester }}</div>
+                                                            <div class="tbl-detail-label text-3xs">Semester</div>
+                                                            <div class="tbl-detail-value text-xs">{{ item.semester }}</div>
                                                         </div>
                                                         <div
                                                             v-if="item.profile?.scholarship_grant?.[0]?.course?.shortname">
-                                                            <div class="tbl-detail-label">Course</div>
-                                                            <div class="tbl-detail-value">{{
+                                                            <div class="tbl-detail-label text-3xs">Course</div>
+                                                            <div class="tbl-detail-value text-xs">{{
                                                                 item.profile.scholarship_grant[0].course.shortname }}
                                                             </div>
                                                         </div>
                                                         <div
                                                             v-if="item.profile?.scholarship_grant?.[0]?.school?.shortname">
-                                                            <div class="tbl-detail-label">School</div>
-                                                            <div class="tbl-detail-value">{{
+                                                            <div class="tbl-detail-label text-3xs">School</div>
+                                                            <div class="tbl-detail-value text-xs">{{
                                                                 item.profile.scholarship_grant[0].school.shortname }}
                                                             </div>
                                                         </div>
@@ -201,19 +201,19 @@
 
                                                 <!-- Cheque subsection -->
                                                 <div>
-                                                    <div class="tbl-section-header mb-[7px]">
+                                                    <div class="tbl-section-header mb-[7px] text-3xs">
                                                         <AppIcon name="check-circle" :size="12"
                                                             class="mr-1 text-[#34C759]" />Cheque
                                                     </div>
                                                     <div class="flex gap-5">
                                                         <div>
-                                                            <div class="tbl-detail-label">Cheque No.</div>
-                                                            <div class="tbl-detail-value">{{
+                                                            <div class="tbl-detail-label text-3xs">Cheque No.</div>
+                                                            <div class="tbl-detail-value text-xs">{{
                                                                 item.cheques?.[0]?.cheque_no || '—' }}</div>
                                                         </div>
                                                         <div>
-                                                            <div class="tbl-detail-label">Date Released</div>
-                                                            <div class="tbl-detail-value">{{
+                                                            <div class="tbl-detail-label text-3xs">Date Released</div>
+                                                            <div class="tbl-detail-value text-xs">{{
                                                                 item.cheques?.[0]?.date_released ?
                                                                     formatDate(item.cheques[0].date_released) : '—' }}</div>
                                                         </div>
@@ -225,7 +225,7 @@
                                             <div>
                                                 <!-- Remarks subsection -->
                                                 <div v-if="item.remarks" class="mb-[14px]">
-                                                    <div class="tbl-section-header mb-[7px]">
+                                                    <div class="tbl-section-header mb-[7px] text-3xs">
                                                         <AppIcon name="comment" :size="12"
                                                             class="mr-1 text-[#FF9500]" />Remarks
                                                     </div>
@@ -235,7 +235,7 @@
 
                                                 <!-- Attachments subsection -->
                                                 <div>
-                                                    <div class="tbl-section-header mb-[7px]">
+                                                    <div class="tbl-section-header mb-[7px] text-3xs">
                                                         <AppIcon name="upload" :size="12" class="mr-1 text-[#007AFF]" />
                                                         Attachments
                                                         ({{ item.attachments?.length || 0 }})
@@ -243,7 +243,7 @@
                                                     <div v-if="item.attachments?.length > 0"
                                                         class="flex flex-wrap gap-1.5">
                                                         <div v-for="att in item.attachments" :key="att.attachment_id"
-                                                            class="flex items-center gap-[5px] bg-white border-[0.5px] border-[#d0d5e8] rounded-lg py-1 px-[9px] text-[11px]">
+                                                            class="flex items-center gap-[5px] bg-white border-[0.5px] border-[#d0d5e8] rounded-lg py-1 px-[9px] text-2xs">
                                                             <AppIcon :name="getFileIcon(att.file_type)" :size="12"
                                                                 class="text-[#007AFF]" />
                                                             <span class="text-[#1c1c1e] max-w-[100px] truncate">{{
@@ -267,29 +267,29 @@
                                         <!-- Action Buttons -->
                                         <div
                                             class="flex flex-wrap gap-2 pt-3 border-t-[0.5px] border-[#d0d5e8] justify-end">
-                                            <button v-if="hasPermission('applicants.edit')"
+                                            <button
                                                 @click.stop="showQrCode(item)"
-                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5] text-xs">
                                                 <AppIcon name="qrcode" :size="12" /> QR Upload
                                             </button>
-                                            <button v-if="hasPermission('applicants.edit')"
+                                            <button
                                                 @click.stop="manageAttachments(item)"
-                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5] text-xs">
                                                 <AppIcon name="upload" :size="12" /> Attachments
                                             </button>
-                                            <button v-if="hasPermission('applicants.edit')"
+                                            <button
                                                 @click.stop="manageCheque(item)"
-                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5]">
+                                                class="tbl-action-btn text-[#007AFF] bg-[#f0f0f5] text-xs">
                                                 <AppIcon name="file" :size="12" /> Cheque
                                             </button>
-                                            <button v-if="hasPermission('applicants.edit')"
+                                            <button
                                                 @click.stop="editDisbursement(item)"
-                                                class="tbl-action-btn text-[#FF9500] bg-[#fff8ec]">
+                                                class="tbl-action-btn text-[#FF9500] bg-[#fff8ec] text-xs">
                                                 <AppIcon name="pencil" :size="12" /> Edit
                                             </button>
-                                            <button v-if="hasPermission('applicants.delete')"
+                                            <button v-if="isAdmin()"
                                                 @click.stop="confirmDelete(item)"
-                                                class="tbl-action-btn text-[#FF3B30] bg-[#fff0f0]">
+                                                class="tbl-action-btn text-[#FF3B30] bg-[#fff0f0] text-xs">
                                                 <AppIcon name="trash" :size="12" /> Delete
                                             </button>
                                         </div>
@@ -440,7 +440,7 @@
 
         <!-- Manage Attachments Modal -->
         <IosModal :visible="showAttachmentsModal" title="Manage Attachments" width="50vw" max-width="95vw"
-            :show-action="hasPermission('applicants.edit')"
+            :show-action="true"
             action-label="Upload" :loading="uploading"
             :action-disabled="!attachmentForm.file || !attachmentForm.attachment_type" @action="uploadAttachment"
             @close="closeAttachmentsModal" @update:visible="showAttachmentsModal = $event">
@@ -468,7 +468,7 @@
                                     @click="viewAttachment(attachment)" />
                                 <AppButton icon="download" size="small" outlined
                                     @click="downloadAttachment(attachment)" />
-                                <AppButton v-if="hasPermission('applicants.edit')" icon="trash" size="small"
+                                <AppButton icon="trash" size="small"
                                     severity="danger" outlined @click="deleteAttachment(attachment)" />
                             </div>
                         </div>
@@ -476,7 +476,7 @@
                 </div>
 
                 <!-- Upload New Attachment -->
-                <div v-if="hasPermission('applicants.edit')">
+                <div>
                     <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Upload New Attachment</h4>
                     <div class="space-y-3">
                         <div>
@@ -579,7 +579,7 @@ const props = defineProps({
 });
 
 // Permission composable
-const { hasPermission } = usePermission();
+const { hasPermission, isAdmin } = usePermission();
 
 // State
 const loading = ref(false);
