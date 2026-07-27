@@ -44,12 +44,12 @@ export const useScholarshipStatus = () => {
 			description: 'Enrolled as scholar',
 		},
 		completed: {
-			label: 'Completed',
+			label: 'Term Completed',
 			severity: 'secondary',
 			color: '#6B7280',
 			bgColor: '#F3F4F6',
 			textColor: '#1F2937',
-			description: 'Scholarship completed',
+			description: 'Academic Term completed',
 		},
 		withdrawn: {
 			label: 'Withdrawn',

@@ -46,7 +46,7 @@ class ScholarshipProfileListingService
 
         $perPage = (int) $request->get('records', 10);
 
-        $profiles = $query->orderBy('updated_at', 'desc')
+        $profiles = $this->applyOrdering($query, $request)
             ->paginate($perPage)
             ->withQueryString();
 
@@ -63,7 +63,7 @@ class ScholarshipProfileListingService
 
         $this->applyFilters($query, $request, $legacyAcademicTermReviewService);
 
-        return $query->orderBy('updated_at', 'desc')->get();
+        return $this->applyOrdering($query, $request)->get();
     }
 
     /**
@@ -83,7 +83,7 @@ class ScholarshipProfileListingService
 
         $total = (clone $query)->toBase()->getCountForPagination();
 
-        $profiles = $query->orderBy('updated_at', 'desc')
+        $profiles = $this->applyOrdering($query, $request)
             ->limit($limit)
             ->get();
 
@@ -155,6 +155,26 @@ class ScholarshipProfileListingService
         ];
     }
 
+    /**
+     * Apply ordering. For the "all" tab, sort by status (active first) then
+     * alphabetically by last_name, first_name. Otherwise default to updated_at desc.
+     */
+    private function applyOrdering(Builder $query, Request $request): Builder
+    {
+        if ($request->filled('unified_status') && $request->unified_status === 'all') {
+            return $query->leftJoin('scholarship_records', function ($join) {
+                    $join->on('scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+                        ->whereRaw('scholarship_records.id = (SELECT sr2.id FROM scholarship_records sr2 WHERE sr2.profile_id = scholarship_profiles.profile_id ORDER BY sr2.created_at DESC LIMIT 1)');
+                })
+                ->orderByRaw("CASE WHEN scholarship_records.unified_status = 'active' THEN 0 ELSE 1 END")
+                ->orderBy('scholarship_profiles.last_name')
+                ->orderBy('scholarship_profiles.first_name')
+                ->select('scholarship_profiles.*');
+        }
+
+        return $query->orderBy('updated_at', 'desc');
+    }
+
     private function applyFilters(Builder $query, Request $request, LegacyAcademicTermReviewService $legacyAcademicTermReviewService): void
     {
         if ($request->filled('unified_status')) {
@@ -162,6 +182,11 @@ class ScholarshipProfileListingService
                 // Graduated profiles are identified by having a graduation_date on academic_enrollments
                 $query->whereHas('academicEnrollments', function ($relationQuery) {
                     $relationQuery->whereNotNull('graduation_date');
+                });
+            } elseif ($request->unified_status === 'all') {
+                // Show all profiles except pending
+                $query->whereHas('latestScholarshipRecord', function ($relationQuery) {
+                    $relationQuery->where('unified_status', '!=', 'pending');
                 });
             } else {
                 $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($request) {
@@ -369,6 +394,16 @@ class ScholarshipProfileListingService
             }
 
             $profile->previous_record_statuses = $previousRecordStatuses->toArray();
+
+            // Term/AY pairs of previously completed records, shown under the
+            // "Term Completed" badge in the Previous Records column.
+            $profile->previous_completed_periods = $profile->scholarshipGrant
+                ->filter(fn($record) => $record->id !== $latestId && $record->unified_status === 'completed')
+                ->map(fn($record) => implode(' ', array_filter([$record->term, $record->academic_year])))
+                ->filter()
+                ->unique()
+                ->values()
+                ->toArray();
 
             $contractCount = $latestRecord && $latestRecord->attachments ? $latestRecord->attachments->count() : 0;
 

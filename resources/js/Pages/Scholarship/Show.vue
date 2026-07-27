@@ -1477,7 +1477,7 @@ const activityLogs = ref([]);
 const statusTimeline = ref([]);
 
 // Status composable
-const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
+const { getStatusLabel } = useScholarshipStatus();
 
 // Watch for tab changes and persist to localStorage
 watch(activeTab, (newValue) => {

@@ -396,13 +396,22 @@
                                 <div v-if="Object.keys(slotProps.data.previous_record_statuses ?? {}).length"
                                     class="flex flex-wrap gap-1">
                                     <div v-for="(count, status) in slotProps.data.previous_record_statuses"
-                                        :key="status" class="flex items-center gap-1">
-                                        <div :class="getStatusBadgeClass(status)"
-                                            class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block">
-                                            {{ getScholarshipStatusLabel(status) }}
+                                        :key="status">
+                                        <div class="flex items-center gap-1">
+                                            <div :class="getStatusBadgeClass(status)"
+                                                class="px-2 py-0.5 rounded-full text-xs font-semibold border text-center inline-block">
+                                                {{ getScholarshipStatusLabel(status) }}
+                                            </div>
+                                            <Badge v-if="count > 1" :value="count" severity="secondary" size="small"
+                                                v-tooltip.top="`${count} records with this status`" />
                                         </div>
-                                        <Badge v-if="count > 1" :value="count" severity="secondary" size="small"
-                                            v-tooltip.top="`${count} records with this status`" />
+                                        <div v-if="status === 'completed' && slotProps.data.previous_completed_periods?.length"
+                                            class="mt-0.5 text-xs leading-tight text-gray-500 dark:text-gray-400">
+                                            <div v-for="(period, i) in slotProps.data.previous_completed_periods"
+                                                :key="i">
+                                                {{ period }}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <span v-else class="text-xs text-gray-400">—</span>
@@ -983,9 +992,10 @@ const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatu
 // Graduate records. Pending records live on the Applicants page. Every other
 // status is reachable through the "Other Records" button.
 const statusTabs = [
+    { label: 'All', value: 'all', icon: 'users' },
     { label: 'Active', value: 'active', icon: 'user-check' },
-    { label: 'Completed', value: 'completed', icon: 'circle-check' },
-    { label: 'Graduate', value: 'graduated', icon: 'graduation-cap' },
+    { label: 'Term Completed', value: 'completed', icon: 'circle-check' },
+    { label: 'Graduated', value: 'graduated', icon: 'graduation-cap' },
 ];
 const TAB_STATUSES = statusTabs.map(t => t.value);
 
@@ -999,7 +1009,7 @@ const isAllowedStatus = (status) =>
     TAB_STATUSES.includes(status) || otherStatusOptions.value.some(option => option.value === status);
 
 const activeTab = ref(
-    isAllowedStatus(filter.value.unified_status) ? filter.value.unified_status : 'active'
+    isAllowedStatus(filter.value.unified_status) ? filter.value.unified_status : 'all'
 );
 
 // The "Other Records" button is highlighted whenever a non-tab status is active
@@ -1156,7 +1166,7 @@ const reportLoading = ref(false);
 const exportRows = computed(() => (exportMode.value === 'all' ? reportRows.value : selectedRows.value));
 
 // Report title defaults to "<Status> Scholarship Records Report" for the active tab
-const STATUS_TITLE_WORD = { active: 'Active', completed: 'Completed', graduated: 'Graduated' };
+const STATUS_TITLE_WORD = { all: 'All', active: 'Active', completed: 'Term Completed', graduated: 'Graduated' };
 const exportDefaultTitle = computed(() => {
     const word = STATUS_TITLE_WORD[activeTab.value] || getStatusLabel(activeTab.value);
     return `${word} Scholarship Records Report`;
@@ -1529,36 +1539,15 @@ const getLegacyTermReviewTooltip = (profile) => {
     return `${conflictingGroups} ${groupLabel} still contain ${totalOpenTerms} pending/active ${termLabel}. Review this profile's legacy records.`;
 };
 
-const getApprovalStatusLabel = (status) => {
-    if (!Array.isArray(props.approvalStatuses)) return status || 'Unknown';
-    const statusObj = props.approvalStatuses.find(s => s.value === status);
-    return statusObj?.label || status || 'Unknown';
-};
 
-const getApprovalStatusSeverity = (status) => {
-    switch (status) {
-        case 'approved':
-            return 'success';
-        case 'pending':
-            return 'warning';
-        case 'declined':
-            return 'danger';
-        case 'auto_approved':
-            return 'info';
-        case 'conditionally_approved':
-            return 'contrast';
-        default:
-            return 'secondary';
-    }
-};
 
 const getScholarshipStatusLabel = (status) => {
+    // Profiles page shows per-term records, so "completed" is spelled out as "Term Completed"
+    if (status === 'completed') return 'Term Completed';
     return getStatusLabel(status);
 };
 
-const getScholarshipStatusSeverity = (status) => {
-    return getStatusSeverity(status);
-};
+
 
 const getStatusTooltip = (status) => {
     const tooltips = {
@@ -1567,7 +1556,7 @@ const getStatusTooltip = (status) => {
         approved: 'Enrolled as scholar',
         denied: 'Application has been denied',
         active: 'Enrolled as scholar',
-        completed: 'Scholarship completed',
+        completed: 'Scholarship term completed',
         'completed-transferred': 'Scholarship completed and transferred',
         unknown: 'Status unknown',
     };
@@ -1723,9 +1712,6 @@ const refreshData = () => {
     });
 };
 
-const toggleSimpleView = () => {
-    simpleView.value = !simpleView.value;
-};
 
 const openContextMenu = (event, profile) => {
     selectedProfileForContext.value = profile;
@@ -1750,12 +1736,12 @@ watch(simpleView, (newValue) => {
 onMounted(() => {
     window.addEventListener('keydown', handleKeydown);
 
-    // Keep the listing constrained to an allowed status (the three tabs plus the
-    // "Other Records" statuses). Pending/unknown URLs snap back to the Active tab.
+    // Keep the listing constrained to an allowed status (the tabs plus the
+    // "Other Records" statuses). Pending/unknown URLs snap back to the All tab.
     // Setting the status filter triggers the watcher, which reloads the data.
     if (!isAllowedStatus(filter.value.unified_status)) {
-        activeTab.value = 'active';
-        filter.value.unified_status = 'active';
+        activeTab.value = 'all';
+        filter.value.unified_status = 'all';
     }
 });
 

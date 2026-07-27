@@ -74,6 +74,11 @@ class ScholarshipProfileResource extends JsonResource
             'educational_backgrounds' => $this->educationalBackgrounds ? $this->educationalBackgrounds : null,
             'ongoing_scholarship_grant' => $this->ongoingScholarshipGrant ? $this->ongoingScholarshipGrant : null,
             'scholarship_grant' => $this->scholarshipGrant ? $this->scholarshipGrant : null,
+            // True when the profile has at least one academic record (enrollment).
+            // Uses the withExists() flag when the query provided it, otherwise checks.
+            'has_academic_record' => array_key_exists('academic_enrollments_exists', $this->resource->getAttributes())
+                ? (bool) $this->resource->academic_enrollments_exists
+                : $this->resource->academicEnrollments()->exists(),
             // application_status, application_status_remarks, application_status_date are now in scholarship_records
             'guardian_name' => $this->guardian_name,
             'guardian_relationship' => $this->guardian_relationship,

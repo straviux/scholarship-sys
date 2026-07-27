@@ -1412,6 +1412,11 @@ const truncateText = (text, maxLength = 80) => {
                                                 @click.stop="copyApplicantName(slotProps.data)">
                                                 <AppIcon name="copy" :size="12" />
                                             </button>
+                                            <!-- Warning for profiles without an academic record -->
+                                            <AppIcon v-if="slotProps.data.has_academic_record === false"
+                                                name="exclamation-triangle" :size="12"
+                                                class="shrink-0 text-amber-500"
+                                                v-tooltip.top="'No academic record'" />
                                             <!-- Priority Badge (visible in simple view) - Fixed position on the right -->
                                             <div v-if="simpleView && slotProps.data.priority_level"
                                                 class="flex-shrink-0 ml-2 flex items-center justify-center"
@@ -1481,27 +1486,40 @@ const truncateText = (text, maxLength = 80) => {
                     <!-- Academic Column -->
                     <Column header="Academic" style="min-width: 240px; max-width: 280px">
                         <template #body="slotProps">
-                            <div v-if="slotProps.data.scholarship_grant[0]" class="flex items-center gap-2">
-                                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-2xs font-bold shrink-0"
-                                    :style="{ backgroundColor: getProgramAvatarColor(slotProps.data.scholarship_grant[0].program) }"
-                                    v-tooltip.top="slotProps.data.scholarship_grant[0].program?.name || 'Program'">
-                                    {{ getProgramAbbrev(slotProps.data.scholarship_grant[0].program) }}
+                            <div class="flex flex-col gap-1.5">
+                                <div v-if="slotProps.data.scholarship_grant[0]" class="flex items-center gap-2">
+                                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-2xs font-bold shrink-0"
+                                        :style="{ backgroundColor: getProgramAvatarColor(slotProps.data.scholarship_grant[0].program) }"
+                                        v-tooltip.top="slotProps.data.scholarship_grant[0].program?.name || 'Program'">
+                                        {{ getProgramAbbrev(slotProps.data.scholarship_grant[0].program) }}
+                                    </div>
+                                    <div
+                                        class="text-xs flex flex-col gap-0.5 min-w-0 whitespace-normal break-words leading-snug">
+                                        <div class="font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
+                                            {{ slotProps.data.scholarship_grant[0].school.shortname }}
+                                        </div>
+                                        <div v-if="slotProps.data.scholarship_grant[0]?.course">
+                                            {{ slotProps.data.scholarship_grant[0].course.name ||
+                                                slotProps.data.scholarship_grant[0].course.shortname }}
+                                        </div>
+                                        <div class="text-gray-600" v-if="slotProps.data.scholarship_grant[0]?.year_level">
+                                            {{ slotProps.data.scholarship_grant[0].year_level }} Year
+                                        </div>
+                                    </div>
                                 </div>
-                                <div
-                                    class="text-xs flex flex-col gap-0.5 min-w-0 whitespace-normal break-words leading-snug">
-                                    <div class="font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
-                                        {{ slotProps.data.scholarship_grant[0].school.shortname }}
-                                    </div>
-                                    <div v-if="slotProps.data.scholarship_grant[0]?.course">
-                                        {{ slotProps.data.scholarship_grant[0].course.name ||
-                                            slotProps.data.scholarship_grant[0].course.shortname }}
-                                    </div>
-                                    <div class="text-gray-600" v-if="slotProps.data.scholarship_grant[0]?.year_level">
-                                        {{ slotProps.data.scholarship_grant[0].year_level }} Year
-                                    </div>
+                                <div v-if="slotProps.data.has_academic_record === false" class="flex items-center">
+                                    <Tag severity="warn" rounded
+                                        v-tooltip.top="'This profile has no academic record'">
+                                        <span class="flex items-center gap-1 text-2xs">
+                                            <AppIcon name="exclamation-triangle" :size="10" />
+                                            No Academic Record
+                                        </span>
+                                    </Tag>
                                 </div>
+                                <span
+                                    v-if="!slotProps.data.scholarship_grant[0] && slotProps.data.has_academic_record !== false"
+                                    class="text-gray-400">-</span>
                             </div>
-                            <span v-else class="text-gray-400">-</span>
                         </template>
                     </Column>
 

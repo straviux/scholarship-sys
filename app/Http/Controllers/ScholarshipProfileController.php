@@ -1184,11 +1184,11 @@ class ScholarshipProfileController extends Controller
      */
     public function profiles(Request $request)
     {
-        // The Profiles page is organised into Active / Completed / Graduate tabs.
-        // Pending records now live on the Applicants page, so default to the
-        // "active" tab when no status is supplied to keep them out of this listing.
+        // The Profiles page is organised into All / Active / Completed / Graduate
+        // tabs. Pending records now live on the Applicants page, so default to
+        // the "all" tab (which excludes pending) when no status is supplied.
         if (!$request->filled('unified_status')) {
-            $request->merge(['unified_status' => 'active']);
+            $request->merge(['unified_status' => 'all']);
         }
 
         $profiles = app(ScholarshipProfileListingService::class)->paginate($request);
@@ -1215,9 +1215,9 @@ class ScholarshipProfileController extends Controller
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', '300');
 
-        // Match the Profiles page default: no status ⇒ Active tab.
+        // Match the Profiles page default: no status ⇒ All tab.
         if (!$request->filled('unified_status')) {
-            $request->merge(['unified_status' => 'active']);
+            $request->merge(['unified_status' => 'all']);
         }
 
         $result = app(ScholarshipProfileListingService::class)->collectForExport($request);

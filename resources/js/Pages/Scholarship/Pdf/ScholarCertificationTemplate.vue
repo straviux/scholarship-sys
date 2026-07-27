@@ -62,9 +62,8 @@
             <p v-else style="text-align:justify;text-indent:60pt;margin-top:14pt !important;">
                 {{ lastNameRef }}, is presently taking her Post-Graduate Internship (PGI) and has requested Financial
                 Assistance to cover the cost of her internship. In accordance with our policy and the Sangguniang
-                Panlalawigan Resolution, the granting of said assistance is allowed, subject to an additional six (6)
-                moths Return-of-Service (ROS) obligation for every year of support. The amount granted for PGI is
-                Seventy Thousand Pesos (₱70,000.00) per semester, or One Hundred Forty Thousand Pesos (₱140,000.00) per
+                Panlalawigan Resolution, the granting of said assistance is allowed, subject to an additional one (1) year Return-of-Service (ROS) obligation for every year of support. The amount granted for PGI is
+                 One Hundred Forty Thousand Pesos (₱140,000.00) per
                 year.
             </p>
 
@@ -93,8 +92,8 @@
     <div
         style="position:fixed;bottom:0;left:0;right:0;text-align:center;font-family:Verdana,Geneva,sans-serif;font-size:8pt;color:#333;">
         <div style="border-top:2.2pt solid #00B050;margin-bottom:4pt;"></div>
-        <p style="margin:0;">Provincial Capitol, Fernandez St., Bgy. Tanglaw, City of Puerto Princesa, 5300</p>
-        <p style="margin:0;">pgpscholarshipprogram@gmail.com</p>
+        <p style="margin:0;font-weight: 600;">📧 <a href="mailto:pgpscholarshipprogram@gmail.com" style="color:#1663C7">pgpscholarshipprogram@gmail.com</a>  📞Phone: 0917-318-5070</p>
+        <p style="margin:0;font-weight: 600;font-style: italic;">Capitol Complex, Puerto Princesa City, Palawan, 5300</p>
     </div>
 
 </template>

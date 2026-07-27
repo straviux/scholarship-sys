@@ -15,6 +15,7 @@ use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -44,8 +45,27 @@ class ApplicantController extends Controller
         }
 
         $query = ScholarshipProfile::distinct()
-            // Join with scholarship_records to access date_filed and filtering
-            ->join('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+            // LEFT join so profiles without any scholarship record still appear
+            // (they're flagged with a warning tag in the UI). The pending-status
+            // and soft-delete guards live in the join clause — putting them in
+            // where() would turn the LEFT join back into an INNER join.
+            ->leftJoin('scholarship_records', function ($join) {
+                $join->on('scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+                    ->where('scholarship_records.unified_status', 'pending')
+                    ->whereNull('scholarship_records.deleted_at');
+            })
+            // Keep the pending-only behavior, but ALSO include profiles with no
+            // scholarship records at all (flagged with a warning tag in the UI).
+            // Profiles whose only records are non-pending (active/interviewed/etc.)
+            // stay hidden, exactly as before.
+            ->where(function ($q) {
+                $q->whereNotNull('scholarship_records.profile_id')
+                    ->orWhereNotExists(function ($sub) {
+                        $sub->select(DB::raw(1))
+                            ->from('scholarship_records as sr_any')
+                            ->whereColumn('sr_any.profile_id', 'scholarship_profiles.profile_id');
+                    });
+            })
             // Eager load relationships - only load PENDING scholarship records to match the filter
             ->with(['createdBy', 'updatedBy', 'scholarshipGrant' => function ($q) {
                 $q->where('unified_status', 'pending')
@@ -107,10 +127,10 @@ class ApplicantController extends Controller
                 'scholarship_records.date_filed',
                 'scholarship_records.unified_status'
             )
-            // CRITICAL: Filter for ONLY PENDING status to exclude approved/denied/active records
-            ->where('scholarship_records.unified_status', 'pending')
-            ->whereNull('scholarship_records.deleted_at')
-            ->whereNotNull('scholarship_records.profile_id');
+            // Flag rows with no academic record (enrollment) so the UI can warn
+            // on them. Must come AFTER select() — select() replaces the column
+            // list, which would silently drop the exists subquery.
+            ->withExists('academicEnrollments');
 
         // Tracking-list tabs (waiting/interview/endorsed hide from main; personal is additive).
         $activeList = $request->get('list');
@@ -555,7 +575,25 @@ class ApplicantController extends Controller
         }
 
         $query = ScholarshipProfile::distinct()
-            ->join('scholarship_records', 'scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+            // LEFT join — same shape as index(): record-less profiles are
+            // included so the report matches what the table shows.
+            ->leftJoin('scholarship_records', function ($join) {
+                $join->on('scholarship_profiles.profile_id', '=', 'scholarship_records.profile_id')
+                    ->where('scholarship_records.unified_status', 'pending')
+                    ->whereNull('scholarship_records.deleted_at');
+            })
+            // Keep the pending-only behavior, but ALSO include profiles with no
+            // scholarship records at all (flagged with a warning tag in the UI).
+            // Profiles whose only records are non-pending (active/interviewed/etc.)
+            // stay hidden, exactly as before.
+            ->where(function ($q) {
+                $q->whereNotNull('scholarship_records.profile_id')
+                    ->orWhereNotExists(function ($sub) {
+                        $sub->select(DB::raw(1))
+                            ->from('scholarship_records as sr_any')
+                            ->whereColumn('sr_any.profile_id', 'scholarship_profiles.profile_id');
+                    });
+            })
             ->with(['scholarshipGrant' => function ($q) {
                 $q->where('unified_status', 'pending')
                     ->with(['program', 'school', 'course'])
@@ -580,10 +618,7 @@ class ApplicantController extends Controller
                 'scholarship_profiles.is_guardian_jpm',
                 'scholarship_records.date_filed',
                 'scholarship_records.unified_status'
-            )
-            ->where('scholarship_records.unified_status', 'pending')
-            ->whereNull('scholarship_records.deleted_at')
-            ->whereNotNull('scholarship_records.profile_id');
+            );
 
         $this->applyApplicantListTabFilter($query, $request->get('list'));
         $this->applyApplicantFilters($query, $request, $programId);
