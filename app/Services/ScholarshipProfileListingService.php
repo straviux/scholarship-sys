@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ScholarshipProfile;
+use App\Services\ScholarshipExpenseProjectionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Schema;
 
 class ScholarshipProfileListingService
 {
+    private ?ScholarshipExpenseProjectionService $expenseProjectionService = null;
+
     public const FILTER_KEYS = [
         'unified_status',
         'name',
@@ -61,6 +64,36 @@ class ScholarshipProfileListingService
         $this->applyFilters($query, $request, $legacyAcademicTermReviewService);
 
         return $query->orderBy('updated_at', 'desc')->get();
+    }
+
+    /**
+     * Collect the full filtered listing for the "Export All" feature. Returns
+     * rows shaped exactly like paginate() (so the same client-side export works
+     * for both selected rows and the full set), capped for safety.
+     *
+     * @return array{data: Collection, capped: bool, total: int}
+     */
+    public function collectForExport(Request $request, int $limit = 20000): array
+    {
+        $legacyAcademicTermReviewService = app(LegacyAcademicTermReviewService::class);
+
+        $query = ScholarshipProfile::with($this->buildRelationships());
+
+        $this->applyFilters($query, $request, $legacyAcademicTermReviewService);
+
+        $total = (clone $query)->toBase()->getCountForPagination();
+
+        $profiles = $query->orderBy('updated_at', 'desc')
+            ->limit($limit)
+            ->get();
+
+        $profiles->transform(fn($profile) => $this->transformProfile($profile, $legacyAcademicTermReviewService));
+
+        return [
+            'data' => $profiles,
+            'capped' => $total > $limit,
+            'total' => $total,
+        ];
     }
 
     /**
@@ -136,6 +169,8 @@ class ScholarshipProfileListingService
 
                     if ($request->unified_status === 'active') {
                         $statuses[] = 'approved';
+                    } elseif ($request->unified_status === 'completed') {
+                        $statuses[] = 'completed-transferred';
                     }
 
                     $relationQuery->whereIn('unified_status', array_unique($statuses));
@@ -281,13 +316,28 @@ class ScholarshipProfileListingService
 
     private function transformProfiles(LengthAwarePaginator $profiles, LegacyAcademicTermReviewService $legacyAcademicTermReviewService): void
     {
-        $profiles->getCollection()->transform(function ($profile) use ($legacyAcademicTermReviewService) {
+        $profiles->getCollection()->transform(
+            fn($profile) => $this->transformProfile($profile, $legacyAcademicTermReviewService)
+        );
+    }
+
+    private function transformProfile($profile, LegacyAcademicTermReviewService $legacyAcademicTermReviewService)
+    {
+        return (function ($profile) use ($legacyAcademicTermReviewService) {
             $latestRecord = $profile->latestScholarshipRecord;
             $graduatedEnrollment = $profile->academicEnrollments->first();
             $ongoingRosRecord = $profile->relationLoaded('returnOfServiceRecords')
                 ? $profile->returnOfServiceRecords->first()
                 : null;
             $legacyTermReview = $legacyAcademicTermReviewService->summarizeProfileRecords($profile->scholarshipGrant);
+
+            // Attach projected expense fields to the latest grant(s) so reports
+            // can surface them. Projection is CPU-only (config-driven, no queries).
+            $this->attachExpenseProjection($latestRecord);
+            $firstGrant = $profile->scholarshipGrant->first();
+            if ($firstGrant && $firstGrant !== $latestRecord) {
+                $this->attachExpenseProjection($firstGrant);
+            }
 
             $profile->latest_scholarship_record = $latestRecord;
             $profile->total_scholarships = $profile->scholarshipGrant->count();
@@ -337,7 +387,23 @@ class ScholarshipProfileListingService
             $profile->has_voucher = $voucherCount > 0;
 
             return $profile;
-        });
+        })($profile);
+    }
+
+    /**
+     * Attach projected-expense attributes to a scholarship record in place.
+     */
+    private function attachExpenseProjection($record): void
+    {
+        if (!$record instanceof \App\Models\ScholarshipRecord) {
+            return;
+        }
+
+        $this->expenseProjectionService ??= app(ScholarshipExpenseProjectionService::class);
+
+        foreach ($this->expenseProjectionService->projectForRecord($record) as $key => $value) {
+            $record->setAttribute($key, $value);
+        }
     }
 
     private function applyTaggedFilter(Builder $query): void

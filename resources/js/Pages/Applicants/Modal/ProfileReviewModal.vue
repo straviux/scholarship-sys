@@ -14,6 +14,11 @@ const props = defineProps({
     visible: Boolean,
     applicant: Object,
     applicants: Array,
+    // profile_id → array of tracking-list keys the profile belongs to
+    listMembership: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
 const emit = defineEmits([
@@ -24,6 +29,9 @@ const emit = defineEmits([
     'edit-yakap',
     'edit-remarks',
     'assign-priority',
+    'remove-priority',
+    'add-to-list',
+    'remove-from-list',
     'delete',
     'closed',
 ]);
@@ -40,7 +48,19 @@ const hasNextProfile = computed(() => currentProfileIndex.value < (props.applica
 const canEditRequirements = computed(() => hasPermission('applicants.view'));
 const canInterview = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer'));
 const canManagePriority = computed(() => hasPermission('priority.manage'));
+const canRemovePriority = computed(() => Boolean(currentApplicant.value?.priority_level) && currentApplicant.value.priority_level !== 'normal');
 const canDelete = computed(() => hasRole('administrator'));
+
+// Tracking lists — mirrors the row context menu on the Applicants page
+const TRACKING_LISTS = [
+    { key: 'waiting', label: 'Waiting', icon: 'clock' },
+    { key: 'interview', label: 'Interview', icon: 'comments' },
+    { key: 'endorsed', label: 'Endorsed', icon: 'share-2' },
+    { key: 'personal', label: 'My List', icon: 'bookmark' },
+];
+const currentLists = computed(() => props.listMembership?.[currentApplicant.value?.profile_id] || []);
+const addableLists = computed(() => TRACKING_LISTS.filter(list => !currentLists.value.includes(list.key)));
+const removableLists = computed(() => TRACKING_LISTS.filter(list => currentLists.value.includes(list.key)));
 // The Edit group is always available, so the menu always renders
 const hasActionMenu = computed(() => true);
 
@@ -196,6 +216,24 @@ const assignPriority = () => {
     emit('assign-priority', currentApplicant.value);
 };
 
+const removePriority = () => {
+    if (!currentApplicant.value) return;
+    hideActionPopover();
+    emit('remove-priority', currentApplicant.value);
+};
+
+const addToList = (listType) => {
+    if (!currentApplicant.value) return;
+    hideActionPopover();
+    emit('add-to-list', currentApplicant.value, listType);
+};
+
+const removeFromList = (listType) => {
+    if (!currentApplicant.value) return;
+    hideActionPopover();
+    emit('remove-from-list', currentApplicant.value, listType);
+};
+
 const deleteApplicant = () => {
     if (!currentApplicant.value) return;
     hideActionPopover();
@@ -245,11 +283,35 @@ const visitProfile = () => {
                             <span>Remarks</span>
                         </button>
 
+                        <template v-if="addableLists.length">
+                            <div class="my-1 border-t border-gray-100 dark:border-gray-700"></div>
+                            <div class="px-3 py-1 text-2xs font-semibold uppercase tracking-wide text-gray-400">Add to</div>
+                            <button v-for="list in addableLists" :key="`add-${list.key}`"
+                                class="ios-action-item text-compact" @click="addToList(list.key)">
+                                <AppIcon :name="list.icon" :size="14" class="ios-action-icon" />
+                                <span>{{ list.label }}</span>
+                            </button>
+                        </template>
+
+                        <template v-if="removableLists.length">
+                            <div class="my-1 border-t border-gray-100 dark:border-gray-700"></div>
+                            <div class="px-3 py-1 text-2xs font-semibold uppercase tracking-wide text-gray-400">Remove from</div>
+                            <button v-for="list in removableLists" :key="`remove-${list.key}`"
+                                class="ios-action-item text-compact" @click="removeFromList(list.key)">
+                                <AppIcon name="times" :size="14" class="ios-action-icon" />
+                                <span>{{ list.label }}</span>
+                            </button>
+                        </template>
+
                         <template v-if="canManagePriority">
                             <div class="my-1 border-t border-gray-100 dark:border-gray-700"></div>
                             <button class="ios-action-item text-compact" @click="assignPriority">
                                 <AppIcon name="star" :size="14" class="ios-action-icon" />
                                 <span>Assign Priority</span>
+                            </button>
+                            <button v-if="canRemovePriority" class="ios-action-item text-compact" @click="removePriority">
+                                <AppIcon name="star-fill" :size="14" class="ios-action-icon" />
+                                <span>Remove Priority</span>
                             </button>
                         </template>
 

@@ -16,38 +16,34 @@
                         </div>
                     </div>
                 </template>
+                <template #center>
+                    <!-- Program tabs — the primary filter, front and center -->
+                    <div class="flex flex-wrap items-center justify-center gap-2" role="tablist"
+                        aria-label="Scholarship programs">
+                        <button type="button" role="tab" :aria-selected="!filters.program"
+                            class="flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all"
+                            :class="!filters.program
+                                ? 'bg-indigo-500 !text-white shadow-md'
+                                : 'bg-white text-slate-600 hover:text-indigo-600'"
+                            @click="selectProgramTab(null)">
+                            <AppIcon name="layers" :size="14" />
+                            All Programs
+                        </button>
+                        <button v-for="(program, i) in programs" :key="program.id" type="button" role="tab"
+                            :aria-selected="isProgramTabActive(program)"
+                            class="flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all"
+                            :class="isProgramTabActive(program)
+                                ? 'bg-indigo-500 !text-white shadow-md'
+                                : 'bg-white text-slate-600 hover:text-indigo-600'"
+                            @click="selectProgramTab(program)">
+                            <span class="h-2 w-2 rounded-full"
+                                :style="{ backgroundColor: program.bg_color || programDotColors[i % programDotColors.length] }"></span>
+                            {{ program.shortname || program.name }}
+                        </button>
+                    </div>
+                </template>
                 <template #end>
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <div class="flex flex-wrap gap-3" role="tablist" aria-label="Interviewed applicant views">
-                            <button type="button" role="tab" :aria-selected="activeTab === 'interviewed'"
-                                class="cursor-pointer rounded-full  px-4 py-[0.65rem] text-slate-700 transition-colors"
-                                :class="activeTab === 'interviewed'
-                                    ? ' bg-blue-400 !text-slate-50'
-                                    : ' bg-white hover:border-blue-200'" @click="activeTab = 'interviewed'">
-                                <div class="flex items-center gap-2">
-                                    <AppIcon name="clipboard-list" :size="14" />
-                                    <span>Interviewed Applicants</span>
-                                    <span
-                                        class="rounded-full bg-blue-50 px-2 py-0.5 text-2xs font-semibold text-blue-700">
-                                        {{ filteredList.length }}
-                                    </span>
-                                </div>
-                            </button>
-                            <button type="button" role="tab" :aria-selected="activeTab === 'recommendation-lists'"
-                                class="cursor-pointer rounded-full  px-4 py-[0.65rem] text-slate-700 transition-colors"
-                                :class="activeTab === 'recommendation-lists'
-                                    ? 'bg-blue-400 !text-slate-50'
-                                    : ' bg-white hover:border-blue-200'" @click="activeTab = 'recommendation-lists'">
-                                <div class="flex items-center gap-2">
-                                    <AppIcon name="list-checks" :size="14" />
-                                    <span>Recommendation Lists</span>
-                                    <span
-                                        class="rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700">
-                                        {{ recommendationLists.length }}
-                                    </span>
-                                </div>
-                            </button>
-                        </div>
                         <AppButton icon="users" label="Cumulative List" severity="secondary" rounded size="small"
                             @click="openCumulativeScholarListModal" />
                         <AppButton v-if="activeTab === 'interviewed'" icon="printer" severity="info" text rounded
@@ -63,7 +59,52 @@
                         
                         
 
-                        <Panel class="!rounded-4xl overflow-hidden shadow-sm">
+                        <Panel class="!rounded-4xl overflow-hidden shadow-sm mt-4">
+                            <!-- View Tabs -->
+                            <div class="mb-4 -mt-2 flex flex-wrap items-center justify-between gap-3">
+                                <div class="flex flex-wrap gap-1" role="tablist" aria-label="Interviewed applicant views">
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'interviewed'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'interviewed'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'interviewed'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="clipboard-list" :size="14" />
+                                            <span>Interviewed</span>
+                                            <span
+                                                class="rounded-full bg-blue-50 px-2 py-0.5 text-2xs font-semibold text-blue-700">
+                                                {{ filteredList.length }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'recommendation-lists'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'recommendation-lists'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'recommendation-lists'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="list-checks" :size="14" />
+                                            <span>Recommendation Lists</span>
+                                            <span
+                                                class="rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700">
+                                                {{ recommendationLists.length }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-3 text-sm opacity-75">
+                                    <span class="font-semibold text-blue-600">{{ stats.total }} interviewed</span>
+                                    <span class="text-gray-300">|</span>
+                                    <span class="font-semibold text-green-600">{{ stats.recommended }} recommended</span>
+                                    <span class="text-gray-300">|</span>
+                                    <span class="font-semibold text-yellow-600">{{ stats.furtherEval }} for evaluation</span>
+                                    <span class="text-gray-300">|</span>
+                                    <span class="font-semibold text-red-600">{{ stats.notRecommended }} not recommended</span>
+                                </div>
+                            </div>
+
                             <div v-if="selectedRows.length > 0"
                                 class="mb-4 rounded-3xl border border-yellow-200 bg-yellow-50 p-3">
                                 <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -98,64 +139,28 @@
                                 </div>
                             </div>
                             
-                            <div class="flex items-end gap-6 short:gap-3 short:mb-2 px-3 py-2 text-sm opacity-75">
-                            <span class="font-semibold text-blue-600">{{ stats.total }} interviewed</span>
-                            <span class="text-gray-300">|</span>
-                            <span class="font-semibold text-green-600">{{ stats.recommended }} recommended</span>
-                            <span class="text-gray-300">|</span>
-                            <span class="font-semibold text-yellow-600">{{ stats.furtherEval }} for evaluation</span>
-                            <span class="text-gray-300">|</span>
-                            <span class="font-semibold text-red-600">{{ stats.notRecommended }} not recommended</span>
-                        </div>
-
-                            <!-- Paginator (top) -->
-                            <div class="flex items-center justify-between px-2 py-2 border-b border-slate-100">
-                                <span class="text-xs text-gray-400">
-                                    {{ props.interviewed_applicants_pagination.from || 0 }}&ndash;{{
-                                        props.interviewed_applicants_pagination.to || 0 }} of {{
-                                        props.interviewed_applicants_pagination.total || 0 }}
-                                </span>
-                                <Paginator
-                                    :first="(props.interviewed_applicants_pagination.current_page - 1) * props.interviewed_applicants_pagination.per_page"
-                                    :rows="props.interviewed_applicants_pagination.per_page"
-                                    :totalRecords="props.interviewed_applicants_pagination.total"
-                                    :rowsPerPageOptions="[100, 50, 20, 10, 200]" @page="onPageChange"
-                                    template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                    class="!p-0 text-xs [&_.p-paginator-page]:!min-w-[1.75rem] [&_.p-paginator-page]:!h-[1.75rem] [&_.p-paginator-page]:!text-xs [&_.p-paginator-element]:!text-xs [&_.p-paginator-element]:!min-w-[1.75rem] [&_.p-paginator-element]:!h-[1.75rem] [&_.p-paginator-rpp-dropdown]:!text-xs [&_.p-paginator-current]:!text-xs" />
-                            </div>
-
                             <!-- Filters above table -->
-                            <div class="flex items-end gap-3 short:gap-2 flex-wrap px-2 py-3 mb-4">
+                            <div class="flex flex-wrap items-end gap-3 mb-4">
+                                <InputGroup class="w-full sm:w-64">
+                                    <InputGroupAddon>
+                                        <AppIcon name="search" :size="14" class="text-gray-400" />
+                                    </InputGroupAddon>
+                                    <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
+                                </InputGroup>
                                 <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
-                                    <IconField iconPosition="left">
-                                        <InputIcon>
-                                            <AppIcon name="search" :size="14" class="text-gray-400" />
-                                        </InputIcon>
-                                        <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
-                                    </IconField>
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
                                     <Select v-model="filters.recommendation" :options="recommendationOptions"
                                         optionLabel="label" optionValue="value" placeholder="All Recommendations" size="small"
                                         class="w-full" />
                                 </div>
                                 <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                                    <ProgramSelect v-model="filters.program" size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                                     <CourseSelect v-model="filters.course" size="small" class="w-full" :load-all-when-no-program="true" />
                                 </div>
                                 <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Recommendation List</label>
                                     <Select v-model="filters.listStatus" :options="recommendationListStatusOptions"
                                         optionLabel="label" optionValue="value" placeholder="All Recommendation List Status"
                                         size="small" class="min-w-[220px] w-full" />
                                 </div>
-                                <div class="ml-auto flex flex-wrap justify-end gap-2">
+                                <div class="ml-auto flex flex-wrap justify-end gap-2 self-center">
                                     <AppButton icon="filter" label="Show Eligible Applicants" severity="secondary" rounded
                                         size="xsmall" @click="presetRecommendationCreationFilters" />
                                     <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
@@ -394,42 +399,67 @@
                     </TabPanel>
 
                     <TabPanel value="recommendation-lists">
-                        <Panel class="!rounded-4xl overflow-hidden shadow-sm">
-                            <div class="flex items-center justify-between mb-4 short:mb-2 -mt-2">
-                                <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                                    <span>{{ filteredRecommendationLists.length }} saved transaction(s)</span>
+                        <Panel class="!rounded-4xl overflow-hidden shadow-sm mt-4">
+                            <!-- View Tabs -->
+                            <div class="mb-4 -mt-2 flex flex-wrap items-center justify-between gap-3">
+                                <div class="flex flex-wrap gap-1" role="tablist" aria-label="Interviewed applicant views">
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'interviewed'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'interviewed'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'interviewed'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="clipboard-list" :size="14" />
+                                            <span>Interviewed</span>
+                                            <span
+                                                class="rounded-full bg-blue-50 px-2 py-0.5 text-2xs font-semibold text-blue-700">
+                                                {{ filteredList.length }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'recommendation-lists'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'recommendation-lists'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'recommendation-lists'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="list-checks" :size="14" />
+                                            <span>Recommendation Lists</span>
+                                            <span
+                                                class="rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700">
+                                                {{ recommendationLists.length }}
+                                            </span>
+                                        </div>
+                                    </button>
                                 </div>
-                                <AppButton v-if="deletedRecommendationLists.length > 0" icon="archive"
-                                    label="Deleted Lists" severity="warning" outlined rounded size="xsmall"
-                                    @click="showDeletedListsModal = true" />
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm text-gray-500">{{ filteredRecommendationLists.length }} saved
+                                        transaction(s)</span>
+                                    <AppButton v-if="deletedRecommendationLists.length > 0" icon="archive"
+                                        label="Deleted Lists" severity="warning" outlined rounded size="xsmall"
+                                        @click="showDeletedListsModal = true" />
+                                </div>
                             </div>
 
                             <!-- Filters above table -->
-                            <div class="flex items-end gap-3 short:gap-2 flex-wrap px-2 py-3 border-b border-slate-100 bg-slate-50/50">
+                            <div class="flex flex-wrap items-end gap-3 mb-4">
+                                <InputGroup class="w-full sm:w-64">
+                                    <InputGroupAddon>
+                                        <AppIcon name="search" :size="14" class="text-gray-400" />
+                                    </InputGroupAddon>
+                                    <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
+                                </InputGroup>
                                 <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Applicant Name</label>
-                                    <IconField iconPosition="left">
-                                        <InputIcon>
-                                            <AppIcon name="search" :size="14" class="text-gray-400" />
-                                        </InputIcon>
-                                        <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
-                                    </IconField>
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Recommendation</label>
                                     <Select v-model="filters.recommendation" :options="recommendationOptions"
                                         optionLabel="label" optionValue="value" placeholder="All Recommendations" size="small"
                                         class="w-full" />
                                 </div>
                                 <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Program</label>
-                                    <ProgramSelect v-model="filters.program" size="small" class="w-full" />
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                                     <CourseSelect v-model="filters.course" size="small" class="w-full" :load-all-when-no-program="true" />
                                 </div>
-                                <div class="ml-auto flex flex-wrap justify-end gap-2">
+                                <div class="ml-auto flex flex-wrap justify-end gap-2 self-center">
                                     <AppButton icon="history" label="Reset Filters" severity="secondary" outlined rounded
                                         size="xsmall" @click="clearInterviewedFilters" />
                                 </div>
@@ -945,8 +975,8 @@ import moment from 'moment';
 import IosModal from '@/Components/ui/IosModal.vue';
 import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
+import { useApi } from '@/composable/api';
 
-import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import ContextMenu from 'primevue/contextmenu';
 import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
@@ -1033,6 +1063,34 @@ const filters = ref({
     course: null,
     listStatus: null,
 });
+
+// Program tabs (toolbar center) — same active-program list ProgramSelect uses
+const { data: programsData, fetchData: fetchPrograms } = useApi(route('scholarshipprograms.getactivelist'));
+const programs = computed(() => programsData.value || []);
+onMounted(fetchPrograms);
+
+// Fallback dot colors for programs without a bg_color
+const programDotColors = ['#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#F97316', '#EAB308', '#22C55E', '#14B8A6', '#06B6D4', '#3B82F6'];
+
+const isProgramTabActive = (program) => {
+    const current = filters.value?.program;
+    if (!current || !program) return false;
+    if (current.id != null && program.id != null && String(current.id) === String(program.id)) return true;
+    const currentName = (current.shortname || current.name || '').toLowerCase();
+    const programName = (program.shortname || program.name || '').toLowerCase();
+    return currentName !== '' && currentName === programName;
+};
+
+const selectProgramTab = (program) => {
+    if (!program) {
+        if (!filters.value.program) return;
+        filters.value.program = null;
+    } else {
+        if (isProgramTabActive(program)) return;
+        filters.value.program = program;
+    }
+    // The filters watcher fires onFilterChange()
+};
 
 const contextMenu = ref();
 const recommendationListContextMenu = ref();

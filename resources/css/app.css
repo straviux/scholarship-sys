@@ -369,3 +369,30 @@
 .dark .p-editor-container .p-editor-content .ql-editor.ql-blank::before {
 	color: #6b7280;
 }
+
+/* ============================================
+   125% DPI compensation (zoom: 0.8 on <body>)
+   zoom also scales viewport-relative units, so 100vh renders at 80%
+   of the real viewport and full-height layouts fall short. Counter it
+   by inflating viewport units by the inverse factor (1 / 0.8 = 1.25).
+   ============================================ */
+.dpr-zoom .h-screen {
+	height: 125vh;
+}
+.dpr-zoom .min-h-screen {
+	min-height: 125vh;
+}
+.dpr-zoom .h-dvh {
+	height: 125dvh;
+}
+.dpr-zoom .min-h-dvh {
+	min-height: 125dvh;
+}
+.dpr-zoom .w-screen {
+	width: 125vw;
+}
+@media (min-width: 768px) {
+	.dpr-zoom .sidebar-shell {
+		height: calc(125vh - var(--sidebar-top) - 1rem);
+	}
+}

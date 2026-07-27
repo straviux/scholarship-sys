@@ -17,6 +17,30 @@
                 </template>
 
                 <template #center>
+                    <!-- Program tabs — the primary filter, front and center -->
+                    <div class="flex flex-wrap items-center justify-center gap-2" role="tablist"
+                        aria-label="Scholarship programs">
+                        <button type="button" role="tab" :aria-selected="!filter.program"
+                            class="flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all"
+                            :class="!filter.program
+                                ? 'bg-indigo-500 !text-white shadow-md'
+                                : 'bg-white text-slate-600 hover:text-indigo-600'"
+                            @click="selectProgramTab(null)">
+                            <AppIcon name="layers" :size="14" />
+                            All Programs
+                        </button>
+                        <button v-for="program in programs" :key="program.id" type="button" role="tab"
+                            :aria-selected="isProgramTabActive(program)"
+                            class="flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all"
+                            :class="isProgramTabActive(program)
+                                ? 'bg-indigo-500 !text-white shadow-md'
+                                : 'bg-white text-slate-600 hover:text-indigo-600'"
+                            @click="selectProgramTab(program)">
+                            <span class="h-2 w-2 rounded-full"
+                                :style="{ backgroundColor: program.bg_color || getProgramColor(program.id) }"></span>
+                            {{ program.shortname || program.name }}
+                        </button>
+                    </div>
                 </template>
                 <template #end>
                     <div class="flex flex-wrap items-center justify-end gap-3 scholarship-toolbar__actions">
@@ -29,8 +53,21 @@
                                     severity="info" outlined class="justify-start" />
                             </div>
                         </Popover>
+                        <!-- Export — ticked rows or the full filtered set -->
+                        <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export"
+                            @click="exportPopover.toggle($event)" severity="info" rounded outlined
+                            :loading="reportLoading" v-tooltip.bottom="'Export records'" />
+                        <Popover ref="exportPopover">
+                            <div class="flex flex-col gap-2 w-60">
+                                <AppButton @click="openExportSelected" label="Export Selected" icon="square-check"
+                                    severity="info" outlined class="justify-start" />
+                                <AppButton @click="openExportAll" label="Export All (current filters)" icon="layers"
+                                    severity="secondary" outlined class="justify-start" />
+                            </div>
+                        </Popover>
+                        <!-- Legacy "Generate Report" hidden in favour of Export Selected (v-if="false") -->
                         <AppButton icon="print" @click="reportTypePopover.toggle($event)" severity="secondary"
-                            v-tooltip.bottom="'Generate Report'" v-if="hasPermission('reports.view')" rounded
+                            v-tooltip.bottom="'Generate Report'" v-if="false" rounded
                             outlined />
                         <Popover ref="reportTypePopover">
                             <div class="flex flex-col gap-2 w-52">
@@ -74,6 +111,12 @@
                             size="small" class="w-full" />
                     </div>
                     <div class="flex flex-col">
+                        <label class="text-xs font-medium text-gray-600 mb-1">Review Status</label>
+                        <Select v-model="drawerFilter.needs_term_review" :options="legacyTermReviewOptions"
+                            optionLabel="label" optionValue="value" placeholder="All" showClear size="small"
+                            class="w-full" />
+                    </div>
+                    <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
                         <Select v-model="drawerFilter.academic_year" :options="academicYearOptions" optionLabel="label"
                             optionValue="value" placeholder="All Years" showClear size="small" class="w-full" />
@@ -97,21 +140,6 @@
                         <Select v-model="drawerFilter.grant_provision" :options="grantProvisionOptions"
                             optionLabel="label" optionValue="value" placeholder="All Provisions" size="small"
                             class="w-full" showClear />
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
-                        <Select v-model="drawerFilter.unified_status" :options="unifiedStatusOptions"
-                            optionLabel="label" optionValue="value" placeholder="All Statuses" showClear size="small"
-                            class="w-full" filter>
-                            <template #filter="{ value, updateModel }">
-                                <InputGroup>
-                                    <InputText :value="value" @input="updateModel($event.target.value)"
-                                        placeholder="Search status..." class="w-full" />
-                                    <AppButton v-if="value" icon="times" severity="secondary" text size="small"
-                                        @click="updateModel('')" />
-                                </InputGroup>
-                            </template>
-                        </Select>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Contract</label>
@@ -139,24 +167,49 @@
             </IosModal>
 
             <!-- Profiles Panel (filters + dataview merged) -->
-            <Panel class="!rounded-4xl overflow-hidden mt-8">
-                <!-- Info Bar -->
-                <div
-                    class="mb-4 flex flex-col gap-3 rounded-4xl bg-gray-50 p-3 dark:bg-[#1e242b] -mt-2 xl:flex-row xl:items-center xl:justify-between">
-                    <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:max-w-md">
-                        <InputGroup>
-                            <InputGroupAddon>
-                                <AppIcon name="search" :size="14" class="text-gray-400" />
-                            </InputGroupAddon>
-                            <InputText v-model="globalFilter" placeholder="Search..." size="small"
-                                @keyup.enter="triggerSearch()" />
-                        </InputGroup>
-                        <AppIcon name="sliders-horizontal" :size="24" class="text-gray-400 cursor-pointer" @click="openDrawer()" v-tooltip.bottom="'More Filters'"/>
-                        <!-- <AppButton icon="sliders-horizontal"  severity="warn" text rounded @click="openDrawer()"
-                            v-tooltip.bottom="'More Filters'" /> -->
+            <Panel class="!rounded-4xl overflow-hidden mt-4">
+                <!-- Status Tabs -->
+                <div class="mb-6 -mt-2 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap gap-1" role="tablist" aria-label="Profile status views">
+                        <button v-for="tab in statusTabs" :key="tab.value" type="button" role="tab"
+                            :aria-selected="activeTab === tab.value"
+                            class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                            :class="activeTab === tab.value
+                                ? 'border-blue-500 font-semibold text-blue-600'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                            @click="selectTab(tab.value)">
+                            <div class="flex items-center gap-2">
+                                <AppIcon :name="tab.icon" :size="14" />
+                                <span>{{ tab.label }}</span>
+                            </div>
+                        </button>
+
+                        <!-- Other Records — reveals the remaining statuses -->
+                        <button type="button" role="tab" :aria-selected="isOtherActive"
+                            class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                            :class="isOtherActive
+                                ? 'border-blue-500 font-semibold text-blue-600'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                            @click="otherRecordsPopover.toggle($event)">
+                            <div class="flex items-center gap-2">
+                                <AppIcon name="layers" :size="14" />
+                                <span>{{ otherButtonLabel }}</span>
+                                <AppIcon name="chevron-down" :size="14" />
+                            </div>
+                        </button>
+                        <Popover ref="otherRecordsPopover">
+                            <div class="flex flex-col gap-1 w-48">
+                                <button v-for="option in otherStatusOptions" :key="option.value" type="button"
+                                    class="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
+                                    :class="activeTab === option.value ? 'bg-blue-50 font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-200' : 'text-gray-700 dark:text-gray-200'"
+                                    @click="selectOtherStatus(option.value)">
+                                    <span>{{ option.label }}</span>
+                                    <AppIcon v-if="activeTab === option.value" name="check" :size="14" />
+                                </button>
+                            </div>
+                        </Popover>
                     </div>
-                    <div class="flex w-full flex-wrap items-center justify-between gap-3 xl:w-auto xl:justify-end">
-                        
+                    <div class="flex items-center gap-3">
                         <div class="flex items-center gap-2">
                             <RecordsSelect v-model="records" label="label" class="w-16" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
@@ -169,8 +222,19 @@
                 </div>
 
                 <div class="flex flex-wrap items-end gap-3 mb-4">
+                    <InputGroup class="w-full sm:w-64">
+                        <InputGroupAddon>
+                            <AppIcon name="search" :size="14" class="text-gray-400" />
+                        </InputGroupAddon>
+                        <InputText v-model="globalFilter" placeholder="Search..." size="small"
+                            @keyup.enter="triggerSearch()" />
+                    </InputGroup>
                     <div class="flex flex-col">
-                        <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
+                        <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
+                            size="small" :multiple="false" />
+                    </div>
+                    <div class="flex flex-col">
+                        <MunicipalitySelect v-model="filter.municipality" custom-placeholder="All Municipalities"
                             size="small" />
                     </div>
                     <div class="flex flex-col">
@@ -181,24 +245,9 @@
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
                             size="small" />
                     </div>
-                    <div class="flex flex-col">
-                        <Select v-model="filter.unified_status" :options="unifiedStatusOptions" optionLabel="label"
-                            optionValue="value" placeholder="All Statuses" showClear size="small" filter>
-                            <template #filter="{ value, updateModel }">
-                                <InputGroup>
-                                    <InputText :value="value" @input="updateModel($event.target.value)"
-                                        placeholder="Search status..." class="w-full" />
-                                    <AppButton v-if="value" icon="times" severity="secondary" text size="small"
-                                        @click="updateModel('')" />
-                                </InputGroup>
-                            </template>
-                        </Select>
-                    </div>
-                    <div class="flex flex-col">
-                        <Select v-model="filter.needs_term_review" :options="legacyTermReviewOptions"
-                            optionLabel="label" optionValue="value" placeholder="Review Status" showClear size="small"
-                            class="min-w-[160px]" />
-                    </div>
+                    <AppIcon name="sliders-horizontal" :size="24"
+                        class="text-gray-400 cursor-pointer self-center" @click="openDrawer()"
+                        v-tooltip.bottom="'More Filters'" />
                     <AppButton v-if="activeFilterTags.length" icon="times" severity="danger" text rounded size="small"
                         @click="clearFilters" v-tooltip.bottom="'Clear Filters'" />
                 </div>
@@ -221,21 +270,26 @@
                         @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
                         :globalFilter="globalFilter"
                         :rowClass="(row) => expandedRows.length && !expandedRows.some(r => r.profile_id === row.profile_id) ? 'row-blurred' : ''"
-                        v-model:expandedRows="expandedRows">
+                        v-model:expandedRows="expandedRows" v-model:selection="selectedRows" dataKey="profile_id">
 
+                        <Column selectionMode="multiple" :exportable="false" headerClass="w-12" bodyClass="w-12" />
                         <Column expander headerClass="w-12" bodyClass="w-12" />
 
-                        <Column field="unique_id" header="ID" headerClass="min-w-[120px]" bodyClass="min-w-[120px]">
+                        <Column field="unique_id" header="Name" headerClass="min-w-[160px]" bodyClass="min-w-[160px]">
                             <template #body="slotProps">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-[40px]">
-                                        <Avatar :label="getInitials(slotProps.data)" size="normal" shape="circle"
+                                    <div class="w-[40px] shrink-0">
+                                        <img v-if="slotProps.data.gender == 'M'" src="/images/male-avatar.png"
+                                            alt="avatar" class="rounded-full w-10 h-10" />
+                                        <img v-else-if="slotProps.data.gender == 'F'" src="/images/female-avatar.png"
+                                            alt="avatar" class="rounded-full w-10 h-10" />
+                                        <Avatar v-else :label="getInitials(slotProps.data)" size="normal" shape="circle"
                                             class="bg-gradient-to-br from-blue-500 to-blue-600 text-white" />
                                     </div>
-                                    <div>
+                                    <div class="flex-1 min-w-0">
                                         <div class="flex flex-wrap items-center gap-2">
                                             <div as="button"
-                                                class="font-bold text-sm text-sky-700 underline underline-offset-2 cursor-pointer hover:text-blue-800"
+                                                class="font-semibold text-sky-800 text-sm flex-1 min-w-0 cursor-pointer hover:text-cyan-600 underline underline-offset-2"
                                                 @click="viewFullProfile(slotProps.data)"
                                                 @contextmenu.prevent="openContextMenu($event, slotProps.data)">{{
                                                     getFullName(slotProps.data) }}</div>
@@ -266,43 +320,53 @@
                                                 v-tooltip.bottom="'Disbursement/Voucher attachment uploaded'" />
                                         </div>
                                     </div>
+                                    <button type="button"
+                                        class="ml-auto shrink-0 self-start cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
+                                        v-tooltip.top="'Copy name'"
+                                        @click.stop="copyProfileName(slotProps.data)">
+                                        <AppIcon name="copy" :size="12" />
+                                    </button>
                                 </div>
                             </template>
                         </Column>
 
 
-                        <Column field="contact_no" header="Contact" headerClass="min-w-[130px]"
-                            bodyClass="min-w-[130px]">
+                        <Column header="Address" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
                             <template #body="slotProps">
-                                <div class="text-sm">
-                                    <div>{{ slotProps.data.contact_no || 'N/A' }}</div>
-                                    <div class="text-xs text-gray-500">{{ slotProps.data.municipality || 'N/A' }}</div>
+                                <div class="text-xs flex items-center gap-2 uppercase" v-if="slotProps.data.municipality">
+                                    <AppIcon name="map" :size="12" class="text-gray-500" />
+                                    <span>{{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
+                                        ${slotProps.data.barangay}` : '' }}</span>
+                                </div>
+                                <span v-else class="text-xs text-gray-400">-</span>
+                                <div class="text-xs mt-0.5 flex items-center gap-2">
+                                    <AppIcon name="phone" :size="12" class="text-gray-500" />
+                                    <span>{{ slotProps.data.contact_no || 'No contact no.' }}</span>
                                 </div>
                             </template>
                         </Column>
 
-                        <Column field="program" header="Program" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
+                        <Column header="Academic" headerClass="min-w-[200px]" bodyClass="min-w-[200px]">
                             <template #body="slotProps">
-                                <div v-if="slotProps.data.latest_scholarship_record"
-                                    class="text-sm font-semibold truncate">
-                                    {{ slotProps.data.latest_scholarship_record.program?.shortname || 'N/A' }}
-                                </div>
-                                <div v-else class="text-sm text-gray-400">N/A</div>
-                            </template>
-                        </Column>
-
-                        <Column field="course" header="Course" headerClass="min-w-[150px]" bodyClass="min-w-[150px]">
-                            <template #body="slotProps">
-                                <div v-if="slotProps.data.latest_scholarship_record">
-                                    <div class="text-sm font-medium truncate">
-                                        {{ slotProps.data.latest_scholarship_record.course?.shortname || 'N/A' }}
+                                <div v-if="slotProps.data.latest_scholarship_record" class="flex items-center gap-2">
+                                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-2xs font-bold shrink-0"
+                                        :style="{ backgroundColor: slotProps.data.latest_scholarship_record.program?.bg_color || getProgramColor(slotProps.data.latest_scholarship_record.program?.id ?? 0) }"
+                                        v-tooltip.top="slotProps.data.latest_scholarship_record.program?.name || 'Program'">
+                                        {{ getProgramAbbrev(slotProps.data.latest_scholarship_record.program) }}
                                     </div>
-                                    <div class="text-xs text-gray-500 truncate">
-                                        {{ slotProps.data.latest_scholarship_record.school?.shortname || 'N/A' }}
-                                    </div>
-                                    <div class="text-xs text-gray-600 truncate"
-                                        v-if="slotProps.data.latest_scholarship_record.year_level">
-                                        {{ slotProps.data.latest_scholarship_record.year_level }} Year
+                                    <div class="text-xs flex flex-col gap-0.5 min-w-0 leading-snug">
+                                        <div class="font-medium truncate"
+                                            v-if="slotProps.data.latest_scholarship_record.school">
+                                            {{ slotProps.data.latest_scholarship_record.school.shortname }}
+                                        </div>
+                                        <div class="truncate" v-if="slotProps.data.latest_scholarship_record.course">
+                                            {{ slotProps.data.latest_scholarship_record.course.name ||
+                                                slotProps.data.latest_scholarship_record.course.shortname }}
+                                        </div>
+                                        <div class="text-gray-600 truncate"
+                                            v-if="slotProps.data.latest_scholarship_record.year_level">
+                                            {{ slotProps.data.latest_scholarship_record.year_level }} Year
+                                        </div>
                                     </div>
                                 </div>
                                 <div v-else class="text-sm text-gray-400">N/A</div>
@@ -685,6 +749,15 @@
             </template>
         </IosModal>
 
+        <!-- Export Modal (ticked rows or full filtered set) -->
+        <ExportSelectedModal :show="showExportModal" :selected-rows="exportRows" :mode="exportMode"
+            :default-title="exportDefaultTitle" default-sort="name" :enable-signatories="true" :enable-projected="true"
+            :enable-jpm="true" :enable-grant-provision="true" @update:show="showExportModal = $event" />
+
+        <!-- Centered loading message while the full report dataset is fetched -->
+        <LoadingIndicator :show="reportLoading" message="Generating report data…"
+            subtext="Fetching all records matching the current filters. Large result sets may take a moment." />
+
         <!-- Generate Report Modal -->
         <ReportWizardModal v-if="!isTechvocReport" :show="showReportWizard" :mode="reportWizardMode" :selected-program="selectedReportProgram" @update:show="showReportWizard = $event" />
 
@@ -841,6 +914,8 @@ import TermSelect from '@/Components/selects/TermSelect.vue';
 
 // Modal Components
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
+import ExportSelectedModal from '@/Pages/Applicants/Modal/ExportSelectedModal.vue';
+import LoadingIndicator from '@/Components/ui/LoadingIndicator.vue';
 import ReportWizardModal from './Modal/ReportWizardModal.vue';
 import GraduateListReportModal from './Modal/GraduateListReportModal.vue';
 import TechvocWizardModal from './Modal/TechvocWizardModal.vue';
@@ -868,7 +943,6 @@ const {
     first,
     totalRecords,
     search: triggerSearch,
-    clear: clearAllFilters,
     onPageChange,
 } = useFilterManager({
     routeName: 'scholarship.profiles',
@@ -903,6 +977,74 @@ const {
 });
 
 
+const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
+
+// Status tabs — the Profiles page primarily lists Active, Completed and
+// Graduate records. Pending records live on the Applicants page. Every other
+// status is reachable through the "Other Records" button.
+const statusTabs = [
+    { label: 'Active', value: 'active', icon: 'user-check' },
+    { label: 'Completed', value: 'completed', icon: 'circle-check' },
+    { label: 'Graduate', value: 'graduated', icon: 'graduation-cap' },
+];
+const TAB_STATUSES = statusTabs.map(t => t.value);
+
+// "Other Records" statuses — everything except the tabs, the folded-in
+// 'approved' state, and 'pending' (which belongs on the Applicants page).
+const EXCLUDED_OTHER_STATUSES = ['pending', 'active', 'approved', 'completed'];
+const otherStatusOptions = computed(() =>
+    statusOptions.value.filter(option => !EXCLUDED_OTHER_STATUSES.includes(option.value))
+);
+const isAllowedStatus = (status) =>
+    TAB_STATUSES.includes(status) || otherStatusOptions.value.some(option => option.value === status);
+
+const activeTab = ref(
+    isAllowedStatus(filter.value.unified_status) ? filter.value.unified_status : 'active'
+);
+
+// The "Other Records" button is highlighted whenever a non-tab status is active
+const isOtherActive = computed(() => !TAB_STATUSES.includes(activeTab.value));
+const otherButtonLabel = computed(() =>
+    isOtherActive.value ? getStatusLabel(activeTab.value) : 'Other Records'
+);
+
+const otherRecordsPopover = ref(null);
+
+const applyStatus = (status) => {
+    if (activeTab.value !== status) {
+        activeTab.value = status;
+        collapseExpandedRows();
+        // Setting the status filter triggers the filter watcher, which runs the search
+        filter.value.unified_status = status;
+    }
+    otherRecordsPopover.value?.hide();
+};
+
+const selectTab = (tab) => applyStatus(tab);
+const selectOtherStatus = (status) => applyStatus(status);
+
+// Program tabs (toolbar center) — match on shortname so the active state also
+// holds when the filter was rehydrated from the query string.
+const isProgramTabActive = (program) => {
+    const current = filter.value?.program;
+    if (!current || !program) return false;
+    const currentName = (current.shortname || current.name || '').toLowerCase();
+    const programName = (program.shortname || program.name || '').toLowerCase();
+    return currentName === programName;
+};
+
+const selectProgramTab = (program) => {
+    if (!program) {
+        if (!filter.value.program) return;
+        filter.value.program = '';
+    } else {
+        if (isProgramTabActive(program)) return;
+        filter.value.program = program;
+    }
+    collapseExpandedRows();
+    // The filter watcher below fires triggerSearch()
+};
+
 // Computed: active filter tags for display
 const activeFilterTags = computed(() => {
     const tags = [];
@@ -918,7 +1060,6 @@ const activeFilterTags = computed(() => {
         academic_year: 'Academic Year',
         term: 'Term',
         grant_provision: 'Grant Provision',
-        unified_status: 'Status',
         needs_term_review: 'Review Status',
         contract_status: 'Contract',
         voucher_status: 'Voucher',
@@ -949,7 +1090,7 @@ const removeFilter = (key) => {
 
 // Auto-trigger search when basic filters change
 watch(
-    () => [filter.value.program, filter.value.course, filter.value.year_level, filter.value.unified_status, filter.value.needs_term_review],
+    () => [filter.value.program, filter.value.school, filter.value.municipality, filter.value.course, filter.value.year_level, filter.value.unified_status, filter.value.needs_term_review],
     () => {
         collapseExpandedRows();
         triggerSearch();
@@ -968,7 +1109,7 @@ watch(records, () => {
 // Filter drawer state
 const showFilterDrawer = ref(false);
 const drawerFilter = ref({});
-const drawerFilterKeys = ['program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status', 'encoded_by'];
+const drawerFilterKeys = ['program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'grant_provision', 'needs_term_review', 'contract_status', 'voucher_status', 'encoded_by'];
 
 const openDrawer = () => {
     const snapshot = {};
@@ -990,7 +1131,7 @@ const applyDrawerFilters = () => {
 };
 
 const clearDrawerFilters = () => {
-    const nullKeys = ['grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status', 'academic_year', 'term', 'encoded_by'];
+    const nullKeys = ['grant_provision', 'needs_term_review', 'contract_status', 'voucher_status', 'academic_year', 'term', 'encoded_by'];
     for (const key of drawerFilterKeys) {
         drawerFilter.value[key] = nullKeys.includes(key) ? null : '';
     }
@@ -1003,13 +1144,89 @@ const expandedRows = ref([]);
 const contextMenu = ref();
 const selectedProfileForContext = ref(null);
 
+// Export — either the rows ticked in the table ('selected') or the full
+// filtered set fetched from the server ('all'). Both feed the shared modal.
+const selectedRows = ref([]);
+const showExportModal = ref(false);
+const exportPopover = ref(null);
+const exportMode = ref('selected');
+const reportRows = ref([]);
+const reportLoading = ref(false);
+
+const exportRows = computed(() => (exportMode.value === 'all' ? reportRows.value : selectedRows.value));
+
+// Report title defaults to "<Status> Scholarship Records Report" for the active tab
+const STATUS_TITLE_WORD = { active: 'Active', completed: 'Completed', graduated: 'Graduated' };
+const exportDefaultTitle = computed(() => {
+    const word = STATUS_TITLE_WORD[activeTab.value] || getStatusLabel(activeTab.value);
+    return `${word} Scholarship Records Report`;
+});
+
+const openExportSelected = () => {
+    exportPopover.value?.hide();
+    if (selectedRows.value.length === 0) {
+        toast.warn('Please select at least one record to export.');
+        return;
+    }
+    exportMode.value = 'selected';
+    showExportModal.value = true;
+};
+
+// Export every record matching the current filters/tab, not just ticked rows.
+const openExportAll = async () => {
+    exportPopover.value?.hide();
+    if (reportLoading.value) return;
+    reportLoading.value = true;
+    try {
+        // Reuse the exact query string that produced the current view.
+        const qs = window.location.search || '';
+        const { data } = await axios.get(route('profile.reportData') + qs);
+        const rows = data?.data ?? [];
+
+        if (!rows.length) {
+            toast.warn('No records match the current filters.');
+            return;
+        }
+
+        reportRows.value = rows;
+        exportMode.value = 'all';
+        showExportModal.value = true;
+
+        if (data?.capped) {
+            toast.warn('Report was capped at 20,000 records. Narrow the filters for a complete set.');
+        }
+    } catch (error) {
+        console.error('Failed to load report data:', error);
+        toast.error('Failed to load report data.');
+    } finally {
+        reportLoading.value = false;
+    }
+};
+
 const collapseExpandedRows = () => {
     expandedRows.value = [];
 };
 
 const clearFilters = () => {
     collapseExpandedRows();
-    clearAllFilters();
+    // Reset every filter except the status tab, which always constrains the listing
+    filter.value.name = '';
+    filter.value.program = '';
+    filter.value.school = '';
+    filter.value.course = '';
+    filter.value.year_level = '';
+    filter.value.academic_year = '';
+    filter.value.term = '';
+    filter.value.municipality = '';
+    filter.value.barangay = '';
+    filter.value.grant_provision = null;
+    filter.value.needs_term_review = null;
+    filter.value.contract_status = null;
+    filter.value.voucher_status = null;
+    filter.value.encoded_by = '';
+    globalFilter.value = '';
+    filter.value.unified_status = activeTab.value;
+    triggerSearch();
 };
 
 // Permission composable
@@ -1082,6 +1299,17 @@ function getProgramColor(id) {
 function getProgramInitials(program) {
     const name = program.shortname || program.name || '';
     return name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+// Program avatar in the Academic column — fixed abbreviations for the four
+// scholarship programs, with a generic initials fallback.
+function getProgramAbbrev(program) {
+    const name = (program?.shortname || program?.name || '').toUpperCase();
+    if (name.includes('MED')) return 'MED';
+    if (name.includes('EFA')) return 'EFA';
+    if (name.includes('TEC') || name.includes('TECH')) return 'TEC';
+    if (name.includes('BAR')) return 'BAR';
+    return name.split(/\s+/).map(w => w[0]).join('').slice(0, 3) || '?';
 }
 
 const isTechvocProgram = (program) => {
@@ -1185,25 +1413,6 @@ const profileToDelete = ref(null);
 
 // Inject the refresh function from AdminLayout
 const refreshActivityLogs = inject('refreshActivityLogs', null);
-const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
-
-const unifiedStatusOptions = computed(() => {
-    const ordered = [
-        { label: 'All Statuses', value: null },
-        { label: 'Pending', value: 'pending' },
-        { label: 'Active', value: 'active' },
-        { label: 'Completed', value: 'completed' },
-        { label: 'Interviewed', value: 'interviewed' },
-        { label: 'Graduated', value: 'graduated' },
-    ];
-
-    // Add remaining statuses
-    const remaining = statusOptions.value.filter(option =>
-        !['pending', 'active', 'completed', 'interviewed', 'graduated'].includes(option.value)
-    );
-
-    return [...ordered, ...remaining];
-});
 
 const attachmentStatusOptions = computed(() => [
     { label: 'All', value: null },
@@ -1296,6 +1505,15 @@ const getInitials = (profile) => {
     const firstInitial = profile.first_name?.charAt(0) || '';
     const lastInitial = profile.last_name?.charAt(0) || '';
     return (firstInitial + lastInitial).toUpperCase() || '?';
+};
+
+// Copy "lastname, firstname" to the clipboard
+const copyProfileName = (profile) => {
+    const text = [profile?.last_name, profile?.first_name].filter(Boolean).join(', ');
+    if (!text) return;
+    navigator.clipboard.writeText(text)
+        .then(() => toast.success(`Copied "${text}"`))
+        .catch(() => toast.error('Failed to copy name'));
 };
 
 const getLegacyTermReviewTooltip = (profile) => {
@@ -1531,6 +1749,14 @@ watch(simpleView, (newValue) => {
 // Lifecycle
 onMounted(() => {
     window.addEventListener('keydown', handleKeydown);
+
+    // Keep the listing constrained to an allowed status (the three tabs plus the
+    // "Other Records" statuses). Pending/unknown URLs snap back to the Active tab.
+    // Setting the status filter triggers the watcher, which reloads the data.
+    if (!isAllowedStatus(filter.value.unified_status)) {
+        activeTab.value = 'active';
+        filter.value.unified_status = 'active';
+    }
 });
 
 onBeforeUnmount(() => {

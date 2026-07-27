@@ -542,7 +542,7 @@ const preparedBy = ref('');
 const canEnableJpmHighlighting = computed(() => {
     if (!currentUser.value) return false;
     const userRoles = currentUser.value.roles || [];
-    const allowedRoles = ['administrator', 'jpm_admin', 'program_manager'];
+    const allowedRoles = ['administrator', 'jpm_admin', 'program_manager', 'screening_officer'];
     return userRoles.some(role => allowedRoles.includes(role.name || role));
 });
 

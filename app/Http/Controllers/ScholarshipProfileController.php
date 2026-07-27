@@ -1184,6 +1184,13 @@ class ScholarshipProfileController extends Controller
      */
     public function profiles(Request $request)
     {
+        // The Profiles page is organised into Active / Completed / Graduate tabs.
+        // Pending records now live on the Applicants page, so default to the
+        // "active" tab when no status is supplied to keep them out of this listing.
+        if (!$request->filled('unified_status')) {
+            $request->merge(['unified_status' => 'active']);
+        }
+
         $profiles = app(ScholarshipProfileListingService::class)->paginate($request);
 
         // Get filter options
@@ -1195,6 +1202,30 @@ class ScholarshipProfileController extends Controller
             'programs' => $programs,
             'declineReasons' => config('scholarship.decline_reasons'),
             'profiles_total' => $profiles->total(),
+        ]);
+    }
+
+    /**
+     * Return the full filtered profile listing as JSON for the "Export All"
+     * feature. Uses the same filters and row shape as the Profiles listing so
+     * the client-side export handles selected rows and the full set identically.
+     */
+    public function reportData(Request $request): JsonResponse
+    {
+        ini_set('memory_limit', '1024M');
+        ini_set('max_execution_time', '300');
+
+        // Match the Profiles page default: no status ⇒ Active tab.
+        if (!$request->filled('unified_status')) {
+            $request->merge(['unified_status' => 'active']);
+        }
+
+        $result = app(ScholarshipProfileListingService::class)->collectForExport($request);
+
+        return response()->json([
+            'data' => $result['data'],
+            'capped' => $result['capped'],
+            'total' => $result['total'],
         ]);
     }
 

@@ -879,7 +879,7 @@ body.ios-admin-page .p-dialog .p-dialog-footer .p-button {
 }
 
 .ios-datatable-rounded.p-datatable {
-	border-radius: 1.5rem;
+	border-radius: 0.375rem;
 	overflow: hidden;
 	border: 1px solid var(--p-datatable-border-color);
 }

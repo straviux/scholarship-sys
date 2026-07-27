@@ -3,13 +3,15 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import moment from 'moment'
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { ref, onBeforeUnmount, watch, computed, inject } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed, inject } from 'vue';
 import { usePermission } from '@/composable/permissions';
+import { useApi } from '@/composable/api';
 import { useFilterManager } from '@/composables/useFilterManager';
 import { stripHtml } from '@/utils/sanitize';
 import axios from 'axios';
 
 import IosModal from '@/Components/ui/IosModal.vue';
+import LoadingIndicator from '@/Components/ui/LoadingIndicator.vue';
 import ApplicantFormModal from './Modal/ApplicantFormModal.vue';
 import YakapCategoryModal from './Modal/YakapCategoryModal.vue';
 import ExportSelectedModal from './Modal/ExportSelectedModal.vue';
@@ -221,9 +223,55 @@ const activeFilterTags = computed(() => {
     return tags;
 });
 
+// Program tabs (toolbar center) — same active-program list ProgramSelect uses
+const { data: programsData, fetchData: fetchPrograms } = useApi(route('scholarshipprograms.getactivelist'));
+const programs = computed(() => programsData.value || []);
+onMounted(fetchPrograms);
+
+// Fallback dot colors for programs without a bg_color
+const programDotColors = ['#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#F97316', '#EAB308', '#22C55E', '#14B8A6', '#06B6D4', '#3B82F6'];
+
+// Program avatar in the Academic column — fixed abbreviations for the four
+// scholarship programs, with a generic initials fallback.
+const getProgramAbbrev = (program) => {
+    const name = (program?.shortname || program?.name || '').toUpperCase();
+    if (name.includes('MED')) return 'MED';
+    if (name.includes('EFA')) return 'EFA';
+    if (name.includes('TEC') || name.includes('TECH')) return 'TEC';
+    if (name.includes('BAR')) return 'BAR';
+    return name.split(/\s+/).map(w => w[0]).join('').slice(0, 3) || '?';
+};
+
+const getProgramAvatarColor = (program) => {
+    if (program?.bg_color) return program.bg_color;
+    if (program?.id != null) return programDotColors[program.id % programDotColors.length];
+    return '#6366F1';
+};
+
+// Match on shortname so the active state also holds when the filter was
+// rehydrated from the query string.
+const isProgramTabActive = (program) => {
+    const current = filter.value?.program;
+    if (!current || !program) return false;
+    const currentName = (current.shortname || current.name || '').toLowerCase();
+    const programName = (program.shortname || program.name || '').toLowerCase();
+    return currentName === programName;
+};
+
+const selectProgramTab = (program) => {
+    if (!program) {
+        if (!filter.value.program) return;
+        filter.value.program = '';
+    } else {
+        if (isProgramTabActive(program)) return;
+        filter.value.program = program;
+    }
+    // The filter watcher below fires triggerSearch()
+};
+
 // Auto-trigger search when basic filters change
 watch(
-    () => [filter.value.program, filter.value.course, filter.value.school, filter.value.year_level, filter.value.date_from, filter.value.date_to],
+    () => [filter.value.program, filter.value.course, filter.value.school, filter.value.municipality, filter.value.year_level, filter.value.date_from, filter.value.date_to],
     () => { triggerSearch(); },
 );
 
@@ -912,6 +960,7 @@ const closeRequirementsModal = () => {
 
 // Export / report modal state
 const showExportModal = ref(false);
+const exportPopover = ref(null);
 const exportMode = ref('selected'); // 'selected' = checked rows, 'all' = full filtered set
 const reportRows = ref([]);
 const reportLoading = ref(false);
@@ -919,13 +968,19 @@ const reportLoading = ref(false);
 // Rows fed to the export modal: the checked rows, or the fetched full set.
 const exportRows = computed(() => exportMode.value === 'all' ? reportRows.value : selectedRows.value);
 
-const openExportModal = () => {
+const openExportSelected = () => {
+    exportPopover.value?.hide();
     if (selectedRows.value.length === 0) {
-        toast.warn('Please select at least one applicant');
+        toast.warn('Please select at least one applicant to export.');
         return;
     }
     exportMode.value = 'selected';
     showExportModal.value = true;
+};
+
+const openExportAll = () => {
+    exportPopover.value?.hide();
+    openReportModal();
 };
 
 // Generate a report of every applicant matching the current filters/tab,
@@ -974,6 +1029,15 @@ const getApplicantInitials = (applicant) => {
 
     formatMemoCache.set(cacheKey, result);
     return result;
+};
+
+// Copy "lastname, firstname" to the clipboard
+const copyApplicantName = (applicant) => {
+    const text = [applicant?.last_name, applicant?.first_name].filter(Boolean).join(', ');
+    if (!text) return;
+    navigator.clipboard.writeText(text)
+        .then(() => toast.success(`Copied "${text}"`))
+        .catch(() => toast.error('Failed to copy name'));
 };
 
 const getApplicantFullName = (applicant) => {
@@ -1065,35 +1129,49 @@ const truncateText = (text, maxLength = 80) => {
                     </div>
                 </template>
 
+                <template #center>
+                    <!-- Program tabs — the primary filter, front and center -->
+                    <div class="flex flex-wrap items-center justify-center gap-2" role="tablist"
+                        aria-label="Scholarship programs">
+                        <button type="button" role="tab" :aria-selected="!filter.program"
+                            class="flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all"
+                            :class="!filter.program
+                                ? 'bg-indigo-500 !text-white shadow-md'
+                                : 'bg-white text-slate-600 hover:text-indigo-600'"
+                            @click="selectProgramTab(null)">
+                            <AppIcon name="layers" :size="14" />
+                            All Programs
+                        </button>
+                        <button v-for="(program, i) in programs" :key="program.id" type="button" role="tab"
+                            :aria-selected="isProgramTabActive(program)"
+                            class="flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all"
+                            :class="isProgramTabActive(program)
+                                ? 'bg-indigo-500 !text-white shadow-md'
+                                : 'bg-white text-slate-600 hover:text-indigo-600'"
+                            @click="selectProgramTab(program)">
+                            <span class="h-2 w-2 rounded-full"
+                                :style="{ backgroundColor: program.bg_color || programDotColors[i % programDotColors.length] }"></span>
+                            {{ program.shortname || program.name }}
+                        </button>
+                    </div>
+                </template>
+
                 <template #end>
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <div class="flex flex-wrap gap-2" role="tablist" aria-label="Applicant lists">
-                            <button v-for="tab in listTabs" :key="tab.key" type="button" role="tab"
-                                :aria-selected="activeListTab === tab.key"
-                                class="cursor-pointer rounded-full px-3 py-2 text-slate-700 transition-colors"
-                                :class="activeListTab === tab.key
-                                    ? 'bg-blue-400 !text-slate-50'
-                                    : 'bg-white hover:border-blue-200'" @click="switchListTab(tab.key)">
-                                <div class="flex items-center gap-2">
-                                    <AppIcon :name="tab.icon" :size="14" />
-                                    <span class="text-compact">{{ tab.label }}</span>
-                                    <span v-if="tab.key !== 'all'"
-                                        class="rounded-full px-2 py-0.5 text-2xs font-semibold"
-                                        :class="activeListTab === tab.key ? 'bg-white/25 text-white' : tab.badgeClass">
-                                        {{ listCounts?.[tab.key] ?? 0 }}
-                                    </span>
-                                </div>
-                            </button>
-                        </div>
-                        <AppButton v-if="hasPermission('applicants.export')" icon="printer" label="Generate Report"
-                            severity="info" outlined rounded size="small" :loading="reportLoading"
-                            @click="openReportModal" v-tooltip.bottom="'Report all applicants matching current filters'" />
-                        <Button @click="openYakapCategoryModal"
-                            severity="success" text rounded v-tooltip.bottom="'Add New Applicant'">
-                            <template #icon>
-                                <AppIcon name="user-plus" :size="24" />
-                            </template>
-                        </Button>
+                        <AppButton icon="plus" @click="openYakapCategoryModal" severity="success"
+                            v-tooltip.bottom="'Add New Applicant'" rounded outlined />
+                        <!-- Export — ticked rows or the full filtered set -->
+                        <AppButton v-if="hasPermission('applicants.export')" icon="download" label="Export"
+                            @click="exportPopover.toggle($event)" severity="info" rounded outlined
+                            :loading="reportLoading" v-tooltip.bottom="'Export applicants'" />
+                        <Popover ref="exportPopover">
+                            <div class="flex flex-col gap-2 w-60">
+                                <AppButton @click="openExportSelected" label="Export Selected" icon="square-check"
+                                    severity="info" outlined class="justify-start" />
+                                <AppButton @click="openExportAll" label="Export All (current filters)" icon="layers"
+                                    severity="secondary" outlined class="justify-start" />
+                            </div>
+                        </Popover>
                     </div>
                 </template>
             </Toolbar>
@@ -1189,24 +1267,31 @@ const truncateText = (text, maxLength = 80) => {
             </IosModal>
 
             <!-- Applicants DataTable -->
-            <Panel class="!rounded-4xl overflow-hidden mt-8">
+            <Panel class="!rounded-4xl overflow-hidden mt-4">
 
-                <!-- Info Bar -->
-                <div
-                    class="flex items-center justify-between gap-4 mb-4 p-3 bg-gray-50 dark:bg-[#1e242b] rounded-4xl -mt-2">
-                    <div class="flex gap-4 max-w-md">
-                        <InputGroup>
-                            <InputGroupAddon>
-                                <AppIcon name="search" :size="16" class="text-gray-400" />
-                            </InputGroupAddon>
-                            <InputText v-model="globalFilter" placeholder="Type name, remarks etc.." size="small"
-                                @keyup.enter="triggerSearch()" />
-                        </InputGroup>
-                        <AppIcon name="sliders-horizontal" :size="24" class="text-gray-400 cursor-pointer" @click="openDrawer()" v-tooltip.bottom="'More Filters'"/>
+                <!-- List Tabs -->
+                <div class="mb-4 -mt-2 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap gap-1" role="tablist" aria-label="Applicant lists">
+                        <button v-for="tab in listTabs" :key="tab.key" type="button" role="tab"
+                            :aria-selected="activeListTab === tab.key"
+                            class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                            :class="activeListTab === tab.key
+                                ? 'border-blue-500 font-semibold text-blue-600'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                            @click="switchListTab(tab.key)">
+                            <div class="flex items-center gap-2">
+                                <AppIcon :name="tab.icon" :size="14" />
+                                <span>{{ tab.label }}</span>
+                                <span v-if="tab.key !== 'all'"
+                                    class="rounded-full px-2 py-0.5 text-2xs font-semibold"
+                                    :class="tab.badgeClass">
+                                    {{ listCounts?.[tab.key] ?? 0 }}
+                                </span>
+                            </div>
+                        </button>
                     </div>
-                    <div class="flex items-center gap-4">
-                        
-                        <div class="ml-auto flex items-center gap-2">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2">
                             <RecordsSelect v-model="records" label="label" class="w-16" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
                         </div>
@@ -1217,21 +1302,25 @@ const truncateText = (text, maxLength = 80) => {
                     </div>
                 </div>
 
-
-
-
                 <div class="flex flex-wrap items-end gap-3 mb-4">
+                    <InputGroup class="w-full sm:w-64">
+                        <InputGroupAddon>
+                            <AppIcon name="search" :size="14" class="text-gray-400" />
+                        </InputGroupAddon>
+                        <InputText v-model="globalFilter" placeholder="Type name, remarks etc.." size="small"
+                            @keyup.enter="triggerSearch()" />
+                    </InputGroup>
                     <div class="flex flex-col">
-                        <ProgramSelect v-model="filter.program" label="shortname" custom-placeholder="All Programs"
+                        <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
+                            size="small" :multiple="false" />
+                    </div>
+                    <div class="flex flex-col">
+                        <MunicipalitySelect v-model="filter.municipality" custom-placeholder="All Municipalities"
                             size="small" />
                     </div>
                     <div class="flex flex-col">
                         <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
                             :scholarship-program-id="filter.program?.id" />
-                    </div>
-                    <div class="flex flex-col">
-                        <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
-                            size="small" :multiple="false" />
                     </div>
                     <div class="flex flex-col">
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
@@ -1243,6 +1332,9 @@ const truncateText = (text, maxLength = 80) => {
                         <DatePicker v-model="filter.date_to" size="small" class="w-36" date-format="M dd, yy" showIcon
                             iconDisplay="input" placeholder="Filed To" />
                     </div>
+                    <AppIcon name="sliders-horizontal" :size="24"
+                        class="text-gray-400 cursor-pointer self-center" @click="openDrawer()"
+                        v-tooltip.bottom="'More Filters'" />
                     <AppButton v-if="activeFilterTags.length" icon="times" severity="danger" text rounded size="small"
                         @click="clearFilter" v-tooltip.bottom="'Clear Filters'" />
                 </div>
@@ -1253,28 +1345,6 @@ const truncateText = (text, maxLength = 80) => {
                     <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded>
                         <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
                     </Tag>
-                </div>
-
-                <!-- Batch Update Section -->
-                <div v-if="selectedRows.length > 0"
-                    class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-4xl flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <AppIcon name="exclamation-circle" :size="20" class="text-yellow-600" />
-                        <div>
-                            <div class="font-semibold text-yellow-900">{{ selectedRows.length }} applicant(s)
-                                selected
-                            </div>
-                            <div class="text-sm text-yellow-700">Use batch update to change YAKAP category for all
-                                selected
-                                applicants</div>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <AppButton v-if="hasPermission('applicants.export')" icon="download" @click="openExportModal"
-                            severity="info" label="Export Selected" outlined rounded />
-                        <AppButton icon="pencil" @click="openBatchYakapModal"
-                            severity="warning" label="Batch Update YAKAP" rounded />
-                    </div>
                 </div>
 
                 <!-- Context Menu -->
@@ -1290,7 +1360,7 @@ const truncateText = (text, maxLength = 80) => {
 
                 <!-- Table View -->
                 <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="applicants" stripedRows
-                    showGridlines responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true"
+                    responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true"
                     paginator :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
                     paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                     :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
@@ -1330,11 +1400,18 @@ const truncateText = (text, maxLength = 80) => {
                                                     {{ getApplicantInitials(slotProps.data) }}
                                                 </div>
                                             </div>
-                                            <div class="font-semibold text-gray-800 text-sm flex-1 min-w-0">
+                                            <div class="font-semibold text-sky-800 text-sm flex-1 min-w-0 cursor-pointer hover:text-cyan-600 underline underline-offset-2"
+                                                @click="openProfileReviewModal(slotProps.data)">
                                                 {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
                                                     slotProps.data.middle_name || '' }} {{
                                                     slotProps.data.extension_name || '' }}
                                             </div>
+                                            <button type="button"
+                                                class="shrink-0 cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
+                                                v-tooltip.top="'Copy name'"
+                                                @click.stop="copyApplicantName(slotProps.data)">
+                                                <AppIcon name="copy" :size="12" />
+                                            </button>
                                             <!-- Priority Badge (visible in simple view) - Fixed position on the right -->
                                             <div v-if="simpleView && slotProps.data.priority_level"
                                                 class="flex-shrink-0 ml-2 flex items-center justify-center"
@@ -1384,47 +1461,47 @@ const truncateText = (text, maxLength = 80) => {
                         </template>
                     </Column>
 
-                    <!-- Academic Column -->
-                    <Column header="Academic" style="min-width: 170px; max-width: 200px">
-                        <template #body="slotProps">
-                            <div v-if="slotProps.data.scholarship_grant[0]"
-                                class="text-xs flex flex-col gap-0.5 whitespace-normal break-words leading-snug">
-                                <div class="font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
-                                    {{ slotProps.data.scholarship_grant[0].school.shortname }}
-                                </div>
-                                <div v-if="slotProps.data.scholarship_grant[0]?.course">
-                                    {{ slotProps.data.scholarship_grant[0].course.name ||
-                                        slotProps.data.scholarship_grant[0].course.shortname }}
-                                </div>
-                            </div>
-                            <span v-else class="text-gray-400">-</span>
-                        </template>
-                    </Column>
-
-                    <!-- Year Level Column -->
-                    <Column header="Year" style="width: 60px">
-                        <template #body="slotProps">
-                            <div class="text-xs text-center">
-                                {{ slotProps.data.scholarship_grant[0]?.year_level || '-' }}
-                            </div>
-                        </template>
-                    </Column>
-
                     <!-- Address Column -->
-                    <Column header="Address" style="min-width: 120px; max-width: 140px">
+                    <Column header="Address" style="min-width: 130px; max-width: 150px">
                         <template #body="slotProps">
-
-                            <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 "
+                            <div class="ml-1 text-xs mt-0.5 flex items-center gap-3 uppercase"
                                 v-if="slotProps.data.municipality">
                                 <AppIcon name="map" :size="12" class="text-gray-500" />
                                 <span>{{ slotProps.data.municipality }}{{ slotProps.data.barangay ? `,
                                     ${slotProps.data.barangay}` : '' }}</span>
                             </div>
                             <span v-else class="text-gray-400">-</span>
-                            <div class="ml-1 text-xs  mt-0.5 flex items-center gap-3 ">
+                            <div class="ml-1 text-xs mt-0.5 flex items-center gap-3">
                                 <AppIcon name="phone" :size="12" class="text-gray-500" />
                                 <span>{{ slotProps.data.contact_no || 'No contact no.' }}</span>
                             </div>
+                        </template>
+                    </Column>
+
+                    <!-- Academic Column -->
+                    <Column header="Academic" style="min-width: 240px; max-width: 280px">
+                        <template #body="slotProps">
+                            <div v-if="slotProps.data.scholarship_grant[0]" class="flex items-center gap-2">
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-2xs font-bold shrink-0"
+                                    :style="{ backgroundColor: getProgramAvatarColor(slotProps.data.scholarship_grant[0].program) }"
+                                    v-tooltip.top="slotProps.data.scholarship_grant[0].program?.name || 'Program'">
+                                    {{ getProgramAbbrev(slotProps.data.scholarship_grant[0].program) }}
+                                </div>
+                                <div
+                                    class="text-xs flex flex-col gap-0.5 min-w-0 whitespace-normal break-words leading-snug">
+                                    <div class="font-medium" v-if="slotProps.data.scholarship_grant[0]?.school">
+                                        {{ slotProps.data.scholarship_grant[0].school.shortname }}
+                                    </div>
+                                    <div v-if="slotProps.data.scholarship_grant[0]?.course">
+                                        {{ slotProps.data.scholarship_grant[0].course.name ||
+                                            slotProps.data.scholarship_grant[0].course.shortname }}
+                                    </div>
+                                    <div class="text-gray-600" v-if="slotProps.data.scholarship_grant[0]?.year_level">
+                                        {{ slotProps.data.scholarship_grant[0].year_level }} Year
+                                    </div>
+                                </div>
+                            </div>
+                            <span v-else class="text-gray-400">-</span>
                         </template>
                     </Column>
 
@@ -1481,7 +1558,7 @@ const truncateText = (text, maxLength = 80) => {
                     </Column>
 
                     <!-- Actions Column -->
-                    <Column header="Actions" style="width: 64px" v-if="!simpleView">
+                    <Column header="⋮" style="width: 48px">
                         <template #body="slotProps">
                             <div class="flex items-center justify-center">
                                 <AppButton icon="ellipsis-vertical" text severity="secondary"
@@ -1507,9 +1584,12 @@ const truncateText = (text, maxLength = 80) => {
         <!-- Modals -->
         <!-- Integrated Profile & Review Modal -->
         <ProfileReviewModal v-model:visible="showProfileReviewModal" :applicant="selectedApplicantForReview"
-            :applicants="applicants" @interview="handleProfileReviewInterview" @edit-profile="handleProfileReviewEdit"
+            :applicants="applicants" :list-membership="listMembership"
+            @interview="handleProfileReviewInterview" @edit-profile="handleProfileReviewEdit"
             @edit-requirements="openRequirementsModal" @edit-yakap="openUpdateYakapModal" @edit-remarks="openRemarksModal"
-            @assign-priority="openPriorityModal" @delete="confirmDeleteApplicant" @closed="closeProfileReviewModal" />
+            @assign-priority="openPriorityModal" @remove-priority="removePriority"
+            @add-to-list="addToList" @remove-from-list="removeFromList"
+            @delete="confirmDeleteApplicant" @closed="closeProfileReviewModal" />
 
         <!-- YAKAP Category Modal - for selecting category when creating new applicant -->
         <YakapCategoryModal v-model:visible="showYakapCategoryModal" @selected="handleYakapCategorySelected" />
@@ -1544,6 +1624,11 @@ const truncateText = (text, maxLength = 80) => {
 
         <!-- Export / Report Modal (checked rows, or full filtered set) -->
         <ExportSelectedModal :show="showExportModal" :selected-rows="exportRows" :mode="exportMode"
+            :enable-signatories="true" :enable-jpm="true" default-sort="date_filed"
             @update:show="showExportModal = $event" />
+
+        <!-- Centered loading message while the full report dataset is fetched -->
+        <LoadingIndicator :show="reportLoading" message="Generating report data…"
+            subtext="Fetching all applicants matching the current filters. Large result sets may take a moment." />
     </AdminLayout>
 </template>

@@ -623,7 +623,7 @@ watch(sidebarMinimized, (isMinimized) => {
 
         <!-- Floating Sidebar -->
         <aside
-            class="fixed z-30 md:z-20 top-0 left-0 md:top-[var(--sidebar-top)] md:left-4 flex flex-col dark:bg-[#222831] dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-var(--sidebar-top)-1rem)]"
+            class="sidebar-shell fixed z-30 md:z-20 top-0 left-0 md:top-[var(--sidebar-top)] md:left-4 flex flex-col dark:bg-[#222831] dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-var(--sidebar-top)-1rem)]"
             :class="[
                 sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
                 toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',

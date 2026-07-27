@@ -14,6 +14,7 @@ const props = defineProps({
 
 // ─── State ───
 const systemUpdates = ref([]);
+const showHelpDialog = ref(false);
 
 // ─── System Updates ───
 const fetchSystemUpdates = async () => {

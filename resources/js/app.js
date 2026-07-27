@@ -9,6 +9,21 @@ import '../css/ios-design-system.css';
 	document.documentElement.classList.toggle('dark', saved === 'dark');
 })();
 
+// Compensate for Windows 125% display scaling so the whole app renders at the
+// same effective size as 100% scaling. Only applies while the device pixel
+// ratio is 1.25, and reacts when the window moves between monitors with
+// different scale factors. The .dpr-zoom class lets CSS undo the side effect
+// on viewport-relative (vh/vw) lengths, which do not shrink with zoom.
+(() => {
+	const mq = window.matchMedia('(resolution: 1.25dppx)');
+	const apply = () => {
+		document.body.style.zoom = mq.matches ? '0.8' : '';
+		document.documentElement.classList.toggle('dpr-zoom', mq.matches);
+	};
+	apply();
+	mq.addEventListener('change', apply);
+})();
+
 import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';

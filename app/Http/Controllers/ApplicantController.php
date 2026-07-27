@@ -573,6 +573,11 @@ class ApplicantController extends Controller
                 'scholarship_profiles.contact_no_2',
                 'scholarship_profiles.remarks',
                 'scholarship_profiles.created_at',
+                // JPM flags — needed for the report's optional JPM column/highlight
+                'scholarship_profiles.is_jpm_member',
+                'scholarship_profiles.is_father_jpm',
+                'scholarship_profiles.is_mother_jpm',
+                'scholarship_profiles.is_guardian_jpm',
                 'scholarship_records.date_filed',
                 'scholarship_records.unified_status'
             )

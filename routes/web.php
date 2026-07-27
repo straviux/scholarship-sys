@@ -270,6 +270,7 @@ Route::middleware(['auth'])->group(function () {
     // ── Profile reports & educational background ────────────────────────
     Route::controller(ScholarshipProfileController::class)->group(function () {
         Route::get('/profiles/generate-report', 'generateReport')->name('profile.generateReport');
+        Route::get('/profiles/report-data', 'reportData')->name('profile.reportData');
         Route::get('/profiles/graduate-list-report', 'graduateListReport')->name('profile.graduateListReport');
         Route::post('/profiles/add-educational-background', 'addEducationBackgroundApi')->name('profile-api.addeducation');
         Route::put('/profiles/update-educational-background/{id}', 'updateEducationBackgroundApi')->name('profile-api.updateeducation');
