@@ -1,6 +1,8 @@
 <template>
     <IosModal :visible="show" title="Create New User" width="500px" max-width="calc(100vw - 2rem)"
-        body-style="padding: 16px;" @update:visible="val => emit('update:show', val)">
+        body-style="padding: 16px;" :show-action="true" 
+        :loading="form.processing" :action-disabled="!form.name || !form.username || !form.password || !form.roles"
+        @action="submit" @update:visible="val => emit('update:show', val)">
         <form @submit.prevent="submit" class="space-y-6 ios-admin-user-form [&_.p-error]:text-sm [&_.p-inputtext]:text-sm [&_.p-password_input]:text-sm">
             <!-- Name Field -->
             <div class="field">
@@ -77,11 +79,6 @@
                     }}</small>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" @click="closeModal" outlined :disabled="form.processing" />
-                <AppButton label="Create User" severity="success" @click="submit" :loading="form.processing"
-                    icon="user-plus" :disabled="!form.name || !form.username || !form.password || !form.roles" />
-            </div>
         </form>
     </IosModal>
 </template>

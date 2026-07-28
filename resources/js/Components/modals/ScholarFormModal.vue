@@ -8,9 +8,33 @@
         :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: 0 }"
         @update:visible="val => emit('update:visible', val)"
     >
+        <template #header-left>
+            <button v-if="activeStep !== '1'" class="ios-nav-btn text-nav"
+                @click="activeStep = String(Number(activeStep) - 1)" v-tooltip.bottom="'Back'">
+                <AppIcon name="chevron-left" :size="16" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="emit('update:visible', false)">
+                <AppIcon name="x" :size="16" />
+            </button>
+        </template>
+
         <template #header-right>
             <div class="ios-nav-right">
                 <span class="ios-nav-step-text text-xs">{{ activeStep }} of 3</span>
+                <button v-if="activeStep === '1'" class="ios-nav-btn ios-nav-btn--inline text-nav" @click="handleNextStep1"
+                    :disabled="!canProceedStep1 || isValidating" v-tooltip.bottom="step1TooltipMessage">
+                    <AppIcon v-if="isValidating" name="spinner" :size="16" class="animate-spin" />
+                    <AppIcon v-else name="chevron-right" :size="16" />
+                </button>
+                <button v-else-if="activeStep === '2'" class="ios-nav-btn ios-nav-btn--inline text-nav" @click="activeStep = '3'"
+                    v-tooltip.bottom="'Next'">
+                    <AppIcon name="chevron-right" :size="16" />
+                </button>
+                <button v-else class="ios-nav-btn ios-nav-btn--inline ios-nav-action text-nav" @click="handleSubmit"
+                    :disabled="form.processing || !canSubmit" v-tooltip.bottom="submitTooltipMessage">
+                    <AppIcon v-if="form.processing" name="spinner" :size="16" class="animate-spin" />
+                    <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
+                </button>
                 <button class="ios-nav-maximize" @click="isMaximized = !isMaximized"
                     v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
                     <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
@@ -168,28 +192,6 @@
             </div>
         </div>
 
-        <div class="ios-footer mt-4">
-            <button v-if="activeStep !== '1'" class="ios-footer-btn ios-footer-back text-sm"
-                @click="activeStep = String(Number(activeStep) - 1)">
-                <AppIcon name="arrow-left" :size="12" /> Back
-            </button>
-            <span v-else></span>
-            <button v-if="activeStep === '1'" class="ios-footer-btn ios-footer-next text-sm" @click="handleNextStep1"
-                :disabled="!canProceedStep1 || isValidating" v-tooltip.top="step1TooltipMessage">
-                {{ isValidating ? 'Checking...' : 'Next' }}
-                <AppIcon name="arrow-right" :size="12" />
-            </button>
-            <button v-else-if="activeStep === '2'" class="ios-footer-btn ios-footer-next text-sm"
-                @click="activeStep = '3'">
-                Next
-                <AppIcon name="arrow-right" :size="12" />
-            </button>
-            <button v-else class="ios-footer-btn ios-footer-submit text-sm" @click="handleSubmit"
-                :disabled="form.processing || !canSubmit" v-tooltip.top="submitTooltipMessage">
-                <AppIcon name="check" :size="12" />
-                {{ form.processing ? 'Saving...' : (mode === 'edit' ? 'Update' : 'Add Scholar') }}
-            </button>
-        </div>
     </IosModal>
 </template>
 

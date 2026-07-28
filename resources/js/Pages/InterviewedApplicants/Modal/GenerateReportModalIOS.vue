@@ -1,13 +1,30 @@
 <template>
-    <Dialog :visible="show" :modal="true" :draggable="true" :closable="false"
-        :style="{ width: '620px' }" :breakpoints="{ '640px': '90vw' }"
+    <IosModal :visible="show" title="Generate Report" width="620px" max-width="94vw" body-style="padding: 16px;"
         @update:visible="val => emit('update:show', val)">
-        <template #header>
-            <div class="flex items-center gap-2">
-                <button class="p-1 !rounded-full !bg-transparent hover:!bg-gray-100 !border-none cursor-pointer" @click="close">
-                    <AppIcon name="x" :size="16" />
+        <template #header-left>
+            <button v-if="currentStep > 1" class="ios-nav-btn text-nav" @click="currentStep--"
+                v-tooltip.bottom="'Back'">
+                <AppIcon name="chevron-left" :size="16" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="close">
+                <AppIcon name="x" :size="16" />
+            </button>
+        </template>
+
+        <template #header-right>
+            <button v-if="currentStep < 4" class="ios-nav-btn text-nav" @click="currentStep++"
+                v-tooltip.bottom="'Next'">
+                <AppIcon name="chevron-right" :size="16" />
+            </button>
+            <div v-else class="ios-nav-actions">
+                <button class="ios-nav-btn text-nav" @click="exportReportToExcel" :disabled="!canGenerateReport"
+                    v-tooltip.bottom="'Export as Excel'">
+                    <AppIcon name="file-excel" :size="16" style="color: #16a34a;" />
                 </button>
-                <span class="text-lg font-semibold">Generate Report</span>
+                <button class="ios-nav-btn ios-nav-action text-nav" @click="generateReport"
+                    :disabled="!canGenerateReport" v-tooltip.bottom="'Generate Report'">
+                    <AppIcon name="printer" :size="16" style="color: #2563eb;" />
+                </button>
             </div>
         </template>
 
@@ -187,6 +204,12 @@
                                 </div>
                                 <span v-else class="text-gray-400">{{ placeholder }}</span>
                             </template>
+                            <template #option="{ option }">
+                                <div class="leading-tight">
+                                    <div class="font-medium text-gray-700">{{ option.label }}</div>
+                                    <div v-if="option.description" class="text-2xs text-gray-500">{{ option.description }}</div>
+                                </div>
+                            </template>
                         </Select>
                         <div v-if="selectedBudgetAllocation" class="mt-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
                             <span class="font-semibold text-gray-700">{{ selectedBudgetAllocationApprovedCount.toLocaleString() }} scholar{{ selectedBudgetAllocationApprovedCount !== 1 ? 's are' : ' is' }} included in the cumulative count.</span>
@@ -267,26 +290,7 @@
             </div>
         </div>
 
-        <!-- ═══ NAVIGATION ═══ -->
-        <div class="flex items-center justify-between pt-3 mt-2 border-t border-gray-100">
-            <button v-if="currentStep > 1"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-blue-500 bg-transparent px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-blue-50 border-none"
-                @click="currentStep--">
-                <AppIcon name="chevron-left" :size="13" /> Back
-            </button>
-            <div v-else></div>
-            <button v-if="currentStep < 4"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-white bg-blue-500 px-4 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-blue-600"
-                @click="currentStep++">
-                Next <AppIcon name="chevron-right" :size="13" />
-            </button>
-            <button v-else
-                class="inline-flex items-center gap-1 text-sm font-bold text-white bg-green-500 px-5 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                @click="generateReport" :disabled="!canGenerateReport">
-                <AppIcon name="printer" :size="14" /> Generate Report
-            </button>
-        </div>
-    </Dialog>
+    </IosModal>
 
     <PdfPreviewModal v-model:show="showPdfPreview" :htmlDoc="pdfPreviewHtml" :title="pdfPreviewTitle"
         :paperSize="pdfPaperSize" />
@@ -296,7 +300,7 @@
 import { ref, computed, watch } from 'vue';
 import moment from 'moment';
 import AppIcon from '@/Components/ui/AppIcon.vue';
-import Dialog from 'primevue/dialog';
+import IosModal from '@/Components/ui/IosModal.vue';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import InputText from 'primevue/inputtext';
@@ -309,6 +313,7 @@ import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
 import InterviewedApplicantsTemplate from '../Pdf/InterviewedApplicantsTemplate.vue';
 import { buildInterviewedApplicantsPdfDoc } from '../Pdf/pdf-styles';
+import { exportInterviewedApplicantsExcel } from '../interviewedApplicantsExport';
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 
 const props = defineProps({
@@ -716,6 +721,14 @@ watch(filteredApplicantIds, (newIds, oldIds = []) => {
         selectedProfileIds.value = nextSelection;
     }
 });
+
+function exportReportToExcel() {
+    if (!canGenerateReport.value) return;
+    exportInterviewedApplicantsExcel({
+        records: printableRecords.value,
+        title: resolvedReportTitle.value,
+    });
+}
 
 function generateReport() {
     if (!canGenerateReport.value) return;

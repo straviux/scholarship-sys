@@ -1,22 +1,7 @@
 <template>
-    <IosModal :visible="show" width="640px" max-width="92vw" body-style="padding: 0;"
-        @update:visible="emit('update:show', $event)">
-        <template #header-left>
-            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="close">
-                <AppIcon name="x" :size="16" />
-            </button>
-        </template>
-
-        <template #title>
-            <span class="ios-nav-title text-nav-title">Graduate List Report</span>
-        </template>
-
-        <template #header-right>
-            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="close">
-                <AppIcon name="x" :size="16" />
-            </button>
-        </template>
-
+    <IosModal :visible="show" title="Graduate List Report" width="640px" max-width="92vw" body-style="padding: 0;"
+        :show-action="true" action-label="Generate" :loading="generating" @action="generateReport"
+        @close="close" @update:visible="emit('update:show', $event)">
         <div class="p-4 max-h-[75vh] overflow-y-auto">
             <!-- ── REPORT TITLE ── -->
             <div class="mb-4">
@@ -98,15 +83,6 @@
                     </div>
                 </div>
                 <span class="block text-3xs text-gray-400 mt-1.5">Leave all signatory fields blank to hide the signature block.</span>
-            </div>
-
-            <!-- ── ACTIONS ── -->
-            <div class="flex items-center justify-end gap-2 pt-3 mt-2 border-t border-gray-100 dark:border-gray-700">
-                <button class="inline-flex items-center gap-1 text-sm font-semibold text-white bg-green-500 px-5 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    @click="generateReport" :disabled="generating">
-                    <AppIcon v-if="generating" name="spinner" :size="14" class="animate-spin" />
-                    <template v-else>Generate</template>
-                </button>
             </div>
         </div>
     </IosModal>

@@ -15,8 +15,9 @@ class UpdateFundTransactionStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'transaction_status' => ['nullable', 'in:No OBR,LOA,Irregular,Transferred,Claimed,Paid,On Process,Denied'],
+            'transaction_status' => ['nullable', 'in:No OBR,LOA,Irregular,Transferred,Claimed,Paid,On Process,Denied,Replacement,Cancelled'],
             'remarks' => ['nullable', 'string'],
+            'status_updated_at' => ['required', 'date'],
         ];
     }
 }

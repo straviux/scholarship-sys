@@ -343,7 +343,7 @@ onBeforeUnmount(() => {
         :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: 0 }"
         @update:visible="val => { if (!val) closeMain(); }">
         <template #header-right>
-            <span class="ios-nav-btn text-nav" style="visibility: hidden; right: 16px;">_</span>
+            <span class="text-xs text-gray-400">{{ checkedCount }}/{{ totalCount }} checked</span>
         </template>
 
         <!-- Applicant name subtitle -->
@@ -427,11 +427,6 @@ onBeforeUnmount(() => {
                     <div style="height: 10px;"></div>
                 </div>
 
-        <!-- Footer -->
-        <div class="ios-footer">
-            <span class="ios-footer-counter">{{ checkedCount }}/{{ totalCount }} checked</span>
-            <button class="ios-footer-btn ios-footer-back text-sm" @click="closeMain">Close</button>
-        </div>
     </IosModal>
 
     <!-- QR Code Modal -->

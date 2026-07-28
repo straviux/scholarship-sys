@@ -806,7 +806,8 @@
             @confirm-deny="confirmDeny" @revert="confirmRevert" />
 
         <PdfPreviewModal v-model:show="showRecommendationListPreview" :htmlDoc="recommendationListPreviewHtml"
-            :title="recommendationListPreviewTitle" :paperSize="recommendationListPreviewPaperSize" />
+            :title="recommendationListPreviewTitle" :paperSize="recommendationListPreviewPaperSize"
+            :onExcel="exportPreviewedRecommendationListExcel" />
 
         <!-- Confirmation Dialog -->
         <IosModal v-model:visible="confirmDialogVisible" :title="confirmDialogHeader" width="calc(100vw - 2rem)"
@@ -987,6 +988,7 @@ import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue'
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 import {
     exportInterviewedApplicantsExcel,
+    exportRecommendationListExcel,
     printInterviewedApplicantsSelection,
     printRecommendationList,
     buildRecommendationListHtml,
@@ -1118,6 +1120,7 @@ const removeFromUpdateListIdx = ref(-1);
 const recommendationListPreviewHtml = ref('');
 const recommendationListPreviewTitle = ref('');
 const recommendationListPreviewPaperSize = ref('a4');
+const previewedRecommendationList = ref(null);
 
 // Confirmation Dialog
 const confirmDialogVisible = ref(false);
@@ -1582,15 +1585,6 @@ const contextMenuItems = computed(() => {
                     openAssessmentDialog(selectedRecord.value, 'edit');
                 }
             }
-        },
-        {
-            label: 'View Profile',
-            icon: 'eye',
-            command: () => {
-                if (selectedRecord.value) {
-                    viewProfile(selectedRecord.value);
-                }
-            }
         }
     ];
 
@@ -1960,10 +1954,6 @@ const confirmRevert = () => {
     revertStatus(selectedRecord.value);
 };
 
-const viewProfile = (record) => {
-    router.visit(route('scholarship.profile.show', record.profile.profile_id));
-};
-
 const formatDate = (date) => {
     return date ? moment(date).format('MMM DD, YYYY') : 'N/A';
 };
@@ -2102,6 +2092,7 @@ const generateRecommendationListPrint = (recommendationList, successMessage = nu
             recommendationList,
             ...printOptions,
         });
+        previewedRecommendationList.value = recommendationList;
         recommendationListPreviewHtml.value = html;
         recommendationListPreviewTitle.value = recommendationList?.list_number
             ? `Recommendation List ${recommendationList.list_number}`
@@ -2232,6 +2223,20 @@ const submitRecommendationList = async (payload) => {
     }
 
     await createRecommendationList(payload);
+};
+
+const exportPreviewedRecommendationListExcel = async () => {
+    if (!previewedRecommendationList.value) {
+        return;
+    }
+
+    try {
+        await exportRecommendationListExcel({ recommendationList: previewedRecommendationList.value });
+        toast.success('Exported recommendation list as EXCEL.');
+    } catch (error) {
+        console.error('Failed to export recommendation list:', error);
+        toast.error('Failed to export recommendation list as EXCEL.');
+    }
 };
 
 const printSavedRecommendationList = (recommendationList) => {

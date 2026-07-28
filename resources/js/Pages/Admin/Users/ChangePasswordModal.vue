@@ -1,7 +1,8 @@
 <template>
 
     <IosModal :visible="show" title="Change Password" width="400px" max-width="calc(100vw - 2rem)"
-        body-style="padding: 16px;" :show-close="false" :dismissable-mask="false">
+        body-style="padding: 16px;" :dismissable-mask="false" :show-action="true" 
+        :loading="form.processing" @close="onClose" @action="submit">
         <div class="mb-4">
             <label class="block mb-1 font-semibold">User</label>
             <InputText :value="user.username" type="text" class="w-full border rounded p-2" disabled />
@@ -21,10 +22,6 @@
 
             </div>
             <div v-if="form.errors.password" class="text-red-600 text-xs mt-1">{{ form.errors.password }}</div>
-            <div class="flex justify-end gap-2 mt-6">
-                <Button type="button" label="Cancel" @click="onClose" />
-                <Button type="submit" label="Submit" severity="success" />
-            </div>
         </form>
     </IosModal>
 </template>

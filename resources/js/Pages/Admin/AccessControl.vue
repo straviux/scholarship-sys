@@ -1073,34 +1073,24 @@ const runCleanup = async () => {
 
         <!-- Delete User Confirmation Dialog -->
         <IosModal v-model:visible="showConfirmDeleteUserModal" title="Confirm Deletion" width="calc(100vw - 2rem)"
-            max-width="450px" :show-action="true" action-label="Delete User" action-class="ios-nav-destructive"
+            max-width="450px" :show-action="true"  action-class="ios-nav-destructive"
             :loading="userForm.processing" @action="deleteUser(modalUserData.id)">
-            <div class="flex items-start gap-4">
-                <AppIcon name="exclamation-triangle" class="text-3xl text-red-500 mt-1" />
-                <div class="flex-1">
-                    <p class="text-lg font-semibold text-gray-800 mb-3">
-                        Are you sure you want to delete this user?
+            <div class="flex items-center gap-4 py-4">
+                <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
+                <div>
+                    <p class="text-lg font-semibold text-gray-800 mb-4">
+                        Are you sure you want to delete this use?
                     </p>
-                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
-                        <div class="flex items-center gap-3 mb-2">
-                            <Avatar :label="modalUserData.name?.charAt(0)?.toUpperCase()" class="bg-red-500 text-white"
-                                shape="circle" size="normal" />
-                            <div>
+                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
+                        
                                 <div class="font-semibold text-red-800">{{ modalUserData.name }}</div>
                                 <div class="text-sm text-red-600">@{{ modalUserData.username }}</div>
-                            </div>
-                        </div>
+                            
                     </div>
-                    <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                        <div class="flex items-center gap-2">
-                            <AppIcon name="exclamation-circle" class="text-amber-600" />
-                            <span class="text-sm text-amber-800 font-medium">Warning</span>
-                        </div>
-                        <p class="text-sm text-amber-700 mt-1">
-                            This action cannot be undone. All data associated with this user will be permanently
+                    <p class="text-sm text-gray-600 mt-2">
+                       This action cannot be undone. All data associated with this user will be permanently
                             removed.
-                        </p>
-                    </div>
+                    </p>
                 </div>
             </div>
         </IosModal>
@@ -1321,10 +1311,10 @@ const runCleanup = async () => {
         <!-- Create/Edit Role Modal -->
         <IosModal :visible="showRoleModal" :title="isEditingRole ? 'Edit Role' : 'Create New Role'"
             width="calc(100vw - 2rem)" max-width="450px" :show-action="true"
-            :action-label="isEditingRole ? 'Update Role' : 'Create Role'" :loading="roleForm.processing"
+             :loading="roleForm.processing"
             :action-disabled="!roleForm.name.trim()" @action="saveRole" @close="closeRoleEditorModal"
             @update:visible="showRoleModal = $event">
-            <div class="space-y-4">
+            <div class="space-y-4 py-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Role Name
@@ -1332,7 +1322,7 @@ const runCleanup = async () => {
                     </label>
                     <InputText v-model="roleForm.name" placeholder="e.g., data_manager" class="w-full"
                         :disabled="roleForm.processing" />
-                    <p class="text-xs text-gray-500 mt-1">Use underscores for multi-word roles</p>
+                    <p class="text-xs text-gray-500 mt-2">Use underscores for multi-word roles</p>
                     <p v-if="roleForm.errors.name" class="text-sm text-red-600 mt-2">
                         {{ roleForm.errors.name }}
                     </p>
@@ -1342,9 +1332,9 @@ const runCleanup = async () => {
 
         <!-- Delete Role Confirmation Dialog -->
         <IosModal v-model:visible="showConfirmDeleteRoleModal" title="Confirm Deletion" width="calc(100vw - 2rem)"
-            max-width="450px" :show-action="true" action-label="Delete Role" action-class="ios-nav-destructive"
+            max-width="450px" :show-action="true"  action-class="ios-nav-destructive"
             @action="deleteRole">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 py-4">
                 <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
                 <div>
                     <p class="text-lg font-semibold text-gray-800 mb-2">
@@ -1366,10 +1356,10 @@ const runCleanup = async () => {
 
         <!-- Create/Edit Permission Modal -->
         <IosModal :visible="showPermissionModal" :title="isEditingPermission ? 'Edit Permission' : 'Create Permission'"
-            :show-action="true" :action-label="isEditingPermission ? 'Update' : 'Create'"
+            :show-action="true"
             :action-disabled="!permissionForm.name" @action="savePermission" @close="closePermissionModal"
             @update:visible="showPermissionModal = $event">
-            <div class="space-y-4">
+            <div class="space-y-4 py-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Permission Name *</label>
                     <InputText v-model="permissionForm.name" placeholder="e.g., users.create, reports.view"
@@ -1385,17 +1375,18 @@ const runCleanup = async () => {
 
         <!-- Delete Permission Confirmation Modal -->
         <IosModal :visible="showConfirmDeletePermissionModal" title="Delete Permission" :show-action="true"
-            action-label="Delete Permission" action-class="ios-nav-destructive" @action="deletePermission"
+            action-class="ios-nav-destructive" @action="deletePermission"
             @close="closeDeletePermissionModal" @update:visible="showConfirmDeletePermissionModal = $event">
-            <div v-if="permissionToDelete" class="space-y-4">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h4 class="font-semibold text-red-900 mb-2">
-                        <AppIcon name="exclamation-triangle" class="mr-2" />Confirm Deletion
-                    </h4>
-                    <p class="text-sm text-red-800">
-                        Are you sure you want to delete permission <strong>{{ permissionToDelete.name }}</strong>?
+            <div class="flex items-center gap-4 py-4">
+                <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
+                <div>
+                    <p class="text-lg font-semibold text-gray-800 mb-2">
+                        Are you sure you want to delete this permission?
                     </p>
-                    <p class="text-sm text-red-700 mt-2">
+                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
+                        <div class="font-semibold text-red-700 capitalize">{{ permissionToDelete.name }}</div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-4">
                         This will remove this permission from all roles that have it.
                     </p>
                 </div>

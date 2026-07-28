@@ -35,6 +35,7 @@ class FundTransaction extends Model
         'scholar_ids',
         'remarks',
         'transaction_status',
+        'status_updated_at',
         'school',
         'grant_provision',
         'scholarship_program_id',
@@ -54,6 +55,7 @@ class FundTransaction extends Model
         'amount' => 'decimal:2',
         'date_obligated' => 'date',
         'upload_token_expires_at' => 'datetime',
+        'status_updated_at' => 'date',
     ];
 
     protected $appends = ['obr_status'];

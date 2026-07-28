@@ -46,6 +46,7 @@ class FundTransactionService
             try {
                 return DB::transaction(function () use ($data) {
                     $data['transaction_id'] = $this->generateTransactionId();
+                    $data['status_updated_at'] = now();
 
                     $voucher = FundTransaction::create($data);
 

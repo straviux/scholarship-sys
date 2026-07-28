@@ -6,7 +6,7 @@ import { exportSelectedApplicantsExcel, printSelectedApplicantsReport } from '..
 import { GROUP_BY_OPTIONS } from '../Reports/reportGrouping';
 import { stripHtml } from '@/utils/sanitize';
 import AppIcon from '@/Components/ui/AppIcon.vue';
-import Dialog from 'primevue/dialog';
+import IosModal from '@/Components/ui/IosModal.vue';
 import Select from 'primevue/select';
 
 const props = defineProps({
@@ -54,13 +54,11 @@ const props = defineProps({
     }
 });
 
-// JPM highlighting is restricted to staff roles that handle JPM tagging.
+// JPM highlighting is restricted to users with the jpm.view permission.
 // Even with enableJpm set by the parent, the toggle stays hidden for others.
 const page = usePage();
 const canUseJpmToggle = computed(() => {
-    const userRoles = page.props.auth?.user?.roles || [];
-    const allowedRoles = ['administrator', 'program_manager', 'jpm_admin', 'screening_officer'];
-    return userRoles.some(role => allowedRoles.includes(role.name || role));
+    return (page.props.auth?.user?.permissions || []).includes('jpm.view');
 });
 const jpmEnabled = computed(() => props.enableJpm && canUseJpmToggle.value);
 
@@ -198,20 +196,22 @@ const exportAs = async (format) => {
 </script>
 
 <template>
-    <Dialog :visible="show" :modal="true" :draggable="true" :closable="false"
-        :style="{ width: '720px' }" :breakpoints="{ '960px': '90vw' }"
+    <IosModal :visible="show" :title="modalTitle" width="720px" max-width="94vw" body-style="padding: 16px;"
         @update:visible="val => !val && close()">
-        <template #header>
-            <div class="flex items-center gap-2">
-                <button class="p-1 !rounded-full !bg-transparent hover:!bg-gray-100 !border-none cursor-pointer" @click="close">
-                    <AppIcon name="x" :size="16" />
+        <template #header-right>
+            <div class="ios-nav-actions">
+                <button type="button" class="ios-nav-btn ios-nav-action text-nav" @click="exportAs('pdf')"
+                    :disabled="generating" v-tooltip.bottom="'Export as PDF'">
+                    <AppIcon name="file-pdf" :size="16" style="color: #dc2626;" />
                 </button>
-                <div>
-                    <div class="text-lg font-semibold leading-tight">{{ modalTitle }}</div>
-                    <div class="text-2xs text-gray-400">{{ selectedRows.length }} {{ countLabel }}</div>
-                </div>
+                <button type="button" class="ios-nav-btn ios-nav-action text-nav" @click="exportAs('excel')"
+                    :disabled="generating" v-tooltip.bottom="'Export as Excel'">
+                    <AppIcon name="file-excel" :size="16" style="color: #16a34a;" />
+                </button>
             </div>
         </template>
+
+        <div class="text-2xs text-gray-400 -mt-2 mb-3">{{ selectedRows.length }} {{ countLabel }}</div>
 
         <!-- Filter note + how it works (Generate Report mode) -->
         <div v-if="isAllMode" class="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5">
@@ -345,17 +345,5 @@ const exportAs = async (format) => {
         </div>
         </div>
         </div>
-
-        <!-- Export Buttons -->
-        <div class="flex gap-2 pt-3 mt-2 border-t border-gray-100">
-            <button class="flex-1 inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-red-500 px-4 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                @click="exportAs('pdf')" :disabled="generating">
-                <AppIcon name="file-pdf" :size="14" /> PDF
-            </button>
-            <button class="flex-1 inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-green-500 px-4 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                @click="exportAs('excel')" :disabled="generating">
-                <AppIcon name="file-excel" :size="14" /> Excel
-            </button>
-        </div>
-    </Dialog>
+    </IosModal>
 </template>

@@ -2,6 +2,30 @@
     <IosModal :visible="show" :title="modalTitle" width="calc(100vw - 2rem)"
         max-width="620px" body-style="padding: 16px;"
         @update:visible="val => emit('update:show', val)">
+        <template #header-left>
+            <button v-if="activeStep > 0 && !loading" class="ios-nav-btn text-nav" @click="prevStep"
+                v-tooltip.bottom="'Back'">
+                <AppIcon name="chevron-left" :size="16" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="emit('update:show', false)">
+                <AppIcon name="x" :size="16" />
+            </button>
+        </template>
+
+        <template #header-right>
+            <button v-if="activeStep < steps.length - 1" class="ios-nav-btn text-nav" @click="nextStep"
+                :disabled="loading" v-tooltip.bottom="'Next'">
+                <AppIcon name="chevron-right" :size="16" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-action text-nav" :disabled="isSubmitDisabled || loading"
+                @click="submitForm"
+                v-tooltip.bottom="isPrintIntent ? 'Save & Print' : (isUpdateListIntent ? 'Update List' : (isEditMode ? 'Save Changes' : 'Create List'))">
+                <AppIcon v-if="loading" name="loader-circle" :size="16" class="animate-spin" />
+                <AppIcon v-else-if="isPrintIntent" name="printer" :size="16" />
+                <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
+            </button>
+        </template>
+
         <!-- ═══ STEPPER INDICATOR ═══ -->
         <div class="flex items-center justify-center gap-1 mb-5">
             <template v-for="(step, idx) in steps" :key="step.key">
@@ -60,6 +84,12 @@
                                     <div v-if="formatBudgetAllocationDescription(value)" class="text-2xs text-gray-500">{{ formatBudgetAllocationDescription(value) }}</div>
                                 </div>
                                 <span v-else class="text-gray-400">{{ placeholder }}</span>
+                            </template>
+                            <template #option="{ option }">
+                                <div class="leading-tight">
+                                    <div class="font-medium text-gray-700">{{ option.label }}</div>
+                                    <div v-if="option.description" class="text-2xs text-gray-500">{{ option.description }}</div>
+                                </div>
                             </template>
                         </Select>
                     </div>
@@ -136,32 +166,6 @@
             </div>
         </div>
 
-        <!-- ═══ NAVIGATION ═══ -->
-        <div class="flex items-center justify-between pt-3 mt-2 border-t border-gray-100">
-            <button v-if="activeStep > 0 && !loading"
-                class="inline-flex items-center gap-1 text-sm font-medium text-gray-600 bg-gray-100 px-4 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-gray-200"
-                @click="prevStep">
-                <AppIcon name="chevron-left" :size="14" />
-                Back
-            </button>
-            <div v-else />
-
-            <div class="flex items-center gap-2">
-                <button v-if="activeStep < steps.length - 1 && !loading"
-                    class="inline-flex items-center gap-1 text-sm font-bold text-white bg-blue-500 px-5 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-blue-600"
-                    @click="nextStep">
-                    Next
-                    <AppIcon name="chevron-right" :size="14" />
-                </button>
-                <button v-if="activeStep === steps.length - 1"
-                    class="inline-flex items-center gap-2 text-sm font-bold text-white bg-green-500 px-5 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    :disabled="isSubmitDisabled || loading" @click="submitForm">
-                    <AppIcon v-if="loading" name="loader-circle" :size="14" class="animate-spin" />
-                    <AppIcon v-else-if="isPrintIntent" name="printer" :size="14" />
-                    {{ loading ? 'Saving...' : (isPrintIntent ? 'Save & Print' : (isUpdateListIntent ? 'Update List' : (isEditMode ? 'Save Changes' : 'Create List'))) }}
-                </button>
-            </div>
-        </div>
     </IosModal>
 </template>
 

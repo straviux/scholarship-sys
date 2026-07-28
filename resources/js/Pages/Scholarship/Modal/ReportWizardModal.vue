@@ -2,7 +2,10 @@
     <IosModal :visible="show" width="760px" max-width="92vw" body-style="padding: 0;"
         @update:visible="handleWizardVisibleUpdate">
         <template #header-left>
-            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="handleWizardBack">
+            <button v-if="currentStep > 1" class="ios-nav-btn text-nav" @click="prevStep" v-tooltip.bottom="'Back'">
+                <AppIcon name="chevron-left" :size="16" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="handleWizardBack">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
@@ -12,8 +15,13 @@
         </template>
 
         <template #header-right>
-            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="handleWizardBack">
-                <AppIcon name="x" :size="16" />
+            <button v-if="currentStep < 4" class="ios-nav-btn text-nav" @click="nextStep" v-tooltip.bottom="'Next'">
+                <AppIcon name="chevron-right" :size="16" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-action text-nav" @click="generateReport" :disabled="generating"
+                v-tooltip.bottom="'Generate Report'">
+                <AppIcon v-if="generating" name="spinner" :size="16" class="animate-spin" />
+                <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
             </button>
         </template>
 
@@ -339,26 +347,6 @@
                 </div>
             </div>
 
-            <!-- ═══ NAVIGATION ═══ -->
-            <div class="flex items-center justify-between pt-3.5 mt-2 border-t border-gray-100 dark:border-gray-700">
-                <button v-if="currentStep > 1"
-                    class="inline-flex items-center gap-1 text-sm font-semibold text-blue-500 bg-transparent px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/30 border-none"
-                    @click="prevStep">
-                    <AppIcon name="chevron-left" :size="13" /> Back
-                </button>
-                <div v-else></div>
-                <button v-if="currentStep < 4"
-                    class="inline-flex items-center gap-1 text-sm font-semibold text-white bg-blue-500 px-4 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-blue-600"
-                    @click="nextStep">
-                    Next <AppIcon name="chevron-right" :size="13" />
-                </button>
-                <button v-else
-                    class="inline-flex items-center gap-1 text-sm font-bold text-white bg-green-500 px-5 py-2 rounded-lg cursor-pointer border-none transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    @click="generateReport" :disabled="generating">
-                    <AppIcon v-if="generating" name="spinner" :size="14" class="animate-spin" />
-                    <template v-else>Generate Report</template>
-                </button>
-            </div>
         </div>
     </IosModal>
 
@@ -541,9 +529,7 @@ const preparedBy = ref('');
 
 const canEnableJpmHighlighting = computed(() => {
     if (!currentUser.value) return false;
-    const userRoles = currentUser.value.roles || [];
-    const allowedRoles = ['administrator', 'jpm_admin', 'program_manager', 'screening_officer'];
-    return userRoles.some(role => allowedRoles.includes(role.name || role));
+    return (currentUser.value.permissions || []).includes('jpm.view');
 });
 
 // ─── Computed summaries ───

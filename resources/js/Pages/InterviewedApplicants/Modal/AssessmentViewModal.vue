@@ -34,6 +34,24 @@
                 <AppIcon v-if="denyForm?.processing" name="spinner" :size="16" />
                 <AppIcon v-else name="x" :size="16" style="color: #dc2626;" />
             </button>
+            <div v-else-if="canManage || canRevert" class="ios-nav-actions">
+                <button type="button" class="ios-nav-btn ios-nav-action assessment-nav-action text-nav"
+                    @click="openEditMode" v-tooltip.bottom="'Edit'">
+                    <AppIcon name="pencil" :size="16" style="color: #2563eb;" />
+                </button>
+                <button v-if="canManage" type="button" class="ios-nav-btn ios-nav-action assessment-nav-action text-nav"
+                    @click="openApproveMode" v-tooltip.bottom="'Approve'">
+                    <AppIcon name="check" :size="16" style="color: #16a34a;" />
+                </button>
+                <button v-if="canManage" type="button" class="ios-nav-btn ios-nav-action assessment-nav-action text-nav"
+                    @click="openDenyMode" v-tooltip.bottom="'Deny'">
+                    <AppIcon name="x" :size="16" style="color: #dc2626;" />
+                </button>
+                <button v-if="canRevert" type="button" class="ios-nav-btn ios-nav-action assessment-nav-action text-nav"
+                    @click="$emit('revert')" v-tooltip.bottom="'Revert to Pending'">
+                    <AppIcon name="arrow-left" :size="16" style="color: #d97706;" />
+                </button>
+            </div>
             <div v-else style="width: 48px;"></div>
         </template>
 
@@ -393,24 +411,6 @@
 
                         </template>
                     </div>
-
-                    <div v-if="showDialogFooter" class="assessment-dialog-footer">
-                        <div class="assessment-dialog-footer-actions">
-                            <template v-if="activeMode === 'view'">
-                                <Button icon="pencil" label="Edit" severity="secondary" text size="xsmall"
-                                    iconColor="#2563eb" @click="openEditMode" />
-                                <Button v-if="canManage" icon="check" label="Approve" severity="secondary" text
-                                    size="xsmall" iconColor="#16a34a" @click="openApproveMode" />
-                                <Button v-if="canManage" icon="x" label="Deny" severity="secondary" text
-                                    size="xsmall" iconColor="#dc2626" @click="openDenyMode" />
-                                <Button v-if="canRevert" icon="arrow-left" label="Revert to Pending"
-                                    severity="secondary" text size="xsmall" iconColor="#d97706"
-                                    @click="$emit('revert')" />
-                            </template>
-
-
-                        </div>
-                    </div>
         </div>
     </IosModal>
 </template>
@@ -717,10 +717,6 @@ const modalTitle = computed(() => {
 
 const modalWidth = computed(() => {
     return activeMode.value === 'view' ? 'min(760px, 96vw)' : 'min(680px, 96vw)';
-});
-
-const showDialogFooter = computed(() => {
-    return activeMode.value === 'view' && (props.canManage || props.canRevert);
 });
 
 const editSubjectName = computed(() => {

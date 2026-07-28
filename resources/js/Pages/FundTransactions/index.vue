@@ -18,6 +18,7 @@ import FilterPage from '@/Components/Filters/FilterPage.vue';
 import axios from 'axios';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
 import { useSystemOptions, getSystemOptionLabel } from '@/composables/useSystemOptions';
+import { getStatusBadgeClass, getStatusTextClass, getStatusIcon } from '@/Pages/FundTransactions/statusMeta';
 import ObrTemplate from '@/Pages/FundTransactions/Pdf/ObrTemplate.vue';
 import DvTemplate from '@/Pages/FundTransactions/Pdf/DvTemplate.vue';
 import PayrollTemplate from '@/Pages/FundTransactions/Pdf/PayrollTemplate.vue';
@@ -123,7 +124,8 @@ const showStatusDialog = ref(false);
 const selectedVoucherForStatus = ref(null);
 const statusForm = reactive({
     obr_status: 'on process',
-    remarks: ''
+    remarks: '',
+    status_updated_at: null
 });
 const savingStatus = ref(false);
 const _obrStatusRaw = useSystemOptions('obr_status');
@@ -938,6 +940,8 @@ const onRowContextMenu = (event) => {
 
 const openContextMenu = (event, voucher) => {
     event.preventDefault();
+
+    // Record actions
     const items = [
         {
             label: 'View',
@@ -949,6 +953,8 @@ const openContextMenu = (event, voucher) => {
             icon: 'pencil',
             command: () => editVoucher(voucher.id)
         },
+        { separator: true },
+        // Documentation actions
         {
             label: 'Upload Documents',
             icon: 'upload',
@@ -959,10 +965,17 @@ const openContextMenu = (event, voucher) => {
             icon: 'comment',
             command: () => openRemarksModal(voucher)
         },
+        { separator: true },
+        // Status & tracking actions
         {
             label: 'Change Status',
             icon: 'sync',
-            command: () => openStatusModal(voucher)
+            items: obrStatuses.value.map(status => ({
+                label: status,
+                icon: getStatusIcon(status),
+                iconClass: getStatusTextClass(status),
+                command: () => openStatusModal(voucher, status)
+            }))
         },
         {
             label: 'Update OBR Info',
@@ -977,9 +990,7 @@ const openContextMenu = (event, voucher) => {
     ];
 
     if (isAdmin.value) {
-        items.push({
-            separator: true
-        });
+        items.push({ separator: true });
         items.push({
             label: 'Delete',
             icon: 'trash',
@@ -1060,9 +1071,11 @@ const saveRemarks = async () => {
 };
 
 // Open transaction status modal
-const openStatusModal = (voucher) => {
-    selectedVoucherForStatus.value = voucher;
-    statusForm.obr_status = voucher.obr_status || 'On Process';
+const openStatusModal = (voucher, presetStatus = null) => {
+    selectedVoucherForStatus.value = presetStatus
+        ? { ...voucher, obr_status: presetStatus, status_updated_at: null }
+        : voucher;
+    statusForm.obr_status = presetStatus || voucher.obr_status || 'On Process';
     statusForm.remarks = voucher.remarks || '';
     showStatusDialog.value = true;
 };
@@ -1073,12 +1086,13 @@ const saveStatus = async () => {
 
     savingStatus.value = true;
     try {
-        // Just send the status and remarks - minimal update
+        // Just send the status, remarks, and manually picked status date - minimal update
         const response = await axios.patch(
             `/api/fund-transactions/${selectedVoucherForStatus.value.id}/update-status`,
             {
                 transaction_status: statusForm.obr_status,
-                remarks: statusForm.remarks
+                remarks: statusForm.remarks,
+                status_updated_at: statusForm.status_updated_at
             }
         );
 
@@ -1087,12 +1101,14 @@ const saveStatus = async () => {
         if (voucherIndex > -1) {
             vouchers.value[voucherIndex].obr_status = response.data.data?.obr_status;
             vouchers.value[voucherIndex].remarks = response.data.data?.remarks;
+            vouchers.value[voucherIndex].status_updated_at = response.data.data?.status_updated_at;
         }
 
         // Also update the currently viewed voucher if it's the same one
         if (selectedVoucher.value?.id === selectedVoucherForStatus.value.id) {
             selectedVoucher.value.obr_status = response.data.data?.obr_status;
             selectedVoucher.value.remarks = response.data.data?.remarks;
+            selectedVoucher.value.status_updated_at = response.data.data?.status_updated_at;
         }
 
         showStatusDialog.value = false;
@@ -1127,6 +1143,21 @@ const formatDate = (date) => {
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
+        });
+    } catch (e) {
+        return date;
+    }
+};
+
+// Date-only variant, used for status_updated_at (which has no time component)
+const formatDateOnly = (date) => {
+    if (!date) return '---';
+    try {
+        const d = new Date(date);
+        return d.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
         });
     } catch (e) {
         return date;
@@ -1177,20 +1208,8 @@ const calculateTotalAmount = (voucher) => {
     return 0;
 };
 
-// Get status color for badge
-const getStatusColor = (status) => {
-    const statusColors = {
-        'No OBR': 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200',
-        'LOA': 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200',
-        'Irregular': 'bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200',
-        'Transferred': 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200',
-        'Claimed': 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-200',
-        'Paid': 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200',
-        'On Process': 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200',
-        'Denied': 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200'
-    };
-    return statusColors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
-};
+// Status color for badges, kept as an alias for the shared status metadata
+const getStatusColor = getStatusBadgeClass;
 
 // Check if payee is school
 const isPayeeSchool = (voucher) => {
@@ -1336,7 +1355,7 @@ const saveOBRTracking = async () => {
                     const voucherData = currentVoucher.data.data;
 
                     // Validate obr_status - preserve existing status
-                    const validStatuses = ['No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied'];
+                    const validStatuses = ['No OBR', 'LOA', 'Irregular', 'Transferred', 'Claimed', 'Paid', 'On Process', 'Denied', 'Replacement', 'Cancelled'];
                     const statusToSend = voucherData.obr_status && validStatuses.includes(voucherData.obr_status)
                         ? voucherData.obr_status
                         : (voucherData.obr_status || 'On Process'); // Keep existing status or default to 'On Process' if none
@@ -1564,7 +1583,7 @@ onMounted(() => {
                 <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
                     <template #item="{ item, props }">
                         <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
-                            <AppIcon v-if="item.icon" :name="item.icon" :size="14" />
+                            <AppIcon v-if="item.icon" :name="item.icon" :size="14" :class="item.iconClass" />
                             <span>{{ item.label }}</span>
                             <AppIcon v-if="item.items" name="chevron-right" :size="14" class="ml-auto" />
                         </a>
@@ -1639,9 +1658,13 @@ onMounted(() => {
                     <Column header="Status" :headerStyle="{ minWidth: '140px' }" :bodyStyle="{ minWidth: '140px' }">
                         <template #body="slotProps">
                             <span
-                                :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusColor(slotProps.data.obr_status)]">
+                                :class="['px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', getStatusColor(slotProps.data.obr_status)]">
+                                <AppIcon :name="getStatusIcon(slotProps.data.obr_status || 'On Process')" :size="12" />
                                 {{ slotProps.data.obr_status || 'On Process' }}
                             </span>
+                            <div v-if="slotProps.data.status_updated_at" class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                                {{ formatDateOnly(slotProps.data.status_updated_at) }}
+                            </div>
                         </template>
                     </Column>
 
@@ -1763,11 +1786,16 @@ onMounted(() => {
                                             <span class="ios-row-label text-sm">OBR Type</span>
                                             <span>{{ formatObrTypeLabel(selectedVoucher.obr_type) }}</span>
                                         </div>
-                                        <div class="ios-row [border-bottom:none]">
+                                        <div class="ios-row">
                                             <span class="ios-row-label text-sm">OBR Status</span>
                                             <span
-                                                :class="['px-3 py-1 rounded-full text-xs font-medium inline-block', getStatusColor(selectedVoucher.obr_status)]">{{
-                                                    selectedVoucher.obr_status || 'On Process' }}</span>
+                                                :class="['px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', getStatusColor(selectedVoucher.obr_status)]">
+                                                <AppIcon :name="getStatusIcon(selectedVoucher.obr_status || 'On Process')" :size="12" />
+                                                {{ selectedVoucher.obr_status || 'On Process' }}</span>
+                                        </div>
+                                        <div class="ios-row [border-bottom:none]">
+                                            <span class="ios-row-label text-sm">Status Updated</span>
+                                            <span>{{ formatDateOnly(selectedVoucher.status_updated_at) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -2114,7 +2142,7 @@ onMounted(() => {
         <!-- Transaction Status Dialog -->
         <StatusModal :show="showStatusDialog" @update:show="showStatusDialog = $event"
             :model-value="selectedVoucherForStatus" :status-options="obrStatuses" :is-saving="savingStatus"
-            @save="(data) => { statusForm.obr_status = data.status; statusForm.remarks = data.remarks; saveStatus(); }" />
+            @save="(data) => { statusForm.obr_status = data.status; statusForm.remarks = data.remarks; statusForm.status_updated_at = data.status_updated_at; saveStatus(); }" />
 
         <!-- PDF Preview Modal -->
         <PdfPreviewModal :show="showPdfPreview" @update:show="showPdfPreview = $event" :html-doc="pdfPreviewHtml"
