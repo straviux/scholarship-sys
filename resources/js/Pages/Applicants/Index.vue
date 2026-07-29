@@ -1160,7 +1160,7 @@ const truncateText = (text, maxLength = 80) => {
                         <AppButton icon="plus" @click="openYakapCategoryModal" severity="success"
                             v-tooltip.bottom="'Add New Applicant'" rounded outlined />
                         <!-- Export — ticked rows or the full filtered set -->
-                        <AppButton v-if="hasPermission('applicants.export')" icon="download" label="Export"
+                        <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export"
                             @click="exportPopover.toggle($event)" severity="info" rounded outlined
                             :loading="reportLoading" v-tooltip.bottom="'Export applicants'" />
                         <Popover ref="exportPopover">

@@ -18,6 +18,31 @@ export const interviewedApplicantsPdfFooterCss = `
 
 body { margin: 0; padding: 0; }
 
+/* Screen "page by page" preview look — the vendored paged.polyfill.min.js is
+   the pagination engine only; it ships without Paged.js's companion
+   interface.css, so without this every page renders flush against the next
+   with no visual separation (one continuous white area instead of distinct
+   sheets on a grey backdrop). Reset to the actual print layout in @media print. */
+.pagedjs_pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #e5e5ea;
+  padding: 16px 0;
+}
+.pagedjs_page {
+  background-color: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  margin-bottom: 16px;
+}
+.pagedjs_page:last-child {
+  margin-bottom: 0;
+}
+@media print {
+  .pagedjs_pages { background: none; padding: 0; }
+  .pagedjs_page { box-shadow: none; margin-bottom: 0; }
+}
+
 table { -fs-table-paginate: paginate; }
 thead { display: table-header-group; }
 tfoot { display: table-footer-group; }

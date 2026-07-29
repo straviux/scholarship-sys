@@ -1,9 +1,9 @@
 import moment from 'moment';
-import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 
 import { renderVueTemplate } from '@/composables/usePdfPrint';
 import InterviewedApplicantsTemplate from './Pdf/InterviewedApplicantsTemplate.vue';
+import RecommendationListTemplate from './Pdf/RecommendationListTemplate.vue';
 import { buildInterviewedApplicantsPdfDoc } from './Pdf/pdf-styles';
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
@@ -36,23 +36,6 @@ function formatApplicantName(record) {
     return `${lastName}, ${firstName}`.trim();
 }
 
-function formatGrantProvision(value) {
-    if (!value) {
-        return '—';
-    }
-
-    if (typeof value === 'string' && !value.includes('_')) {
-        return value;
-    }
-
-    return value
-        .toString()
-        .split('_')
-        .filter(Boolean)
-        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ');
-}
-
 function formatProjectedTerms(value) {
     const terms = Number(value);
     return Number.isFinite(terms) ? `${terms}` : 'Not configured';
@@ -69,10 +52,6 @@ function formatProjectedExpense(value) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     }).format(Number(value) || 0);
-}
-
-function formatDate(value) {
-    return value ? moment(value).format('MMM DD, YYYY') : '—';
 }
 
 export function buildInterviewedApplicantsSelectionHtml({ records = [], preparedBy = DEFAULT_PREPARED_BY } = {}) {
@@ -125,10 +104,11 @@ export function buildRecommendationListHtml({ recommendationList = null, paperSi
     const finalPaperSize = paperSize || recommendationList?.paper_size || 'A4';
     const finalOrientation = orientation || recommendationList?.orientation || 'landscape';
 
-    const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
+    const bodyHtml = renderVueTemplate(RecommendationListTemplate, {
         records: normalizedRecords,
-        reportType: 'list',
         groupBy: recommendationList?.group_by || 'course',
+        paperSize: finalPaperSize,
+        orientation: finalOrientation,
         today: requestDateLabel,
         preparedBy: recommendationList?.prepared_by || DEFAULT_PREPARED_BY,
         preparedByPosition: recommendationList?.prepared_by_position || DEFAULT_PREPARED_BY_POSITION,
@@ -138,12 +118,9 @@ export function buildRecommendationListHtml({ recommendationList = null, paperSi
         budgetProgram: recommendationList?.budget_program || '',
         budgetAllocation: recommendationList?.budget_allocation || null,
         highlightJpmMembers: Boolean(recommendationList?.highlight_jpm_members),
-        includeEndorsedBy: Boolean(recommendationList?.include_endorsed_by),
         showRemarks: Boolean(recommendationList?.show_remarks),
-        reportTitle: recommendationList?.report_title || 'RECOMMENDATION LIST FOR APPROVAL',
+        reportTitle: recommendationList?.report_title || 'Request for Scholarship Approval',
         listNumber: recommendationList?.list_number || '',
-        includeInterviewColumns: includeInterviewColumns ?? true,
-        includeProjectedColumns: includeProjectedColumns ?? true,
     });
 
     const title = recommendationList?.list_number
@@ -459,7 +436,7 @@ export async function exportRecommendationListExcel({ recommendationList = null 
     const budgetAllocation = recommendationList?.budget_allocation || null;
     const budgetProgram = recommendationList?.budget_program?.trim() || budgetAllocation?.program || 'N/A';
     const listNumber = recommendationList?.list_number || '';
-    const reportTitle = recommendationList?.report_title || 'RECOMMENDATION LIST FOR APPROVAL';
+    const reportTitle = recommendationList?.report_title || 'Request for Scholarship Approval';
     const today = recommendationList?.request_date
         ? moment(recommendationList.request_date).format('MMMM D, YYYY')
         : recommendationList?.created_at
@@ -926,84 +903,547 @@ export async function exportRecommendationListExcel({ recommendationList = null 
     rlSaveWorkbookBuffer(buffer, filename);
 }
 
-export function exportInterviewedApplicantsExcel({ records = [], title = 'INTERVIEWED APPLICANTS REPORT' } = {}) {
+// ── Interviewed Applicants Excel export ─────────────────────────────
+// Mirrors InterviewedApplicantsTemplate.vue as rendered by generateReport()
+// in GenerateReportModalIOS.vue: same columns (respecting the same toggles),
+// same grouping, same JPM highlight/remarks, same budget-allocation +
+// signatories block. Reuses the ExcelJS helpers (rl*) built for the
+// Approval Request export above — they aren't report-specific.
+const IA_REC_LABELS = {
+    recommended: 'Recommended for Approval',
+    further_evaluation: 'For Further Evaluation',
+    not_recommended: 'Not Recommended',
+};
+
+function iaRecLabel(value) {
+    return IA_REC_LABELS[value] || value || '—';
+}
+
+export async function exportInterviewedApplicantsExcel({
+    records = [],
+    title = 'INTERVIEWED APPLICANTS REPORT',
+    reportType = 'list',
+    groupBy = 'none',
+    today = moment().format('MMMM D, YYYY'),
+    includeInterviewColumns = true,
+    showInterviewerColumn = true,
+    includeEndorsedBy = false,
+    includeProjectedColumns = true,
+    highlightJpmMembers = false,
+    showRemarks = false,
+    budgetAllocation = null,
+    budgetProgram = '',
+    listNumber = '',
+    preparedBy = DEFAULT_PREPARED_BY,
+    preparedByPosition = DEFAULT_PREPARED_BY_POSITION,
+    preparedByOffice = DEFAULT_PREPARED_BY_OFFICE,
+    approvedBy = DEFAULT_APPROVED_BY,
+    approvedByPosition = DEFAULT_APPROVED_BY_POSITION,
+} = {}) {
     const normalizedRecords = normalizeRecords(records);
-    const generatedAt = moment().format('MMMM DD, YYYY h:mm A');
+    const resolvedBudgetProgram = budgetProgram?.trim() || budgetAllocation?.program || 'N/A';
 
-    const upper = (v) => String(v ?? '').toUpperCase();
+    // Column layout mirrors the PDF colgroup/toggles.
+    const columns = [
+        { key: 'num', header: '#', width: 4, align: 'center', rowspan2: true },
+        { key: 'name', header: 'Name', width: 26, align: 'left', rowspan2: true },
+        { key: 'municipality', header: 'Municipality', width: 14, align: 'left', rowspan2: true },
+        { key: 'program', header: 'Program', width: 8, align: 'center', rowspan2: true },
+        { key: 'school', header: 'School', width: 20, align: 'left', rowspan2: true },
+        { key: 'course', header: 'Course', width: 20, align: 'left', rowspan2: true },
+        { key: 'year', header: 'Year', width: 6, align: 'center', rowspan2: true },
+        { key: 'term', header: 'Agreement Start', width: 12, align: 'center', rowspan2: true },
+        { key: 'ay', header: 'Academic Year', width: 12, align: 'center', rowspan2: true },
+    ];
+    if (includeProjectedColumns) {
+        columns.push(
+            { key: 'projTerms', group: 'Projected', header: 'Terms', width: 8, align: 'center' },
+            { key: 'projGrant', group: 'Projected', header: 'Grant', width: 14, align: 'right' },
+            { key: 'projCompletion', group: 'Projected', header: 'Completion', width: 11, align: 'center' },
+        );
+    }
+    if (includeInterviewColumns) {
+        columns.push({ key: 'intDate', group: 'Interview', header: 'Date', width: 12, align: 'center' });
+        if (showInterviewerColumn) {
+            columns.push({ key: 'intBy', group: 'Interview', header: 'By', width: 16, align: 'center' });
+        }
+    }
+    if (includeEndorsedBy) {
+        columns.push({ key: 'endorsed', header: 'Endorsed By', width: 14, align: 'center', rowspan2: true });
+    }
+    columns.push({ key: 'remarks', header: 'Remarks', width: 22, align: 'left', rowspan2: true });
 
-    const workbook = XLSX.utils.book_new();
+    const totalColumns = columns.length;
 
-    const rows = [
-        [upper(title)],
-        [`GENERATED: ${upper(generatedAt)}`],
-        [`TOTAL RECORDS: ${normalizedRecords.length}`],
-        [],
-        [
-            '#',
-            'NAME',
-            'PROGRAM',
-            'SCHOOL',
-            'COURSE',
-            'YEAR LEVEL',
-            'TERM',
-            'ACADEMIC YEAR',
-            'GRANT PROVISION',
-            'RECOMMENDATION',
-            'INTERVIEW DATE',
-            'INTERVIEWED BY',
-        ],
-        ...normalizedRecords.map((record, index) => [
-            index + 1,
-            upper(formatApplicantName(record)),
-            upper(record?.program?.shortname || record?.program?.name || '—'),
-            upper(record?.school?.name || record?.school?.shortname || '—'),
-            upper(record?.course?.name || record?.course?.shortname || '—'),
-            upper(record?.year_level || '—'),
-            upper(record?.term || '—'),
-            upper(record?.academic_year || '—'),
-            upper(formatGrantProvision(record?.grant_provision_label || record?.grant_provision)),
-            upper(record?.recommendation || '—'),
-            upper(formatDate(record?.interviewed_at)),
-            upper(record?.interviewer?.name || '—'),
-        ]),
+    const valueGetters = {
+        num: (record, index) => index + 1,
+        name: (record) => rlFormatApplicantName(record),
+        municipality: (record) => String(record?.profile?.municipality || '').toUpperCase(),
+        program: (record) => record?.program?.shortname || '',
+        school: (record) => record?.school?.name || record?.school?.shortname || '',
+        course: (record) => record?.course?.name || record?.course?.shortname || '',
+        year: (record) => record?.year_level || '',
+        term: (record) => record?.term || '',
+        ay: (record) => record?.academic_year || '',
+        projTerms: (record) => {
+            const terms = Number(record?.projected_term_count);
+            return Number.isFinite(terms) ? terms : '';
+        },
+        projGrant: (record) => record?.projected_total_expense !== null && record?.projected_total_expense !== undefined
+            ? rlFmtCurrency(record.projected_total_expense)
+            : '',
+        projCompletion: (record) => record?.projected_completion_year ?? '',
+        intDate: (record) => record?.interviewed_at ? moment(record.interviewed_at).format('MMM DD, YYYY') : '',
+        intBy: (record) => String(record?.interviewer?.name || '').toUpperCase(),
+        endorsed: (record) => record?.endorsed_by || '',
+        remarks: (record) => (showRemarks ? String(record?.interview_remarks || record?.remarks || '') : ''),
+    };
+
+    const workbook = new ExcelJS.Workbook();
+    const logos = await rlLoadReportLogos(workbook);
+    const worksheet = workbook.addWorksheet('Interviewed Applicants');
+    worksheet.columns = columns.map((col) => ({ width: col.width }));
+
+    // ── Letterhead ────────────────────────────────────────────────────
+    const letterheadLines = [
+        { text: 'Republic of the Philippines', size: 11, bold: true },
+        { text: 'Provincial Government of Palawan', size: 11, bold: true },
+        { text: 'Yakap Sa Edukasyon', size: 10, bold: false },
+        { text: 'Scholarship Program', size: 10, bold: false },
+        { text: 'Puerto Princesa City, Palawan', size: 10, bold: false },
     ];
 
-    const worksheet = XLSX.utils.aoa_to_sheet(rows);
-    worksheet['!cols'] = [
-        { wch: 6 },
-        { wch: 28 },
-        { wch: 12 },
-        { wch: 20 },
-        { wch: 24 },
-        { wch: 10 },
-        { wch: 12 },
-        { wch: 14 },
-        { wch: 22 },
-        { wch: 22 },
-        { wch: 16 },
-        { wch: 22 },
-    ];
+    letterheadLines.forEach((line, index) => {
+        const rowIndex = index + 1;
+        worksheet.mergeCells(rowIndex, 1, rowIndex, totalColumns);
+        const cell = worksheet.getCell(rowIndex, 1);
+        cell.value = line.text;
+        cell.font = { name: RL_FONT, size: line.size, bold: line.bold };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        worksheet.getRow(rowIndex).height = 15;
+    });
+    for (let c = 1; c <= totalColumns; c++) {
+        worksheet.getCell(letterheadLines.length, c).border = { bottom: RL_MEDIUM };
+    }
 
-    // Apply uniform font: Calibri 10pt, headers bold + centered
-    const DEFAULT_CELL_STYLE = { font: { name: 'Calibri', sz: 10 } };
-    const TITLE_STYLE = { font: { name: 'Calibri', sz: 12, bold: true }, alignment: { horizontal: 'center' } };
-    const META_STYLE = { font: { name: 'Calibri', sz: 10, bold: true } };
-    const HEADER_STYLE = { font: { name: 'Calibri', sz: 10, bold: true }, alignment: { horizontal: 'center' } };
+    if (logos) {
+        const inset = Math.max(totalColumns * 0.25, 1);
+        worksheet.addImage(logos.pgpId, {
+            tl: { col: inset, row: 0.1 },
+            ext: { width: 76, height: 76 },
+            editAs: 'oneCell',
+        });
+        worksheet.addImage(logos.yakapId, {
+            tl: { col: Math.max(totalColumns - inset - 1, 0.1), row: 0.1 },
+            ext: { width: 76, height: 76 },
+            editAs: 'oneCell',
+        });
+    }
 
-    const range = XLSX.utils.decode_range(worksheet['!ref']);
-    for (let r = range.s.r; r <= range.e.r; r++) {
-        for (let c = range.s.c; c <= range.e.c; c++) {
-            const addr = XLSX.utils.encode_cell({ r, c });
-            if (!worksheet[addr]) continue;
-            if (!worksheet[addr].s) worksheet[addr].s = {};
-            if (r === 0) Object.assign(worksheet[addr].s, TITLE_STYLE);
-            else if (r <= 3) Object.assign(worksheet[addr].s, META_STYLE);
-            else if (r === 4) Object.assign(worksheet[addr].s, HEADER_STYLE);
-            else Object.assign(worksheet[addr].s, DEFAULT_CELL_STYLE);
+    // ── Report title + date ───────────────────────────────────────────
+    const titleRowIndex = letterheadLines.length + 2;
+    worksheet.mergeCells(titleRowIndex, 1, titleRowIndex, totalColumns);
+    const titleCell = worksheet.getCell(titleRowIndex, 1);
+    titleCell.value = title;
+    titleCell.font = { name: RL_FONT, size: 13, bold: true };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(titleRowIndex).height = 20;
+
+    worksheet.mergeCells(titleRowIndex + 1, 1, titleRowIndex + 1, totalColumns);
+    const dateCell = worksheet.getCell(titleRowIndex + 1, 1);
+    dateCell.value = today;
+    dateCell.font = { name: RL_FONT, size: 9 };
+    dateCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    let rowIndex = titleRowIndex + 3;
+
+    if (normalizedRecords.length === 0) {
+        worksheet.mergeCells(rowIndex, 1, rowIndex, totalColumns);
+        const emptyCell = worksheet.getCell(rowIndex, 1);
+        emptyCell.value = 'No interviewed applicants match the current selection.';
+        emptyCell.font = { name: RL_FONT, size: 10, italic: true, color: { argb: 'FF888888' } };
+        emptyCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        rowIndex += 2;
+    } else if (reportType === 'summary') {
+        // ── Summary: By Recommendation, then By Program (stacked) ──────
+        const writeSummaryTable = (heading, rows) => {
+            worksheet.mergeCells(rowIndex, 1, rowIndex, totalColumns);
+            const headingCell = worksheet.getCell(rowIndex, 1);
+            headingCell.value = heading;
+            headingCell.font = { name: RL_FONT, size: 9, bold: true };
+            headingCell.fill = RL_HEADER_FILL;
+            rowIndex += 1;
+
+            const headerRow = worksheet.getRow(rowIndex);
+            headerRow.getCell(1).value = heading === 'By Recommendation' ? 'Recommendation' : 'Program';
+            headerRow.getCell(2).value = 'Interviewed';
+            headerRow.getCell(3).value = 'Projected Grant';
+            for (let c = 1; c <= 3; c++) {
+                const cell = headerRow.getCell(c);
+                cell.font = { name: RL_FONT, size: 8, bold: true };
+                cell.fill = RL_HEADER_FILL;
+                cell.border = RL_ALL_BORDERS;
+                cell.alignment = { horizontal: c === 1 ? 'left' : 'right' };
+            }
+            rowIndex += 1;
+
+            rows.forEach((row) => {
+                const dataRow = worksheet.getRow(rowIndex);
+                dataRow.getCell(1).value = row.label;
+                dataRow.getCell(2).value = row.interviewed;
+                dataRow.getCell(3).value = rlFmtCurrency(row.projected);
+                for (let c = 1; c <= 3; c++) {
+                    const cell = dataRow.getCell(c);
+                    cell.font = { name: RL_FONT, size: 8, bold: c > 1 };
+                    cell.border = RL_ALL_BORDERS;
+                    cell.alignment = { horizontal: c === 1 ? 'left' : 'right' };
+                }
+                rowIndex += 1;
+            });
+            rowIndex += 1;
+        };
+
+        const recOrder = ['recommended', 'further_evaluation', 'not_recommended'];
+        const recGrouped = {};
+        const progGrouped = {};
+        for (const record of normalizedRecords) {
+            const recKey = record.recommendation || 'unknown';
+            if (!recGrouped[recKey]) recGrouped[recKey] = { key: recKey, label: iaRecLabel(recKey), interviewed: 0, projected: 0 };
+            recGrouped[recKey].interviewed += 1;
+            recGrouped[recKey].projected += Number(record.projected_total_expense || 0);
+
+            const progKey = record.program?.shortname || 'N/A';
+            if (!progGrouped[progKey]) progGrouped[progKey] = { key: progKey, label: progKey, interviewed: 0, projected: 0 };
+            progGrouped[progKey].interviewed += 1;
+            progGrouped[progKey].projected += Number(record.projected_total_expense || 0);
+        }
+
+        const recRows = Object.values(recGrouped).sort((a, b) => {
+            const ai = recOrder.indexOf(a.key);
+            const bi = recOrder.indexOf(b.key);
+            if (ai === -1 && bi === -1) return a.label.localeCompare(b.label);
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+        });
+        const progRows = Object.values(progGrouped).sort((a, b) => a.label.localeCompare(b.label));
+
+        writeSummaryTable('By Recommendation', recRows);
+        writeSummaryTable('By Program', progRows);
+    } else {
+        // ── Detailed list: grouped or flat ──────────────────────────────
+        const writeTableHeader = (startRow) => {
+            const headerRow1 = worksheet.getRow(startRow);
+            const headerRow2 = worksheet.getRow(startRow + 1);
+
+            for (let c = 1; c <= totalColumns; c++) {
+                [headerRow1.getCell(c), headerRow2.getCell(c)].forEach((cell) => {
+                    cell.font = { name: RL_FONT, size: 7, bold: true };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                    cell.fill = RL_HEADER_FILL;
+                    cell.border = RL_ALL_BORDERS;
+                });
+            }
+
+            let colIndex = 1;
+            let groupStart = null;
+            let groupLabel = '';
+
+            const flushGroup = (endCol) => {
+                if (groupStart !== null) {
+                    worksheet.mergeCells(startRow, groupStart, startRow, endCol);
+                    headerRow1.getCell(groupStart).value = groupLabel;
+                    groupStart = null;
+                }
+            };
+
+            columns.forEach((col) => {
+                if (col.group) {
+                    if (groupStart === null || groupLabel !== col.group) {
+                        flushGroup(colIndex - 1);
+                        groupStart = colIndex;
+                        groupLabel = col.group;
+                    }
+                    headerRow2.getCell(colIndex).value = col.header;
+                } else {
+                    flushGroup(colIndex - 1);
+                    worksheet.mergeCells(startRow, colIndex, startRow + 1, colIndex);
+                    headerRow1.getCell(colIndex).value = col.header;
+                }
+                colIndex += 1;
+            });
+            flushGroup(colIndex - 1);
+
+            headerRow1.height = 14;
+            headerRow2.height = 14;
+        };
+
+        const writeDataRow = (targetRow, record, index) => {
+            const row = worksheet.getRow(targetRow);
+            const jpmHighlight = highlightJpmMembers && rlHasJpmMember(record);
+
+            columns.forEach((col, colIdx) => {
+                const cell = row.getCell(colIdx + 1);
+                cell.value = valueGetters[col.key](record, index);
+                const isName = col.key === 'name';
+                cell.font = {
+                    name: RL_FONT,
+                    size: 8,
+                    bold: (isName && !jpmHighlight) || jpmHighlight,
+                    color: jpmHighlight ? { argb: 'FF166534' } : undefined,
+                };
+                cell.alignment = { horizontal: col.align, vertical: 'middle', wrapText: true };
+                cell.border = RL_ALL_BORDERS;
+            });
+        };
+
+        const writeGroupHeader = (targetRow, groupName, groupRecords) => {
+            const nameSpan = Math.min(8, totalColumns);
+            worksheet.mergeCells(targetRow, 1, targetRow, nameSpan);
+            const nameCell = worksheet.getCell(targetRow, 1);
+            nameCell.value = groupName;
+            nameCell.font = { name: RL_FONT, size: 10, bold: true };
+            nameCell.alignment = { horizontal: 'left', vertical: 'middle' };
+
+            worksheet.mergeCells(targetRow, nameSpan + 1, targetRow, totalColumns);
+            const metaCell = worksheet.getCell(targetRow, nameSpan + 1);
+            const projectedTotal = groupRecords.reduce((sum, record) => sum + Number(record?.projected_total_expense || 0), 0);
+            metaCell.value = `${groupRecords.length} record${groupRecords.length !== 1 ? 's' : ''} | ${rlFmtCurrency(projectedTotal)} projected grant`;
+            metaCell.font = { name: RL_FONT, size: 8, color: { argb: 'FF555555' } };
+            metaCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+            for (let c = 1; c <= totalColumns; c++) {
+                worksheet.getCell(targetRow, c).border = { bottom: RL_THIN };
+            }
+            worksheet.getRow(targetRow).height = 16;
+        };
+
+        if (groupBy !== 'none') {
+            const groupKeyFor = (record) => {
+                if (groupBy === 'program') return record.program?.shortname || 'N/A';
+                if (groupBy === 'school') return record.school?.name || record.school?.shortname || 'N/A';
+                if (groupBy === 'course') return record.course?.name || record.course?.shortname || 'N/A';
+                if (groupBy === 'recommendation') return iaRecLabel(record.recommendation);
+                if (groupBy === 'interviewer') return record.interviewer?.name || 'N/A';
+                return 'All';
+            };
+
+            const groups = {};
+            for (const record of normalizedRecords) {
+                const key = groupKeyFor(record);
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(record);
+            }
+
+            const sortedGroups = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+
+            sortedGroups.forEach(([groupName, groupRecords], groupIndex) => {
+                const sorted = rlSortRecords(groupRecords);
+                if (groupIndex > 0) {
+                    rowIndex += 1;
+                }
+                writeGroupHeader(rowIndex, groupName, sorted);
+                rowIndex += 1;
+                writeTableHeader(rowIndex);
+                rowIndex += 2;
+                sorted.forEach((record, index) => {
+                    writeDataRow(rowIndex, record, index);
+                    rowIndex += 1;
+                });
+            });
+        } else {
+            writeTableHeader(rowIndex);
+            rowIndex += 2;
+            normalizedRecords.forEach((record, index) => {
+                writeDataRow(rowIndex, record, index);
+                rowIndex += 1;
+            });
         }
     }
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Interviewed Applicants');
-    XLSX.writeFile(workbook, `interviewed_applicants_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`);
+    // ── Budget allocation block ───────────────────────────────────────
+    if (budgetAllocation) {
+        const calendarYear = rlCalendarYearLabel(budgetAllocation);
+        const heading = calendarYear
+            ? `Budget Allocation for Calendar Year ${calendarYear}`
+            : 'Budget Allocation for Current Calendar Year';
+        const totalScholars = normalizedRecords.length;
+        const approvedScholars = Array.isArray(budgetAllocation.approved_scholars)
+            ? budgetAllocation.approved_scholars.filter((scholar) => rlScholarMatchesBudgetProgram(scholar, budgetAllocation, resolvedBudgetProgram))
+            : [];
+        const approvedScholarsToDate = approvedScholars.length
+            ? approvedScholars.length
+            : Number(budgetAllocation.approved_scholars_to_date ?? totalScholars) || 0;
+        const approvedScholarsCurrentAyTotal = Number(budgetAllocation.approved_scholars_current_ay_estimated_total ?? 0) || 0;
+        const runningBalance = Number(budgetAllocation.total_allotment ?? 0)
+            - Number(budgetAllocation.disbursed ?? 0)
+            - approvedScholarsCurrentAyTotal;
+        const totalCurrentAyGrant = normalizedRecords.reduce((sum, record) => sum + rlEstimatedCurrentAyGrant(record), 0);
+        const projectedBalance = runningBalance - totalCurrentAyGrant;
+        const scopeSuffix = calendarYear ? ` (CY ${calendarYear})` : '';
+
+        rowIndex += 2;
+        const headingNameSpan = Math.min(9, totalColumns - 3);
+        worksheet.mergeCells(rowIndex, 1, rowIndex, headingNameSpan);
+        const headingCell = worksheet.getCell(rowIndex, 1);
+        headingCell.value = heading.toUpperCase();
+        headingCell.font = { name: RL_FONT, size: 9, bold: true };
+        headingCell.alignment = { horizontal: 'left', vertical: 'middle' };
+        if (listNumber) {
+            worksheet.mergeCells(rowIndex, totalColumns - 2, rowIndex, totalColumns);
+            const requestCell = worksheet.getCell(rowIndex, totalColumns - 2);
+            requestCell.value = `Request No. ${listNumber}`;
+            requestCell.font = { name: RL_FONT, size: 9, bold: true };
+            requestCell.alignment = { horizontal: 'right' };
+        }
+        rowIndex += 1;
+
+        const label1End = 3;
+        const value1End = 8;
+        const label2End = Math.min(12, totalColumns - 1);
+
+        const writeBudgetRow = ({ label1, value1, label2 = null, value2 = null, value1Bold = false, value1Color = null, spanValue = false }) => {
+            worksheet.mergeCells(rowIndex, 1, rowIndex, label1End);
+            const l1 = worksheet.getCell(rowIndex, 1);
+            l1.value = label1;
+            l1.font = { name: RL_FONT, size: 8, bold: true };
+            l1.fill = RL_LABEL_FILL;
+            l1.alignment = { vertical: 'middle', wrapText: true };
+
+            const v1End = spanValue ? totalColumns : value1End;
+            worksheet.mergeCells(rowIndex, label1End + 1, rowIndex, v1End);
+            const v1 = worksheet.getCell(rowIndex, label1End + 1);
+            v1.value = value1;
+            v1.font = { name: RL_FONT, size: 8, bold: value1Bold, color: value1Color ? { argb: value1Color } : undefined };
+            v1.alignment = { vertical: 'middle', wrapText: true };
+
+            let lastCol = v1End;
+            if (!spanValue && label2 !== null) {
+                worksheet.mergeCells(rowIndex, value1End + 1, rowIndex, label2End);
+                const l2 = worksheet.getCell(rowIndex, value1End + 1);
+                l2.value = label2;
+                l2.font = { name: RL_FONT, size: 8, bold: true };
+                l2.fill = RL_LABEL_FILL;
+                l2.alignment = { vertical: 'middle', wrapText: true, indent: 1 };
+
+                worksheet.mergeCells(rowIndex, label2End + 1, rowIndex, totalColumns);
+                const v2 = worksheet.getCell(rowIndex, label2End + 1);
+                v2.value = value2 ?? '';
+                v2.font = { name: RL_FONT, size: 8 };
+                v2.alignment = { vertical: 'middle' };
+                lastCol = totalColumns;
+            }
+
+            for (let c = 1; c <= lastCol; c++) {
+                worksheet.getCell(rowIndex, c).border = RL_ALL_BORDERS;
+            }
+            worksheet.getRow(rowIndex).height = 15;
+            rowIndex += 1;
+        };
+
+        writeBudgetRow({
+            label1: 'Program',
+            value1: `${resolvedBudgetProgram} · ${budgetAllocation.rc_name || budgetAllocation.rc_code || 'N/A'} · ${budgetAllocation.fiscal_year ? `CY ${budgetAllocation.fiscal_year}` : 'CY N/A'}`,
+            spanValue: true,
+        });
+        writeBudgetRow({
+            label1: 'Allocated Fund',
+            value1: rlFmtCurrency(budgetAllocation.total_allotment),
+            label2: 'No. of Scholars:',
+            value2: '',
+        });
+        writeBudgetRow({
+            label1: 'Running Balance',
+            value1: rlFmtCurrency(runningBalance),
+            label2: 'Current no. for this request',
+            value2: totalScholars,
+        });
+        writeBudgetRow({
+            label1: 'Total amount for this request',
+            value1: rlFmtCurrency(totalCurrentAyGrant),
+            value1Bold: true,
+            label2: `Cumulative Approved No.${scopeSuffix}`,
+            value2: approvedScholarsToDate,
+        });
+        writeBudgetRow({
+            label1: 'Remaining balance after approval',
+            value1: rlFmtCurrency(projectedBalance),
+            value1Bold: true,
+            value1Color: projectedBalance < 0 ? 'FFB91C1C' : 'FF166534',
+            spanValue: true,
+        });
+
+        worksheet.mergeCells(rowIndex, label1End + 1, rowIndex, totalColumns);
+        const approvalMarkCell = worksheet.getCell(rowIndex, label1End + 1);
+        approvalMarkCell.value = '___APPROVED          ___DISAPPROVED';
+        approvalMarkCell.font = { name: RL_FONT, size: 7, color: { argb: 'FF555555' } };
+        approvalMarkCell.alignment = { horizontal: 'right' };
+        rowIndex += 1;
+    }
+
+    // ── Signatories (only when the PDF would show them) ───────────────
+    if (budgetAllocation || preparedBy?.trim()) {
+        rowIndex += 2;
+        const sigLeftCol = 2;
+        const sigRightCol = Math.max(totalColumns - 5, sigLeftCol + 4);
+        const sigSpan = 4;
+
+        const sigLabelRow = worksheet.getRow(rowIndex);
+        sigLabelRow.getCell(sigLeftCol).value = 'Prepared by:';
+        sigLabelRow.getCell(sigLeftCol).font = { name: RL_FONT, size: 8, bold: true };
+        sigLabelRow.getCell(sigRightCol).value = 'Approved by:';
+        sigLabelRow.getCell(sigRightCol).font = { name: RL_FONT, size: 8, bold: true };
+        rowIndex += 4;
+
+        worksheet.mergeCells(rowIndex, sigLeftCol, rowIndex, sigLeftCol + sigSpan - 1);
+        const prepNameCell = worksheet.getCell(rowIndex, sigLeftCol);
+        prepNameCell.value = (preparedBy || DEFAULT_PREPARED_BY).toUpperCase();
+        prepNameCell.font = { name: RL_FONT, size: 8, bold: true };
+        prepNameCell.alignment = { horizontal: 'center' };
+
+        worksheet.mergeCells(rowIndex, sigRightCol, rowIndex, sigRightCol + sigSpan - 1);
+        const apprNameCell = worksheet.getCell(rowIndex, sigRightCol);
+        apprNameCell.value = (approvedBy || DEFAULT_APPROVED_BY).toUpperCase();
+        apprNameCell.font = { name: RL_FONT, size: 8, bold: true };
+        apprNameCell.alignment = { horizontal: 'center' };
+
+        for (let c = 0; c < sigSpan; c++) {
+            worksheet.getCell(rowIndex, sigLeftCol + c).border = { top: RL_THIN };
+            worksheet.getCell(rowIndex, sigRightCol + c).border = { top: RL_THIN };
+        }
+        rowIndex += 1;
+
+        worksheet.mergeCells(rowIndex, sigLeftCol, rowIndex, sigLeftCol + sigSpan - 1);
+        const prepPosCell = worksheet.getCell(rowIndex, sigLeftCol);
+        prepPosCell.value = preparedByPosition || DEFAULT_PREPARED_BY_POSITION;
+        prepPosCell.font = { name: RL_FONT, size: 8 };
+        prepPosCell.alignment = { horizontal: 'center' };
+
+        worksheet.mergeCells(rowIndex, sigRightCol, rowIndex, sigRightCol + sigSpan - 1);
+        const apprPosCell = worksheet.getCell(rowIndex, sigRightCol);
+        apprPosCell.value = approvedByPosition || DEFAULT_APPROVED_BY_POSITION;
+        apprPosCell.font = { name: RL_FONT, size: 8 };
+        apprPosCell.alignment = { horizontal: 'center' };
+        rowIndex += 1;
+
+        worksheet.mergeCells(rowIndex, sigLeftCol, rowIndex, sigLeftCol + sigSpan - 1);
+        const prepOfficeCell = worksheet.getCell(rowIndex, sigLeftCol);
+        prepOfficeCell.value = preparedByOffice || DEFAULT_PREPARED_BY_OFFICE;
+        prepOfficeCell.font = { name: RL_FONT, size: 8 };
+        prepOfficeCell.alignment = { horizontal: 'center' };
+        rowIndex += 3;
+
+        worksheet.mergeCells(rowIndex, sigRightCol, rowIndex, sigRightCol + sigSpan - 1);
+        const dateLineCell = worksheet.getCell(rowIndex, sigRightCol);
+        dateLineCell.value = 'Date';
+        dateLineCell.font = { name: RL_FONT, size: 8 };
+        dateLineCell.alignment = { horizontal: 'center' };
+        for (let c = 0; c < sigSpan; c++) {
+            worksheet.getCell(rowIndex, sigRightCol + c).border = { top: RL_THIN };
+        }
+    }
+
+    // ── Save ──────────────────────────────────────────────────────────
+    const buffer = await workbook.xlsx.writeBuffer();
+    rlSaveWorkbookBuffer(buffer, `interviewed_applicants_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`);
 }

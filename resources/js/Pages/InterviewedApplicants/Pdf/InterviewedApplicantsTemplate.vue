@@ -66,7 +66,7 @@
                             <col v-if="includeProjectedColumns" style="width:6.5%;" />
                             <col v-if="includeProjectedColumns" style="width:4.5%;" />
                             <col v-if="includeInterviewColumns" style="width:6.5%;" />
-                            <col v-if="includeInterviewColumns" style="width:5%;" />
+                            <col v-if="includeInterviewColumns && showInterviewerColumn" style="width:5%;" />
                             <col v-if="includeEndorsedBy" style="width:6.5%;" />
                             <col
                                 :style="includeEndorsedBy ? 'width:14%;' : (includeInterviewColumns ? 'width:10.25%;' : 'width:16%;')" />
@@ -84,7 +84,7 @@
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Academic Year
                                 </th>
                                 <th v-if="includeProjectedColumns" :style="TH" colspan="3">Projected</th>
-                                <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
+                                <th v-if="includeInterviewColumns" :style="TH" :colspan="showInterviewerColumn ? 2 : 1">Interview</th>
                                 <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed
                                     By</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
@@ -92,9 +92,9 @@
                             <tr>
                                 <th v-if="includeProjectedColumns" :style="TH">Terms</th>
                                 <th v-if="includeProjectedColumns" :style="TH">Grant</th>
-                                <th v-if="includeProjectedColumns" :style2="TH">Completion</th>
+                                <th v-if="includeProjectedColumns" :style="TH">Completion</th>
                                 <th v-if="includeInterviewColumns" :style="TH">Date</th>
-                                <th v-if="includeInterviewColumns" :style="TH">By</th>
+                                <th v-if="includeInterviewColumns && showInterviewerColumn" :style="TH">By</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -124,7 +124,7 @@
                                 <td v-if="includeInterviewColumns"
                                     :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                         fmtDate(record.interviewed_at) }}</td>
-                                <td v-if="includeInterviewColumns"
+                                <td v-if="includeInterviewColumns && showInterviewerColumn"
                                     :style="TD + 'text-align:center;text-transform:uppercase;'">{{
                                         record.interviewer?.name || '' }}</td>
                                 <td v-if="includeEndorsedBy" :style="TD + 'text-align:center;font-size:7pt;'">{{
@@ -159,7 +159,7 @@
                             <col v-if="includeProjectedColumns" style="width:6.5%;" />
                             <col v-if="includeProjectedColumns" style="width:5%;" />
                             <col v-if="includeInterviewColumns" style="width:7%;" />
-                            <col v-if="includeInterviewColumns" style="width:7%;" />
+                            <col v-if="includeInterviewColumns && showInterviewerColumn" style="width:7%;" />
                             <col v-if="includeEndorsedBy" style="width:6.5%;" />
                             <col
                                 :style="includeEndorsedBy ? 'width:12%;' : (includeInterviewColumns ? 'width:10%;' : 'width:16%;')" />
@@ -175,7 +175,7 @@
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Year</th>
                                 <th :style="TH + 'vertical-align:middle;'" rowspan="2">Agreement Start</th>
                                 <th v-if="includeProjectedColumns" :style="TH" colspan="3">Projected</th>
-                                <th v-if="includeInterviewColumns" :style="TH" colspan="2">Interview</th>
+                                <th v-if="includeInterviewColumns" :style="TH" :colspan="showInterviewerColumn ? 2 : 1">Interview</th>
                                 <th v-if="includeEndorsedBy" :style="TH + 'vertical-align:middle;'" rowspan="2">Endorsed
                                     By
                                 </th>
@@ -186,7 +186,7 @@
                                 <th v-if="includeProjectedColumns" :style="TH">Grant</th>
                                 <th v-if="includeProjectedColumns" :style="TH">Completion</th>
                                 <th v-if="includeInterviewColumns" :style="TH">Date</th>
-                                <th v-if="includeInterviewColumns" :style="TH">By</th>
+                                <th v-if="includeInterviewColumns && showInterviewerColumn" :style="TH">By</th>
 
                             </tr>
                         </thead>
@@ -218,7 +218,7 @@
                                     :style="TD + 'text-align:center;white-space:nowrap;'">{{
                                         fmtDate(record.interviewed_at)
                                     }}</td>
-                                <td v-if="includeInterviewColumns"
+                                <td v-if="includeInterviewColumns && showInterviewerColumn"
                                     :style="TD + 'text-align:center;text-transform:uppercase;'">{{
                                         record.interviewer?.name
                                         || '' }}</td>
@@ -441,6 +441,7 @@ const props = defineProps({
     reportTitle: { type: String, default: 'INTERVIEWED APPLICANTS REPORT' },
     listNumber: { type: String, default: '' },
     includeInterviewColumns: { type: Boolean, default: true },
+    showInterviewerColumn: { type: Boolean, default: true },
     includeEndorsedBy: { type: Boolean, default: false },
     includeProjectedColumns: { type: Boolean, default: true },
     highlightJpmMembers: { type: Boolean, default: false },

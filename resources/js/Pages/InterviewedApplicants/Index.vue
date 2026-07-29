@@ -86,7 +86,7 @@
                                         @click="activeTab = 'recommendation-lists'">
                                         <div class="flex items-center gap-2">
                                             <AppIcon name="list-checks" :size="14" />
-                                            <span>Recommendation Lists</span>
+                                            <span>Approval Requests</span>
                                             <span
                                                 class="rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700">
                                                 {{ recommendationLists.length }}
@@ -114,31 +114,19 @@
                                             <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
                                                 applicant(s) selected</div>
                                             <div class="text-xs text-yellow-700">
-                                                Create a saved recommendation list or export the current selection.
+                                                Export the current selection.
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex flex-wrap gap-2">
-                                        <AppButton icon="list-checks" label="Create Recommendation List" severity="info"
-                                            rounded size="small" :disabled="!canCreateRecommendationListFromSelection"
-                                            @click="openCreateRecommendationListModal" />
                                         <AppButton icon="file-type" label="Export PDF" severity="danger" outlined
                                             rounded size="small" @click="exportSelected('pdf')" />
                                         <AppButton icon="file-spreadsheet" label="Export Excel" severity="success"
                                             outlined rounded size="small" @click="exportSelected('excel')" />
                                     </div>
                                 </div>
-                                <div v-if="selectionHasNonRecommended" class="mt-2 text-xs font-medium text-amber-700">
-                                    Only applicants already marked Recommended for Approval can be saved in a
-                                    recommendation list.
-                                </div>
-                                <div v-if="selectionHasExistingRecommendationList"
-                                    class="mt-2 text-xs font-medium text-amber-700">
-                                    Remove applicants already in a recommendation list before creating a new
-                                    recommendation list.
-                                </div>
                             </div>
-                            
+
                             <!-- Filters above table -->
                             <div class="flex flex-wrap items-end gap-3 mb-4">
                                 <InputGroup class="w-full sm:w-64">
@@ -157,7 +145,7 @@
                                 </div>
                                 <div class="flex flex-col">
                                     <Select v-model="filters.listStatus" :options="recommendationListStatusOptions"
-                                        optionLabel="label" optionValue="value" placeholder="All Recommendation List Status"
+                                        optionLabel="label" optionValue="value" placeholder="All Approval Request Status"
                                         size="small" class="min-w-[220px] w-full" />
                                 </div>
                                 <div class="ml-auto flex flex-wrap justify-end gap-2 self-center">
@@ -197,9 +185,8 @@
                                     </template>
                                     <template #body="slotProps">
                                         <div class="flex justify-center"
-                                            v-tooltip.top="slotProps.data.is_in_recommendation_list ? 'Already included in a recommendation list (still selectable for export)' : 'Select applicant'">
+                                            v-tooltip.top="slotProps.data.is_in_recommendation_list ? 'Already included in an approval request (still selectable for export)' : 'Select applicant'">
                                             <Checkbox :modelValue="isRowSelected(slotProps.data)" binary
-                                                :disabled="!isRowSelectable(slotProps.data)"
                                                 @update:modelValue="(checked) => toggleRowSelection(slotProps.data, checked)" />
                                         </div>
                                     </template>
@@ -274,7 +261,7 @@
                                             </span>
                                             <span v-if="slotProps.data.is_in_recommendation_list"
                                                 class="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-3xs font-semibold text-amber-700">
-                                                Already in Recommendation List
+                                                Already in Approval Request
                                             </span>
                                         </div>
                                     </template>
@@ -420,7 +407,7 @@
                                         @click="activeTab = 'recommendation-lists'">
                                         <div class="flex items-center gap-2">
                                             <AppIcon name="list-checks" :size="14" />
-                                            <span>Recommendation Lists</span>
+                                            <span>Approval Requests</span>
                                             <span
                                                 class="rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700">
                                                 {{ recommendationLists.length }}
@@ -434,6 +421,8 @@
                                     <AppButton v-if="deletedRecommendationLists.length > 0" icon="archive"
                                         label="Deleted Lists" severity="warning" outlined rounded size="xsmall"
                                         @click="showDeletedListsModal = true" />
+                                    <AppButton icon="plus" label="Create Approval Request" severity="info" rounded
+                                        size="small" @click="openCreateRecommendationListModal" />
                                 </div>
                             </div>
 
@@ -469,7 +458,7 @@
 
                             <div v-if="filteredRecommendationLists.length === 0"
                                 class="py-10 text-center text-gray-500">
-                                No saved recommendation lists yet
+                                No saved approval requests yet
                             </div>
 
                             <DataTable v-else :value="filteredRecommendationLists" dataKey="id"
@@ -689,7 +678,7 @@
 
                             <div v-if="filteredDeletedRecommendationLists.length === 0"
                                 class="py-8 text-center text-gray-500">
-                                No deleted recommendation lists match the current filters
+                                No deleted approval requests match the current filters
                             </div>
 
                             <DataTable v-else :value="filteredDeletedRecommendationLists" dataKey="id" showGridlines
@@ -788,7 +777,7 @@
 
         <CreateRecommendationListModal :show="showCreateRecommendationListModal"
             @update:show="handleRecommendationListModalVisibility"
-            :selected-count="recommendationListModalSelectedCount" :budget-allocations="props.budget_allocations"
+            :applicants="recommendationApplicantPool" :budget-allocations="props.budget_allocations"
             :default-prepared-by="currentUser?.name || ''" :loading="isCreatingRecommendationList"
             :mode="recommendationListModalMode" :initial-data="editingRecommendationList"
             :submit-intent="recommendationListSubmitIntent" @submit="submitRecommendationList" />
@@ -819,141 +808,6 @@
             <div class="flex items-start gap-3">
                 <i v-if="confirmDialogIcon" :class="confirmDialogIcon" class="text-xl mt-0.5" />
                 <p class="m-0 text-sm leading-relaxed text-gray-700">{{ confirmDialogMessage }}</p>
-            </div>
-        </IosModal>
-
-        <!-- Update List Modal -->
-        <IosModal v-model:visible="showUpdateListModal" :title="'Update List: ' + (editingRecommendationList?.list_number || '')"
-            width="calc(100vw - 2rem)" max-width="1100px" body-style="padding: 16px;">
-            <template #header-right>
-                <button class="ios-nav-btn ios-nav-action text-nav"
-                    type="button"
-                    @click="showAddApplicantsModal = true">
-                    <AppIcon name="user-round-plus" :size="18" />
-                </button>
-            </template>
-            <div v-if="editingRecommendationList" class="flex flex-col gap-4">
-                <!-- Current Records -->
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-sm font-semibold text-gray-700">
-                            Current Applicants ({{ (editingRecommendationList.records || []).length }})
-                        </h3>
-                    </div>
-                    <div v-if="(editingRecommendationList.records || []).length === 0"
-                        class="py-6 text-center text-xs text-gray-400">
-                        No applicants in this list.
-                    </div>
-                    <div v-else class="max-h-[28rem] overflow-y-auto rounded-lg border border-gray-200">
-                        <table class="min-w-full text-xs">
-                            <thead class="bg-gray-50 sticky top-0">
-                                <tr>
-                                    <th class="text-center px-3 py-2 font-medium text-gray-500 w-10">#</th>
-                                    <th class="text-left px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
-                                        @click="toggleUpdateListSort('name')">
-                                        Name
-                                        <AppIcon v-if="updateListSortField === 'name'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
-                                    </th>
-                                    <th class="text-left px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
-                                        @click="toggleUpdateListSort('program')">
-                                        Program
-                                        <AppIcon v-if="updateListSortField === 'program'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
-                                    </th>
-                                    <th class="text-left px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
-                                        @click="toggleUpdateListSort('school')">
-                                        School
-                                        <AppIcon v-if="updateListSortField === 'school'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
-                                    </th>
-                                    <th class="text-left px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
-                                        @click="toggleUpdateListSort('course')">
-                                        Course
-                                        <AppIcon v-if="updateListSortField === 'course'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
-                                    </th>
-                                    <th class="text-center px-3 py-2 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-700"
-                                        @click="toggleUpdateListSort('year_level')">
-                                        Year Level
-                                        <AppIcon v-if="updateListSortField === 'year_level'" :name="updateListSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'" :size="12" class="inline ml-0.5" />
-                                    </th>
-                                    <th class="text-center px-3 py-2 font-medium text-gray-500 w-16">Remove</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                <tr v-for="(record, idx) in sortedUpdateListRecords" :key="record.id">
-                                    <td class="px-3 py-2 text-center text-gray-400">{{ idx + 1 }}</td>
-                                    <td class="px-3 py-2 font-medium text-gray-800">
-                                        {{ formatApplicantName(record) }}
-                                    </td>
-                                    <td class="px-3 py-2 text-gray-600">{{ record.program?.shortname || 'N/A' }}</td>
-                                    <td class="px-3 py-2 text-gray-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
-                                    <td class="px-3 py-2 text-gray-600">{{ record.course?.shortname || record.course?.name || 'N/A' }}</td>
-                                    <td class="px-3 py-2 text-center text-gray-600">{{ getSystemOptionLabel('year_level', record.year_level, 'N/A') }}</td>
-                                    <td class="px-3 py-2 text-center">
-                                        <button class="text-red-500 hover:text-red-700 border-none bg-transparent cursor-pointer"
-                                            @click="removeFromUpdateListIdx = idx">
-                                            <AppIcon name="trash-2" :size="14" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </IosModal>
-
-        <!-- Add Applicants Modal -->
-        <IosModal v-model:visible="showAddApplicantsModal" title="Add Applicants" width="calc(100vw - 2rem)"
-            max-width="900px" body-style="padding: 16px;">
-            <template #header-right>
-                <button class="ios-nav-btn ios-nav-action text-nav"
-                    type="button"
-                    :disabled="updateListSelectedIds.length === 0"
-                    @click="addSelectedUpdateListApplicants">
-                    Save
-                    <AppIcon name="save" :size="16" />
-                </button>
-            </template>
-            <div class="flex flex-col gap-4">
-                <div class="flex gap-2">
-                    <IconField iconPosition="left" class="flex-1">
-                        <InputIcon><AppIcon name="search" :size="14" class="text-gray-400" /></InputIcon>
-                        <InputText v-model="updateListSearch" placeholder="Search by name..." size="small" class="w-full" />
-                    </IconField>
-                    <button class="inline-flex items-center gap-1 px-3 py-1.5 text-2xs font-medium text-gray-500 rounded-full cursor-pointer border-none bg-transparent hover:bg-gray-100"
-                        @click="updateListSelectedIds = []">Clear</button>
-                </div>
-                <div v-if="availableForUpdateList.length === 0" class="py-6 text-center text-xs text-gray-400">
-                    No available recommended applicants to add.
-                </div>
-                <div v-else class="max-h-96 overflow-y-auto rounded-lg border border-gray-200">
-                    <table class="min-w-full text-xs">
-                        <thead class="bg-gray-50 sticky top-0">
-                            <tr>
-                                <th class="text-center px-3 py-2 font-medium text-gray-500 w-10">
-                                    <Checkbox :modelValue="allUpdateListAvailableSelected" binary
-                                        :indeterminate="someUpdateListAvailableSelected"
-                                        @update:modelValue="toggleAllUpdateListAvailable" />
-                                </th>
-                                <th class="text-left px-3 py-2 font-medium text-gray-500">Name</th>
-                                <th class="text-left px-3 py-2 font-medium text-gray-500">Program</th>
-                                <th class="text-left px-3 py-2 font-medium text-gray-500">School</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="record in filteredAddApplicantsAvailable" :key="record.id">
-                                <td class="px-3 py-2 text-center">
-                                    <Checkbox :modelValue="isUpdateListAvailableSelected(record)" binary
-                                        @update:modelValue="(checked) => toggleUpdateListAvailable(record, checked)" />
-                                </td>
-                                <td class="px-3 py-2 font-medium text-gray-800">
-                                    {{ formatApplicantName(record) }}
-                                </td>
-                                <td class="px-3 py-2 text-gray-600">{{ record.program?.shortname || 'N/A' }}</td>
-                                <td class="px-3 py-2 text-gray-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </IosModal>
     </AdminLayout>
@@ -1105,11 +959,6 @@ const recommendationLists = ref([...(props.recommendation_lists || [])]);
 const deletedRecommendationLists = ref([...(props.deleted_recommendation_lists || [])]);
 const recommendationListExpandedRows = ref({});
 const showRecommendationListPreview = ref(false);
-const showUpdateListModal = ref(false);
-const showAddApplicantsModal = ref(false);
-const updateListSearch = ref('');
-const updateListSelectedIds = ref([]);
-const removeFromUpdateListIdx = ref(-1);
 const recommendationListPreviewHtml = ref('');
 const recommendationListPreviewTitle = ref('');
 const recommendationListPreviewPaperSize = ref('a4');
@@ -1165,8 +1014,8 @@ const recommendationOptions = [
 
 const recommendationListStatusOptions = [
     { label: 'All Applicants', value: null },
-    { label: 'Not Yet in Recommendation List', value: 'available' },
-    { label: 'Already in Recommendation List', value: 'included' },
+    { label: 'Not Yet in Approval Request', value: 'available' },
+    { label: 'Already in Approval Request', value: 'included' },
 ];
 
 const getRecommendationListStatusLabel = (value) => {
@@ -1312,7 +1161,7 @@ const activeFilterTags = computed(() => {
     if (activeTab.value === 'interviewed' && filters.value.listStatus) {
         tags.push({
             key: 'listStatus',
-            label: 'Recommendation List',
+            label: 'Approval Request',
             display: getRecommendationListStatusLabel(filters.value.listStatus),
         });
     }
@@ -1351,28 +1200,6 @@ const filteredList = computed(() => {
     }
 
     return list;
-});
-
-const selectionHasNonRecommended = computed(() => {
-    return selectedRows.value.some((record) => record.recommendation !== 'recommended');
-});
-
-const selectionHasExistingRecommendationList = computed(() => {
-    return selectedRows.value.some((record) => record.is_in_recommendation_list);
-});
-
-const canCreateRecommendationListFromSelection = computed(() => {
-    return selectedRows.value.length > 0
-        && !selectionHasNonRecommended.value
-        && !selectionHasExistingRecommendationList.value;
-});
-
-const recommendationListModalSelectedCount = computed(() => {
-    if (recommendationListModalMode.value === 'edit') {
-        return Number(editingRecommendationList.value?.record_count || editingRecommendationList.value?.records?.length || 0);
-    }
-
-    return selectedRows.value.length;
 });
 
 const selectedRowIds = computed(() => new Set(selectedRows.value.map((record) => Number(record.id))));
@@ -1504,7 +1331,7 @@ const stats = computed(() => ({
     notRecommended: props.interviewed_applicants_stats?.not_recommended ?? 0,
 }));
 
-// Recommendation List Context Menu
+// Approval Request Context Menu
 const openRecommendationListContextMenu = (event, recommendationList) => {
     selectedRecommendationList.value = recommendationList;
     recommendationListContextMenu.value.show(event);
@@ -1624,7 +1451,12 @@ const openContextMenu = (event, record) => {
     contextMenu.value.show(event);
 };
 
-const isRowSelectable = (record) => true;
+// Recommendation lists must be scoped to a single program — once a selection
+// has started, rows from a different program are disabled from being added.
+const isRowSelectable = (record) => {
+    if (selectionAnchorProgramId.value === null) return true;
+    return String(record?.program?.id ?? '') === String(selectionAnchorProgramId.value);
+};
 
 const isRowSelected = (record) => selectedRowIds.value.has(Number(record?.id));
 
@@ -1651,7 +1483,9 @@ const toggleSelectAllFilteredRows = (checked) => {
         const selectedById = new Map(selectedRows.value.map((record) => [Number(record.id), record]));
 
         filteredList.value.forEach((record) => {
-            selectedById.set(Number(record.id), record);
+            if (isRowSelectable(record)) {
+                selectedById.set(Number(record.id), record);
+            }
         });
 
         selectedRows.value = Array.from(selectedById.values());
@@ -1813,21 +1647,6 @@ const handleRecommendationListModalVisibility = (value) => {
 };
 
 const openCreateRecommendationListModal = () => {
-    if (selectedRows.value.length === 0) {
-        toast.warn('Please select at least one applicant.');
-        return;
-    }
-
-    if (selectionHasNonRecommended.value) {
-        toast.warn('Only applicants marked Recommended for Approval can be saved in a recommendation list.');
-        return;
-    }
-
-    if (selectionHasExistingRecommendationList.value) {
-        toast.warn('Remove applicants already in a recommendation list before creating a new recommendation list.');
-        return;
-    }
-
     recommendationListModalMode.value = 'create';
     recommendationListSubmitIntent.value = 'save';
     editingRecommendationList.value = null;
@@ -2006,7 +1825,7 @@ const applyFilters = () => {
     // Filters are reactive
 };
 
-const exportSelected = (format) => {
+const exportSelected = async (format) => {
     if (selectedRows.value.length === 0) {
         toast.warn('Please select at least one applicant');
         return;
@@ -2023,7 +1842,7 @@ const exportSelected = (format) => {
                 return;
             }
         } else if (format === 'excel') {
-            exportInterviewedApplicantsExcel({ records: selectedRows.value });
+            await exportInterviewedApplicantsExcel({ records: selectedRows.value });
         }
 
         toast.success(`Exported ${selectedRows.value.length} applicant(s) as ${format.toUpperCase()}.`);
@@ -2038,18 +1857,10 @@ const createRecommendationList = async (payload) => {
         return;
     }
 
-    if (selectedRows.value.length === 0) {
+    const { record_ids: recordIds, ...reportFields } = payload;
+
+    if (!recordIds || recordIds.length === 0) {
         toast.warn('Please select at least one applicant.');
-        return;
-    }
-
-    if (selectionHasNonRecommended.value) {
-        toast.warn('Only applicants marked Recommended for Approval can be saved in a recommendation list.');
-        return;
-    }
-
-    if (selectionHasExistingRecommendationList.value) {
-        toast.warn('Remove applicants already in a recommendation list before creating a new recommendation list.');
         return;
     }
 
@@ -2057,28 +1868,27 @@ const createRecommendationList = async (payload) => {
 
     try {
         const response = await axios.post(route('scholarship.recommendation-lists.store'), {
-            record_ids: selectedRows.value.map((record) => record.id),
-            ...payload,
+            record_ids: recordIds,
+            ...reportFields,
         });
 
         const savedRecommendationList = response.data?.data;
 
         if (!savedRecommendationList) {
-            throw new Error('Recommendation list payload was not returned.');
+            throw new Error('Approval request payload was not returned.');
         }
 
         upsertRecommendationList(savedRecommendationList);
         recommendationListExpandedRows.value = { [savedRecommendationList.id]: true };
-        selectedRows.value = [];
         handleRecommendationListModalVisibility(false);
         activeTab.value = 'recommendation-lists';
-        toast.success(response.data?.message || 'Recommendation list created successfully.');
+        toast.success(response.data?.message || 'Approval request created successfully.');
     } catch (error) {
-        console.error('Failed to create recommendation list:', error);
+        console.error('Failed to create approval request:', error);
 
         const message = error?.response?.data?.errors?.record_ids?.[0]
             || error?.response?.data?.message
-            || 'Failed to create recommendation list.';
+            || 'Failed to create approval request.';
 
         toast.error(message);
     } finally {
@@ -2095,8 +1905,8 @@ const generateRecommendationListPrint = (recommendationList, successMessage = nu
         previewedRecommendationList.value = recommendationList;
         recommendationListPreviewHtml.value = html;
         recommendationListPreviewTitle.value = recommendationList?.list_number
-            ? `Recommendation List ${recommendationList.list_number}`
-            : 'Recommendation List';
+            ? `Approval Request ${recommendationList.list_number}`
+            : 'Approval Request';
         const paperMap = { landscape: { A4: 'a4-landscape', Letter: 'letter-landscape', Legal: 'landscape' }, portrait: { A4: 'a4', Letter: 'letter', Legal: 'long' } };
         const orientation = recommendationList?.orientation || 'landscape';
         const paperSize = recommendationList?.paper_size || 'A4';
@@ -2109,8 +1919,8 @@ const generateRecommendationListPrint = (recommendationList, successMessage = nu
 
         return true;
     } catch (error) {
-        console.error('Failed to print recommendation list:', error);
-        toast.error('Failed to print recommendation list.');
+        console.error('Failed to print approval request:', error);
+        toast.error('Failed to print approval request.');
         return false;
     }
 };
@@ -2147,7 +1957,7 @@ const updateRecommendationList = async (payload, { shouldPrintAfterSave = false 
         handleRecommendationListModalVisibility(false);
         activeTab.value = 'recommendation-lists';
 
-        const successMessage = response.data?.message || 'Recommendation list updated successfully.';
+        const successMessage = response.data?.message || 'Approval request updated successfully.';
 
         if (shouldPrintAfterSave) {
             const printOptions = {
@@ -2156,7 +1966,7 @@ const updateRecommendationList = async (payload, { shouldPrintAfterSave = false 
             };
             const printed = generateRecommendationListPrint(
                 savedRecommendationList,
-                `Updated ${savedRecommendationList.list_number}. Printing recommendation list.`,
+                `Updated ${savedRecommendationList.list_number}. Printing approval request.`,
                 printOptions,
             );
 
@@ -2169,10 +1979,10 @@ const updateRecommendationList = async (payload, { shouldPrintAfterSave = false 
 
         toast.success(successMessage);
     } catch (error) {
-        console.error('Failed to update recommendation list:', error);
+        console.error('Failed to update approval request:', error);
 
         const message = error?.response?.data?.message
-            || 'Failed to update recommendation list.';
+            || 'Failed to update approval request.';
 
         toast.error(message);
     } finally {
@@ -2182,36 +1992,7 @@ const updateRecommendationList = async (payload, { shouldPrintAfterSave = false 
 
 const submitRecommendationList = async (payload) => {
     if (payload?.is_update_list && editingRecommendationList.value?.id) {
-        // "Update List" uses the refresh endpoint with selected record IDs
-        const recordIds = selectedRows.value.map(r => r.id);
-        if (recordIds.length === 0) {
-            toast.warn('Please select at least one applicant.');
-            return;
-        }
-
-        isCreatingRecommendationList.value = true;
-        try {
-            const response = await axios.patch(
-                route('scholarship.recommendation-lists.refresh', editingRecommendationList.value.id),
-                { record_ids: recordIds },
-            );
-
-            upsertRecommendationList(response.data?.data);
-            recommendationListExpandedRows.value = {
-                ...recommendationListExpandedRows.value,
-                [editingRecommendationList.value.id]: true,
-            };
-            handleRecommendationListModalVisibility(false);
-            activeTab.value = 'recommendation-lists';
-            selectedRows.value = [];
-            refreshPage();
-            toast.success(response.data?.message || 'Recommendation list updated successfully.');
-        } catch (error) {
-            console.error('Failed to update recommendation list:', error);
-            toast.error(error?.response?.data?.message || 'Failed to update recommendation list.');
-        } finally {
-            isCreatingRecommendationList.value = false;
-        }
+        await saveUpdateListChanges(payload.record_ids || []);
         return;
     }
 
@@ -2232,10 +2013,10 @@ const exportPreviewedRecommendationListExcel = async () => {
 
     try {
         await exportRecommendationListExcel({ recommendationList: previewedRecommendationList.value });
-        toast.success('Exported recommendation list as EXCEL.');
+        toast.success('Exported approval request as EXCEL.');
     } catch (error) {
-        console.error('Failed to export recommendation list:', error);
-        toast.error('Failed to export recommendation list as EXCEL.');
+        console.error('Failed to export approval request:', error);
+        toast.error('Failed to export approval request as EXCEL.');
     }
 };
 
@@ -2249,7 +2030,7 @@ const performApproveRecommendationList = async (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for approval.');
+        toast.error('Approval request is unavailable for approval.');
         return;
     }
 
@@ -2263,7 +2044,7 @@ const performApproveRecommendationList = async (recommendationList) => {
         const approvedRecommendationList = response.data?.data;
 
         if (!approvedRecommendationList?.id) {
-            throw new Error('Approved recommendation list payload was not returned.');
+            throw new Error('Approved approval request payload was not returned.');
         }
 
         upsertRecommendationList(approvedRecommendationList);
@@ -2272,12 +2053,12 @@ const performApproveRecommendationList = async (recommendationList) => {
             [approvedRecommendationList.id]: true,
         };
         refreshPage();
-        toast.success(response.data?.message || 'Recommendation list approved successfully.');
+        toast.success(response.data?.message || 'Approval request approved successfully.');
     } catch (error) {
-        console.error('Failed to approve recommendation list:', error);
+        console.error('Failed to approve approval request:', error);
 
         const message = error?.response?.data?.message
-            || 'Failed to approve recommendation list.';
+            || 'Failed to approve approval request.';
 
         toast.error(message);
     } finally {
@@ -2291,7 +2072,7 @@ const performRevertRecommendationListApproval = async (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for approval revert.');
+        toast.error('Approval request is unavailable for approval revert.');
         return;
     }
 
@@ -2305,7 +2086,7 @@ const performRevertRecommendationListApproval = async (recommendationList) => {
         const revertedRecommendationList = response.data?.data;
 
         if (!revertedRecommendationList?.id) {
-            throw new Error('Reverted recommendation list payload was not returned.');
+            throw new Error('Reverted approval request payload was not returned.');
         }
 
         upsertRecommendationList(revertedRecommendationList);
@@ -2314,12 +2095,12 @@ const performRevertRecommendationListApproval = async (recommendationList) => {
             [revertedRecommendationList.id]: true,
         };
         refreshPage();
-        toast.success(response.data?.message || 'Recommendation list approval reverted successfully.');
+        toast.success(response.data?.message || 'Approval request approval reverted successfully.');
     } catch (error) {
-        console.error('Failed to revert recommendation list approval:', error);
+        console.error('Failed to revert approval request approval:', error);
 
         const message = error?.response?.data?.message
-            || 'Failed to revert recommendation list approval.';
+            || 'Failed to revert approval request approval.';
 
         toast.error(message);
     } finally {
@@ -2333,20 +2114,20 @@ const approveRecommendationList = (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for approval.');
+        toast.error('Approval request is unavailable for approval.');
         return;
     }
 
     if (recommendationList.is_approved) {
-        toast.warn('Recommendation list is already approved.');
+        toast.warn('Approval request is already approved.');
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
     const approverName = currentUser.value?.name || 'the current user';
 
     openConfirmDialog({
-        header: 'Approve Recommendation List',
+        header: 'Approve Request',
         message: `Approve ${targetLabel}? This will record ${approverName} as the approving user and timestamp the list.`,
         icon: 'pi pi-check-circle',
         acceptLabel: 'Approve',
@@ -2363,19 +2144,19 @@ const revertRecommendationListApproval = (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for approval revert.');
+        toast.error('Approval request is unavailable for approval revert.');
         return;
     }
 
     if (!recommendationList.is_approved) {
-        toast.warn('Recommendation list is not approved.');
+        toast.warn('Approval request is not approved.');
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
 
     openConfirmDialog({
-        header: 'Revert Recommendation List Approval',
+        header: 'Revert Request Approval',
         message: `Revert approval for ${targetLabel}? This will remove the list approval stamp and restore affected applicants to their previous review status.`,
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Revert Approval',
@@ -2392,7 +2173,7 @@ const performDeleteRecommendationList = async (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for deletion.');
+        toast.error('Approval request is unavailable for deletion.');
         return;
     }
 
@@ -2417,12 +2198,12 @@ const performDeleteRecommendationList = async (recommendationList) => {
             handleRecommendationListModalVisibility(false);
         }
 
-        toast.success(response.data?.message || 'Recommendation list deleted successfully.');
+        toast.success(response.data?.message || 'Approval request deleted successfully.');
     } catch (error) {
-        console.error('Failed to delete recommendation list:', error);
+        console.error('Failed to delete approval request:', error);
 
         const message = error?.response?.data?.message
-            || 'Failed to delete recommendation list.';
+            || 'Failed to delete approval request.';
 
         toast.error(message);
     } finally {
@@ -2436,15 +2217,15 @@ const deleteRecommendationList = (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for deletion.');
+        toast.error('Approval request is unavailable for deletion.');
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
 
     openConfirmDialog({
-        header: 'Delete Recommendation List',
-        message: `Delete ${targetLabel}? This will move the saved recommendation list to the deleted section until it is restored.`,
+        header: 'Delete Approval Request',
+        message: `Delete ${targetLabel}? This will move the saved approval request to the deleted section until it is restored.`,
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Delete',
         severity: 'danger',
@@ -2460,7 +2241,7 @@ const performRestoreRecommendationList = async (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for restoration.');
+        toast.error('Approval request is unavailable for restoration.');
         return;
     }
 
@@ -2479,12 +2260,12 @@ const performRestoreRecommendationList = async (recommendationList) => {
             );
         }
 
-        toast.success(response.data?.message || 'Recommendation list restored successfully.');
+        toast.success(response.data?.message || 'Approval request restored successfully.');
     } catch (error) {
-        console.error('Failed to restore recommendation list:', error);
+        console.error('Failed to restore approval request:', error);
 
         const message = error?.response?.data?.message
-            || 'Failed to restore recommendation list.';
+            || 'Failed to restore approval request.';
 
         toast.error(message);
     } finally {
@@ -2498,15 +2279,15 @@ const restoreRecommendationList = (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for restoration.');
+        toast.error('Approval request is unavailable for restoration.');
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
 
     openConfirmDialog({
-        header: 'Restore Recommendation List',
-        message: `Restore ${targetLabel}? This will return it to the active recommendation list table.`,
+        header: 'Restore Approval Request',
+        message: `Restore ${targetLabel}? This will return it to the active approval request table.`,
         icon: 'pi pi-refresh',
         acceptLabel: 'Restore',
         severity: 'warning',
@@ -2522,7 +2303,7 @@ const performForceDeleteRecommendationList = async (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for permanent deletion.');
+        toast.error('Approval request is unavailable for permanent deletion.');
         return;
     }
 
@@ -2537,12 +2318,12 @@ const performForceDeleteRecommendationList = async (recommendationList) => {
             (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
         );
 
-        toast.success(response.data?.message || 'Recommendation list permanently deleted.');
+        toast.success(response.data?.message || 'Approval request permanently deleted.');
     } catch (error) {
-        console.error('Failed to permanently delete recommendation list:', error);
+        console.error('Failed to permanently delete approval request:', error);
 
         const message = error?.response?.data?.message
-            || 'Failed to permanently delete recommendation list.';
+            || 'Failed to permanently delete approval request.';
 
         toast.error(message);
     } finally {
@@ -2556,15 +2337,15 @@ const forceDeleteRecommendationList = (recommendationList) => {
     }
 
     if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for permanent deletion.');
+        toast.error('Approval request is unavailable for permanent deletion.');
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this recommendation list';
+    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
 
     openConfirmDialog({
         header: 'Permanently Delete Soft-Deleted List',
-        message: `Permanently delete the soft-deleted record ${targetLabel}? This cannot be undone and will remove the saved recommendation list permanently.`,
+        message: `Permanently delete the soft-deleted record ${targetLabel}? This cannot be undone and will remove the saved approval request permanently.`,
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Delete Permanently',
         severity: 'danger',
@@ -2574,221 +2355,61 @@ const forceDeleteRecommendationList = (recommendationList) => {
     });
 };
 
+// Opens the unified Create/Update Approval Request modal in "update-list"
+// intent — its own Select Applicants step (pre-checked with current members)
+// replaces the old separate current-list/add-applicants modal pair.
 const openUpdateListModal = (recommendationList) => {
     if (isCreatingRecommendationList.value || !recommendationList?.id) {
         return;
     }
 
     editingRecommendationList.value = recommendationList;
-    updateListSearch.value = '';
-    showUpdateListModal.value = true;
+    recommendationListModalMode.value = 'edit';
+    recommendationListSubmitIntent.value = 'update-list';
+    showCreateRecommendationListModal.value = true;
 };
 
-const updateListSortField = ref('school');
-const updateListSortOrder = ref('asc');
+// Pool of applicants offered by the Select Applicants step: recommended
+// applicants not already in another approval request. When updating an
+// existing request, its current members are included too (pre-checked),
+// even though they're already "in a request" — this one.
+const recommendationApplicantPool = computed(() => {
+    if (recommendationListSubmitIntent.value === 'update-list' && editingRecommendationList.value) {
+        const currentIds = new Set(
+            (editingRecommendationList.value.records || []).map((r) => Number(r.id))
+        );
 
-function toggleUpdateListSort(field) {
-    if (updateListSortField.value === field) {
-        updateListSortOrder.value = updateListSortOrder.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        updateListSortField.value = field;
-        updateListSortOrder.value = 'asc';
+        return (props.interviewed_applicants || [])
+            .filter((r) => r.recommendation === 'recommended'
+                && (!r.is_in_recommendation_list || currentIds.has(Number(r.id))));
     }
-}
-
-// Computed: recommended applicants NOT already in the editing list
-const availableForUpdateList = computed(() => {
-    if (!editingRecommendationList.value) return [];
-
-    const currentIds = new Set(
-        (editingRecommendationList.value.records || []).map(r => Number(r.id))
-    );
 
     return (props.interviewed_applicants || [])
-        .filter(r => r.recommendation === 'recommended' && !currentIds.has(Number(r.id)));
+        .filter((r) => r.recommendation === 'recommended' && !r.is_in_recommendation_list);
 });
 
-// Sorted for the update list modal
-const FIELD_ACCESSORS = {
-    name: (r) => formatApplicantName(r).toLowerCase(),
-    program: (r) => (r.program?.shortname || '').toLowerCase(),
-    school: (r) => (r.school?.shortname || r.school?.name || '').toLowerCase(),
-    course: (r) => (r.course?.shortname || r.course?.name || '').toLowerCase(),
-    year_level: (r) => (getSystemOptionLabel('year_level', r.year_level, '') || '').toLowerCase(),
-};
-
-const sortedUpdateListRecords = computed(() => {
-    const records = editingRecommendationList.value?.records || [];
-    const field = updateListSortField.value;
-    const order = updateListSortOrder.value;
-
-    const sorted = [...records].sort((a, b) => {
-        const accessor = FIELD_ACCESSORS[field] || FIELD_ACCESSORS.school;
-        const valA = accessor(a);
-        const valB = accessor(b);
-        if (valA !== valB) return valA.localeCompare(valB);
-
-        // Secondary sort by school then name
-        const schoolA = FIELD_ACCESSORS.school(a);
-        const schoolB = FIELD_ACCESSORS.school(b);
-        if (schoolA !== schoolB) return schoolA.localeCompare(schoolB);
-
-        const nameA = FIELD_ACCESSORS.name(a);
-        const nameB = FIELD_ACCESSORS.name(b);
-        return nameA.localeCompare(nameB);
-    });
-
-    return order === 'desc' ? sorted.reverse() : sorted;
-});
-
-const filteredUpdateListAvailable = computed(() => {
-// renamed to avoid confusion — used by add applicants modal
-    const q = updateListSearch.value.trim().toLowerCase();
-    if (!q) return availableForUpdateList.value;
-
-    return availableForUpdateList.value.filter(r => {
-        const name = `${r.profile?.last_name || ''} ${r.profile?.first_name || ''}`.toLowerCase();
-        return name.includes(q);
-    });
-});
-
-// Filtered available applicants for the add-applicants modal
-const filteredAddApplicantsAvailable = computed(() => {
-    const q = updateListSearch.value.trim().toLowerCase();
-    if (!q) return availableForUpdateList.value;
-
-    return availableForUpdateList.value.filter(r => {
-        const name = `${r.profile?.last_name || ''} ${r.profile?.first_name || ''}`.toLowerCase();
-        return name.includes(q);
-    });
-});
-
-const allUpdateListAvailableSelected = computed(() => {
-    return filteredAddApplicantsAvailable.value.length > 0
-        && filteredAddApplicantsAvailable.value.every(r => updateListSelectedIds.value.includes(r.id));
-});
-
-const someUpdateListAvailableSelected = computed(() => {
-    return !allUpdateListAvailableSelected.value
-        && filteredAddApplicantsAvailable.value.some(r => updateListSelectedIds.value.includes(r.id));
-});
-
-function isUpdateListAvailableSelected(record) {
-    return updateListSelectedIds.value.includes(record.id);
-}
-
-function toggleUpdateListAvailable(record, checked) {
-    if (checked) {
-        updateListSelectedIds.value = [...updateListSelectedIds.value, record.id];
-    } else {
-        updateListSelectedIds.value = updateListSelectedIds.value.filter(id => id !== record.id);
-    }
-}
-
-function toggleAllUpdateListAvailable(checked) {
-    if (checked) {
-        updateListSelectedIds.value = filteredAddApplicantsAvailable.value.map(r => r.id);
-    } else {
-        updateListSelectedIds.value = [];
-    }
-}
-
-function selectAllUpdateListAvailable() {
-    updateListSelectedIds.value = filteredAddApplicantsAvailable.value.map(r => r.id);
-}
-
-function addSelectedUpdateListApplicants() {
-    if (!editingRecommendationList.value || updateListSelectedIds.value.length === 0) return;
-
-    const existingIds = new Set(
-        (editingRecommendationList.value.records || []).map(r => Number(r.id))
-    );
-
-    console.log('addSelectedUpdateListApplicants - selectedIds:', updateListSelectedIds.value);
-    console.log('addSelectedUpdateListApplicants - existingIds:', [...existingIds]);
-
-    const newRecords = (props.interviewed_applicants || [])
-        .filter(r => updateListSelectedIds.value.includes(r.id) && !existingIds.has(Number(r.id)));
-
-    console.log('addSelectedUpdateListApplicants - newRecords:', newRecords.map(r => r.id));
-
-    editingRecommendationList.value = {
-        ...editingRecommendationList.value,
-        records: [...(editingRecommendationList.value.records || []), ...newRecords],
-    };
-    console.log('addSelectedUpdateListApplicants - total records after add:', editingRecommendationList.value.records?.length);
-    updateListSelectedIds.value = [];
-    showAddApplicantsModal.value = false;
-
-    // Persist to backend immediately
-    saveUpdateListChanges();
-}
-
-// Watcher for remove from update list — requires confirmation
-watch(removeFromUpdateListIdx, (idx) => {
-    if (idx < 0 || !editingRecommendationList.value) return;
-    const sorted = sortedUpdateListRecords.value;
-    if (idx >= sorted.length) { removeFromUpdateListIdx.value = -1; return; }
-    const record = sorted[idx];
-    if (!record?.id) { removeFromUpdateListIdx.value = -1; return; }
-
-    const applicantName = formatApplicantName(record);
-
-    openConfirmDialog({
-        header: 'Remove Applicant',
-        message: `Remove ${applicantName} from this list?`,
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Remove',
-        severity: 'danger',
-        onAccept: async () => {
-            isCreatingRecommendationList.value = true;
-            try {
-                const response = await axios.delete(
-                    route('scholarship.recommendation-lists.remove-record', {
-                        recommendationList: editingRecommendationList.value.id,
-                        scholarshipRecord: record.id,
-                    }),
-                );
-
-                const updated = response.data?.data;
-                upsertRecommendationList(updated);
-                editingRecommendationList.value = updated;
-                toast.success(response.data?.message || 'Record removed successfully.');
-            } catch (error) {
-                console.error('Failed to remove record:', error);
-                toast.error(error?.response?.data?.message || 'Failed to remove record from list.');
-            } finally {
-                isCreatingRecommendationList.value = false;
-            }
-        },
-    });
-    removeFromUpdateListIdx.value = -1;
-});
-
-async function saveUpdateListChanges() {
+async function saveUpdateListChanges(recordIds) {
     if (!editingRecommendationList.value?.id) return;
 
-    const recordIds = (editingRecommendationList.value.records || []).map(r => r.id);
-    console.log('saveUpdateListChanges - recordIds:', recordIds);
     if (recordIds.length === 0) {
-        toast.warn('Please keep at least one applicant in the list.');
+        toast.warn('Please keep at least one applicant in the request.');
         return;
     }
 
     isCreatingRecommendationList.value = true;
-    const url = route('scholarship.recommendation-lists.refresh', editingRecommendationList.value.id);
-    console.log('saveUpdateListChanges - calling:', url, recordIds);
     try {
-        const response = await axios.patch(url, { record_ids: recordIds });
-        console.log('saveUpdateListChanges - response:', response.data);
+        const response = await axios.patch(
+            route('scholarship.recommendation-lists.refresh', editingRecommendationList.value.id),
+            { record_ids: recordIds },
+        );
 
         upsertRecommendationList(response.data?.data);
-        showUpdateListModal.value = false;
+        handleRecommendationListModalVisibility(false);
         editingRecommendationList.value = null;
-        toast.success(response.data?.message || 'Recommendation list updated successfully.');
+        toast.success(response.data?.message || 'Approval request updated successfully.');
     } catch (error) {
-        const msg = error?.response?.data?.message || error?.message || 'Failed to update recommendation list.';
-        console.error('Failed to update recommendation list:', error);
+        const msg = error?.response?.data?.message || error?.message || 'Failed to update approval request.';
+        console.error('Failed to update approval request:', error);
         toast.error(msg);
     } finally {
         isCreatingRecommendationList.value = false;
@@ -2815,8 +2436,8 @@ const refreshRecommendationList = async (recommendationList) => {
         refreshPage();
         toast.success(response.data?.message || 'Recommendation list updated successfully.');
     } catch (error) {
-        console.error('Failed to refresh recommendation list:', error);
-        toast.error(error?.response?.data?.message || 'Failed to update recommendation list.');
+        console.error('Failed to refresh approval request:', error);
+        toast.error(error?.response?.data?.message || 'Failed to update approval request.');
     } finally {
         recommendationList._refreshing = false;
     }

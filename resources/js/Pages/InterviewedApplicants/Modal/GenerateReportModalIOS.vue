@@ -274,6 +274,10 @@
                             <span>Show Interview Columns</span>
                             <ToggleSwitch v-model="includeInterviewColumns" />
                         </label>
+                        <label v-if="reportType === 'list' && includeInterviewColumns" class="flex items-center justify-between py-1.5 pl-3 text-xs text-gray-700 cursor-pointer border-b border-gray-50 hover:text-gray-900">
+                            <span>Show Interviewer</span>
+                            <ToggleSwitch v-model="showInterviewerColumn" />
+                        </label>
                         <label v-if="reportType === 'list'" class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-b border-gray-50 hover:text-gray-900">
                             <span>Highlight JPM Names</span>
                             <ToggleSwitch v-model="highlightJpmMembers" />
@@ -365,6 +369,7 @@ const groupBy = ref('none');
 const paperSize = ref('Legal');
 const orientation = ref('landscape');
 const includeInterviewColumns = ref(false);
+const showInterviewerColumn = ref(true);
 const highlightJpmMembers = ref(false);
 const showRemarks = ref(false);
 
@@ -729,6 +734,19 @@ function exportReportToExcel() {
     exportInterviewedApplicantsExcel({
         records: printableRecords.value,
         title: resolvedReportTitle.value,
+        reportType: reportType.value,
+        groupBy: groupBy.value,
+        today: moment().format('MMMM D, YYYY'),
+        includeInterviewColumns: includeInterviewColumns.value,
+        showInterviewerColumn: showInterviewerColumn.value,
+        highlightJpmMembers: reportType.value === 'list' ? highlightJpmMembers.value : false,
+        showRemarks: reportType.value === 'list' ? showRemarks.value : false,
+        budgetAllocation: showBudgetAllocation.value ? buildBudgetAllocationPayload(selectedBudgetAllocation.value) : null,
+        preparedBy: showSignatories.value ? (preparedBy.value?.trim() || DEFAULT_PREPARED_BY) : '',
+        preparedByPosition: showSignatories.value ? (preparedByPosition.value?.trim() || DEFAULT_PREPARED_BY_POSITION) : '',
+        preparedByOffice: showSignatories.value ? (preparedByOffice.value?.trim() || DEFAULT_PREPARED_BY_OFFICE) : '',
+        approvedBy: showSignatories.value ? (approvedBy.value?.trim() || DEFAULT_APPROVED_BY) : '',
+        approvedByPosition: showSignatories.value ? (approvedByPosition.value?.trim() || DEFAULT_APPROVED_BY_POSITION) : '',
     });
 }
 
@@ -767,6 +785,7 @@ function generateReport() {
         budgetAllocation: showBudgetAllocation.value ? buildBudgetAllocationPayload(selectedBudgetAllocation.value) : null,
         reportTitle,
         includeInterviewColumns: includeInterviewColumns.value,
+        showInterviewerColumn: showInterviewerColumn.value,
         includeGrantProvision: includeGrantProvision.value,
         grant_value: grantValue.value,
         highlightJpmMembers: reportType.value === 'list' ? highlightJpmMembers.value : false,

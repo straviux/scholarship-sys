@@ -350,7 +350,7 @@ class ScholarshipApiController extends Controller
             $programNames = ScholarshipProgram::pluck('name', 'id');
 
             $records = ScholarshipRecord::with(['profile', 'course', 'school'])
-                ->where('unified_status', 'active')
+                ->whereIn('unified_status', ['active', 'completed'])
                 ->whereHas('profile', function ($query) {
                     $query->where('is_active', 1);
                 })

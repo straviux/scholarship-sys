@@ -1,6 +1,6 @@
 <template>
     <IosModal :visible="show" :title="modalTitle" width="calc(100vw - 2rem)"
-        max-width="620px" body-style="padding: 16px;"
+        max-width="700px" body-style="padding: 16px;"
         @update:visible="val => emit('update:show', val)">
         <template #header-left>
             <button class="ios-nav-btn ios-nav-cancel text-nav" @click="emit('update:show', false)">
@@ -11,7 +11,7 @@
         <template #header-right>
             <button v-if="activeStep === steps.length - 1" class="ios-nav-btn ios-nav-action text-nav" :disabled="isSubmitDisabled || loading"
                 @click="submitForm"
-                v-tooltip.bottom="isPrintIntent ? 'Save & Print' : (isUpdateListIntent ? 'Update List' : (isEditMode ? 'Save Changes' : 'Create List'))">
+                v-tooltip.bottom="isPrintIntent ? 'Save & Print' : (isUpdateListIntent ? 'Update Request' : (isEditMode ? 'Save Changes' : 'Create Request'))">
                 <AppIcon v-if="loading" name="loader-circle" :size="16" class="animate-spin" />
                 <AppIcon v-else-if="isPrintIntent" name="printer" :size="16" />
                 <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
@@ -22,7 +22,7 @@
             <button class="ios-footer-btn" :disabled="activeStep === 0 || loading" @click="prevStep">
                 <AppIcon name="chevron-left" :size="14" /> Back
             </button>
-            <button v-if="activeStep < steps.length - 1" class="ios-footer-btn ios-footer-btn-primary" :disabled="loading" @click="nextStep">
+            <button v-if="activeStep < steps.length - 1" class="ios-footer-btn ios-footer-btn-primary" :disabled="loading || !canAdvancePast(activeStep + 1)" @click="nextStep">
                 Next <AppIcon name="chevron-right" :size="14" />
             </button>
             <span v-else></span>
@@ -47,19 +47,67 @@
             </template>
         </div>
 
-        <div class="max-h-[50vh] overflow-y-auto">
-            <!-- Selection summary (always visible) -->
-            <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+        <div class="max-h-[55vh] overflow-y-auto">
+            <!-- Selection summary (only relevant while the applicants step exists) -->
+            <div v-if="showApplicantsStep" class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
                 <span class="font-semibold text-gray-700">{{ selectedCount }} applicant(s) selected</span>
                 <span class="text-gray-400 ml-2">· Recommended for Approval</span>
             </div>
 
-            <!-- ═══ STEP 1: Report Details ═══ -->
-            <div v-show="activeStep === 0">
+            <!-- ═══ STEP: Select Applicants ═══ -->
+            <div v-if="showApplicantsStep" v-show="activeStep === applicantsStepIndex">
+                <div class="flex gap-2 mb-3">
+                    <ProgramSelect v-model="applicantProgramFilter" custom-placeholder="All Programs"
+                        class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                    <IconField iconPosition="left" class="flex-1">
+                        <InputIcon><AppIcon name="search" :size="14" class="text-gray-400" /></InputIcon>
+                        <InputText v-model="applicantSearch" placeholder="Search by name..." size="small" class="w-full" />
+                    </IconField>
+                </div>
+
+                <div v-if="eligibleApplicants.length === 0" class="py-6 text-center text-xs text-gray-400">
+                    No recommended applicants are available to select.
+                </div>
+                <div v-else-if="filteredApplicants.length === 0" class="py-6 text-center text-xs text-gray-400">
+                    No applicants match the current filters.
+                </div>
+                <div v-else class="max-h-80 overflow-y-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full text-xs">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="text-center px-3 py-2 font-medium text-gray-500 w-10">
+                                    <Checkbox :modelValue="allFilteredApplicantsSelected" binary
+                                        :indeterminate="someFilteredApplicantsSelected"
+                                        @update:modelValue="toggleAllFilteredApplicants" />
+                                </th>
+                                <th class="text-left px-3 py-2 font-medium text-gray-500">Name</th>
+                                <th class="text-left px-3 py-2 font-medium text-gray-500">Program</th>
+                                <th class="text-left px-3 py-2 font-medium text-gray-500">School</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="record in filteredApplicants" :key="record.id">
+                                <td class="px-3 py-2 text-center"
+                                    v-tooltip.top="!isApplicantSelectable(record) && !isApplicantSelected(record) ? 'An approval request can only include applicants from the same program' : null">
+                                    <Checkbox :modelValue="isApplicantSelected(record)" binary
+                                        :disabled="!isApplicantSelectable(record) && !isApplicantSelected(record)"
+                                        @update:modelValue="(checked) => toggleApplicant(record, checked)" />
+                                </td>
+                                <td class="px-3 py-2 font-medium text-gray-800">{{ formatApplicantName(record) }}</td>
+                                <td class="px-3 py-2 text-gray-600">{{ record.program?.shortname || 'N/A' }}</td>
+                                <td class="px-3 py-2 text-gray-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ═══ STEP: Report Details ═══ -->
+            <div v-show="activeStep === detailsStepIndex">
                 <!-- Report Title -->
                 <div class="mb-4">
                     <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
-                    <InputText v-model="form.report_title" placeholder="Recommendation list title"
+                    <InputText v-model="form.report_title" placeholder="Approval request title"
                         class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
                 </div>
 
@@ -101,8 +149,8 @@
                 </div>
             </div>
 
-            <!-- ═══ STEP 2: Signatories ═══ -->
-            <div v-show="activeStep === 1">
+            <!-- ═══ STEP: Signatories ═══ -->
+            <div v-show="activeStep === signatoriesStepIndex">
                 <div class="mb-4">
                     <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatories</label>
                     <div class="flex gap-2">
@@ -125,47 +173,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- ═══ STEP 3: Options & Paper ═══ -->
-            <div v-show="activeStep === 2">
-                <!-- Options -->
-                <div class="mb-4">
-                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Options</label>
-                    <div class="flex flex-col gap-0.5">
-                        <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-b border-gray-50 hover:text-gray-900">
-                            <span>Highlight JPM Names</span>
-                            <ToggleSwitch v-model="form.highlight_jpm_members" />
-                        </label>
-                        <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-b border-gray-50 hover:text-gray-900">
-                            <span>Include Endorsed By</span>
-                            <ToggleSwitch v-model="form.include_endorsed_by" />
-                        </label>
-                        <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-b border-gray-50 hover:text-gray-900">
-                            <span>Show Remarks</span>
-                            <ToggleSwitch v-model="form.show_remarks" />
-                        </label>
-                        <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-b border-gray-50 hover:text-gray-900">
-                            <span>Include Projected Columns</span>
-                            <ToggleSwitch v-model="includeProjectedColumns" />
-                        </label>
-                        <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer hover:text-gray-900">
-                            <span>Include Interview Columns</span>
-                            <ToggleSwitch v-model="includeInterviewColumns" />
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Paper & Orientation -->
-                <div class="mb-4">
-                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Paper &amp; Orientation</label>
-                    <div class="flex gap-2">
-                        <Select v-model="paperSize" :options="paperSizeOptions" optionLabel="label" optionValue="value"
-                            class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
-                        <Select v-model="orientation" :options="orientationOptions" optionLabel="label" optionValue="value"
-                            class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
-                    </div>
-                </div>
-            </div>
         </div>
 
     </IosModal>
@@ -179,7 +186,9 @@ import IosModal from '@/Components/ui/IosModal.vue';
 import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
 import DatePicker from 'primevue/datepicker';
-import ToggleSwitch from 'primevue/toggleswitch';
+import Checkbox from 'primevue/checkbox';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
@@ -187,12 +196,13 @@ const DEFAULT_PREPARED_BY_POSITION = 'Program Manager';
 const DEFAULT_PREPARED_BY_OFFICE = 'YAKAP sa Edukasyon';
 const DEFAULT_APPROVED_BY = 'AMY ROA ALVAREZ';
 const DEFAULT_APPROVED_BY_POSITION = 'Governor';
+const DEFAULT_REPORT_TITLE = 'Request for Scholarship Approval';
 
 const props = defineProps({
     show: Boolean,
-    selectedCount: {
-        type: Number,
-        default: 0,
+    applicants: {
+        type: Array,
+        default: () => [],
     },
     budgetAllocations: {
         type: Array,
@@ -223,12 +233,9 @@ const props = defineProps({
 const emit = defineEmits(['update:show', 'submit']);
 
 const form = ref({
-    report_title: 'RECOMMENDATION LIST FOR APPROVAL',
+    report_title: DEFAULT_REPORT_TITLE,
     request_date: null,
     budget_program: null,
-    highlight_jpm_members: false,
-    include_endorsed_by: false,
-    show_remarks: false,
     prepared_by: '',
     prepared_by_position: DEFAULT_PREPARED_BY_POSITION,
     prepared_by_office: DEFAULT_PREPARED_BY_OFFICE,
@@ -237,63 +244,136 @@ const form = ref({
 });
 const selectedBudgetAllocation = ref(null);
 const showBudgetError = ref(false);
-const includeProjectedColumns = ref(true);
-const includeInterviewColumns = ref(true);
-const paperSize = ref('A4');
-const orientation = ref('landscape');
 const activeStep = ref(0);
 
-const steps = [
-    { key: 'details', label: 'Report Details' },
-    { key: 'signatories', label: 'Signatories' },
-    { key: 'options', label: 'Options & Paper' },
-];
-
-const paperSizeOptions = [
-    { label: 'A4', value: 'A4' },
-    { label: 'Letter', value: 'Letter' },
-    { label: 'Legal / Long', value: 'Legal' },
-];
-
-const orientationOptions = [
-    { label: 'Portrait', value: 'portrait' },
-    { label: 'Landscape', value: 'landscape' },
-];
+// ═══ Select Applicants step ═══
+const applicantProgramFilter = ref(null);
+const applicantSearch = ref('');
+const selectedApplicantIds = ref([]);
 
 const isEditMode = computed(() => props.mode === 'edit');
 const isPrintIntent = computed(() => props.submitIntent === 'print');
 const isUpdateListIntent = computed(() => props.submitIntent === 'update-list');
+
+// The applicants step only makes sense when membership is actually being set:
+// creating a new request, or adding/removing applicants from an existing one.
+// Editing report details/signatories on an already-saved request leaves
+// membership untouched.
+const showApplicantsStep = computed(() => props.mode === 'create' || isUpdateListIntent.value);
+
+const steps = computed(() => {
+    const list = [];
+    if (showApplicantsStep.value) list.push({ key: 'applicants', label: 'Select Applicants' });
+    list.push({ key: 'details', label: 'Report Details' });
+    list.push({ key: 'signatories', label: 'Signatories' });
+    return list;
+});
+const applicantsStepIndex = computed(() => (showApplicantsStep.value ? 0 : -1));
+const detailsStepIndex = computed(() => (showApplicantsStep.value ? 1 : 0));
+const signatoriesStepIndex = computed(() => (showApplicantsStep.value ? 2 : 1));
+
+function formatApplicantName(record) {
+    const lastName = record?.profile?.last_name || '';
+    const firstName = record?.profile?.first_name || '';
+    const middleInitial = record?.profile?.middle_name
+        ? `${record.profile.middle_name.trim().charAt(0).toUpperCase()}.`
+        : '';
+
+    return [lastName + ',', firstName, middleInitial].filter(Boolean).join(' ').trim();
+}
+
+// Parent already scopes props.applicants to the correct eligible pool
+// (Recommended for Approval, and not already in another approval request).
+const eligibleApplicants = computed(() => props.applicants || []);
+
+const filteredApplicants = computed(() => {
+    const programId = applicantProgramFilter.value?.id ?? null;
+    const query = applicantSearch.value.trim().toLowerCase();
+
+    return eligibleApplicants.value.filter((record) => {
+        if (programId && String(record?.program?.id ?? '') !== String(programId)) {
+            return false;
+        }
+        if (query && !formatApplicantName(record).toLowerCase().includes(query)) {
+            return false;
+        }
+        return true;
+    });
+});
+
+// An approval request can only include applicants from a single program —
+// once a selection has started, other-program rows are disabled.
+const selectionAnchorProgramId = computed(() => {
+    if (selectedApplicantIds.value.length === 0) return null;
+    const anchor = eligibleApplicants.value.find((record) => selectedApplicantIds.value.includes(record.id));
+    return anchor?.program?.id ?? null;
+});
+
+function isApplicantSelected(record) {
+    return selectedApplicantIds.value.includes(record.id);
+}
+
+function isApplicantSelectable(record) {
+    if (selectionAnchorProgramId.value === null) return true;
+    return String(record?.program?.id ?? '') === String(selectionAnchorProgramId.value);
+}
+
+function toggleApplicant(record, checked) {
+    if (checked) {
+        if (!isApplicantSelectable(record)) return;
+        if (!selectedApplicantIds.value.includes(record.id)) {
+            selectedApplicantIds.value = [...selectedApplicantIds.value, record.id];
+        }
+        return;
+    }
+
+    selectedApplicantIds.value = selectedApplicantIds.value.filter((id) => id !== record.id);
+}
+
+const allFilteredApplicantsSelected = computed(() => {
+    return filteredApplicants.value.length > 0
+        && filteredApplicants.value.every((record) => isApplicantSelected(record));
+});
+
+const someFilteredApplicantsSelected = computed(() => {
+    return !allFilteredApplicantsSelected.value
+        && filteredApplicants.value.some((record) => isApplicantSelected(record));
+});
+
+function toggleAllFilteredApplicants(checked) {
+    if (!checked) {
+        const filteredIds = new Set(filteredApplicants.value.map((record) => record.id));
+        selectedApplicantIds.value = selectedApplicantIds.value.filter((id) => !filteredIds.has(id));
+        return;
+    }
+
+    const selectable = filteredApplicants.value.filter((record) => isApplicantSelectable(record));
+    const selectedById = new Set(selectedApplicantIds.value);
+    selectable.forEach((record) => selectedById.add(record.id));
+    selectedApplicantIds.value = Array.from(selectedById);
+}
+
+const selectedCount = computed(() => selectedApplicantIds.value.length);
+
 const modalTitle = computed(() => {
     if (isUpdateListIntent.value) {
-        return 'Update Recommendation List';
+        return 'Update Approval Request';
     }
     if (isEditMode.value && isPrintIntent.value) {
-        return 'Print Recommendation List';
+        return 'Print Approval Request';
     }
 
-    return isEditMode.value ? 'Edit Report Settings' : 'Create Recommendation List';
-});
-const submitTooltip = computed(() => {
-    if (isEditMode.value && isPrintIntent.value) {
-        return 'Save and Print';
-    }
-
-    return isEditMode.value ? 'Save Changes' : 'Create List';
+    return isEditMode.value ? 'Edit Approval Request' : 'Create Approval Request';
 });
 const budgetErrorMessage = computed(() => isEditMode.value
-    ? 'Select a budget allocation before updating the recommendation list.'
-    : 'Select a budget allocation before creating the recommendation list.');
+    ? 'Select a budget allocation before updating the approval request.'
+    : 'Select a budget allocation before creating the approval request.');
 
 const budgetAllocationCurrencyFormatter = new Intl.NumberFormat('en-PH', {
     style: 'currency',
     currency: 'PHP',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-});
-const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
 });
 
 function formatBudgetAllocationAmount(allocation) {
@@ -471,14 +551,7 @@ const budgetAllocationOptions = computed(() => {
 });
 
 const requiresBudgetAllocationSelection = computed(() => budgetAllocationOptions.value.length > 0);
-const isSubmitDisabled = computed(() => props.selectedCount === 0);
-const selectedBudgetProgramId = computed(() => {
-    const value = form.value.budget_program;
-
-    return typeof value === 'object' && value !== null
-        ? value.id ?? null
-        : null;
-});
+const isSubmitDisabled = computed(() => showApplicantsStep.value && selectedCount.value === 0);
 const selectedBudgetProgramLabel = computed(() => {
     const value = form.value.budget_program;
 
@@ -520,10 +593,15 @@ function stepNumberClass(idx) {
     if (idx < activeStep.value) return 'bg-green-500 text-white';
     return 'bg-gray-200 text-gray-500';
 }
-function canAdvancePast(idx) { return idx <= activeStep.value; }
-function nextStep() { if (activeStep.value < steps.length - 1) activeStep.value++; }
+function canAdvancePast(idx) {
+    if (showApplicantsStep.value && idx > applicantsStepIndex.value && selectedCount.value === 0) {
+        return false;
+    }
+    return idx <= activeStep.value + 1;
+}
+function nextStep() { if (activeStep.value < steps.value.length - 1 && canAdvancePast(activeStep.value + 1)) activeStep.value++; }
 function prevStep() { if (activeStep.value > 0) activeStep.value--; }
-function goToStep(idx) { if (idx <= activeStep.value) activeStep.value = idx; }
+function goToStep(idx) { if (idx <= activeStep.value || canAdvancePast(idx)) activeStep.value = idx; }
 
 function normalizeBudgetProgram(value) {
     if (!value) {
@@ -543,12 +621,9 @@ function resetForm() {
     const initialData = props.initialData;
 
     form.value = {
-        report_title: initialData?.report_title ?? 'RECOMMENDATION LIST FOR APPROVAL',
+        report_title: initialData?.report_title ?? DEFAULT_REPORT_TITLE,
         request_date: parseRequestDate(initialData?.request_date ?? initialData?.created_at) ?? new Date(),
         budget_program: initialData?.budget_program ?? initialData?.budget_allocation?.program ?? null,
-        highlight_jpm_members: Boolean(initialData?.highlight_jpm_members),
-        include_endorsed_by: Boolean(initialData?.include_endorsed_by),
-        show_remarks: Boolean(initialData?.show_remarks),
         prepared_by: initialData?.prepared_by ?? (props.defaultPreparedBy?.trim() || DEFAULT_PREPARED_BY),
         prepared_by_position: initialData?.prepared_by_position ?? DEFAULT_PREPARED_BY_POSITION,
         prepared_by_office: initialData?.prepared_by_office ?? DEFAULT_PREPARED_BY_OFFICE,
@@ -566,12 +641,16 @@ function resetForm() {
             : null;
     }
 
+    // Seed the applicant picker: empty for a fresh create, pre-checked with
+    // the request's current members when updating one.
+    selectedApplicantIds.value = Array.isArray(initialData?.records)
+        ? initialData.records.map((record) => record.id)
+        : [];
+    applicantProgramFilter.value = null;
+    applicantSearch.value = '';
+
     showBudgetError.value = false;
     activeStep.value = 0;
-
-    // Restore paper & orientation from initialData (or defaults)
-    paperSize.value = initialData?.paper_size || 'A4';
-    orientation.value = initialData?.orientation || 'landscape';
 }
 
 function close() {
@@ -583,11 +662,14 @@ function close() {
 }
 
 function submitForm() {
+    if (isSubmitDisabled.value) {
+        return;
+    }
+
     if (isUpdateListIntent.value) {
-        // For update-list, we only need to submit record IDs
-        showBudgetError.value = false;
         emit('submit', {
             is_update_list: true,
+            record_ids: selectedApplicantIds.value,
         });
         return;
     }
@@ -600,16 +682,17 @@ function submitForm() {
     showBudgetError.value = false;
 
     emit('submit', {
+        ...(showApplicantsStep.value ? { record_ids: selectedApplicantIds.value } : {}),
         report_title: form.value.report_title,
         request_date: formatRequestDateForPayload(form.value.request_date),
-        paper_size: paperSize.value,
-        orientation: orientation.value,
+        paper_size: 'A4',
+        orientation: 'landscape',
         budget_program: normalizeBudgetProgram(form.value.budget_program),
-        highlight_jpm_members: form.value.highlight_jpm_members,
-        include_endorsed_by: form.value.include_endorsed_by,
-        show_remarks: form.value.show_remarks,
-        include_projected_columns: includeProjectedColumns.value,
-        include_interview_columns: includeInterviewColumns.value,
+        highlight_jpm_members: false,
+        include_endorsed_by: false,
+        show_remarks: false,
+        include_projected_columns: true,
+        include_interview_columns: true,
         prepared_by: form.value.prepared_by,
         prepared_by_position: form.value.prepared_by_position,
         prepared_by_office: form.value.prepared_by_office,
@@ -624,20 +707,6 @@ watch(() => props.show, (value) => {
         resetForm();
     }
 });
-
-function formatDate(value) {
-    if (!value) {
-        return '—';
-    }
-
-    const date = new Date(`${value}T00:00:00`);
-
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    return shortDateFormatter.format(date);
-}
 
 function parseRequestDate(value) {
     if (!value) {
