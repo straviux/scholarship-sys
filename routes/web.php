@@ -451,7 +451,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/menu/sidebar', [MenuController::class, 'sidebarMenu'])->name('api.menu.sidebar');
 
     // ── Fund transactions, payment monitoring & budget reports ──────────
-    Route::get('/fund-transactions', fn() => inertia('FundTransactions/index'))
+    Route::get('/fund-transactions', fn() => inertia('FundTransactions/Index'))
         ->middleware('check.permission:fund_transactions.view')
         ->name('fund_transactions.index');
 

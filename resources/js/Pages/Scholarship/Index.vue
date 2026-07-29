@@ -262,10 +262,7 @@
 
                 <!-- DataTable View -->
                 <div class="scholarship-table-wrap">
-                    <DataTable :value="tableData" paginator :rows="dataViewRows" :totalRecords="totalRecords"
-                        :first="first" @page="onPageChange" :lazy="true"
-                        paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                        :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
+                    <DataTable :value="tableData"
                         :rowHover="true" stripedRows class="compact-table [&_.p-datatable-thead_th]:text-sm [&_.p-chip]:text-xs" scrollable tableStyle="min-width: 84rem"
                         @rowContextmenu="(event) => openContextMenu(event.originalEvent, event.data)" contextMenu
                         :globalFilter="globalFilter"
@@ -549,6 +546,14 @@
                             </div>
                         </template>
                     </DataTable>
+                </div>
+
+                <div v-if="tableData.length > 0" class="flex flex-col items-center gap-1 mt-4">
+                    <AppButton v-if="hasMore" label="Show More" icon="chevron-down" severity="secondary" size="small"
+                        outlined rounded @click="loadMore()" />
+                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                        Showing {{ tableData.length }} of {{ totalRecords }} entries
+                    </span>
                 </div>
             </Panel>
         </div>
@@ -948,11 +953,10 @@ const {
     filters: filter,
     globalFilter,
     records,
-    rows,
-    first,
     totalRecords,
     search: triggerSearch,
-    onPageChange,
+    hasMore,
+    loadMore,
 } = useFilterManager({
     routeName: 'scholarship.profiles',
     props,
@@ -1440,11 +1444,6 @@ const profilesData = computed(() => {
 
 // All rows always shown; non-expanded rows are blurred via rowClass
 const tableData = computed(() => profilesData.value);
-
-// Computed rows for DataView - provides fallback when records is null
-const dataViewRows = computed(() => {
-    return rows.value || 10;
-});
 
 const contextMenuItems = computed(() => [
     {

@@ -123,9 +123,36 @@ export function useFilterManager({
 		return params;
 	}
 
+	// --- Show More (optional alternative to the paginator) ---
+	// Accumulates rows by growing the requested limit instead of paging —
+	// opt-in via loadMore()/hasMore; consumers that stick with the paginator
+	// (:rows/:first/:totalRecords/@page) are unaffected.
+	const limit = ref(rows.value);
+	const hasMore = computed(() => limit.value < totalRecords.value);
+
+	function loadMore(batchSize) {
+		limit.value += batchSize || rows.value;
+		const params = buildParams(false);
+		params.records = limit.value;
+		params.page = 1;
+
+		if (beforeSearch) {
+			beforeSearch(params, filters.value);
+		}
+
+		router.get(route(routeName), params, {
+			preserveState: true,
+			preserveScroll: true,
+			...routerOptions,
+		});
+	}
+
 	// --- Search ---
 	function search(resetPage = true) {
-		if (resetPage) page.value = 1;
+		if (resetPage) {
+			page.value = 1;
+			limit.value = rows.value;
+		}
 		const params = buildParams(resetPage);
 
 		// Allow page-specific param mutations (e.g. JPM 3-state, profile_type)
@@ -187,6 +214,7 @@ export function useFilterManager({
 	// Sync first when rows change
 	watch(rows, () => {
 		first.value = (page.value - 1) * rows.value;
+		limit.value = rows.value;
 	});
 
 	return {
@@ -208,6 +236,11 @@ export function useFilterManager({
 		search, // () => void — call on "Apply Filter" click
 		clear, // () => void — call on "Clear Filters" click
 		onPageChange, // (event) => void — bind to DataTable @page
+
+		// Show More (alternative to the paginator)
+		limit, // ref — total rows currently requested (grows via loadMore)
+		hasMore, // computed — true while limit < totalRecords
+		loadMore, // (batchSize?) => void — fetch the next batch onto the end of the list
 
 		// Advanced
 		buildParams, // (resetPage?) => object — get params without navigating

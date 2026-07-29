@@ -20,9 +20,22 @@ use GuzzleHttp\Client;
 class FundTransactionController extends Controller
 {
 
+    /**
+     * Statuses that lock a record from further edits by non-administrators.
+     */
+    private const LOCKED_STATUSES = ['Paid', 'Claimed'];
+
     public function __construct(
         private FundTransactionService $service,
     ) {}
+
+    /**
+     * Whether a voucher's current status locks it from non-admin edits.
+     */
+    private function isLocked(FundTransaction $voucher): bool
+    {
+        return in_array($voucher->transaction_status, self::LOCKED_STATUSES, true);
+    }
 
     /**
      * Store a newly created voucher.
@@ -150,6 +163,13 @@ class FundTransactionController extends Controller
     {
         try {
             $voucher = FundTransaction::findOrFail($id);
+
+            if ($this->isLocked($voucher) && !Auth::user()->hasRole('administrator')) {
+                return response()->json([
+                    'message' => 'This record is locked because it has been marked Paid or Claimed. Only an administrator can edit it.',
+                ], 403);
+            }
+
             $voucher = $this->service->update($voucher, $request->validated());
 
             return response()->json([

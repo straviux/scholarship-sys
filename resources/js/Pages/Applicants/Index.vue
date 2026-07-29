@@ -143,13 +143,12 @@ const {
     filters: filter,
     globalFilter,
     records,
-    rows,
-    first,
     totalRecords,
     showAllFilters,
     search: triggerSearch,
     clear: clearFilter,
-    onPageChange,
+    hasMore,
+    loadMore,
 } = useFilterManager({
     routeName: 'applicants.index',
     props,
@@ -770,7 +769,7 @@ const showRowContextMenu = (event, rowData) => {
     contextMenu.value.show(event);
 };
 
-// showAllFilters, globalFilter, first, rows, totalRecords, onPageChange
+// showAllFilters, globalFilter, totalRecords, hasMore, loadMore
 // are all provided by useFilterManager composable above
 
 // Row selection state
@@ -1359,13 +1358,9 @@ const truncateText = (text, maxLength = 80) => {
                 </ContextMenu>
 
                 <!-- Table View -->
-                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="applicants" stripedRows
-                    responsiveLayout="scroll" :emptyMessage="'No applicants to display'" :lazy="true"
-                    paginator :rows="rows" :totalRecords="totalRecords" :first="first" @page="onPageChange"
-                    paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                    :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} entries'"
-                    v-model:selection="selectedRows" dataKey="profile_id"
-                    :rowsPerPageOptions="[10, 25, 50, 100, 250, 500]" :scrollable="true"
+                <DataTable :value="applicants" stripedRows
+                    responsiveLayout="scroll" :emptyMessage="'No applicants to display'"
+                    v-model:selection="selectedRows" dataKey="profile_id" :scrollable="true"
                     class="applicants-table ios-datatable-rounded" @row-contextmenu="onRowContextMenu" contextMenu>
 
                     <!-- Selection Column -->
@@ -1586,6 +1581,14 @@ const truncateText = (text, maxLength = 80) => {
                         </template>
                     </Column>
                 </DataTable>
+
+                <div v-if="applicants.length > 0" class="flex flex-col items-center gap-1 mt-4">
+                    <AppButton v-if="hasMore" label="Show More" icon="chevron-down" severity="secondary" size="small"
+                        outlined rounded @click="loadMore()" />
+                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                        Showing {{ applicants.length }} of {{ totalRecords }} entries
+                    </span>
+                </div>
             </Panel>
         </div>
 

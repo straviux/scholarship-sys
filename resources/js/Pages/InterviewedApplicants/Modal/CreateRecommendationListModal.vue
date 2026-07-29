@@ -3,27 +3,29 @@
         max-width="620px" body-style="padding: 16px;"
         @update:visible="val => emit('update:show', val)">
         <template #header-left>
-            <button v-if="activeStep > 0 && !loading" class="ios-nav-btn text-nav" @click="prevStep"
-                v-tooltip.bottom="'Back'">
-                <AppIcon name="chevron-left" :size="16" />
-            </button>
-            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="emit('update:show', false)">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="emit('update:show', false)">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
 
         <template #header-right>
-            <button v-if="activeStep < steps.length - 1" class="ios-nav-btn text-nav" @click="nextStep"
-                :disabled="loading" v-tooltip.bottom="'Next'">
-                <AppIcon name="chevron-right" :size="16" />
-            </button>
-            <button v-else class="ios-nav-btn ios-nav-action text-nav" :disabled="isSubmitDisabled || loading"
+            <button v-if="activeStep === steps.length - 1" class="ios-nav-btn ios-nav-action text-nav" :disabled="isSubmitDisabled || loading"
                 @click="submitForm"
                 v-tooltip.bottom="isPrintIntent ? 'Save & Print' : (isUpdateListIntent ? 'Update List' : (isEditMode ? 'Save Changes' : 'Create List'))">
                 <AppIcon v-if="loading" name="loader-circle" :size="16" class="animate-spin" />
                 <AppIcon v-else-if="isPrintIntent" name="printer" :size="16" />
                 <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
             </button>
+        </template>
+
+        <template #footer>
+            <button class="ios-footer-btn" :disabled="activeStep === 0 || loading" @click="prevStep">
+                <AppIcon name="chevron-left" :size="14" /> Back
+            </button>
+            <button v-if="activeStep < steps.length - 1" class="ios-footer-btn ios-footer-btn-primary" :disabled="loading" @click="nextStep">
+                Next <AppIcon name="chevron-right" :size="14" />
+            </button>
+            <span v-else></span>
         </template>
 
         <!-- ═══ STEPPER INDICATOR ═══ -->

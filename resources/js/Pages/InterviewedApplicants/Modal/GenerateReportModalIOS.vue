@@ -2,21 +2,13 @@
     <IosModal :visible="show" title="Generate Report" width="620px" max-width="94vw" body-style="padding: 16px;"
         @update:visible="val => emit('update:show', val)">
         <template #header-left>
-            <button v-if="currentStep > 1" class="ios-nav-btn text-nav" @click="currentStep--"
-                v-tooltip.bottom="'Back'">
-                <AppIcon name="chevron-left" :size="16" />
-            </button>
-            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="close">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="close">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
 
         <template #header-right>
-            <button v-if="currentStep < 4" class="ios-nav-btn text-nav" @click="currentStep++"
-                v-tooltip.bottom="'Next'">
-                <AppIcon name="chevron-right" :size="16" />
-            </button>
-            <div v-else class="ios-nav-actions">
+            <div v-if="currentStep === 4" class="ios-nav-actions">
                 <button class="ios-nav-btn text-nav" @click="exportReportToExcel" :disabled="!canGenerateReport"
                     v-tooltip.bottom="'Export as Excel'">
                     <AppIcon name="file-excel" :size="16" style="color: #16a34a;" />
@@ -26,6 +18,16 @@
                     <AppIcon name="printer" :size="16" style="color: #2563eb;" />
                 </button>
             </div>
+        </template>
+
+        <template #footer>
+            <button class="ios-footer-btn" :disabled="currentStep === 1" @click="currentStep--">
+                <AppIcon name="chevron-left" :size="14" /> Back
+            </button>
+            <button v-if="currentStep < 4" class="ios-footer-btn ios-footer-btn-primary" @click="currentStep++">
+                Next <AppIcon name="chevron-right" :size="14" />
+            </button>
+            <span v-else></span>
         </template>
 
         <!-- ═══ STEPPER ═══ -->

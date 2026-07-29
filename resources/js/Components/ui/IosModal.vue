@@ -41,6 +41,10 @@
                 <div class="ios-body" :class="bodyClass" :style="bodyStyle">
                     <slot />
                 </div>
+
+                <div v-if="$slots.footer" class="ios-footer-bar" :class="footerClass">
+                    <slot name="footer" />
+                </div>
             </div>
         </template>
     </Dialog>
@@ -140,6 +144,10 @@ const props = defineProps({
         default: '',
     },
     bodyClass: {
+        type: [String, Array, Object],
+        default: '',
+    },
+    footerClass: {
         type: [String, Array, Object],
         default: '',
     },

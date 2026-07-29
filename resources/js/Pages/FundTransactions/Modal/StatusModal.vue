@@ -1,7 +1,7 @@
 <template>
     <IosModal :visible="show" title="Update Transaction Status" width="500px" max-width="90vw"
         body-style="padding: 16px;" :show-action="true" :loading="isSaving"
-        :action-disabled="!statusUpdatedAt" @action="saveStatus" @update:visible="val => emit('update:show', val)">
+        :action-disabled="isActionDisabled" @action="saveStatus" @update:visible="val => emit('update:show', val)">
         <div v-if="modelValue" class="pt-6 pb-12">
             <div class="ios-section">
                 <div class="ios-card" style="padding: 12px 16px;">
@@ -32,17 +32,32 @@
                 <p class="ios-section-label text-compact">Status Updated Date <span class="text-red-500">*</span></p>
                 <DatePicker v-model="statusUpdatedAt" placeholder="Select date" class="w-full" />
             </div>
+            <div v-if="needsObrNo" class="ios-section">
+                <p class="ios-section-label text-compact">OBR No. <span class="text-red-500">*</span></p>
+                <InputText v-model="obrNo" placeholder="Enter OBR No." class="w-full" />
+            </div>
+            <div v-if="requiresReason" class="ios-section">
+                <p class="ios-section-label text-compact">Reason / Remarks <span class="text-red-500">*</span></p>
+                <Textarea v-model="reason" placeholder="Explain the reason for this status" class="w-full" rows="3" autoResize />
+            </div>
         </div>
     </IosModal>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
+import InputText from 'primevue/inputtext';
+import Textarea from 'primevue/textarea';
 import IosModal from '@/Components/ui/IosModal.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import { getStatusIcon, getStatusTextClass } from '@/Pages/FundTransactions/statusMeta';
+
+// Statuses that represent an exception/deviation from the normal flow and
+// therefore require the user to record a reason — kept in sync with
+// UpdateFundTransactionStatusRequest::REASON_REQUIRED_STATUSES on the backend.
+const REASON_REQUIRED_STATUSES = ['Cancelled', 'Replacement', 'Denied', 'Irregular', 'Transferred', 'LOA'];
 
 const props = defineProps({
     show: {
@@ -67,12 +82,29 @@ const emit = defineEmits(['update:show', 'save']);
 
 const status = ref('on process');
 const statusUpdatedAt = ref(new Date());
+const obrNo = ref('');
+const reason = ref('');
+
+// True when the voucher has no OBR No. on file — required before it can move
+// out of "No OBR" into any tracked status.
+const needsObrNo = computed(() => !props.modelValue?.obr_no && status.value !== 'No OBR');
+
+const requiresReason = computed(() => REASON_REQUIRED_STATUSES.includes(status.value));
+
+const isActionDisabled = computed(() => {
+    if (!statusUpdatedAt.value) return true;
+    if (needsObrNo.value && !obrNo.value?.trim()) return true;
+    if (requiresReason.value && !reason.value?.trim()) return true;
+    return false;
+});
 
 watch(() => props.modelValue, (newVal) => {
     if (newVal?.obr_status) {
         status.value = newVal.obr_status;
     }
     statusUpdatedAt.value = newVal?.status_updated_at ? new Date(newVal.status_updated_at) : new Date();
+    obrNo.value = newVal?.obr_no || '';
+    reason.value = '';
 }, { deep: true });
 
 // Send a plain YYYY-MM-DD string so the picked calendar day is preserved
@@ -87,9 +119,13 @@ const formatDateOnly = (date) => {
 };
 
 const saveStatus = () => {
+    if (isActionDisabled.value) return;
+
     emit('save', {
         status: status.value,
-        status_updated_at: formatDateOnly(statusUpdatedAt.value)
+        status_updated_at: formatDateOnly(statusUpdatedAt.value),
+        ...(needsObrNo.value ? { obr_no: obrNo.value.trim() } : {}),
+        ...(requiresReason.value ? { remarks: reason.value.trim() } : {}),
     });
 };
 </script>

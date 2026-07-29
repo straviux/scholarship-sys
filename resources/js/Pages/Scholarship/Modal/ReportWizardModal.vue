@@ -2,10 +2,7 @@
     <IosModal :visible="show" width="760px" max-width="92vw" body-style="padding: 0;"
         @update:visible="handleWizardVisibleUpdate">
         <template #header-left>
-            <button v-if="currentStep > 1" class="ios-nav-btn text-nav" @click="prevStep" v-tooltip.bottom="'Back'">
-                <AppIcon name="chevron-left" :size="16" />
-            </button>
-            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="handleWizardBack">
+            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="handleWizardBack">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
@@ -15,14 +12,21 @@
         </template>
 
         <template #header-right>
-            <button v-if="currentStep < 4" class="ios-nav-btn text-nav" @click="nextStep" v-tooltip.bottom="'Next'">
-                <AppIcon name="chevron-right" :size="16" />
-            </button>
-            <button v-else class="ios-nav-btn ios-nav-action text-nav" @click="generateReport" :disabled="generating"
+            <button v-if="currentStep === 4" class="ios-nav-btn ios-nav-action text-nav" @click="generateReport" :disabled="generating"
                 v-tooltip.bottom="'Generate Report'">
                 <AppIcon v-if="generating" name="spinner" :size="16" class="animate-spin" />
                 <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
             </button>
+        </template>
+
+        <template #footer>
+            <button class="ios-footer-btn" :disabled="currentStep === 1" @click="prevStep">
+                <AppIcon name="chevron-left" :size="14" /> Back
+            </button>
+            <button v-if="currentStep < 4" class="ios-footer-btn ios-footer-btn-primary" @click="nextStep">
+                Next <AppIcon name="chevron-right" :size="14" />
+            </button>
+            <span v-else></span>
         </template>
 
         <div class="p-3 max-h-[78vh] overflow-y-auto">

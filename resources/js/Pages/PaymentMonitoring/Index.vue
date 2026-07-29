@@ -303,6 +303,23 @@ const groupedData = computed(() => {
 
     return Array.from(groups.values());
 });
+
+// "Show More" over the already-loaded client-side data — replaces the
+// PrimeVue paginator so row order/position stays stable as more are revealed.
+// (Row expansion isn't compatible with PrimeVue's virtual scroller, so this
+// table uses a plain incremental slice instead.)
+const GROUPS_BATCH_SIZE = 20;
+const visibleGroupCount = ref(GROUPS_BATCH_SIZE);
+const visibleGroupedData = computed(() => groupedData.value.slice(0, visibleGroupCount.value));
+const hasMoreGroups = computed(() => visibleGroupCount.value < groupedData.value.length);
+const loadMoreGroups = () => {
+    visibleGroupCount.value += GROUPS_BATCH_SIZE;
+};
+
+// Reset the visible slice whenever the underlying filtered/grouped data changes
+watch(groupedData, () => {
+    visibleGroupCount.value = GROUPS_BATCH_SIZE;
+});
 </script>
 
 <template>
@@ -434,8 +451,8 @@ const groupedData = computed(() => {
                     </span>
                 </div>
 
-                <DataTable v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }" :value="groupedData"
-                    :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" class="text-sm ios-pm-table" showGridlines
+                <DataTable :value="visibleGroupedData"
+                    class="text-sm ios-pm-table" showGridlines
                     stripedRows scrollable dataKey="profile_id" v-model:expandedRows="expandedRows"
                     :rowClass="(row) => activeExpandedProfileId && activeExpandedProfileId !== row.profile_id ? 'ios-pm-row-blurred' : ''"
                     @rowExpand="handleRowExpand" @rowCollapse="handleRowCollapse">
@@ -636,6 +653,14 @@ const groupedData = computed(() => {
                         </div>
                     </template>
                 </DataTable>
+
+                <div v-if="visibleGroupedData.length > 0" class="flex flex-col items-center gap-1 mt-4">
+                    <AppButton v-if="hasMoreGroups" label="Show More" icon="chevron-down" severity="secondary"
+                        size="small" outlined rounded @click="loadMoreGroups" />
+                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                        Showing {{ visibleGroupedData.length }} of {{ groupedData.length }} scholar(s)
+                    </span>
+                </div>
             </Panel>
         </div>
 

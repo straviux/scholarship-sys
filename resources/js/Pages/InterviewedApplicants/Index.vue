@@ -179,7 +179,7 @@
                             <div v-if="filteredList.length === 0" class="text-center py-8 text-gray-500">
                                 No interviewed applicants found
                             </div>
-                            <DataTable v-else v-animate-table-rows="{ duration: 0.3, stagger: 0.05 }"
+                            <DataTable v-else
                                 :value="filteredList" responsiveLayout="scroll"
                                 class="text-sm ios-interviewed-table ios-datatable-clean" dataKey="id"
                                 v-model:expandedRows="expandedRows" showGridlines stripedRows scrollable
@@ -380,20 +380,14 @@
                                 </template>
                             </DataTable>
 
-                            <!-- Paginator (bottom) -->
-                            <div class="flex items-center justify-between px-2 py-2 border-t border-slate-100">
+                            <!-- Show More (bottom) -->
+                            <div v-if="filteredList.length > 0" class="flex flex-col items-center gap-1 px-2 py-3 border-t border-slate-100">
+                                <AppButton v-if="hasMoreInterviewed" label="Show More" icon="chevron-down"
+                                    severity="secondary" size="small" outlined rounded @click="loadMoreInterviewed" />
                                 <span class="text-xs text-gray-400">
-                                    {{ props.interviewed_applicants_pagination.from || 0 }}&ndash;{{
-                                        props.interviewed_applicants_pagination.to || 0 }} of {{
-                                        props.interviewed_applicants_pagination.total || 0 }}
+                                    Showing {{ props.interviewed_applicants?.length || 0 }} of {{
+                                        props.interviewed_applicants_pagination.total || 0 }} entries
                                 </span>
-                                <Paginator
-                                    :first="(props.interviewed_applicants_pagination.current_page - 1) * props.interviewed_applicants_pagination.per_page"
-                                    :rows="props.interviewed_applicants_pagination.per_page"
-                                    :totalRecords="props.interviewed_applicants_pagination.total"
-                                    :rowsPerPageOptions="[100, 50, 20, 10, 200]" @page="onPageChange"
-                                    template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                    class="!p-0 text-xs [&_.p-paginator-page]:!min-w-[1.75rem] [&_.p-paginator-page]:!h-[1.75rem] [&_.p-paginator-page]:!text-xs [&_.p-paginator-element]:!text-xs [&_.p-paginator-element]:!min-w-[1.75rem] [&_.p-paginator-element]:!h-[1.75rem] [&_.p-paginator-rpp-dropdown]:!text-xs [&_.p-paginator-current]:!text-xs" />
                             </div>
                         </Panel>
                     </TabPanel>
@@ -993,7 +987,6 @@ import {
     printRecommendationList,
     buildRecommendationListHtml,
 } from './interviewedApplicantsExport';
-import Paginator from 'primevue/paginator';
 
 const { hasRole } = usePermission();
 const page = usePage();
@@ -1719,8 +1712,15 @@ const fetchPage = (page, perPageValue) => {
     });
 };
 
-const onPageChange = (event) => {
-    fetchPage(event.page + 1, event.rows);
+// "Show More" — grow the requested page size and refetch from the start,
+// so the accumulated list keeps growing instead of paging through slices.
+const hasMoreInterviewed = computed(() =>
+    (props.interviewed_applicants?.length || 0) < (props.interviewed_applicants_pagination?.total || 0)
+);
+
+const loadMoreInterviewed = () => {
+    const batchSize = props.interviewed_applicants_pagination?.per_page || 100;
+    fetchPage(1, perPage.value + batchSize);
 };
 
 let filterTimeout = null;

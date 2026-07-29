@@ -231,6 +231,72 @@
 	background: rgba(156, 163, 175, 0.4);
 }
 
+/* ── Footer Bar (stepper Back/Next actions) ── */
+.ios-footer-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 10px 16px;
+	background: linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
+	border-top: 0.5px solid #e5e5ea;
+	flex-shrink: 0;
+}
+
+.ios-footer-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.4rem 0.75rem;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1;
+	color: #374151;
+	cursor: pointer;
+	border-radius: 999px;
+	transition:
+		opacity 0.18s ease,
+		color 0.18s ease;
+}
+
+.ios-footer-btn:hover {
+	opacity: 0.72;
+}
+
+.ios-footer-btn:active {
+	opacity: 0.56;
+}
+
+.ios-footer-btn:disabled {
+	color: #c7c7cc;
+	cursor: not-allowed;
+	opacity: 0.56;
+}
+
+.ios-footer-btn-primary {
+	color: #007aff;
+}
+
+.dark .ios-footer-bar {
+	background: linear-gradient(180deg, rgba(30, 30, 35, 0.96) 0%, rgba(24, 24, 28, 0.96) 100%);
+	border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-footer-btn {
+	color: #d1d5db;
+}
+
+.dark .ios-footer-btn-primary {
+	color: #0a84ff;
+}
+
+.dark .ios-footer-btn:disabled {
+	color: #48484a;
+}
+
 /* ── Sections ── */
 .ios-section {
 	margin-top: 22px;
