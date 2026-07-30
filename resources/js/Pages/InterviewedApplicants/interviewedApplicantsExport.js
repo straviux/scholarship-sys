@@ -2,7 +2,6 @@ import moment from 'moment';
 import ExcelJS from 'exceljs';
 
 import { renderVueTemplate } from '@/composables/usePdfPrint';
-import InterviewedApplicantsTemplate from './Pdf/InterviewedApplicantsTemplate.vue';
 import RecommendationListTemplate from './Pdf/RecommendationListTemplate.vue';
 import { buildInterviewedApplicantsPdfDoc } from './Pdf/pdf-styles';
 
@@ -52,44 +51,6 @@ function formatProjectedExpense(value) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     }).format(Number(value) || 0);
-}
-
-export function buildInterviewedApplicantsSelectionHtml({ records = [], preparedBy = DEFAULT_PREPARED_BY } = {}) {
-    const normalizedRecords = normalizeRecords(records);
-
-    const bodyHtml = renderVueTemplate(InterviewedApplicantsTemplate, {
-        records: normalizedRecords,
-        reportType: 'list',
-        groupBy: 'none',
-        today: moment().format('MMMM D, YYYY'),
-        preparedBy: '',
-        preparedByPosition: '',
-        preparedByOffice: '',
-        approvedBy: '',
-        approvedByPosition: '',
-        includeProjectedColumns: false,
-        includeInterviewColumns: true,
-        includeEndorsedBy: false,
-        showRemarks: false,
-        reportTitle: 'Selected Interviewed Applicants Report',
-    });
-
-    const title = 'Selected Interviewed Applicants Report';
-    return buildInterviewedApplicantsPdfDoc(bodyHtml, title, 'a4-landscape');
-}
-
-export function printInterviewedApplicantsSelection({ records = [], preparedBy = DEFAULT_PREPARED_BY } = {}) {
-    const html = buildInterviewedApplicantsSelectionHtml({ records, preparedBy });
-    const printWindow = window.open('', '_blank');
-
-    if (!printWindow) {
-        return false;
-    }
-
-    printWindow.document.write(html);
-    printWindow.document.close();
-
-    return true;
 }
 
 export function buildRecommendationListHtml({ recommendationList = null, paperSize = null, orientation = null, includeInterviewColumns = null, includeProjectedColumns = null } = {}) {

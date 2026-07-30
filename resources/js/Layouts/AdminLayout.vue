@@ -623,7 +623,7 @@ watch(sidebarMinimized, (isMinimized) => {
 
         <!-- Floating Sidebar -->
         <aside
-            class="sidebar-shell fixed z-30 md:z-20 top-0 left-0 md:top-[var(--sidebar-top)] md:left-4 flex flex-col dark:bg-[#222831] dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-var(--sidebar-top)-1rem)]"
+            class="sidebar-shell fixed z-30 md:z-20 top-0 left-0 md:top-[var(--sidebar-top)] md:left-2 flex flex-col dark:bg-[#222831] dark:shadow-none transition-[width,transform] duration-300 rounded-4xl min-w-0 h-full md:h-[calc(100vh-var(--sidebar-top)-1rem)]"
             :class="[
                 sidebarMinimized ? 'md:w-[110px]' : 'md:w-[220px]',
                 toggleMenu ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -811,12 +811,11 @@ watch(sidebarMinimized, (isMinimized) => {
                     <!-- Logo and App Name -->
                     <div class="flex items-center space-x-3 flex-1 min-w-0">
                         <div class="flex items-center space-x-2">
-                            <img src="/images/pgp-logo.png" class="w-8 h-8 object-contain" alt="logo" />
-                            <span
-                                class="text-lg font-semibold text-gray-800 dark:text-gray-200 hidden sm:inline">Scholarship
-                                Program</span>
+                            <img src="/images/yakap-logo.png" class="w-14 h-14 object-contain" alt="logo" />
+                            <!-- <span
+                                class="text-lg font-semibold text-gray-800 dark:text-gray-200 hidden sm:inline">YSE</span> -->
                         </div>
-                        <div class="hidden md:block w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+                        <!-- <div class="hidden md:block w-px h-6 bg-gray-300 dark:bg-gray-600"></div> -->
                         <!-- Server Date/Time Display -->
                         <div
                             class="hidden md:flex flex-col items-start justify-center text-gray-600 dark:text-gray-300 text-sm px-4">

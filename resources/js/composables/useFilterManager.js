@@ -46,6 +46,12 @@ export function useFilterManager({
 		if (def.type === 'number' && initial !== null) {
 			initial = parseInt(initial) || def.default || null;
 		}
+		// Multiselect filters round-trip as a comma-joined string in the URL —
+		// split back into an array of tokens so the MultiSelect component can
+		// resolve and display each selected chip.
+		if (def.multiple && typeof initial === 'string' && initial !== '') {
+			initial = initial.split(',').map((token) => token.trim()).filter(Boolean);
+		}
 
 		filters.value[def.key] = initial;
 		defaults[def.key] = def.default ?? null;

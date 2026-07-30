@@ -134,10 +134,8 @@
                                         </div>
                                     </div>
                                     <div class="flex flex-wrap gap-2">
-                                        <AppButton icon="file-type" label="Export PDF" severity="danger" outlined
-                                            rounded size="small" @click="exportSelected('pdf')" />
                                         <AppButton icon="file-spreadsheet" label="Export Excel" severity="success"
-                                            outlined rounded size="small" @click="exportSelected('excel')" />
+                                            outlined rounded size="small" @click="exportSelected" />
                                     </div>
                                 </div>
                             </div>
@@ -835,6 +833,24 @@
                                 </div>
                             </div>
 
+                            <div v-if="selectedAuditRows.length > 0"
+                                class="mb-4 rounded-3xl border border-yellow-200 bg-yellow-50 p-3">
+                                <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <AppIcon name="check-circle" :size="18" class="text-yellow-600" />
+                                        <div>
+                                            <div class="font-semibold text-yellow-900 text-sm">{{ selectedAuditRows.length }}
+                                                record(s) selected</div>
+                                            <div class="text-xs text-yellow-700">
+                                                Export the current selection.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <AppButton icon="file-spreadsheet" label="Export Excel" severity="success" outlined
+                                        rounded size="small" @click="exportSelectedAuditRecords" />
+                                </div>
+                            </div>
+
                             <!-- Filters above table -->
                             <div class="flex flex-wrap items-end gap-3 mb-4">
                                 <InputGroup class="w-full sm:w-64">
@@ -858,6 +874,22 @@
                             <DataTable v-else :value="filteredAuditRecords" dataKey="id" showGridlines stripedRows
                                 scrollable responsiveLayout="scroll"
                                 class="text-sm ios-interviewed-table ios-datatable-clean">
+                                <Column :exportable="false" headerClass="w-12" bodyClass="w-12">
+                                    <template #header>
+                                        <div class="flex justify-center">
+                                            <Checkbox :modelValue="allFilteredAuditRowsSelected" binary
+                                                :indeterminate="someFilteredAuditRowsSelected"
+                                                :disabled="filteredAuditRecords.length === 0"
+                                                @update:modelValue="toggleSelectAllFilteredAuditRows" />
+                                        </div>
+                                    </template>
+                                    <template #body="slotProps">
+                                        <div class="flex justify-center">
+                                            <Checkbox :modelValue="isAuditRowSelected(slotProps.data)" binary
+                                                @update:modelValue="(checked) => toggleAuditRowSelection(slotProps.data, checked)" />
+                                        </div>
+                                    </template>
+                                </Column>
                                 <Column header="Name" headerClass="min-w-[220px]" bodyClass="min-w-[220px]">
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ formatApplicantName(slotProps.data) }}</div>
@@ -998,7 +1030,6 @@ import {
     exportInterviewedApplicantsExcel,
     exportRecommendationListExcel,
     exportRecommendationListAuditExcel,
-    printInterviewedApplicantsSelection,
     printRecommendationList,
     buildRecommendationListHtml,
 } from './interviewedApplicantsExport';
@@ -1449,6 +1480,47 @@ const auditStatusBadgeClass = (status) => {
     return 'bg-gray-100 text-gray-600';
 };
 
+// Selection + export-selected for the "All" audit view, mirroring the
+// Interviewed tab's selection pattern.
+const selectedAuditRows = ref([]);
+const selectedAuditRowIds = computed(() => new Set(selectedAuditRows.value.map((record) => Number(record.id))));
+
+const isAuditRowSelected = (record) => selectedAuditRowIds.value.has(Number(record?.id));
+
+const toggleAuditRowSelection = (record, checked) => {
+    const recordId = Number(record.id);
+
+    if (checked) {
+        if (!selectedAuditRowIds.value.has(recordId)) {
+            selectedAuditRows.value = [...selectedAuditRows.value, record];
+        }
+        return;
+    }
+
+    selectedAuditRows.value = selectedAuditRows.value.filter((selectedRecord) => Number(selectedRecord.id) !== recordId);
+};
+
+const allFilteredAuditRowsSelected = computed(() => {
+    return filteredAuditRecords.value.length > 0
+        && filteredAuditRecords.value.every((record) => selectedAuditRowIds.value.has(Number(record.id)));
+});
+
+const someFilteredAuditRowsSelected = computed(() => {
+    return !allFilteredAuditRowsSelected.value
+        && filteredAuditRecords.value.some((record) => selectedAuditRowIds.value.has(Number(record.id)));
+});
+
+const toggleSelectAllFilteredAuditRows = (checked) => {
+    if (checked) {
+        const selectedById = new Map(selectedAuditRows.value.map((record) => [Number(record.id), record]));
+        filteredAuditRecords.value.forEach((record) => selectedById.set(Number(record.id), record));
+        selectedAuditRows.value = Array.from(selectedById.values());
+        return;
+    }
+
+    selectedAuditRows.value = [];
+};
+
 const resetDenyForm = () => {
     denyForm.reset();
     denyForm.clearErrors();
@@ -1502,6 +1574,11 @@ const recommendationListContextMenuItems = computed(() => {
 
     items.push(
         {
+            label: 'Print',
+            icon: 'printer',
+            command: () => printSavedRecommendationList(recommendationList),
+        },
+        {
             label: 'Update List',
             icon: 'refresh-cw',
             command: () => openUpdateListModal(recommendationList),
@@ -1510,11 +1587,6 @@ const recommendationListContextMenuItems = computed(() => {
             label: 'Settings',
             icon: 'settings',
             command: () => openEditRecommendationListModal(recommendationList),
-        },
-        {
-            label: 'Print',
-            icon: 'printer',
-            command: () => printSavedRecommendationList(recommendationList),
         },
         {
             label: 'Delete',
@@ -1585,6 +1657,10 @@ const openContextMenu = (event, record) => {
 
 // Recommendation lists must be scoped to a single program — once a selection
 // has started, rows from a different program are disabled from being added.
+const selectionAnchorProgramId = computed(() => {
+    return selectedRows.value.length > 0 ? (selectedRows.value[0]?.program?.id ?? null) : null;
+});
+
 const isRowSelectable = (record) => {
     if (selectionAnchorProgramId.value === null) return true;
     return String(record?.program?.id ?? '') === String(selectionAnchorProgramId.value);
@@ -1965,30 +2041,18 @@ const applyFilters = () => {
     // Filters are reactive
 };
 
-const exportSelected = async (format) => {
+const exportSelected = async () => {
     if (selectedRows.value.length === 0) {
         toast.warn('Please select at least one applicant');
         return;
     }
 
     try {
-        if (format === 'pdf') {
-            const opened = printInterviewedApplicantsSelection({
-                records: selectedRows.value,
-            });
-
-            if (!opened) {
-                toast.error('Pop-up blocked. Please allow pop-ups and try again.');
-                return;
-            }
-        } else if (format === 'excel') {
-            await exportInterviewedApplicantsExcel({ records: selectedRows.value });
-        }
-
-        toast.success(`Exported ${selectedRows.value.length} applicant(s) as ${format.toUpperCase()}.`);
+        await exportInterviewedApplicantsExcel({ records: selectedRows.value });
+        toast.success(`Exported ${selectedRows.value.length} applicant(s) as EXCEL.`);
     } catch (error) {
         console.error('Failed to export interviewed applicants:', error);
-        toast.error(`Failed to export applicant(s) as ${format.toUpperCase()}.`);
+        toast.error('Failed to export applicant(s) as EXCEL.');
     }
 };
 
@@ -2004,6 +2068,21 @@ const exportAuditRecords = async () => {
     } catch (error) {
         console.error('Failed to export approval request audit records:', error);
         toast.error('Failed to export records to Excel.');
+    }
+};
+
+const exportSelectedAuditRecords = async () => {
+    if (selectedAuditRows.value.length === 0) {
+        toast.warn('Please select at least one record');
+        return;
+    }
+
+    try {
+        await exportRecommendationListAuditExcel({ records: selectedAuditRows.value });
+        toast.success(`Exported ${selectedAuditRows.value.length} record(s) to Excel.`);
+    } catch (error) {
+        console.error('Failed to export selected approval request audit records:', error);
+        toast.error('Failed to export selected record(s) to Excel.');
     }
 };
 
@@ -2704,6 +2783,16 @@ watch(() => props.recommendation_list_audit_records, (value) => {
 
 watch(interviewedApplicantsWithRecommendationFlags, () => {
     syncSelectedRows();
+});
+
+watch(recommendationListAuditRecords, () => {
+    const currentRecordsById = new Map(
+        recommendationListAuditRecords.value.map((record) => [Number(record.id), record]),
+    );
+
+    selectedAuditRows.value = selectedAuditRows.value
+        .map((record) => currentRecordsById.get(Number(record.id)))
+        .filter((record) => Boolean(record));
 });
 
 onMounted(() => {

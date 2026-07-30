@@ -37,6 +37,32 @@ import { toast } from '@/utils/toast';
 
 const { hasPermission, hasRole } = usePermission();
 
+// JPM tagging — visible only to roles with jpm.view permission.
+// Cycles like the navbar theme switcher: off -> on (show tags) -> only (filter to JPM members) -> off
+const isJpmMember = (profile) => Boolean(
+    profile?.is_jpm_member || profile?.is_father_jpm || profile?.is_mother_jpm || profile?.is_guardian_jpm
+);
+
+const jpmMode = ref('off'); // 'off' | 'on' | 'only'
+
+const cycleJpmMode = () => {
+    const modes = ['off', 'on', 'only'];
+    const idx = modes.indexOf(jpmMode.value);
+    jpmMode.value = modes[(idx + 1) % modes.length];
+};
+
+const getJpmModeIcon = () => {
+    if (jpmMode.value === 'on') return 'eye';
+    if (jpmMode.value === 'only') return 'filter';
+    return 'eye-off';
+};
+
+const getJpmModeLabel = () => {
+    if (jpmMode.value === 'on') return 'On';
+    if (jpmMode.value === 'only') return 'Showing JPM Only';
+    return 'Off';
+};
+
 // Inject the refresh function from AdminLayout
 const refreshActivityLogs = inject('refreshActivityLogs', null);
 
@@ -138,6 +164,41 @@ const removeFromList = (profile, listType) => {
     });
 };
 
+const addToListPopover = ref(null);
+
+const batchAddToList = (listType) => {
+    addToListPopover.value?.hide();
+
+    if (selectedRows.value.length === 0) {
+        toast.warn('Please select at least one applicant');
+        return;
+    }
+
+    const count = selectedRows.value.length;
+
+    router.post(route('applicant-lists.store'), {
+        profile_ids: selectedRows.value.map(row => row.profile_id),
+        list_type: listType,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            const label = listTabs.find(t => t.key === listType)?.label || listType;
+            toast.success(`Added ${count} applicant(s) to ${label} list`);
+            selectedRows.value = [];
+        },
+        onError: () => toast.error('Failed to add applicants to list'),
+    });
+};
+
+// Multiselect filters submit as a comma-joined string; single-select ones
+// keep passing through a plain value, matching each field's `getter`.
+const extractMultiValue = (value, getter) => {
+    if (Array.isArray(value)) {
+        return value.map(getter).filter(Boolean).join(',');
+    }
+    return getter(value);
+};
+
 // Filter management via composable
 const {
     filters: filter,
@@ -158,11 +219,11 @@ const {
         { key: 'name', type: 'text', default: '' },
         { key: 'parent_name', type: 'text', default: '' },
         { key: 'program', type: 'select', default: '', extract: v => v?.shortname?.toLowerCase() },
-        { key: 'school', type: 'select', default: '', extract: v => v?.shortname?.toLowerCase() },
-        { key: 'course', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
-        { key: 'municipality', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
-        { key: 'barangay', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
-        { key: 'year_level', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
+        { key: 'school', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.shortname?.toLowerCase()) },
+        { key: 'course', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.name?.toLowerCase()) },
+        { key: 'municipality', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.name?.toLowerCase()) },
+        { key: 'barangay', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.name?.toLowerCase()) },
+        { key: 'year_level', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.value?.toLowerCase()) },
         { key: 'academic_year', type: 'text', default: '' },
         { key: 'term', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
         { key: 'yakap_category', type: 'text', default: '' },
@@ -212,10 +273,12 @@ const activeFilterTags = computed(() => {
     };
     for (const [key, label] of Object.entries(labelMap)) {
         const val = f[key];
-        if (!val) continue;
+        if (!val || (Array.isArray(val) && val.length === 0)) continue;
         let display;
         if (val instanceof Date) {
             display = moment(val).format('MMM DD, YYYY');
+        } else if (Array.isArray(val)) {
+            display = val.map(item => item?.shortname || item?.name || item?.value || item).join(', ');
         } else if (typeof val === 'object') {
             display = val.shortname || val.name || val.value || JSON.stringify(val);
         } else {
@@ -596,6 +659,13 @@ const academicYearOptions = computed(() => {
 // Separate drawer filter model (only applied on submit)
 const drawerFilter = ref({});
 
+// BarangaySelect only scopes to a single municipality — with multiselect,
+// use the first pick as a best-effort scope.
+const drawerFilterMunicipalityId = computed(() => {
+    const municipality = drawerFilter.value.municipality;
+    return Array.isArray(municipality) ? municipality[0]?.id : municipality?.id;
+});
+
 const drawerFilterKeys = ['parent_name', 'program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'yakap_category', 'priority_level', 'date_from', 'date_to', 'encoded_from', 'encoded_to', 'encoded_by'];
 
 const openDrawer = () => {
@@ -790,7 +860,11 @@ const applicantMemoCache = new Map();
 
 // Pass raw data directly - transformations happen only on render
 const applicants = computed(() => {
-    return props.profiles.data || [];
+    const rows = props.profiles.data || [];
+    if (jpmMode.value === 'only' && hasPermission('jpm.view')) {
+        return rows.filter(isJpmMember);
+    }
+    return rows;
 });
 
 // Delete confirmation propertiesr
@@ -963,7 +1037,6 @@ const closeRequirementsModal = () => {
 
 // Export / report modal state
 const showExportModal = ref(false);
-const exportPopover = ref(null);
 const exportMode = ref('selected'); // 'selected' = checked rows, 'all' = full filtered set
 const reportRows = ref([]);
 const reportLoading = ref(false);
@@ -972,19 +1045,50 @@ const reportLoading = ref(false);
 const exportRows = computed(() => exportMode.value === 'all' ? reportRows.value : selectedRows.value);
 
 const openExportSelected = () => {
-    exportPopover.value?.hide();
     if (selectedRows.value.length === 0) {
         toast.warn('Please select at least one applicant to export.');
         return;
     }
-    exportMode.value = 'selected';
-    showExportModal.value = true;
+
+    openConfirmDialog({
+        header: 'Export Selected',
+        message: `Export ${selectedRows.value.length} selected applicant(s)? You'll choose a format (PDF or Excel) in the next step.`,
+        acceptLabel: 'Export',
+        icon: 'pi pi-download',
+        onAccept: () => {
+            exportMode.value = 'selected';
+            showExportModal.value = true;
+        },
+    });
 };
 
 const openExportAll = () => {
-    exportPopover.value?.hide();
     openReportModal();
 };
+
+// Confirmation Dialog (IosModal-based, matches InterviewedApplicants/Index.vue)
+const confirmDialogVisible = ref(false);
+const confirmDialogHeader = ref('');
+const confirmDialogMessage = ref('');
+const confirmDialogAcceptLabel = ref('');
+const confirmDialogIcon = ref('');
+const confirmDialogOnAccept = ref(null);
+
+function openConfirmDialog({ header, message, acceptLabel, icon, onAccept }) {
+    confirmDialogHeader.value = header;
+    confirmDialogMessage.value = message;
+    confirmDialogAcceptLabel.value = acceptLabel;
+    confirmDialogIcon.value = icon || '';
+    confirmDialogOnAccept.value = onAccept;
+    confirmDialogVisible.value = true;
+}
+
+function handleConfirmDialogAccept() {
+    confirmDialogVisible.value = false;
+    if (typeof confirmDialogOnAccept.value === 'function') {
+        confirmDialogOnAccept.value();
+    }
+}
 
 // Generate a report of every applicant matching the current filters/tab,
 // not just the checked rows. Fetches the full set from the server first.
@@ -1163,18 +1267,11 @@ const truncateText = (text, maxLength = 80) => {
                     <div class="flex flex-wrap items-center justify-end gap-3">
                         <AppButton icon="plus" @click="openYakapCategoryModal" severity="success"
                             v-tooltip.bottom="'Add New Applicant'" rounded outlined />
-                        <!-- Export — ticked rows or the full filtered set -->
-                        <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export"
-                            @click="exportPopover.toggle($event)" severity="info" rounded outlined
-                            :loading="reportLoading" v-tooltip.bottom="'Export applicants'" />
-                        <Popover ref="exportPopover">
-                            <div class="flex flex-col gap-2 w-60">
-                                <AppButton @click="openExportSelected" label="Export Selected" icon="square-check"
-                                    severity="info" outlined class="justify-start" />
-                                <AppButton @click="openExportAll" label="Export All (current filters)" icon="layers"
-                                    severity="secondary" outlined class="justify-start" />
-                            </div>
-                        </Popover>
+                        <!-- Export the full filtered set. Export Selected lives in the
+                             selected-rows toolbar above the table once rows are checked. -->
+                        <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export All"
+                            @click="openExportAll" severity="info" rounded outlined
+                            :loading="reportLoading" v-tooltip.bottom="'Export all applicants matching the current filters'" />
                     </div>
                 </template>
             </Toolbar>
@@ -1195,17 +1292,18 @@ const truncateText = (text, maxLength = 80) => {
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                         <CourseSelect v-model="drawerFilter.course" label="name" custom-placeholder="All Courses"
-                            size="small" class="w-full" :scholarship-program-id="drawerFilter.program?.id" />
+                            size="small" class="w-full" :scholarship-program-id="drawerFilter.program?.id"
+                            :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">School</label>
                         <SchoolSelect v-model="drawerFilter.school" label="shortname" custom-placeholder="All Schools"
-                            size="small" class="w-full" :multiple="false" />
+                            size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
                         <YearLevelSelect v-model="drawerFilter.year_level" custom-placeholder="All Year Levels"
-                            size="small" class="w-full" />
+                            size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
@@ -1220,12 +1318,12 @@ const truncateText = (text, maxLength = 80) => {
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
                         <MunicipalitySelect v-model="drawerFilter.municipality" custom-placeholder="All Municipalities"
-                            size="small" class="w-full" />
+                            size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Barangay</label>
-                        <BarangaySelect v-model="drawerFilter.barangay" :municipality-id="drawerFilter.municipality?.id"
-                            custom-placeholder="All Barangays" size="small" class="w-full" />
+                        <BarangaySelect v-model="drawerFilter.barangay" :municipality-id="drawerFilterMunicipalityId"
+                            custom-placeholder="All Barangays" size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">YAKAP Category</label>
@@ -1294,6 +1392,7 @@ const truncateText = (text, maxLength = 80) => {
                         </button>
                     </div>
                     <div class="flex items-center gap-3">
+                        
                         <div class="flex items-center gap-2">
                             <RecordsSelect v-model="records" label="label" class="w-16" size="small" />
                             <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
@@ -1315,19 +1414,19 @@ const truncateText = (text, maxLength = 80) => {
                     </InputGroup>
                     <div class="flex flex-col">
                         <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
-                            size="small" :multiple="false" />
+                            size="small" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <MunicipalitySelect v-model="filter.municipality" custom-placeholder="All Municipalities"
-                            size="small" />
+                            size="small" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
-                            :scholarship-program-id="filter.program?.id" />
+                            :scholarship-program-id="filter.program?.id" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
-                            size="small" />
+                            size="small" :multiple="true" />
                     </div>
                     <div class="flex gap-3">
                         <DatePicker v-model="filter.date_from" size="small" class="w-36" date-format="M dd, yy" showIcon
@@ -1340,6 +1439,8 @@ const truncateText = (text, maxLength = 80) => {
                         v-tooltip.bottom="'More Filters'" />
                     <AppButton v-if="activeFilterTags.length" icon="times" severity="danger" text rounded size="small"
                         @click="clearFilter" v-tooltip.bottom="'Clear Filters'" />
+
+                        
                 </div>
 
                 <!-- Active Filter Tags -->
@@ -1361,6 +1462,31 @@ const truncateText = (text, maxLength = 80) => {
                     </template>
                 </ContextMenu>
 
+                <!-- Selected rows toolbar -->
+                <div v-if="selectedRows.length > 0"
+                    class="mb-4 rounded-3xl border border-gray-200 bg-gray-50 p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <AppIcon name="check-circle" :size="18" class="text-yellow-600" />
+                            <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
+                                applicant(s) selected</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <AppButton icon="list-plus" label="Add to List" @click="addToListPopover.toggle($event)"
+                                severity="contrast" outlined rounded size="small" />
+                            <Popover ref="addToListPopover">
+                                <div class="flex flex-col gap-2 w-56">
+                                    <AppButton v-for="tab in listTabs.filter(t => t.key !== 'all')" :key="tab.key"
+                                        @click="batchAddToList(tab.key)" :label="tab.label" :icon="tab.icon"
+                                        severity="secondary" outlined class="justify-start" />
+                                </div>
+                            </Popover>
+                            <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export Selected"
+                                @click="openExportSelected" severity="contrast" outlined rounded size="small" />
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Table View -->
                 <DataTable :value="applicants" stripedRows
                     responsiveLayout="scroll" :emptyMessage="'No applicants to display'"
@@ -1380,7 +1506,7 @@ const truncateText = (text, maxLength = 80) => {
                     </Column>
 
                     <!-- Sequence Number & Name Column -->
-                    <Column header="Applicant" style="min-width: 300px">
+                    <Column header="Applicant" style="min-width: 200px">
                         <template #body="slotProps">
                             <div class="flex flex-col gap-2">
                                 <div class="flex gap-2 items-start w-full">
@@ -1403,7 +1529,11 @@ const truncateText = (text, maxLength = 80) => {
                                                 @click="openProfileReviewModal(slotProps.data)">
                                                 {{ slotProps.data.last_name }}, {{ slotProps.data.first_name }} {{
                                                     slotProps.data.middle_name || '' }} {{
-                                                    slotProps.data.extension_name || '' }}
+                                                    slotProps.data.extension_name || '' }} <!-- JPM Member tag — gated behind jpm.view permission -->
+                                            <Tag v-if="hasPermission('jpm.view') && jpmMode !== 'off' && isJpmMember(slotProps.data)"
+                                                severity="success" rounded class="shrink-0 ml-1">
+                                                <span class="text-2xs font-semibold">JPM</span>
+                                            </Tag>
                                             </div>
                                             <button type="button"
                                                 class="shrink-0 cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
@@ -1411,11 +1541,8 @@ const truncateText = (text, maxLength = 80) => {
                                                 @click.stop="copyApplicantName(slotProps.data)">
                                                 <AppIcon name="copy" :size="12" />
                                             </button>
-                                            <!-- Warning for profiles without an academic record -->
-                                            <AppIcon v-if="slotProps.data.has_academic_record === false"
-                                                name="exclamation-triangle" :size="12"
-                                                class="shrink-0 text-amber-500"
-                                                v-tooltip.top="'No academic record'" />
+                                          
+                                            
                                             <!-- Priority Badge (visible in simple view) - Fixed position on the right -->
                                             <div v-if="simpleView && slotProps.data.priority_level"
                                                 class="flex-shrink-0 ml-2 flex items-center justify-center"
@@ -1575,7 +1702,12 @@ const truncateText = (text, maxLength = 80) => {
                     </Column>
 
                     <!-- Actions Column -->
-                    <Column header="⋮" style="width: 48px">
+                    <Column style="width: 60px">
+                        <template #header>
+                            <AppButton v-if="hasPermission('jpm.view')" :icon="getJpmModeIcon()" label="JPM"
+                                severity="secondary" text size="small" @click="cycleJpmMode"
+                                v-tooltip.top="'JPM Tags: ' + getJpmModeLabel()" />
+                        </template>
                         <template #body="slotProps">
                             <div class="flex items-center justify-center">
                                 <AppButton icon="ellipsis-vertical" text severity="secondary"
@@ -1655,5 +1787,15 @@ const truncateText = (text, maxLength = 80) => {
         <!-- Centered loading message while the full report dataset is fetched -->
         <LoadingIndicator :show="reportLoading" message="Generating report data…"
             subtext="Fetching all applicants matching the current filters. Large result sets may take a moment." />
+
+        <!-- Confirmation Dialog -->
+        <IosModal v-model:visible="confirmDialogVisible" :title="confirmDialogHeader" width="calc(100vw - 2rem)"
+            max-width="450px" body-style="padding: 16px;" show-action :action-label="confirmDialogAcceptLabel"
+            @action="handleConfirmDialogAccept">
+            <div class="flex items-start gap-3">
+                <i v-if="confirmDialogIcon" :class="confirmDialogIcon" class="text-xl mt-0.5" />
+                <p class="m-0 text-sm leading-relaxed text-gray-700">{{ confirmDialogMessage }}</p>
+            </div>
+        </IosModal>
     </AdminLayout>
 </template>

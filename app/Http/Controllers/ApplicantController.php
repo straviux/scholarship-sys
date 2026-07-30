@@ -395,6 +395,17 @@ class ApplicantController extends Controller
      * query. Used by both the paginated table (index) and the report endpoint
      * (reportData) so the report can never drift from what the table shows.
      */
+    /**
+     * Filters like school/course/municipality/barangay/year_level accept either
+     * a single value or a comma-separated list (from a multiselect filter).
+     */
+    private function splitFilterValues($value): array
+    {
+        $values = is_array($value) ? $value : explode(',', (string) $value);
+
+        return array_values(array_filter(array_map('trim', $values)));
+    }
+
     private function applyApplicantFilters($query, Request $request, ?int $programId): void
     {
         // Filter by program if specified
@@ -430,8 +441,7 @@ class ApplicantController extends Controller
 
         // Filter by school - use leftJoin to avoid duplicate rows
         if ($request->filled('school')) {
-            $schools = is_array($request->school) ? $request->school : explode(',', $request->school);
-            $schools = array_filter(array_map('trim', $schools));
+            $schools = $this->splitFilterValues($request->school);
 
             if (!empty($schools)) {
                 $query->leftJoin('schools', 'scholarship_records.school_id', '=', 'schools.id')
@@ -446,7 +456,15 @@ class ApplicantController extends Controller
 
         // Filter by year_level - must ensure pending status is maintained
         if ($request->filled('year_level')) {
-            $query->where('scholarship_records.year_level', 'like', '%' . $request->year_level . '%');
+            $yearLevels = $this->splitFilterValues($request->year_level);
+
+            if (!empty($yearLevels)) {
+                $query->where(function ($q) use ($yearLevels) {
+                    foreach ($yearLevels as $yearLevel) {
+                        $q->orWhere('scholarship_records.year_level', 'like', '%' . $yearLevel . '%');
+                    }
+                });
+            }
         }
 
         // Filter by yakap_category - must ensure pending status is maintained
@@ -461,11 +479,17 @@ class ApplicantController extends Controller
 
         // Filter by course - use leftJoin to avoid duplicate rows
         if ($request->filled('course')) {
-            $query->leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
-                ->where(function ($q) use ($request) {
-                    $q->where('courses.shortname', 'like', '%' . $request->course . '%')
-                        ->orWhere('courses.name', 'like', '%' . $request->course . '%');
-                });
+            $courses = $this->splitFilterValues($request->course);
+
+            if (!empty($courses)) {
+                $query->leftJoin('courses', 'scholarship_records.course_id', '=', 'courses.id')
+                    ->where(function ($q) use ($courses) {
+                        foreach ($courses as $course) {
+                            $q->orWhere('courses.shortname', 'like', '%' . $course . '%')
+                                ->orWhere('courses.name', 'like', '%' . $course . '%');
+                        }
+                    });
+            }
         }
 
         // Filter by remarks
@@ -477,12 +501,28 @@ class ApplicantController extends Controller
 
         // Filter by municipality
         if ($request->filled('municipality')) {
-            $query->where('scholarship_profiles.municipality', 'like', '%' . $request->municipality . '%');
+            $municipalities = $this->splitFilterValues($request->municipality);
+
+            if (!empty($municipalities)) {
+                $query->where(function ($q) use ($municipalities) {
+                    foreach ($municipalities as $municipality) {
+                        $q->orWhere('scholarship_profiles.municipality', 'like', '%' . $municipality . '%');
+                    }
+                });
+            }
         }
 
         // Filter by barangay
         if ($request->filled('barangay')) {
-            $query->where('scholarship_profiles.barangay', 'like', '%' . $request->barangay . '%');
+            $barangays = $this->splitFilterValues($request->barangay);
+
+            if (!empty($barangays)) {
+                $query->where(function ($q) use ($barangays) {
+                    foreach ($barangays as $barangay) {
+                        $q->orWhere('scholarship_profiles.barangay', 'like', '%' . $barangay . '%');
+                    }
+                });
+            }
         }
 
         // Filter by name (first_name, last_name, or full name)
