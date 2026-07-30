@@ -2,7 +2,7 @@
 
     <Head title="Mobile Upload Settings" />
     <AdminLayout>
-        <Toast />
+        <Toast position="top-center" :life="3500" :baseZIndex="20000" />
 
         <AdminPageShell title="Mobile Upload Settings"
             description="Configure the mobile upload entrypoint, upload limits, token lifetime, and image optimization defaults from one iOS-styled control surface."

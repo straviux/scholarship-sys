@@ -196,7 +196,7 @@
             @close-report="closeReportDialog" @generate-report="generateReport" />
 
         <!-- Toast Notifications with higher z-index than drawer -->
-        <Toast position="top-right" :life="3500" :baseZIndex="20000" />
+        <Toast position="top-center" :life="3500" :baseZIndex="20000" />
     </AdminLayout>
 </template>
 

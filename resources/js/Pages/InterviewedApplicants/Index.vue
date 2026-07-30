@@ -93,6 +93,21 @@
                                             </span>
                                         </div>
                                     </button>
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'all'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'all'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'all'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="list" :size="14" />
+                                            <span>All</span>
+                                            <span
+                                                class="rounded-full bg-amber-50 px-2 py-0.5 text-2xs font-semibold text-amber-700">
+                                                {{ recommendationListAuditRecords.length }}
+                                            </span>
+                                        </div>
+                                    </button>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-3 text-sm opacity-75">
                                     <span class="font-semibold text-blue-600">{{ stats.total }} interviewed</span>
@@ -411,6 +426,21 @@
                                             <span
                                                 class="rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700">
                                                 {{ recommendationLists.length }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'all'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'all'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'all'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="list" :size="14" />
+                                            <span>All</span>
+                                            <span
+                                                class="rounded-full bg-amber-50 px-2 py-0.5 text-2xs font-semibold text-amber-700">
+                                                {{ recommendationListAuditRecords.length }}
                                             </span>
                                         </div>
                                     </button>
@@ -744,6 +774,136 @@
                             </DataTable>
                         </IosModal>
                     </TabPanel>
+
+                    <TabPanel value="all">
+                        <Panel class="!rounded-4xl overflow-hidden shadow-sm mt-4">
+                            <!-- View Tabs -->
+                            <div class="mb-4 -mt-2 flex flex-wrap items-center justify-between gap-3">
+                                <div class="flex flex-wrap gap-1" role="tablist" aria-label="Interviewed applicant views">
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'interviewed'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'interviewed'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'interviewed'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="clipboard-list" :size="14" />
+                                            <span>Interviewed</span>
+                                            <span
+                                                class="rounded-full bg-blue-50 px-2 py-0.5 text-2xs font-semibold text-blue-700">
+                                                {{ filteredList.length }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'recommendation-lists'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'recommendation-lists'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'recommendation-lists'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="list-checks" :size="14" />
+                                            <span>Approval Requests</span>
+                                            <span
+                                                class="rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700">
+                                                {{ recommendationLists.length }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                    <button type="button" role="tab" :aria-selected="activeTab === 'all'"
+                                        class="cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors"
+                                        :class="activeTab === 'all'
+                                            ? 'border-blue-500 font-semibold text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                                        @click="activeTab = 'all'">
+                                        <div class="flex items-center gap-2">
+                                            <AppIcon name="list" :size="14" />
+                                            <span>All</span>
+                                            <span
+                                                class="rounded-full bg-amber-50 px-2 py-0.5 text-2xs font-semibold text-amber-700">
+                                                {{ recommendationListAuditRecords.length }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span v-if="bypassedAuditCount > 0" class="text-sm font-semibold text-red-600">
+                                        {{ bypassedAuditCount }} processed outside an approval request
+                                    </span>
+                                    <AppButton icon="file-spreadsheet" label="Export Excel" severity="success" outlined
+                                        rounded size="xsmall" @click="exportAuditRecords" />
+                                </div>
+                            </div>
+
+                            <!-- Filters above table -->
+                            <div class="flex flex-wrap items-end gap-3 mb-4">
+                                <InputGroup class="w-full sm:w-64">
+                                    <InputGroupAddon>
+                                        <AppIcon name="search" :size="14" class="text-gray-400" />
+                                    </InputGroupAddon>
+                                    <InputText v-model="filters.name" placeholder="Search by name..." size="small" />
+                                </InputGroup>
+                                <div class="flex items-center gap-2">
+                                    <Checkbox v-model="auditOnlyBypassed" binary inputId="auditOnlyBypassed" />
+                                    <label for="auditOnlyBypassed" class="cursor-pointer text-sm text-gray-700">
+                                        Show only processed-outside-request records
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div v-if="filteredAuditRecords.length === 0" class="py-10 text-center text-gray-500">
+                                No approval request records found
+                            </div>
+
+                            <DataTable v-else :value="filteredAuditRecords" dataKey="id" showGridlines stripedRows
+                                scrollable responsiveLayout="scroll"
+                                class="text-sm ios-interviewed-table ios-datatable-clean">
+                                <Column header="Name" headerClass="min-w-[220px]" bodyClass="min-w-[220px]">
+                                    <template #body="slotProps">
+                                        <div class="font-semibold text-slate-800">{{ formatApplicantName(slotProps.data) }}</div>
+                                    </template>
+                                </Column>
+                                <Column header="Program / Course / School" headerClass="min-w-[240px]" bodyClass="min-w-[240px]">
+                                    <template #body="slotProps">
+                                        <div class="text-slate-700">{{ slotProps.data.program || 'N/A' }} — {{ slotProps.data.course || 'N/A' }}</div>
+                                        <div class="text-2xs text-slate-500">{{ slotProps.data.school || 'N/A' }}</div>
+                                    </template>
+                                </Column>
+                                <Column header="Current Status" headerClass="min-w-[160px]" bodyClass="min-w-[160px]">
+                                    <template #body="slotProps">
+                                        <span
+                                            :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-3xs font-semibold', auditStatusBadgeClass(slotProps.data.unified_status)]">
+                                            {{ auditStatusLabel(slotProps.data.unified_status) }}
+                                        </span>
+                                        <div v-if="slotProps.data.date_approved" class="mt-1 text-2xs text-slate-500">
+                                            Approved {{ formatDate(slotProps.data.date_approved) }}
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="In Approval Request(s)" headerClass="min-w-[240px]" bodyClass="min-w-[240px]">
+                                    <template #body="slotProps">
+                                        <div class="flex flex-wrap gap-1">
+                                            <span v-for="listEntry in slotProps.data.lists" :key="listEntry.list_number"
+                                                :class="['inline-flex items-center rounded-full px-2 py-0.5 text-3xs font-semibold',
+                                                    listEntry.approved_at ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700']">
+                                                {{ listEntry.list_number }}
+                                            </span>
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column header="Flag" headerClass="min-w-[220px]" bodyClass="min-w-[220px]">
+                                    <template #body="slotProps">
+                                        <span v-if="slotProps.data.processed_outside_list"
+                                            class="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-3xs font-semibold text-red-700">
+                                            <AppIcon name="alert-triangle" :size="12" />
+                                            Processed outside this request
+                                        </span>
+                                        <span v-else class="text-2xs text-slate-400">—</span>
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </Panel>
+                    </TabPanel>
                 </TabPanels>
             </Tabs>
         </div>
@@ -784,8 +944,8 @@
 
         <AssessmentViewModal v-model:show="showAssessmentDialog" :record="selectedRecord"
             :initial-mode="assessmentInitialMode" :can-manage="canManageActions" :can-revert="canManageActions"
-            :approval-form="approvalForm" :deny-form="denyForm" :decline-reasons="declineReasons"
-            :interviewers="interviewers" @updated="onAssessmentUpdated" @confirm-approve="confirmApprove"
+            :deny-form="denyForm" :decline-reasons="declineReasons"
+            :interviewers="interviewers" @updated="onAssessmentUpdated"
             @confirm-deny="confirmDeny" @revert="confirmRevert" />
 
         <PdfPreviewModal v-model:show="showRecommendationListPreview" :htmlDoc="recommendationListPreviewHtml"
@@ -837,6 +997,7 @@ import { getSystemOptionLabel } from '@/composables/useSystemOptions';
 import {
     exportInterviewedApplicantsExcel,
     exportRecommendationListExcel,
+    exportRecommendationListAuditExcel,
     printInterviewedApplicantsSelection,
     printRecommendationList,
     buildRecommendationListHtml,
@@ -893,6 +1054,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    recommendation_list_audit_records: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const recommendationListReloadProps = [
@@ -901,6 +1066,7 @@ const recommendationListReloadProps = [
     'budget_allocations',
     'recommendation_lists',
     'deleted_recommendation_lists',
+    'recommendation_list_audit_records',
 ];
 
 // State
@@ -956,6 +1122,8 @@ const editingRecommendationList = ref(null);
 const selectedRows = ref([]);
 const expandedRows = ref({});
 const recommendationLists = ref([...(props.recommendation_lists || [])]);
+const recommendationListAuditRecords = ref([...(props.recommendation_list_audit_records || [])]);
+const auditOnlyBypassed = ref(false);
 const deletedRecommendationLists = ref([...(props.deleted_recommendation_lists || [])]);
 const recommendationListExpandedRows = ref({});
 const showRecommendationListPreview = ref(false);
@@ -989,10 +1157,6 @@ function handleConfirmDialogAccept() {
         confirmDialogOnAccept.value();
     }
 }
-
-const approvalForm = useForm({
-    date_approved: new Date(),
-});
 
 const denyForm = useForm({
     reason: '',
@@ -1248,60 +1412,41 @@ const filteredRecommendationLists = computed(() => filterRecommendationLists(rec
 
 const filteredDeletedRecommendationLists = computed(() => filterRecommendationLists(deletedRecommendationLists.value));
 
-const formatDateForPayload = (value) => {
-    if (!value) {
-        return null;
+// "All" audit view — every record ever added to an approval request, with its
+// live current status, so staff can spot records that moved past "interviewed"
+// (active/completed/denied) while every request containing them is still unapproved.
+const bypassedAuditCount = computed(() => recommendationListAuditRecords.value.filter((r) => r.processed_outside_list).length);
+
+const filteredAuditRecords = computed(() => {
+    const nameQuery = normalizedNameFilter.value;
+    let list = recommendationListAuditRecords.value;
+
+    if (auditOnlyBypassed.value) {
+        list = list.filter((r) => r.processed_outside_list);
     }
 
-    return moment(value).format('YYYY-MM-DD');
-};
-
-const approvalValidationFields = [
-    {
-        key: 'date_approved',
-        label: 'Approval Date',
-        hasValue: () => Boolean(approvalForm.date_approved),
-    },
-];
-
-const validateApprovalForm = () => {
-    const clientErrors = {};
-    const missingFields = [];
-
-    approvalForm.clearErrors(...approvalValidationFields.map(field => field.key));
-
-    approvalValidationFields.forEach((field) => {
-        if (!field.hasValue()) {
-            clientErrors[field.key] = `${field.label} is required.`;
-            missingFields.push(field.label);
-        }
-    });
-
-    if (!missingFields.length) {
-        return true;
+    if (nameQuery) {
+        list = list.filter((record) => recordMatchesName(record, nameQuery));
     }
 
-    approvalForm.errors = {
-        ...approvalForm.errors,
-        ...clientErrors,
-    };
+    return list;
+});
 
-    toast.warn('Complete the highlighted approval fields before submitting.');
-
-    return false;
+const auditStatusLabels = {
+    interviewed: 'Interviewed',
+    active: 'Active',
+    completed: 'Completed',
+    denied: 'Denied',
+    approved: 'Approved',
 };
 
-const populateApprovalForm = (record) => {
-    approvalForm.date_approved = record.date_approved ? new Date(record.date_approved) : new Date();
-};
+const auditStatusLabel = (status) => auditStatusLabels[status] || status || 'Unknown';
 
-const resetApprovalForm = (record = null) => {
-    approvalForm.reset();
-    approvalForm.clearErrors();
-
-    if (record) {
-        populateApprovalForm(record);
-    }
+const auditStatusBadgeClass = (status) => {
+    if (status === 'interviewed') return 'bg-blue-50 text-blue-700';
+    if (status === 'denied') return 'bg-red-50 text-red-700';
+    if (status === 'active' || status === 'completed' || status === 'approved') return 'bg-emerald-50 text-emerald-700';
+    return 'bg-gray-100 text-gray-600';
 };
 
 const resetDenyForm = () => {
@@ -1312,10 +1457,6 @@ const resetDenyForm = () => {
 const openAssessmentDialog = (record, mode = 'view') => {
     selectedRecord.value = record;
     assessmentInitialMode.value = mode;
-
-    if (mode === 'approve') {
-        resetApprovalForm(record);
-    }
 
     if (mode === 'deny') {
         resetDenyForm();
@@ -1411,16 +1552,6 @@ const contextMenuItems = computed(() => {
     if (canManageActions.value) {
         items.push({ separator: true });
         items.push({
-            label: 'Approve',
-            icon: 'check',
-            class: 'p-menuitem-success',
-            command: () => {
-                if (selectedRecord.value) {
-                    openAssessmentDialog(selectedRecord.value, 'approve');
-                }
-            }
-        });
-        items.push({
             label: 'Deny',
             icon: 'x',
             class: 'p-menuitem-danger',
@@ -1435,9 +1566,10 @@ const contextMenuItems = computed(() => {
         items.push({
             label: 'Revert to Pending',
             icon: 'arrow-left',
+            disabled: Boolean(selectedRecord.value?.is_in_recommendation_list),
             command: () => {
                 if (selectedRecord.value) {
-                    revertStatus(selectedRecord.value);
+                    promptRevertStatus(selectedRecord.value);
                 }
             }
         });
@@ -1534,6 +1666,14 @@ const fetchPage = (page, perPageValue) => {
             params.program = programId;
         }
     }
+    if (filters.value.course) {
+        const courseId = typeof filters.value.course === 'object'
+            ? filters.value.course?.id
+            : filters.value.course;
+        if (courseId) {
+            params.course = courseId;
+        }
+    }
 
     router.get(route('scholarship.interviewed-applicants'), params, {
         preserveState: true,
@@ -1570,6 +1710,7 @@ const onFilterChange = () => {
 watch(() => filters.value.recommendation, onFilterChange);
 watch(() => filters.value.name, onFilterChange);
 watch(() => filters.value.program, onFilterChange);
+watch(() => filters.value.course, onFilterChange);
 
 // Methods
 const onAssessmentUpdated = (changes) => {
@@ -1708,31 +1849,6 @@ const collapseRecommendationListRow = (recommendationListId) => {
     recommendationListExpandedRows.value = nextExpandedRows;
 };
 
-const confirmApprove = () => {
-    if (!selectedRecord.value) return;
-
-    if (!validateApprovalForm()) {
-        return;
-    }
-
-    approvalForm.transform((data) => ({
-        date_approved: formatDateForPayload(data.date_approved),
-    })).post(route('scholarship.record.approve', selectedRecord.value.id), {
-        onSuccess: () => {
-            showAssessmentDialog.value = false;
-            assessmentInitialMode.value = 'view';
-            toast.success('Application approved successfully');
-        },
-        onError: (errors) => {
-            const hasSummaryOnlyErrors = Object.keys(errors || {}).some((field) => field !== 'date_approved');
-            toast.error(hasSummaryOnlyErrors
-                ? 'Saved assessment details are incomplete. Use Edit Assessment, then try approving again.'
-                : 'Review the approval date and try again.');
-            console.error(errors);
-        }
-    });
-};
-
 const confirmDeny = () => {
     if (!selectedRecord.value || !denyForm.reason || !denyForm.details) {
         toast.error('Please fill in all required fields');
@@ -1767,10 +1883,34 @@ const revertStatus = (record) => {
     });
 };
 
+// Revert to Pending needs a confirmation, and is blocked for records already
+// included in an approval request (they must be removed from the request first).
+const promptRevertStatus = (record) => {
+    if (!record) return;
+
+    if (record.is_in_recommendation_list) {
+        toast.error('This applicant is already in an approval request. Remove them from it before reverting to pending.');
+        return;
+    }
+
+    const applicantName = formatApplicantName(record);
+
+    openConfirmDialog({
+        header: 'Revert to Pending',
+        message: `Revert ${applicantName} to Pending? This clears their interview assessment and recommendation.`,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Revert',
+        severity: 'warning',
+        onAccept: () => {
+            revertStatus(record);
+        },
+    });
+};
+
 const confirmRevert = () => {
     if (!selectedRecord.value) return;
 
-    revertStatus(selectedRecord.value);
+    promptRevertStatus(selectedRecord.value);
 };
 
 const formatDate = (date) => {
@@ -1849,6 +1989,21 @@ const exportSelected = async (format) => {
     } catch (error) {
         console.error('Failed to export interviewed applicants:', error);
         toast.error(`Failed to export applicant(s) as ${format.toUpperCase()}.`);
+    }
+};
+
+const exportAuditRecords = async () => {
+    if (filteredAuditRecords.value.length === 0) {
+        toast.warn('No records to export');
+        return;
+    }
+
+    try {
+        await exportRecommendationListAuditExcel({ records: filteredAuditRecords.value });
+        toast.success(`Exported ${filteredAuditRecords.value.length} record(s) to Excel.`);
+    } catch (error) {
+        console.error('Failed to export approval request audit records:', error);
+        toast.error('Failed to export records to Excel.');
     }
 };
 
@@ -2541,6 +2696,10 @@ watch(() => props.recommendation_lists, (value) => {
 
 watch(() => props.deleted_recommendation_lists, (value) => {
     deletedRecommendationLists.value = [...(value || [])];
+}, { deep: true });
+
+watch(() => props.recommendation_list_audit_records, (value) => {
+    recommendationListAuditRecords.value = [...(value || [])];
 }, { deep: true });
 
 watch(interviewedApplicantsWithRecommendationFlags, () => {

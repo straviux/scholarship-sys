@@ -1664,6 +1664,11 @@ class ScholarshipProfileController extends Controller
             });
         }
 
+        // Filter by course
+        if ($request->filled('course')) {
+            $query->where('course_id', $request->course);
+        }
+
         // Filter by program
         if ($request->filled('program')) {
             $query->where('program_id', $request->program);
@@ -1714,13 +1719,78 @@ class ScholarshipProfileController extends Controller
                 'further_eval' => (int) ($stats->further_eval ?? 0),
                 'not_recommended' => (int) ($stats->not_recommended ?? 0),
             ],
-            'interviewed_applicants_filters' => $request->only(['recommendation', 'name', 'program']),
+            'interviewed_applicants_filters' => $request->only(['recommendation', 'name', 'program', 'course']),
             'decline_reasons' => config('scholarship.decline_reasons'),
             'interviewers' => User::query()->select('id', 'name')->orderBy('name')->get(),
             'budget_allocations' => $this->getInterviewedApplicantsBudgetAllocations(),
             'recommendation_lists' => $this->getRecommendationLists(),
             'deleted_recommendation_lists' => $this->getDeletedRecommendationLists(),
+            'recommendation_list_audit_records' => $this->getRecommendationListAuditRecords(),
         ]);
+    }
+
+    /**
+     * Every record ever added to a (non-deleted) recommendation list, with its
+     * live current status — lets staff see which ones have already moved past
+     * "interviewed" (approved/active/completed/denied) even while the list
+     * itself is still sitting unapproved, which otherwise looks like a bypass.
+     */
+    private function getRecommendationListAuditRecords(): array
+    {
+        $lists = RecommendationList::query()->get(['id', 'list_number', 'approved_at', 'approved_by_user_id', 'selected_record_ids']);
+
+        $listsByRecordId = [];
+        foreach ($lists as $list) {
+            $recordIds = collect($list->selected_record_ids ?? [])
+                ->map(fn($id) => (int) $id)
+                ->filter()
+                ->unique();
+
+            foreach ($recordIds as $recordId) {
+                $listsByRecordId[$recordId][] = [
+                    'list_number' => $list->list_number,
+                    'approved_at' => $list->approved_at?->toIso8601String(),
+                ];
+            }
+        }
+
+        if ($listsByRecordId === []) {
+            return [];
+        }
+
+        return ScholarshipRecord::query()
+            ->whereIn('id', array_keys($listsByRecordId))
+            ->with([
+                'profile' => fn($q) => $q->select('profile_id', 'first_name', 'last_name', 'middle_name'),
+                'program' => fn($q) => $q->select('scholarship_programs.id', 'scholarship_programs.shortname'),
+                'course' => fn($q) => $q->select('courses.id', 'courses.shortname'),
+                'school' => fn($q) => $q->select('schools.id', 'schools.shortname'),
+            ])
+            ->get()
+            ->map(function (ScholarshipRecord $record) use ($listsByRecordId) {
+                $memberships = $listsByRecordId[$record->id] ?? [];
+
+                return [
+                    'id' => $record->id,
+                    'profile' => [
+                        'first_name' => $record->profile?->first_name,
+                        'last_name' => $record->profile?->last_name,
+                        'middle_name' => $record->profile?->middle_name,
+                    ],
+                    'program' => $record->program?->shortname,
+                    'course' => $record->course?->shortname,
+                    'school' => $record->school?->shortname,
+                    'unified_status' => $record->unified_status,
+                    'date_approved' => $record->date_approved?->toDateString(),
+                    'lists' => $memberships,
+                    // Already moved past "interviewed" while every list containing it
+                    // is still unapproved — status changed outside the list workflow.
+                    'processed_outside_list' => $record->unified_status !== 'interviewed'
+                        && collect($memberships)->every(fn($m) => $m['approved_at'] === null),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     public function storeRecommendationList(

@@ -22,12 +22,6 @@
                 <AppIcon v-if="editSubmitting" name="spinner" :size="16" />
                 <AppIcon v-else name="check" :size="16" style="color: #2563eb;" />
             </button>
-            <button v-else-if="activeMode === 'approve'" type="button"
-                class="ios-nav-btn ios-nav-action assessment-nav-action text-nav" @click="$emit('confirm-approve')"
-                :disabled="approvalForm?.processing" v-tooltip.bottom="'Approve Application'">
-                <AppIcon v-if="approvalForm?.processing" name="spinner" :size="16" />
-                <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
-            </button>
             <button v-else-if="activeMode === 'deny'" type="button"
                 class="ios-nav-btn ios-nav-action assessment-nav-action text-nav" @click="$emit('confirm-deny')"
                 :disabled="denyForm?.processing" v-tooltip.bottom="'Confirm Deny'">
@@ -40,16 +34,14 @@
                     <AppIcon name="pencil" :size="16" style="color: #2563eb;" />
                 </button>
                 <button v-if="canManage" type="button" class="ios-nav-btn ios-nav-action assessment-nav-action text-nav"
-                    @click="openApproveMode" v-tooltip.bottom="'Approve'">
-                    <AppIcon name="check" :size="16" style="color: #16a34a;" />
-                </button>
-                <button v-if="canManage" type="button" class="ios-nav-btn ios-nav-action assessment-nav-action text-nav"
                     @click="openDenyMode" v-tooltip.bottom="'Deny'">
                     <AppIcon name="x" :size="16" style="color: #dc2626;" />
                 </button>
                 <button v-if="canRevert" type="button" class="ios-nav-btn ios-nav-action assessment-nav-action text-nav"
-                    @click="$emit('revert')" v-tooltip.bottom="'Revert to Pending'">
-                    <AppIcon name="arrow-left" :size="16" style="color: #d97706;" />
+                    @click="$emit('revert')"
+                    :disabled="localRecord?.is_in_recommendation_list"
+                    v-tooltip.bottom="localRecord?.is_in_recommendation_list ? 'Already in an approval request — remove it first' : 'Revert to Pending'">
+                    <AppIcon name="arrow-left" :size="16" :style="localRecord?.is_in_recommendation_list ? 'color: #c7c7cc;' : 'color: #d97706;'" />
                 </button>
             </div>
             <div v-else style="width: 48px;"></div>
@@ -189,175 +181,6 @@
                                 :interviewers="props.interviewers" />
                         </template>
 
-                        <template v-else-if="activeMode === 'approve'">
-                            <div v-if="approvalValidationSummary" class="ios-section ios-section-tight">
-                                <div class="ios-card ios-validation-summary">
-                                    <div class="ios-validation-summary-icon">
-                                        <AppIcon name="exclamation-triangle" :size="16" />
-                                    </div>
-                                    <div>
-                                        <div class="ios-validation-summary-title text-compact">Review Before Approval</div>
-                                        <p class="ios-validation-summary-text text-xs">{{ approvalValidationSummary }}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="ios-section ios-section-tight">
-                                <div class="ios-card" style="background: #F8FAFC; border-color: #CBD5E1;">
-                                    <p class="text-sm text-slate-700">
-                                        Approval uses the saved assessment and academic details below. If anything is
-                                        incorrect,
-                                        go back and use Edit Assessment before approving.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="ios-section">
-                                <div class="ios-section-label text-compact">Applicant Summary</div>
-                                <div class="ios-card" style="background: #EFF6FF; border-color: #BFDBFE;">
-                                    <div class="ios-row">
-                                        <div class="ios-row-label interview-assessment-form__name text-sm text-nav">
-                                            {{ localRecord.profile.last_name }}, {{ localRecord.profile.first_name }}
-                                        </div>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="phone" :size="13" style="color: #34C759;" />
-                                            Contact
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ localRecord.profile.contact_no || 'N/A'
-                                            }}</span>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="message-square-more" :size="13" style="color: #6366F1;" />
-                                            Recommendation
-                                        </div>
-                                        <Tag :value="formatRecommendation(localRecord.recommendation)"
-                                            :severity="getRecommendationSeverity(localRecord.recommendation)" />
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="calendar" :size="13" style="color: #8E8E93;" />
-                                            Interview Date
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ formatDate(localRecord.interviewed_at)
-                                            }}</span>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="user" :size="13" style="color: #007AFF;" />
-                                            Interviewed By
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ localRecord.interviewer?.name || 'N/A'
-                                            }}</span>
-                                    </div>
-                                    <div class="ios-row ios-row-last">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="user" :size="13" style="color: #34C759;" />
-                                            Endorsed By
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ localRecord.endorsed_by || 'N/A'
-                                            }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="ios-section">
-                                <div class="ios-section-label text-compact">Academic Summary</div>
-                                <div class="ios-card">
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="book-open" :size="13" style="color: #007AFF;" />
-                                            Program
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ localRecord.program?.shortname || 'N/A'
-                                            }}</span>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="graduation-cap" :size="13" style="color: #34C759;" />
-                                            Course
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ localRecord.course?.shortname ||
-                                            localRecord.course?.name || 'N/A' }}</span>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="building-2" :size="13" style="color: #FF9500;" />
-                                            School
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ localRecord.school?.shortname ||
-                                            localRecord.school?.name || 'N/A' }}</span>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="list-checks" :size="13" style="color: #5856D6;" />
-                                            Year Level
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ getSystemOptionLabel('year_level',
-                                            localRecord.year_level, 'N/A') }}</span>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="calendar" :size="13" style="color: #AF52DE;" />
-                                            Term
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ getSystemOptionLabel('term',
-                                            localRecord.term, 'N/A') }}</span>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="calendar" :size="13" style="color: #0EA5E9;" />
-                                            Academic Year
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ localRecord.academic_year || 'N/A'
-                                            }}</span>
-                                    </div>
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="wallet" :size="13" style="color: #007AFF;" />
-                                            Grant Provision
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ getSystemOptionLabel('grant_provision',
-                                            localRecord.grant_provision, 'N/A') }}</span>
-                                    </div>
-                                    <div class="ios-row ios-row-last">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="calendar" :size="13" style="color: #8E8E93;" />
-                                            Date Filed
-                                        </div>
-                                        <span class="text-sm text-gray-700">{{ formatDate(localRecord.date_filed)
-                                            }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="ios-section">
-                                <div class="ios-section-label text-compact">Approval Date</div>
-                                <div class="ios-card">
-                                    <div class="ios-row">
-                                        <div class="ios-row-label text-sm">
-                                            <AppIcon name="calendar-plus" :size="13" style="color: #34C759;" />
-                                            Approval Date <span class="ios-required-mark">*</span>
-                                        </div>
-                                        <div class="ios-row-control ios-row-control-validation">
-                                            <div
-                                                :class="['ios-input-stack', { 'has-error': approvalForm?.errors?.date_approved }]">
-                                                <Calendar v-model="approvalForm.date_approved" showIcon
-                                                    iconDisplay="input" :maxDate="new Date()" class="ios-full-input text-compact [&_.p-inputtext]:text-compact [&_.p-textarea]:text-compact [&_.p-inputnumber-input]:text-compact [&_.p-multiselect]:text-compact [&_.p-select]:text-compact [&_.p-datepicker]:text-compact" />
-                                                <small v-if="approvalForm?.errors?.date_approved"
-                                                    class="ios-field-error text-xs">
-                                                    {{ approvalForm.errors.date_approved }}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </template>
-
                         <template v-else-if="activeMode === 'deny'">
                             <div class="ios-section">
                                 <div class="ios-card" style="background: #FFF5F5; border-color: #FECACA;">
@@ -448,10 +271,6 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
-    approvalForm: {
-        type: Object,
-        required: true,
-    },
     denyForm: {
         type: Object,
         required: true,
@@ -466,12 +285,11 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['update:show', 'updated', 'confirm-approve', 'confirm-deny', 'revert']);
+const emit = defineEmits(['update:show', 'updated', 'confirm-deny', 'revert']);
 
 const show = toRef(props, 'show');
 const record = toRef(props, 'record');
 const initialMode = toRef(props, 'initialMode');
-const approvalForm = toRef(props, 'approvalForm');
 const denyForm = toRef(props, 'denyForm');
 const declineReasons = toRef(props, 'declineReasons');
 const page = usePage();
@@ -587,28 +405,6 @@ const recommendationOptions = [
     { label: 'Not Recommended', value: 'not_recommended' },
 ];
 
-const approvalValidationLabels = {
-    program_id: 'Program',
-    course_id: 'Course',
-    school_id: 'School',
-    year_level: 'Year Level',
-    term: 'Term',
-    academic_year: 'Academic Year',
-    date_approved: 'Approval Date',
-};
-
-const approvalValidationSummary = computed(() => {
-    const activeLabels = Object.entries(approvalValidationLabels)
-        .filter(([field]) => Boolean(approvalForm.value?.errors?.[field]))
-        .map(([, label]) => label);
-
-    if (!activeLabels.length) {
-        return '';
-    }
-
-    return `This application cannot be approved until these saved details are complete: ${activeLabels.join(', ')}. Use Edit Assessment to correct them.`;
-});
-
 const editValidationLabels = {
     program_id: 'Program',
     course_id: 'Course',
@@ -656,15 +452,7 @@ const syncLocalRecord = () => {
 };
 
 const normalizeMode = (mode) => {
-    return ['view', 'edit', 'approve', 'deny'].includes(mode) ? mode : 'view';
-};
-
-const resetApprovalFormState = () => {
-    approvalForm.value.reset();
-    approvalForm.value.clearErrors();
-    approvalForm.value.date_approved = localRecord.value?.date_approved
-        ? new Date(localRecord.value.date_approved)
-        : new Date();
+    return ['view', 'edit', 'deny'].includes(mode) ? mode : 'view';
 };
 
 const resetDenyFormState = () => {
@@ -681,10 +469,6 @@ watch(show, (value) => {
         activeMode.value = normalizeMode(initialMode.value);
         syncLocalRecord();
 
-        if (activeMode.value === 'approve') {
-            resetApprovalFormState();
-        }
-
         if (activeMode.value === 'deny') {
             resetDenyFormState();
         }
@@ -700,17 +484,10 @@ watch(initialMode, (value) => {
     }
 });
 
-watch(() => approvalForm.value?.date_approved, (value) => {
-    if (value) {
-        approvalForm.value?.clearErrors('date_approved');
-    }
-});
-
 const modalTitle = computed(() => {
     return {
         view: 'Interview Assessment',
         edit: 'Edit Assessment',
-        approve: 'Approve Application',
         deny: 'Deny Application',
     }[activeMode.value] || 'Interview Assessment';
 });
@@ -795,13 +572,6 @@ const openEditMode = () => {
     editForm.value = createEditFormState();
     editErrors.value = {};
     activeMode.value = 'edit';
-};
-
-const openApproveMode = () => {
-    if (!props.canManage) return;
-
-    resetApprovalFormState();
-    activeMode.value = 'approve';
 };
 
 const openDenyMode = () => {

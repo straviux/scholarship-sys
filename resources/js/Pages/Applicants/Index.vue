@@ -179,6 +179,10 @@ const {
         if (form.sort && Object.values(form.sort).some(v => v)) {
             params.sort = form.sort;
         }
+        // Preserve the active list tab, otherwise the backend falls back to 'all'
+        if (activeListTab.value !== 'all') {
+            params.list = activeListTab.value;
+        }
     },
 });
 
@@ -647,7 +651,7 @@ const buildContextMenu = (rowData) => {
             icon: 'id-card',
             command: () => openProfileReviewModal(rowData)
         });
-        if (hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer')) {
+        if ((hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer')) && activeListTab.value !== 'interview') {
             items.push({
                 label: 'Interview',
                 icon: 'comments',
@@ -1605,7 +1609,7 @@ const truncateText = (text, maxLength = 80) => {
         <!-- Modals -->
         <!-- Integrated Profile & Review Modal -->
         <ProfileReviewModal v-model:visible="showProfileReviewModal" :applicant="selectedApplicantForReview"
-            :applicants="applicants" :list-membership="listMembership"
+            :applicants="applicants" :list-membership="listMembership" :active-list-tab="activeListTab"
             @interview="handleProfileReviewInterview" @edit-profile="handleProfileReviewEdit"
             @edit-requirements="openRequirementsModal" @edit-yakap="openUpdateYakapModal" @edit-remarks="openRemarksModal"
             @assign-priority="openPriorityModal" @remove-priority="removePriority"

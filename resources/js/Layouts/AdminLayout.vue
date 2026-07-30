@@ -557,7 +557,7 @@ watch(sidebarMinimized, (isMinimized) => {
 </script>
 
 <template>
-    <Toast position="top-right" :life="3500" :baseZIndex="20000" />
+    <Toast position="top-center" :life="3500" :baseZIndex="20000" />
     <ConfirmDialog></ConfirmDialog>
     <MaintenanceAlertModal />
 

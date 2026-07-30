@@ -289,7 +289,7 @@ onMounted(() => {
 <template>
 
     <Head title="Responsibility Centers" />
-    <Toast position="top-right" :life="3500" :baseZIndex="20000" />
+    <Toast position="top-center" :life="3500" :baseZIndex="20000" />
 
     <div>
         <!-- Toolbar -->

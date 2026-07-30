@@ -180,6 +180,22 @@ function rlFormatApplicantName(record) {
     return [lastName + ',', firstName, middleInitial].filter(Boolean).join(' ').trim();
 }
 
+// Uniformity checks — mirrors RecommendationListTemplate.vue exactly: a
+// column (School/Program/Academic Year) is hidden and hoisted into the
+// header text instead whenever every record shares the same value.
+function rlSchoolKey(record) {
+    return String(record?.school?.id ?? record?.school?.name ?? record?.school?.shortname ?? '').trim().toLowerCase();
+}
+function rlProgramKey(record) {
+    return String(record?.program?.id ?? record?.program?.name ?? record?.program?.shortname ?? '').trim().toLowerCase();
+}
+function rlAyTermKey(record) {
+    return `${String(record?.academic_year ?? '').trim().toLowerCase()}||${String(record?.term ?? '').trim().toLowerCase()}`;
+}
+function rlUniqueCount(records, getter) {
+    return new Set(records.map(getter)).size;
+}
+
 function rlHasJpmMember(record) {
     return Boolean(
         record?.profile?.is_jpm_member
@@ -430,7 +446,6 @@ function rlSaveWorkbookBuffer(buffer, filename) {
 export async function exportRecommendationListExcel({ recommendationList = null } = {}) {
     const records = recommendationList?.records || [];
     const groupBy = recommendationList?.group_by || 'course';
-    const includeEndorsedBy = Boolean(recommendationList?.include_endorsed_by);
     const showRemarks = Boolean(recommendationList?.show_remarks);
     const highlightJpm = Boolean(recommendationList?.highlight_jpm_members);
     const budgetAllocation = recommendationList?.budget_allocation || null;
@@ -448,27 +463,46 @@ export async function exportRecommendationListExcel({ recommendationList = null 
     const approvedBy = recommendationList?.approved_by || DEFAULT_APPROVED_BY;
     const approvedByPosition = recommendationList?.approved_by_position || DEFAULT_APPROVED_BY_POSITION;
 
-    // Column layout mirrors the PDF colgroup (grouped variant).
+    // Uniformity — a column is hidden (and hoisted into the header text
+    // instead) whenever every record shares the same value, exactly like
+    // RecommendationListTemplate.vue's showSchoolColumn/showProgramColumn/
+    // showAcademicYearColumn.
+    const schoolUniform = records.length > 0 && rlUniqueCount(records, rlSchoolKey) === 1;
+    const programUniform = records.length > 0 && rlUniqueCount(records, rlProgramKey) === 1;
+    const ayTermUniform = records.length > 0 && rlUniqueCount(records, rlAyTermKey) === 1;
+    const showSchoolColumn = !schoolUniform;
+    const showProgramColumn = !programUniform;
+    const showAcademicYearColumn = !ayTermUniform;
+
+    const firstRecord = records[0] || null;
+    const uniformSchoolLabel = firstRecord?.school?.name || firstRecord?.school?.shortname || '';
+    const uniformProgramLabel = firstRecord?.program?.name || firstRecord?.program?.shortname || '';
+    const uniformAcademicYear = firstRecord?.academic_year || '';
+    const uniformTerm = firstRecord?.term || '';
+
+    // Column layout mirrors the PDF colgroup exactly — no Course, no
+    // Interview Date/By, no Endorsed By: none of those exist in the PDF.
     const columns = [
         { key: 'num', header: '#', width: 4, align: 'center', rowspan2: true },
         { key: 'name', header: 'Name', width: 26, align: 'left', rowspan2: true },
         { key: 'municipality', header: 'Municipality', width: 14, align: 'left', rowspan2: true },
-        { key: 'program', header: 'Program', width: 8, align: 'center', rowspan2: true },
-        { key: 'school', header: 'School', width: 20, align: 'left', rowspan2: true },
-        { key: 'course', header: 'Course', width: 20, align: 'left', rowspan2: true },
-        { key: 'year', header: 'Year', width: 6, align: 'center', rowspan2: true },
-        { key: 'term', header: 'Agreement Start', width: 12, align: 'center', rowspan2: true },
-        { key: 'ay', header: 'Academic Year', width: 12, align: 'center', rowspan2: true },
+        { key: 'year', header: 'Year Level', width: 8, align: 'center', rowspan2: true },
+    ];
+    if (showSchoolColumn) {
+        columns.push({ key: 'school', header: 'School', width: 20, align: 'left', rowspan2: true });
+    }
+    if (showProgramColumn) {
+        columns.push({ key: 'program', header: 'Program', width: 10, align: 'center', rowspan2: true });
+    }
+    if (showAcademicYearColumn) {
+        columns.push({ key: 'ay', header: 'Academic Year', width: 14, align: 'center', rowspan2: true });
+    }
+    columns.push(
         { key: 'projTerms', group: 'Projected', header: 'Terms', width: 8, align: 'center' },
         { key: 'projGrant', group: 'Projected', header: 'Grant', width: 14, align: 'right' },
         { key: 'projCompletion', group: 'Projected', header: 'Completion', width: 11, align: 'center' },
-        { key: 'intDate', group: 'Interview', header: 'Date', width: 12, align: 'center' },
-        { key: 'intBy', group: 'Interview', header: 'By', width: 16, align: 'center' },
-    ];
-    if (includeEndorsedBy) {
-        columns.push({ key: 'endorsed', header: 'Endorsed By', width: 14, align: 'center', rowspan2: true });
-    }
-    columns.push({ key: 'remarks', header: 'Remarks', width: 22, align: 'left', rowspan2: true });
+        { key: 'remarks', header: 'Remarks', width: 22, align: 'left', rowspan2: true },
+    );
 
     const totalColumns = columns.length;
 
@@ -476,12 +510,11 @@ export async function exportRecommendationListExcel({ recommendationList = null 
         num: (record, index) => index + 1,
         name: (record) => rlFormatApplicantName(record),
         municipality: (record) => String(record?.profile?.municipality || '').toUpperCase(),
-        program: (record) => record?.program?.shortname || '',
-        school: (record) => record?.school?.name || record?.school?.shortname || '',
-        course: (record) => record?.course?.name || record?.course?.shortname || '',
         year: (record) => record?.year_level || '',
-        term: (record) => record?.term || '',
-        ay: (record) => record?.academic_year || '',
+        school: (record) => record?.school?.name || record?.school?.shortname || '',
+        program: (record) => record?.program?.shortname || '',
+        // PDF stacks Term above Academic Year in one cell — mirror with a line break.
+        ay: (record) => [record?.term || '', record?.academic_year || ''].filter(Boolean).join('\n'),
         projTerms: (record) => {
             const terms = Number(record?.projected_term_count);
             return Number.isFinite(terms) ? terms : '';
@@ -490,9 +523,6 @@ export async function exportRecommendationListExcel({ recommendationList = null 
             ? rlFmtCurrency(record.projected_total_expense)
             : '',
         projCompletion: (record) => record?.projected_completion_year ?? '',
-        intDate: (record) => record?.interviewed_at ? moment(record.interviewed_at).format('MMM DD, YYYY') : '',
-        intBy: (record) => String(record?.interviewer?.name || '').toUpperCase(),
-        endorsed: (record) => record?.endorsed_by || '',
         remarks: (record) => (showRemarks ? String(record?.interview_remarks || record?.remarks || '') : ''),
     };
 
@@ -542,23 +572,47 @@ export async function exportRecommendationListExcel({ recommendationList = null 
     const titleRowIndex = letterheadLines.length + 2;
     worksheet.mergeCells(titleRowIndex, 1, titleRowIndex, totalColumns);
     const titleCell = worksheet.getCell(titleRowIndex, 1);
-    titleCell.value = reportTitle;
+    titleCell.value = reportTitle.toUpperCase();
     titleCell.font = { name: RL_FONT, size: 13, bold: true };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     worksheet.getRow(titleRowIndex).height = 20;
 
-    worksheet.mergeCells(titleRowIndex + 1, 1, titleRowIndex + 1, totalColumns);
-    const dateCell = worksheet.getCell(titleRowIndex + 1, 1);
+    let rowIndex = titleRowIndex + 1;
+
+    // Uniform school name — hoisted here instead of its own column.
+    if (schoolUniform) {
+        worksheet.mergeCells(rowIndex, 1, rowIndex, totalColumns);
+        const schoolCell = worksheet.getCell(rowIndex, 1);
+        schoolCell.value = uniformSchoolLabel.toUpperCase();
+        schoolCell.font = { name: RL_FONT, size: 11, bold: true };
+        schoolCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        rowIndex += 1;
+    }
+
+    // Uniform term/academic year — hoisted here instead of its own column.
+    if (ayTermUniform) {
+        worksheet.mergeCells(rowIndex, 1, rowIndex, totalColumns);
+        const ayCell = worksheet.getCell(rowIndex, 1);
+        ayCell.value = `For Academic Year ${uniformAcademicYear} ${uniformTerm}`.trim();
+        ayCell.font = { name: RL_FONT, size: 9 };
+        ayCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        rowIndex += 1;
+    }
+
+    worksheet.mergeCells(rowIndex, 1, rowIndex, totalColumns);
+    const dateCell = worksheet.getCell(rowIndex, 1);
     dateCell.value = today;
     dateCell.font = { name: RL_FONT, size: 9 };
     dateCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    rowIndex += 2;
 
-    // ── Grant label / Request No. line ────────────────────────────────
-    let rowIndex = titleRowIndex + 3;
-    if (records.length > 0) {
-        const grantCell = worksheet.getCell(rowIndex, 1);
-        grantCell.value = `Grant: ${rlPerScholarGrantLabel(records)}`;
-        grantCell.font = { name: RL_FONT, size: 8, bold: true };
+    // Program + Grant (only shown when program is uniform, matching the PDF)
+    // and Request No. (shown once the list has more than 2 records) — same row.
+    const perScholarGrantLabel = records.length > 0 ? rlPerScholarGrantLabel(records) : '';
+    if (programUniform || (listNumber && records.length > 2)) {
+        const programCell = worksheet.getCell(rowIndex, 1);
+        programCell.value = `Program: ${uniformProgramLabel}${perScholarGrantLabel ? ` | Grant: ${perScholarGrantLabel}` : ''}`;
+        programCell.font = { name: RL_FONT, size: 9, bold: true };
 
         if (listNumber && records.length > 2) {
             worksheet.mergeCells(rowIndex, totalColumns - 2, rowIndex, totalColumns);
@@ -643,7 +697,7 @@ export async function exportRecommendationListExcel({ recommendationList = null 
 
     // ── Body: grouped (PDF default for recommendation lists) or flat ──
     const writeGroupHeader = (targetRow, groupName, groupRecords) => {
-        const nameSpan = Math.min(8, totalColumns);
+        const nameSpan = Math.max(1, Math.min(4, totalColumns - 1));
         worksheet.mergeCells(targetRow, 1, targetRow, nameSpan);
         const nameCell = worksheet.getCell(targetRow, 1);
         nameCell.value = groupName;
@@ -748,11 +802,12 @@ export async function exportRecommendationListExcel({ recommendationList = null 
         }
         rowIndex += 1;
 
-        // 4-slot grid mapped onto the sheet: label1 (1-3), value1 (4-8),
-        // label2 (9-12), value2 (13-end).
-        const label1End = 3;
-        const value1End = 8;
-        const label2End = Math.min(12, totalColumns - 1);
+        // 4-slot grid mapped onto the sheet, scaled to however many columns
+        // this list actually has (as few as 8 once School/Program/Academic
+        // Year are hoisted into the header instead of shown as columns).
+        const label1End = Math.min(2, totalColumns - 3);
+        const value1End = Math.max(label1End + 1, totalColumns - 4);
+        const label2End = Math.max(value1End + 1, totalColumns - 2);
 
         const writeBudgetRow = ({ label1, value1, label2 = null, value2 = null, value1Bold = false, value1Color = null, spanValue = false }) => {
             worksheet.mergeCells(rowIndex, 1, rowIndex, label1End);
@@ -1446,4 +1501,44 @@ export async function exportInterviewedApplicantsExcel({
     // ── Save ──────────────────────────────────────────────────────────
     const buffer = await workbook.xlsx.writeBuffer();
     rlSaveWorkbookBuffer(buffer, `interviewed_applicants_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`);
+}
+
+// Plain data-dump export for the "All" approval-request audit view — just a
+// header row + data rows, no letterhead/title rows like the other exports.
+export async function exportRecommendationListAuditExcel({ records = [] } = {}) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('All Records');
+
+    worksheet.columns = [
+        { header: 'Name', key: 'name', width: 30 },
+        { header: 'Program', key: 'program', width: 14 },
+        { header: 'Course', key: 'course', width: 24 },
+        { header: 'School', key: 'school', width: 24 },
+        { header: 'Current Status', key: 'status', width: 16 },
+        { header: 'Date Approved', key: 'date_approved', width: 16 },
+        { header: 'Approval Request(s)', key: 'lists', width: 26 },
+        { header: 'Processed Outside Request', key: 'flag', width: 22 },
+    ];
+
+    worksheet.getRow(1).font = { name: RL_FONT, bold: true };
+
+    records.forEach((record) => {
+        worksheet.addRow({
+            name: formatApplicantName(record),
+            program: record?.program || '',
+            course: record?.course || '',
+            school: record?.school || '',
+            status: record?.unified_status || '',
+            date_approved: record?.date_approved || '',
+            lists: (record?.lists || []).map((l) => l.list_number).join(', '),
+            flag: record?.processed_outside_list ? 'Yes' : '',
+        });
+    });
+
+    worksheet.eachRow((row) => {
+        row.font = { ...row.font, name: RL_FONT };
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    rlSaveWorkbookBuffer(buffer, `approval_request_audit_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`);
 }
