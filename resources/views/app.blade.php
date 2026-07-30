@@ -8,6 +8,8 @@
 
     <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+    <link rel="icon" href="/images/yakap.ico" type="image/x-icon">
+
     <!-- DNS prefetch / preconnect for external resources -->
     <link rel="preconnect" href="//fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>

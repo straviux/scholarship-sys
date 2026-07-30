@@ -165,7 +165,7 @@ onMounted(fetchData);
     <!-- MultiSelect for multiple selection -->
     <MultiSelect v-if="multiple" v-model="localValue" :options="schoolOptions" filter autoFilterFocus :showClear="showClear"
         optionLabel="name" :placeholder="customPlaceholder" class="w-full" :filterFields="['name', 'shortname']"
-        :maxSelectedLabels="3" :selectedItemsLabel="'{0} schools selected'" showSelectAll
+        :maxSelectedLabels="1" :selectedItemsLabel="'{0} selected'" showSelectAll
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #chip="slotProps">
             <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">

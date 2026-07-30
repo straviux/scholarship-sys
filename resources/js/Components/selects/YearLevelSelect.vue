@@ -138,8 +138,8 @@ const selectPt = computed(() => {
 
 <template>
     <MultiSelect v-if="multiple" v-model="localValue" :options="year_levels" filter :showClear="showClear"
-        optionLabel="label" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
-        :selectedItemsLabel="'{0} year levels selected'" showSelectAll :size="iosCompact ? 'small' : undefined"
+        optionLabel="label" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="1"
+        :selectedItemsLabel="'{0} selected'" showSelectAll :size="iosCompact ? 'small' : undefined"
         :pt="selectPt">
         <template #option="slotProps">
             <div class="flex items-start uppercase">

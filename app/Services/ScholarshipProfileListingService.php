@@ -175,6 +175,17 @@ class ScholarshipProfileListingService
         return $query->orderBy('updated_at', 'desc');
     }
 
+    /**
+     * Filters like school/course/municipality/barangay/year_level/term/academic_year
+     * accept either a single value or a comma-separated list (from a multiselect filter).
+     */
+    private function splitFilterValues($value): array
+    {
+        $values = is_array($value) ? $value : explode(',', (string) $value);
+
+        return array_values(array_filter(array_map('trim', $values)));
+    }
+
     private function applyFilters(Builder $query, Request $request, LegacyAcademicTermReviewService $legacyAcademicTermReviewService): void
     {
         if ($request->filled('unified_status')) {
@@ -211,43 +222,91 @@ class ScholarshipProfileListingService
         }
 
         if ($request->filled('school')) {
-            $query->whereHas('latestScholarshipRecord.school', function ($relationQuery) use ($request) {
-                $relationQuery->where('shortname', 'like', '%' . $request->school . '%')
-                    ->orWhere('name', 'like', '%' . $request->school . '%');
-            });
+            $schools = $this->splitFilterValues($request->school);
+
+            if (!empty($schools)) {
+                $query->whereHas('latestScholarshipRecord.school', function ($relationQuery) use ($schools) {
+                    $relationQuery->where(function ($q) use ($schools) {
+                        foreach ($schools as $school) {
+                            $q->orWhere('shortname', 'like', '%' . $school . '%')
+                                ->orWhere('name', 'like', '%' . $school . '%');
+                        }
+                    });
+                });
+            }
         }
 
         if ($request->filled('course')) {
-            $query->whereHas('latestScholarshipRecord.course', function ($relationQuery) use ($request) {
-                $relationQuery->where('courses.shortname', 'like', '%' . $request->course . '%')
-                    ->orWhere('courses.name', 'like', '%' . $request->course . '%');
-            });
+            $courses = $this->splitFilterValues($request->course);
+
+            if (!empty($courses)) {
+                $query->whereHas('latestScholarshipRecord.course', function ($relationQuery) use ($courses) {
+                    $relationQuery->where(function ($q) use ($courses) {
+                        foreach ($courses as $course) {
+                            $q->orWhere('courses.shortname', 'like', '%' . $course . '%')
+                                ->orWhere('courses.name', 'like', '%' . $course . '%');
+                        }
+                    });
+                });
+            }
         }
 
         if ($request->filled('year_level')) {
-            $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($request) {
-                $relationQuery->where('year_level', 'like', '%' . $request->year_level . '%');
-            });
+            $yearLevels = $this->splitFilterValues($request->year_level);
+
+            if (!empty($yearLevels)) {
+                $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($yearLevels) {
+                    $relationQuery->where(function ($q) use ($yearLevels) {
+                        foreach ($yearLevels as $yearLevel) {
+                            $q->orWhere('year_level', 'like', '%' . $yearLevel . '%');
+                        }
+                    });
+                });
+            }
         }
 
         if ($request->filled('academic_year')) {
-            $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($request) {
-                $relationQuery->where('academic_year', $request->academic_year);
-            });
+            $academicYears = $this->splitFilterValues($request->academic_year);
+
+            if (!empty($academicYears)) {
+                $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($academicYears) {
+                    $relationQuery->whereIn('academic_year', $academicYears);
+                });
+            }
         }
 
         if ($request->filled('term')) {
-            $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($request) {
-                $relationQuery->where('term', $request->term);
-            });
+            $terms = $this->splitFilterValues($request->term);
+
+            if (!empty($terms)) {
+                $query->whereHas('latestScholarshipRecord', function ($relationQuery) use ($terms) {
+                    $relationQuery->whereIn('term', $terms);
+                });
+            }
         }
 
         if ($request->filled('municipality')) {
-            $query->where('municipality', 'like', '%' . $request->municipality . '%');
+            $municipalities = $this->splitFilterValues($request->municipality);
+
+            if (!empty($municipalities)) {
+                $query->where(function ($q) use ($municipalities) {
+                    foreach ($municipalities as $municipality) {
+                        $q->orWhere('municipality', 'like', '%' . $municipality . '%');
+                    }
+                });
+            }
         }
 
         if ($request->filled('barangay')) {
-            $query->where('barangay', 'like', '%' . $request->barangay . '%');
+            $barangays = $this->splitFilterValues($request->barangay);
+
+            if (!empty($barangays)) {
+                $query->where(function ($q) use ($barangays) {
+                    foreach ($barangays as $barangay) {
+                        $q->orWhere('barangay', 'like', '%' . $barangay . '%');
+                    }
+                });
+            }
         }
 
         if ($request->filled('name')) {

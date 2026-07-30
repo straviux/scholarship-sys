@@ -81,19 +81,41 @@ const barangayOptions = computed(() => {
     return options;
 });
 
+const isSameBarangaySelection = (left, right) => {
+    if (Array.isArray(left) || Array.isArray(right)) {
+        if (!Array.isArray(left) || !Array.isArray(right)) {
+            return false;
+        }
+
+        if (left.length !== right.length) {
+            return false;
+        }
+
+        return left.every((entry, index) => entry === right[index]);
+    }
+
+    return left === right;
+};
+
 // Local value for v-model
 const localValue = ref(resolveBarangayValue(props.modelValue));
 
 watch(
     [() => props.modelValue, () => barangayOptions.value],
     () => {
-        localValue.value = resolveBarangayValue(props.modelValue);
+        const resolvedValue = resolveBarangayValue(props.modelValue);
+
+        if (!isSameBarangaySelection(localValue.value, resolvedValue)) {
+            localValue.value = resolvedValue;
+        }
     },
     { immediate: true, deep: true }
 );
 
 watch(localValue, (val) => {
-    emit('update:modelValue', val);
+    if (!isSameBarangaySelection(val, props.modelValue)) {
+        emit('update:modelValue', val);
+    }
 }, { deep: true });
 
 const selectPt = computed(() => {
@@ -149,11 +171,13 @@ watch(
         // 1. Municipality actually changes (not initial load) ? oldMunicipalityId !== undefined
         // 2. There's no existing valid selection ? !hasExistingSelection
         // 3. Municipality changes to a specific value ? newMunicipalityId !== '' && !== null
-        const hasExistingSelection = props.modelValue && (
-            typeof props.modelValue === 'object'
-                ? props.modelValue.id
-                : props.modelValue
-        );
+        const hasExistingSelection = Array.isArray(props.modelValue)
+            ? props.modelValue.length > 0
+            : props.modelValue && (
+                typeof props.modelValue === 'object'
+                    ? props.modelValue.id
+                    : props.modelValue
+            );
 
         if (newMunicipalityId !== '' && newMunicipalityId !== null && oldMunicipalityId !== undefined && !hasExistingSelection) {
             localValue.value = props.multiple ? [] : null;
@@ -166,8 +190,8 @@ watch(
 <template>
     <!-- Use MultiSelect when multiple is true -->
     <MultiSelect v-if="multiple" v-model="localValue" :options="barangayOptions" filter :filterFields="['name']"
-        optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
-        :selectedItemsLabel="'{0} barangays selected'" showSelectAll showClear :size="iosCompact ? 'small' : undefined"
+        optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="1"
+        :selectedItemsLabel="'{0} selected'" showSelectAll showClear :size="iosCompact ? 'small' : undefined"
         :pt="selectPt">
         <template #option="slotProps">
             <div class="flex items-start uppercase">

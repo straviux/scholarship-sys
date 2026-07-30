@@ -272,6 +272,8 @@ class ApplicantController extends Controller
                 'municipality' => $request->get('municipality', ''),
                 'barangay' => $request->get('barangay', ''),
                 'year_level' => $request->get('year_level', ''),
+                'term' => $request->get('term', ''),
+                'academic_year' => $request->get('academic_year', ''),
                 'yakap_category' => $request->get('yakap_category', ''),
                 'priority_level' => $request->get('priority_level', ''),
                 'parent_name' => $request->get('parent_name', ''),
@@ -323,6 +325,8 @@ class ApplicantController extends Controller
             'municipality' => $request->get('municipality', ''),
             'barangay' => $request->get('barangay', ''),
             'year_level' => $request->get('year_level', ''),
+            'term' => $request->get('term', ''),
+            'academic_year' => $request->get('academic_year', ''),
             'priority_level' => $request->get('priority_level', ''),
             'parent_name' => $request->get('parent_name', ''),
             'date_from' => $request->get('date_from', ''),
@@ -464,6 +468,24 @@ class ApplicantController extends Controller
                         $q->orWhere('scholarship_records.year_level', 'like', '%' . $yearLevel . '%');
                     }
                 });
+            }
+        }
+
+        // Filter by term
+        if ($request->filled('term')) {
+            $terms = $this->splitFilterValues($request->term);
+
+            if (!empty($terms)) {
+                $query->whereIn('scholarship_records.term', $terms);
+            }
+        }
+
+        // Filter by academic_year
+        if ($request->filled('academic_year')) {
+            $academicYears = $this->splitFilterValues($request->academic_year);
+
+            if (!empty($academicYears)) {
+                $query->whereIn('scholarship_records.academic_year', $academicYears);
             }
         }
 

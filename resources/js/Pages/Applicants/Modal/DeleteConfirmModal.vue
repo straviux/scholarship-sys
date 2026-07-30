@@ -45,7 +45,7 @@ const deleteApplicant = () => {
 
 <template>
     <IosModal :visible="show" title="Confirm Deletion" width="460px" max-width="calc(100vw - 24px)"
-        body-style="padding: 0 16px;" :show-action="true" action-label="Delete" :loading="deleting"
+        body-style="padding: 0 16px;" :show-action="true" :loading="deleting"
         action-class="ios-nav-destructive" @action="deleteApplicant" @update:visible="val => !val && close()">
         <div v-if="applicant">
                     <!-- Warning Section -->

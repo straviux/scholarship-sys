@@ -53,18 +53,10 @@
                                     severity="info" outlined class="justify-start" />
                             </div>
                         </Popover>
-                        <!-- Export — ticked rows or the full filtered set -->
-                        <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export"
-                            @click="exportPopover.toggle($event)" severity="info" rounded outlined
-                            :loading="reportLoading" v-tooltip.bottom="'Export records'" />
-                        <Popover ref="exportPopover">
-                            <div class="flex flex-col gap-2 w-60">
-                                <AppButton @click="openExportSelected" label="Export Selected" icon="square-check"
-                                    severity="info" outlined class="justify-start" />
-                                <AppButton @click="openExportAll" label="Export All (current filters)" icon="layers"
-                                    severity="secondary" outlined class="justify-start" />
-                            </div>
-                        </Popover>
+                        <!-- Export the full filtered set. Export Selected lives in the
+                             selected-rows toolbar above the table once rows are checked. -->
+                        <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export All"
+                            @click="openExportAll" severity="info" rounded outlined :loading="reportLoading" />
                         <!-- Legacy "Generate Report" hidden in favour of Export Selected (v-if="false") -->
                         <AppButton icon="print" @click="reportTypePopover.toggle($event)" severity="secondary"
                             v-tooltip.bottom="'Generate Report'" v-if="false" rounded
@@ -98,17 +90,17 @@
                         <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                         <CourseSelect v-model="drawerFilter.course" label="name" custom-placeholder="All Courses"
                             size="small" class="w-full" :scholarship-program-id="drawerFilter.program?.id"
-                            :load-all-when-no-program="true" />
+                            :load-all-when-no-program="true" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">School</label>
                         <SchoolSelect v-model="drawerFilter.school" label="shortname" custom-placeholder="All Schools"
-                            size="small" class="w-full" :multiple="false" />
+                            size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Year Level</label>
                         <YearLevelSelect v-model="drawerFilter.year_level" custom-placeholder="All Year Levels"
-                            size="small" class="w-full" />
+                            size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Review Status</label>
@@ -118,22 +110,23 @@
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
-                        <Select v-model="drawerFilter.academic_year" :options="academicYearOptions" optionLabel="label"
-                            optionValue="value" placeholder="All Years" showClear size="small" class="w-full" />
+                        <MultiSelect v-model="drawerFilter.academic_year" :options="academicYearOptions" optionLabel="label"
+                            optionValue="value" placeholder="All Years" showClear showSelectAll size="small"
+                            class="w-full" :maxSelectedLabels="1" :selectedItemsLabel="'{0} selected'" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Term</label>
-                        <TermSelect v-model="drawerFilter.term" size="small" class="w-full" />
+                        <TermSelect v-model="drawerFilter.term" size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
                         <MunicipalitySelect v-model="drawerFilter.municipality" custom-placeholder="All Municipalities"
-                            size="small" class="w-full" />
+                            size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Barangay</label>
-                        <BarangaySelect v-model="drawerFilter.barangay" :municipality-id="drawerFilter.municipality?.id"
-                            custom-placeholder="All Barangays" size="small" class="w-full" />
+                        <BarangaySelect v-model="drawerFilter.barangay" :municipality-id="drawerFilterMunicipalityId"
+                            custom-placeholder="All Barangays" size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Grant Provision</label>
@@ -210,14 +203,8 @@
                         </Popover>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2">
-                            <RecordsSelect v-model="records" label="label" class="w-16" size="small" />
-                            <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
-                        </div>
-                        <AppButton :icon="simpleView ? 'table' : 'list'" severity="secondary" rounded outlined
-                            size="small"
-                            v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
-                            @click="simpleView = !simpleView" />
+                        <AppButton icon="settings-2" severity="secondary" rounded text size="large"
+                            v-tooltip.bottom="'Display Settings'" @click="showDisplaySettingsModal = true" />
                     </div>
                 </div>
 
@@ -231,19 +218,20 @@
                     </InputGroup>
                     <div class="flex flex-col">
                         <SchoolSelect v-model="filter.school" label="shortname" custom-placeholder="All Schools"
-                            size="small" :multiple="false" />
+                            size="small" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <MunicipalitySelect v-model="filter.municipality" custom-placeholder="All Municipalities"
-                            size="small" />
+                            size="small" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
-                            :scholarship-program-id="filter.program?.id" :load-all-when-no-program="true" />
+                            :scholarship-program-id="filter.program?.id" :load-all-when-no-program="true"
+                            :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
-                            size="small" />
+                            size="small" :multiple="true" />
                     </div>
                     <AppIcon name="sliders-horizontal" :size="24"
                         class="text-gray-400 cursor-pointer self-center" @click="openDrawer()"
@@ -258,6 +246,20 @@
                     <Tag v-for="tag in activeFilterTags" :key="tag.key" severity="secondary" rounded>
                         <span class="text-xs">{{ tag.label }}: <strong>{{ tag.display }}</strong></span>
                     </Tag>
+                </div>
+
+                <!-- Selected rows toolbar -->
+                <div v-if="selectedRows.length > 0"
+                    class="mb-4 rounded-3xl border border-yellow-200 bg-yellow-50 p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <AppIcon name="check-circle" :size="18" class="text-yellow-600" />
+                            <div class="font-semibold text-yellow-900 text-sm">{{ selectedRows.length }}
+                                record(s) selected</div>
+                        </div>
+                        <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export Selected"
+                            @click="openExportSelected" severity="info" rounded size="small" />
+                    </div>
                 </div>
 
                 <!-- DataTable View -->
@@ -900,6 +902,42 @@
                 </a>
             </template>
         </ContextMenu>
+
+        <!-- Confirmation Dialog -->
+        <IosModal v-model:visible="confirmDialogVisible" :title="confirmDialogHeader" width="calc(100vw - 2rem)"
+            max-width="450px" body-style="padding: 16px;" show-action :action-label="confirmDialogAcceptLabel"
+            @action="handleConfirmDialogAccept">
+            <div class="flex items-start gap-3">
+                <i v-if="confirmDialogIcon" :class="confirmDialogIcon" class="text-xl mt-0.5" />
+                <p class="m-0 text-sm leading-relaxed text-gray-700">{{ confirmDialogMessage }}</p>
+            </div>
+        </IosModal>
+
+        <!-- Display Settings Modal -->
+        <IosModal v-model:visible="showDisplaySettingsModal" title="Display Settings" width="calc(100vw - 2rem)"
+            max-width="400px" body-style="padding: 16px;">
+            <div class="ios-section ios-section-tight">
+                <div class="ios-section-label text-compact">Rows Per Page</div>
+                <div class="ios-card">
+                    <div class="ios-row ios-row-last">
+                        <span class="ios-row-label text-sm">Show</span>
+                        <div class="flex items-center gap-2">
+                            <RecordsSelect v-model="records" label="label" class="w-20" size="small" />
+                            <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ios-section">
+                <div class="ios-section-label text-compact">View Mode</div>
+                <div class="ios-card">
+                    <div class="ios-row ios-row-last">
+                        <span class="ios-row-label text-sm">{{ simpleView ? 'Simple View' : 'Detailed View' }}</span>
+                        <ToggleSwitch v-model="simpleView" />
+                    </div>
+                </div>
+            </div>
+        </IosModal>
     </AdminLayout>
 </template>
 
@@ -948,6 +986,15 @@ const props = defineProps({
 });
 // Page-specific state
 
+// Multiselect filters submit as a comma-joined string; single-select ones
+// keep passing through a plain value, matching each field's `getter`.
+const extractMultiValue = (value, getter) => {
+    if (Array.isArray(value)) {
+        return value.map(getter).filter(Boolean).join(',');
+    }
+    return getter(value);
+};
+
 // Filter management via composable
 const {
     filters: filter,
@@ -964,13 +1011,13 @@ const {
     filterDefs: [
         { key: 'name', type: 'text', default: '' },
         { key: 'program', type: 'select', default: '', extract: v => v?.shortname?.toLowerCase() },
-        { key: 'school', type: 'select', default: '', extract: v => v?.shortname?.toLowerCase() },
-        { key: 'course', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
-        { key: 'year_level', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
-        { key: 'academic_year', type: 'text', default: '' },
-        { key: 'term', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
-        { key: 'municipality', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
-        { key: 'barangay', type: 'select', default: '', extract: v => v?.name?.toLowerCase() },
+        { key: 'school', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.shortname?.toLowerCase()) },
+        { key: 'course', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.name?.toLowerCase()) },
+        { key: 'year_level', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.value?.toLowerCase()) },
+        { key: 'academic_year', type: 'select', default: '', multiple: true, extract: v => Array.isArray(v) ? v.filter(Boolean).join(',') : v },
+        { key: 'term', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.value?.toLowerCase()) },
+        { key: 'municipality', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.name?.toLowerCase()) },
+        { key: 'barangay', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.name?.toLowerCase()) },
         { key: 'grant_provision', type: 'text', default: null },
         { key: 'unified_status', type: 'text', default: null },
         { key: 'needs_term_review', type: 'text', default: null },
@@ -1081,10 +1128,12 @@ const activeFilterTags = computed(() => {
     };
     for (const [key, label] of Object.entries(labelMap)) {
         const val = f[key];
-        if (!val) continue;
+        if (!val || (Array.isArray(val) && val.length === 0)) continue;
         let display;
         if (key === 'needs_term_review' && val === 'needs_review') {
             display = 'Needs Review';
+        } else if (Array.isArray(val)) {
+            display = val.map(item => item?.shortname || item?.name || item?.value || item).join(', ');
         } else if (typeof val === 'object') {
             display = val.shortname || val.name || val.value || JSON.stringify(val);
         } else {
@@ -1125,6 +1174,13 @@ const showFilterDrawer = ref(false);
 const drawerFilter = ref({});
 const drawerFilterKeys = ['program', 'course', 'school', 'municipality', 'barangay', 'year_level', 'academic_year', 'term', 'grant_provision', 'needs_term_review', 'contract_status', 'voucher_status', 'encoded_by'];
 
+// BarangaySelect only scopes to a single municipality — with multiselect,
+// use the first pick as a best-effort scope.
+const drawerFilterMunicipalityId = computed(() => {
+    const municipality = drawerFilter.value.municipality;
+    return Array.isArray(municipality) ? municipality[0]?.id : municipality?.id;
+});
+
 const openDrawer = () => {
     const snapshot = {};
     for (const key of drawerFilterKeys) {
@@ -1154,6 +1210,7 @@ const clearDrawerFilters = () => {
 // UI State
 
 const simpleView = ref(localStorage.getItem('scholarProfileSimpleView') === 'true' || false);
+const showDisplaySettingsModal = ref(false);
 const expandedRows = ref([]);
 const contextMenu = ref();
 const selectedProfileForContext = ref(null);
@@ -1162,12 +1219,35 @@ const selectedProfileForContext = ref(null);
 // filtered set fetched from the server ('all'). Both feed the shared modal.
 const selectedRows = ref([]);
 const showExportModal = ref(false);
-const exportPopover = ref(null);
 const exportMode = ref('selected');
 const reportRows = ref([]);
 const reportLoading = ref(false);
 
 const exportRows = computed(() => (exportMode.value === 'all' ? reportRows.value : selectedRows.value));
+
+// Confirmation Dialog (IosModal-based, matches InterviewedApplicants/Index.vue and Applicants/Index.vue)
+const confirmDialogVisible = ref(false);
+const confirmDialogHeader = ref('');
+const confirmDialogMessage = ref('');
+const confirmDialogAcceptLabel = ref('');
+const confirmDialogIcon = ref('');
+const confirmDialogOnAccept = ref(null);
+
+function openConfirmDialog({ header, message, acceptLabel, icon, onAccept }) {
+    confirmDialogHeader.value = header;
+    confirmDialogMessage.value = message;
+    confirmDialogAcceptLabel.value = acceptLabel;
+    confirmDialogIcon.value = icon || '';
+    confirmDialogOnAccept.value = onAccept;
+    confirmDialogVisible.value = true;
+}
+
+function handleConfirmDialogAccept() {
+    confirmDialogVisible.value = false;
+    if (typeof confirmDialogOnAccept.value === 'function') {
+        confirmDialogOnAccept.value();
+    }
+}
 
 // Report title defaults to "<Status> Scholarship Records Report" for the active tab
 const STATUS_TITLE_WORD = { all: 'All', active: 'Active', completed: 'Term Completed', graduated: 'Graduated' };
@@ -1177,18 +1257,37 @@ const exportDefaultTitle = computed(() => {
 });
 
 const openExportSelected = () => {
-    exportPopover.value?.hide();
     if (selectedRows.value.length === 0) {
         toast.warn('Please select at least one record to export.');
         return;
     }
-    exportMode.value = 'selected';
-    showExportModal.value = true;
+
+    openConfirmDialog({
+        header: 'Export Selected',
+        message: `Export ${selectedRows.value.length} selected record(s)? You'll choose a format (PDF or Excel) in the next step.`,
+        acceptLabel: 'Export',
+        icon: 'pi pi-download',
+        onAccept: () => {
+            exportMode.value = 'selected';
+            showExportModal.value = true;
+        },
+    });
 };
 
 // Export every record matching the current filters/tab, not just ticked rows.
-const openExportAll = async () => {
-    exportPopover.value?.hide();
+const openExportAll = () => {
+    openConfirmDialog({
+        header: 'Export All',
+        message: 'Export all records matching the current filters? You\'ll choose a format (PDF or Excel) in the next step.',
+        acceptLabel: '',
+        icon: 'pi pi-download',
+        onAccept: () => {
+            fetchAndShowExportAll();
+        },
+    });
+};
+
+const fetchAndShowExportAll = async () => {
     if (reportLoading.value) return;
     reportLoading.value = true;
     try {

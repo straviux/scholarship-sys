@@ -174,7 +174,23 @@ const selectPt = computed(() => {
 </script>
 
 <template>
-    <Select v-model="localValue" :options="terms" filter :filterFields="['label', 'value']" autoFilterFocus :showClear="showClear"
+    <MultiSelect v-if="multiple" v-model="localValue" :options="terms" filter :filterFields="['label', 'value']"
+        :showClear="showClear" optionLabel="label" placeholder="Select Term" class="w-full" :maxSelectedLabels="1"
+        :selectedItemsLabel="'{0} selected'" showSelectAll :loading="loading"
+        :size="iosCompact ? 'small' : undefined" :pt="selectPt">
+        <template #option="slotProps">
+            <div class="flex items-start uppercase">
+                <div>{{ slotProps.option.label }}</div>
+            </div>
+        </template>
+        <template #chip="slotProps">
+            <div class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded uppercase mr-1">
+                {{ slotProps.value.label }}
+            </div>
+        </template>
+    </MultiSelect>
+
+    <Select v-else v-model="localValue" :options="terms" filter :filterFields="['label', 'value']" autoFilterFocus :showClear="showClear"
         optionLabel="label" placeholder="Select Term" class="w-full" :loading="loading"
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #value="slotProps">

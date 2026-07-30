@@ -288,8 +288,8 @@ const onSelectHide = () => {
     <!-- Use MultiSelect when multiple is true -->
     <MultiSelect ref="multiSelect" v-if="multiple" v-model="localValue" :options="courseOptions" filter
         @show="onSelectShow" @hide="onSelectHide" :filterFields="['name', 'shortname', 'field_of_study']"
-        optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="3"
-        :selectedItemsLabel="'{0} courses selected'" :loading="loading" showSelectAll :showClear="showClear"
+        optionLabel="name" :placeholder="customPlaceholder" class="w-full" :maxSelectedLabels="1"
+        :selectedItemsLabel="'{0} selected'" :loading="loading" showSelectAll :showClear="showClear"
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #option="slotProps">
             <div class="uppercase" :title="getCourseOptionTitle(slotProps.option)">

@@ -167,8 +167,8 @@ const selectPt = computed(() => {
 <template>
     <!-- Use MultiSelect when multiple is true -->
     <MultiSelect v-if="multiple" v-model="localValue" :options="municipalities" filter :filterFields="['name']"
-        optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full" :maxSelectedLabels="3"
-        :selectedItemsLabel="'{0} municipalities selected'" showSelectAll showClear
+        optionLabel="name" :placeholder="customPlaceholder" :loading="loading" class="w-full" :maxSelectedLabels="1"
+        :selectedItemsLabel="'{0} selected'" showSelectAll showClear
         :size="iosCompact ? 'small' : undefined" :pt="selectPt">
         <template #option="slotProps">
             <div class="flex items-start uppercase">

@@ -224,8 +224,8 @@ const {
         { key: 'municipality', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.name?.toLowerCase()) },
         { key: 'barangay', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.name?.toLowerCase()) },
         { key: 'year_level', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.value?.toLowerCase()) },
-        { key: 'academic_year', type: 'text', default: '' },
-        { key: 'term', type: 'select', default: '', extract: v => v?.value?.toLowerCase() },
+        { key: 'academic_year', type: 'select', default: '', multiple: true, extract: v => Array.isArray(v) ? v.filter(Boolean).join(',') : v },
+        { key: 'term', type: 'select', default: '', multiple: true, extract: v => extractMultiValue(v, item => item?.value?.toLowerCase()) },
         { key: 'yakap_category', type: 'text', default: '' },
         { key: 'priority_level', type: 'text', default: '' },
         { key: 'date_from', type: 'date', default: null },
@@ -700,6 +700,8 @@ const clearDrawerFilters = () => {
 // Simple view toggle - hide action buttons for easier viewing
 const simpleView = ref(localStorage.getItem('simpleView') !== null ? localStorage.getItem('simpleView') === 'true' : true);
 
+const showDisplaySettingsModal = ref(false);
+
 // Watch for changes in simpleView and persist to localStorage
 watch(simpleView, (newValue) => {
     localStorage.setItem('simpleView', newValue.toString());
@@ -1063,7 +1065,15 @@ const openExportSelected = () => {
 };
 
 const openExportAll = () => {
-    openReportModal();
+    openConfirmDialog({
+        header: 'Export All',
+        message: 'Export all applicants matching the current filters? You\'ll choose a format (PDF or Excel) in the next step.',
+        acceptLabel: '',
+        icon: 'pi pi-download',
+        onAccept: () => {
+            openReportModal();
+        },
+    });
 };
 
 // Confirmation Dialog (IosModal-based, matches InterviewedApplicants/Index.vue)
@@ -1270,8 +1280,7 @@ const truncateText = (text, maxLength = 80) => {
                         <!-- Export the full filtered set. Export Selected lives in the
                              selected-rows toolbar above the table once rows are checked. -->
                         <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export All"
-                            @click="openExportAll" severity="info" rounded outlined
-                            :loading="reportLoading" v-tooltip.bottom="'Export all applicants matching the current filters'" />
+                            @click="openExportAll" severity="info" rounded outlined :loading="reportLoading" />
                     </div>
                 </template>
             </Toolbar>
@@ -1293,7 +1302,7 @@ const truncateText = (text, maxLength = 80) => {
                         <label class="text-xs font-medium text-gray-600 mb-1">Course</label>
                         <CourseSelect v-model="drawerFilter.course" label="name" custom-placeholder="All Courses"
                             size="small" class="w-full" :scholarship-program-id="drawerFilter.program?.id"
-                            :multiple="true" />
+                            :load-all-when-no-program="true" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">School</label>
@@ -1307,13 +1316,13 @@ const truncateText = (text, maxLength = 80) => {
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Academic Year</label>
-                        <Select v-model="drawerFilter.academic_year" :options="academicYearOptions" optionLabel="label"
+                        <MultiSelect v-model="drawerFilter.academic_year" :options="academicYearOptions" optionLabel="label"
                             optionValue="value" placeholder="All Academic Years" size="small" class="w-full"
-                            showClear />
+                            :maxSelectedLabels="1" :selectedItemsLabel="'{0} selected'" showClear showSelectAll />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Term</label>
-                        <TermSelect v-model="drawerFilter.term" size="small" class="w-full" />
+                        <TermSelect v-model="drawerFilter.term" size="small" class="w-full" :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs font-medium text-gray-600 mb-1">Municipality</label>
@@ -1392,15 +1401,8 @@ const truncateText = (text, maxLength = 80) => {
                         </button>
                     </div>
                     <div class="flex items-center gap-3">
-                        
-                        <div class="flex items-center gap-2">
-                            <RecordsSelect v-model="records" label="label" class="w-16" size="small" />
-                            <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
-                        </div>
-                        <AppButton :icon="simpleView ? 'table' : 'list'" severity="secondary" rounded outlined
-                            size="small"
-                            v-tooltip.bottom="simpleView ? 'Switch to Detailed View' : 'Switch to Simple View'"
-                            @click="simpleView = !simpleView" />
+                        <AppButton icon="settings-2" severity="secondary" rounded text size="large"
+                            v-tooltip.bottom="'Display Settings'" @click="showDisplaySettingsModal = true" />
                     </div>
                 </div>
 
@@ -1422,7 +1424,8 @@ const truncateText = (text, maxLength = 80) => {
                     </div>
                     <div class="flex flex-col">
                         <CourseSelect v-model="filter.course" label="name" custom-placeholder="All Courses" size="small"
-                            :scholarship-program-id="filter.program?.id" :multiple="true" />
+                            :scholarship-program-id="filter.program?.id" :load-all-when-no-program="true"
+                            :multiple="true" />
                     </div>
                     <div class="flex flex-col">
                         <YearLevelSelect v-model="filter.year_level" custom-placeholder="All Year Levels"
@@ -1795,6 +1798,32 @@ const truncateText = (text, maxLength = 80) => {
             <div class="flex items-start gap-3">
                 <i v-if="confirmDialogIcon" :class="confirmDialogIcon" class="text-xl mt-0.5" />
                 <p class="m-0 text-sm leading-relaxed text-gray-700">{{ confirmDialogMessage }}</p>
+            </div>
+        </IosModal>
+
+        <!-- Display Settings Modal -->
+        <IosModal v-model:visible="showDisplaySettingsModal" title="Display Settings" width="calc(100vw - 2rem)"
+            max-width="400px" body-style="padding: 16px;">
+            <div class="ios-section ios-section-tight">
+                <div class="ios-section-label text-compact">Rows Per Page</div>
+                <div class="ios-card">
+                    <div class="ios-row ios-row-last">
+                        <span class="ios-row-label text-sm">Show</span>
+                        <div class="flex items-center gap-2">
+                            <RecordsSelect v-model="records" label="label" class="w-20" size="small" />
+                            <span class="text-sm text-gray-600">/ <strong>{{ totalRecords }}</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ios-section">
+                <div class="ios-section-label text-compact">View Mode</div>
+                <div class="ios-card">
+                    <div class="ios-row ios-row-last">
+                        <span class="ios-row-label text-sm">{{ simpleView ? 'Simple View' : 'Detailed View' }}</span>
+                        <ToggleSwitch v-model="simpleView" />
+                    </div>
+                </div>
             </div>
         </IosModal>
     </AdminLayout>
