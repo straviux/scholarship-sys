@@ -288,8 +288,13 @@ class AcademicEnrollmentTermService
             $record->date_approved = $data['date_approved'];
         }
 
-        if (array_key_exists('unified_status', $data)) {
-            $record->unified_status = $data['unified_status'] ?? 'pending';
+        // Term-edit requests always carry a `unified_status` key (even when the
+        // form never asked for one — see AcademicEnrollmentTermUpsertRequest's
+        // prepareForValidation(), which merges it in as null). Treat "key
+        // present but null" as "not actually provided" so editing a term never
+        // silently resets an existing record's real status back to pending.
+        if (array_key_exists('unified_status', $data) && $data['unified_status'] !== null) {
+            $record->unified_status = $data['unified_status'];
         } elseif ($isNewRecord) {
             $record->unified_status = 'pending';
         }

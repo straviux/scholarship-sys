@@ -51,7 +51,7 @@ const hasPreviousProfile = computed(() => currentProfileIndex.value > 0);
 const hasNextProfile = computed(() => currentProfileIndex.value < (props.applicants?.length || 0) - 1);
 const canEditRequirements = computed(() => hasPermission('applicants.view'));
 const canInterview = computed(() => (hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer'))
-    && props.activeListTab !== 'interview');
+    && props.activeListTab === 'interview');
 const canManagePriority = computed(() => hasPermission('priority.manage'));
 const canRemovePriority = computed(() => Boolean(currentApplicant.value?.priority_level) && currentApplicant.value.priority_level !== 'normal');
 const canDelete = computed(() => hasRole('administrator'));

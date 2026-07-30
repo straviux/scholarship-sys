@@ -1618,6 +1618,15 @@ const contextMenuItems = computed(() => {
                     openAssessmentDialog(selectedRecord.value, 'edit');
                 }
             }
+        },
+        {
+            label: 'View Profile',
+            icon: 'eye',
+            command: () => {
+                if (selectedRecord.value) {
+                    viewProfile(selectedRecord.value);
+                }
+            }
         }
     ];
 
@@ -1987,6 +1996,10 @@ const confirmRevert = () => {
     if (!selectedRecord.value) return;
 
     promptRevertStatus(selectedRecord.value);
+};
+
+const viewProfile = (record) => {
+    router.visit(route('scholarship.profile.show', record.profile.profile_id));
 };
 
 const formatDate = (date) => {

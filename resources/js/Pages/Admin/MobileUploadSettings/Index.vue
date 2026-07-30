@@ -2,7 +2,7 @@
 
     <Head title="Mobile Upload Settings" />
     <AdminLayout>
-        <Toast position="top-center" :life="3500" :baseZIndex="20000" />
+        <Toast position="top-center" :life="3500" :baseZIndex="20000" :onClick="onToastClick" />
 
         <AdminPageShell title="Mobile Upload Settings"
             description="Configure the mobile upload entrypoint, upload limits, token lifetime, and image optimization defaults from one iOS-styled control surface."
@@ -299,6 +299,7 @@ import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
+import { onToastClick } from '@/utils/toast';
 
 const props = defineProps({
     settings: {

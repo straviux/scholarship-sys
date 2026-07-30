@@ -1842,8 +1842,9 @@ class ScholarshipProfileController extends Controller
         }
 
         $approver = Auth::user();
+        $skippedCount = 0;
 
-        DB::transaction(function () use ($recommendationList, $approver) {
+        DB::transaction(function () use ($recommendationList, $approver, &$skippedCount) {
             $approvedAt = now();
             $approvalDate = $approvedAt->toDateString();
             $selectedRecordIds = collect($recommendationList->selected_record_ids ?? [])
@@ -1853,27 +1854,30 @@ class ScholarshipProfileController extends Controller
                 ->values();
 
             $records = ScholarshipRecord::query()
+                ->withTrashed()
                 ->whereIn('id', $selectedRecordIds)
                 ->get()
                 ->keyBy('id');
 
-            $invalidRecordIds = [];
+            $missingRecordIds = [];
+            $skippedRecordIds = [];
             $approvalService = app(ScholarshipApprovalService::class);
 
             foreach ($selectedRecordIds as $recordId) {
                 $record = $records->get($recordId);
 
                 if (!$record) {
-                    $invalidRecordIds[] = $recordId;
+                    $missingRecordIds[] = $recordId;
                     continue;
                 }
 
-                if ($record->unified_status === 'active') {
-                    continue;
-                }
-
-                if (!in_array($record->unified_status, ['interviewed', 'approved'], true)) {
-                    $invalidRecordIds[] = $recordId;
+                // Already advanced past "interviewed" (approved individually,
+                // completed, denied, withdrawn, etc.) outside this recommendation
+                // list, or soft-deleted since being added — skip it instead of
+                // blocking the whole list from being approved. See the "All"
+                // audit tab for records flagged this way.
+                if ($record->trashed() || !in_array($record->unified_status, ['interviewed', 'approved'], true)) {
+                    $skippedRecordIds[] = $recordId;
                     continue;
                 }
 
@@ -1890,12 +1894,12 @@ class ScholarshipProfileController extends Controller
                 ]);
             }
 
-            if ($invalidRecordIds !== []) {
+            if ($missingRecordIds !== []) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'recommendation_list' => sprintf(
-                        'Recommendation list %s contains record(s) that cannot be approved: %s.',
+                        'Recommendation list %s references record(s) that no longer exist: %s.',
                         $recommendationList->list_number,
-                        implode(', ', $invalidRecordIds)
+                        implode(', ', $missingRecordIds)
                     ),
                 ]);
             }
@@ -1903,6 +1907,16 @@ class ScholarshipProfileController extends Controller
             $recommendationList->approved_by_user_id = $approver?->id;
             $recommendationList->approved_at = $approvedAt;
             $recommendationList->save();
+
+            if ($skippedRecordIds !== []) {
+                $skippedCount = count($skippedRecordIds);
+
+                Log::info('recommendation_list_approval_skipped_records', [
+                    'id' => $recommendationList->id,
+                    'list_number' => $recommendationList->list_number,
+                    'skipped_record_ids' => $skippedRecordIds,
+                ]);
+            }
         });
 
         $recommendationList->refresh()->load(['creator', 'approver']);
@@ -1915,9 +1929,18 @@ class ScholarshipProfileController extends Controller
             'approved_record_ids' => $recommendationList->selected_record_ids ?? [],
         ]);
 
+        $message = sprintf('Recommendation list %s approved successfully.', $recommendationList->list_number);
+
+        if ($skippedCount > 0) {
+            $message .= sprintf(
+                ' %d record(s) were already processed outside this request and were skipped.',
+                $skippedCount
+            );
+        }
+
         return response()->json([
             'success' => true,
-            'message' => sprintf('Recommendation list %s approved successfully.', $recommendationList->list_number),
+            'message' => $message,
             'data' => $this->transformRecommendationList($recommendationList),
         ]);
     }
@@ -1936,8 +1959,9 @@ class ScholarshipProfileController extends Controller
         }
 
         $user = Auth::user();
+        $skippedCount = 0;
 
-        DB::transaction(function () use ($recommendationList, $user) {
+        DB::transaction(function () use ($recommendationList, $user, &$skippedCount) {
             $selectedRecordIds = collect($recommendationList->selected_record_ids ?? [])
                 ->map(fn($recordId) => (int) $recordId)
                 ->filter()
@@ -1945,27 +1969,33 @@ class ScholarshipProfileController extends Controller
                 ->values();
 
             $records = ScholarshipRecord::query()
+                ->withTrashed()
                 ->whereIn('id', $selectedRecordIds)
                 ->get()
                 ->keyBy('id');
 
-            $invalidRecordIds = [];
+            $missingRecordIds = [];
+            $skippedRecordIds = [];
             $approvalService = app(ScholarshipApprovalService::class);
 
             foreach ($selectedRecordIds as $recordId) {
                 $record = $records->get($recordId);
 
                 if (!$record) {
-                    $invalidRecordIds[] = $recordId;
+                    $missingRecordIds[] = $recordId;
                     continue;
                 }
 
-                if ($record->unified_status === 'interviewed' && $record->date_approved === null) {
+                if (!$record->trashed() && $record->unified_status === 'interviewed' && $record->date_approved === null) {
                     continue;
                 }
 
-                if (!in_array($record->unified_status, ['active', 'approved'], true)) {
-                    $invalidRecordIds[] = $recordId;
+                // Already moved further (completed, denied, withdrawn, etc.)
+                // outside this recommendation list, or soft-deleted since being
+                // added — skip it instead of blocking the rest of the list from
+                // being reverted.
+                if ($record->trashed() || !in_array($record->unified_status, ['active', 'approved'], true)) {
+                    $skippedRecordIds[] = $recordId;
                     continue;
                 }
 
@@ -1974,12 +2004,12 @@ class ScholarshipProfileController extends Controller
                 ]);
             }
 
-            if ($invalidRecordIds !== []) {
+            if ($missingRecordIds !== []) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'recommendation_list' => sprintf(
-                        'Recommendation list %s contains record(s) that cannot have approval reverted: %s.',
+                        'Recommendation list %s references record(s) that no longer exist: %s.',
                         $recommendationList->list_number,
-                        implode(', ', $invalidRecordIds)
+                        implode(', ', $missingRecordIds)
                     ),
                 ]);
             }
@@ -1987,6 +2017,16 @@ class ScholarshipProfileController extends Controller
             $recommendationList->approved_by_user_id = null;
             $recommendationList->approved_at = null;
             $recommendationList->save();
+
+            if ($skippedRecordIds !== []) {
+                $skippedCount = count($skippedRecordIds);
+
+                Log::info('recommendation_list_revert_skipped_records', [
+                    'id' => $recommendationList->id,
+                    'list_number' => $recommendationList->list_number,
+                    'skipped_record_ids' => $skippedRecordIds,
+                ]);
+            }
         });
 
         $recommendationList->refresh()->load(['creator', 'approver']);
@@ -1998,9 +2038,18 @@ class ScholarshipProfileController extends Controller
             'reverted_record_ids' => $recommendationList->selected_record_ids ?? [],
         ]);
 
+        $message = sprintf('Recommendation list %s approval reverted successfully.', $recommendationList->list_number);
+
+        if ($skippedCount > 0) {
+            $message .= sprintf(
+                ' %d record(s) were already processed outside this request and were skipped.',
+                $skippedCount
+            );
+        }
+
         return response()->json([
             'success' => true,
-            'message' => sprintf('Recommendation list %s approval reverted successfully.', $recommendationList->list_number),
+            'message' => $message,
             'data' => $this->transformRecommendationList($recommendationList),
         ]);
     }

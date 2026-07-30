@@ -723,7 +723,7 @@ const buildContextMenu = (rowData) => {
             icon: 'id-card',
             command: () => openProfileReviewModal(rowData)
         });
-        if ((hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer')) && activeListTab.value !== 'interview') {
+        if ((hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer')) && activeListTab.value === 'interview') {
             items.push({
                 label: 'Interview',
                 icon: 'comments',

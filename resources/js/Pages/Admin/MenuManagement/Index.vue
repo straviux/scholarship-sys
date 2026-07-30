@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import * as LucideIcons from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
+import { onToastClick } from '@/utils/toast';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -623,7 +624,7 @@ const debouncedSaveOrder = () => {
     <Head title="Manage Menu Items" />
 
     <AdminLayout>
-        <Toast position="top-center" :life="3500" :baseZIndex="20000" />
+        <Toast position="top-center" :life="3500" :baseZIndex="20000" :onClick="onToastClick" />
         <ConfirmDialog></ConfirmDialog>
 
         <!-- Delete Confirmation Dialog -->

@@ -196,7 +196,7 @@
             @close-report="closeReportDialog" @generate-report="generateReport" />
 
         <!-- Toast Notifications with higher z-index than drawer -->
-        <Toast position="top-center" :life="3500" :baseZIndex="20000" />
+        <Toast position="top-center" :life="3500" :baseZIndex="20000" :onClick="onToastClick" />
     </AdminLayout>
 </template>
 
@@ -208,6 +208,7 @@ import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
+import { onToastClick } from '@/utils/toast';
 import ReturnOfServiceDialogs from '@/Pages/ReturnOfService/Components/ReturnOfServiceDialogs.vue';
 import ReturnOfServiceReportTemplate from '@/Pages/ReturnOfService/Pdf/ReturnOfServiceReportTemplate.vue';
 import { returnOfServiceReportCss } from '@/Pages/ReturnOfService/Pdf/report-styles.js';

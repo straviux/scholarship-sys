@@ -57,7 +57,7 @@ const deleteApplicant = () => {
                                 <div>
                                     <div class="text-gray-800 dark:text-gray-300"
                                         style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">
-                                        {{ hasRole('administrator') ? `Permanently delete this applicant?` : `Delete
+                                    {{ hasRole('administrator') ? `Permanently delete this applicant?` : `Delete
                                         this applicant ? ` }}
                                     </div>
                                     <div style="font-size: 13px; color: #8E8E93; line-height: 1.4;">

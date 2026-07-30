@@ -4072,11 +4072,12 @@ div.ql-align-justify {
 	margin: 0 0 10px;
 	border-radius: 16px;
 	border: 0.5px solid rgba(0, 0, 0, 0.06);
-	background: rgba(255, 255, 255, 0.82);
+	background: rgba(255, 255, 255, 0.85);
 	-webkit-backdrop-filter: blur(20px);
 	backdrop-filter: blur(20px);
 	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
 	overflow: hidden;
+	cursor: pointer;
 }
 
 .p-toast .p-toast-message-content {
@@ -4097,6 +4098,8 @@ div.ql-align-justify {
 
 .p-toast .p-toast-message-icon svg,
 .p-toast .p-toast-message-icon .p-icon {
+	display: block;
+	margin-top:2px;
 	width: 20px;
 	height: 20px;
 }
@@ -4115,30 +4118,8 @@ div.ql-align-justify {
 
 .p-toast .p-toast-detail {
 	margin-top: 2px;
-	color: #6b7280;
+	color: #3f3f46;
 	font-weight: 400;
-}
-
-.p-toast .p-toast-close-button {
-	width: 22px;
-	height: 22px;
-	min-width: 22px;
-	border-radius: 9999px;
-	background: rgba(120, 120, 128, 0.12) !important;
-	border: 0 !important;
-	box-shadow: none !important;
-	color: #8e8e93;
-	transition: background 0.18s ease, color 0.18s ease;
-}
-
-.p-toast .p-toast-close-button:hover {
-	background: rgba(120, 120, 128, 0.2) !important;
-	color: #3a3a3c;
-}
-
-.p-toast .p-toast-close-icon {
-	width: 11px;
-	height: 11px;
 }
 
 .p-toast .p-toast-message-info .p-toast-message-icon {
@@ -4176,21 +4157,11 @@ div.ql-align-justify {
 }
 
 .dark .p-toast .p-toast-detail {
-	color: #9ca3af;
-}
-
-.dark .p-toast .p-toast-close-button {
-	background: rgba(142, 142, 147, 0.2) !important;
-	color: #9ca3af;
+	color: #d1d5db;
 }
 
 .dark .p-toast .p-toast-message-contrast .p-toast-message-icon {
 	color: #f9fafb;
-}
-
-.dark .p-toast .p-toast-close-button:hover {
-	background: rgba(142, 142, 147, 0.3) !important;
-	color: #e5e7eb;
 }
 
 /* ── PrimeVue filled variant overrides (global) ── */

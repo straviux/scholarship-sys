@@ -7,6 +7,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import logger from '@/utils/logger';
+import { onToastClick } from '@/utils/toast';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
 
@@ -289,7 +290,7 @@ onMounted(() => {
 <template>
 
     <Head title="Responsibility Centers" />
-    <Toast position="top-center" :life="3500" :baseZIndex="20000" />
+    <Toast position="top-center" :life="3500" :baseZIndex="20000" :onClick="onToastClick" />
 
     <div>
         <!-- Toolbar -->

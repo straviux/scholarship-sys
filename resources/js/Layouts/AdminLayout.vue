@@ -10,6 +10,7 @@ import { useSmoothScroll } from "@/composables/useSmoothScroll";
 import { usePermission } from "@/composable/permissions";
 import { useTheme } from "@/composables/useTheme";
 import logger from '@/utils/logger';
+import { onToastClick } from '@/utils/toast';
 
 const { hasRole, hasPermission } = usePermission();
 const { scrollToTop } = useSmoothScroll();
@@ -557,7 +558,7 @@ watch(sidebarMinimized, (isMinimized) => {
 </script>
 
 <template>
-    <Toast position="top-center" :life="3500" :baseZIndex="20000" />
+    <Toast position="top-center" :life="3500" :baseZIndex="20000" :onClick="onToastClick" />
     <ConfirmDialog></ConfirmDialog>
     <MaintenanceAlertModal />
 
