@@ -380,7 +380,7 @@ function rlSaveWorkbookBuffer(buffer, filename) {
 
 export async function exportRecommendationListExcel({ recommendationList = null } = {}) {
     const records = recommendationList?.records || [];
-    const groupBy = recommendationList?.group_by || 'none';
+    const groupBy = recommendationList?.group_by || 'course';
     const showRemarks = Boolean(recommendationList?.show_remarks);
     const highlightJpm = Boolean(recommendationList?.highlight_jpm_members);
     const budgetAllocation = recommendationList?.budget_allocation || null;
