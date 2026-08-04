@@ -229,6 +229,30 @@ class ApplicantController extends Controller
                     ->orderBy('created_at', 'desc');
             }
         ]);
+
+        // Attach list-entry metadata (when added, by whom) for the active
+        // shared-list tab, so it can show "Added on ... by ...".
+        if (in_array($activeList, ApplicantListEntry::SHARED_LISTS, true)) {
+            $listEntryDetails = $listService->detailsFor(
+                $profiles->getCollection()->pluck('profile_id')->all(),
+                $activeList
+            );
+            $profiles->getCollection()->each(function ($profile) use ($listEntryDetails) {
+                $detail = $listEntryDetails[$profile->profile_id] ?? null;
+                $profile->list_entry_added_at = $detail['added_at'] ?? null;
+                $profile->list_entry_added_by = $detail['added_by'] ?? null;
+            });
+        }
+
+        // If the search came up empty, check whether the term matches a
+        // profile that simply lives in a different pipeline tab, so the UI
+        // can point the user there instead of looking like a broken search.
+        $searchHintList = null;
+        $searchTerm = trim((string) ($request->get('global_search') ?: $request->get('name')));
+        if ($profiles->total() === 0 && $searchTerm !== '') {
+            $searchHintList = $listService->findListForSearch($searchTerm, $activeList ?: null);
+        }
+
         if (in_array($action, ['edit', 'update']) && $id) {
             $profile = ScholarshipProfile::with([
                 'scholarshipGrant.program',
@@ -312,6 +336,7 @@ class ApplicantController extends Controller
                     'listMembership' => fn() => $listService->membershipFor(
                         $profiles->getCollection()->pluck('profile_id')->all()
                     ),
+                    'searchHintList' => $searchHintList,
                 ]
             );
         }
@@ -364,6 +389,7 @@ class ApplicantController extends Controller
                 'listMembership' => fn() => $listService->membershipFor(
                     $profiles->getCollection()->pluck('profile_id')->all()
                 ),
+                'searchHintList' => $searchHintList,
             ]
         );
     }

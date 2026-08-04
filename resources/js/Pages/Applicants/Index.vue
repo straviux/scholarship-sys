@@ -97,6 +97,11 @@ const props = defineProps({
     listMembership: {
         type: Object,
         default: () => ({})
+    },
+    // When a search comes up empty here, the list key it actually lives in (if any)
+    searchHintList: {
+        type: String,
+        default: null
     }
 });
 
@@ -113,10 +118,23 @@ const listTabs = [
 
 const activeListTab = computed(() => props.activeList || 'all');
 
+// Label for the tab a "not found here" search hint points to
+const searchHintListLabel = computed(() => {
+    return listTabs.find(t => t.key === props.searchHintList)?.label || null;
+});
+
 const switchListTab = (key) => {
     if (key === activeListTab.value) return;
 
-    router.get(route('applicants.index'), key === 'all' ? {} : { list: key }, {
+    const params = buildParams(false);
+    if (form.sort && Object.values(form.sort).some(v => v)) {
+        params.sort = form.sort;
+    }
+    if (key !== 'all') {
+        params.list = key;
+    }
+
+    router.get(route('applicants.index'), params, {
         preserveScroll: true,
         preserveState: false,
     });
@@ -200,6 +218,7 @@ const {
     clear: clearFilter,
     hasMore,
     loadMore,
+    buildParams,
 } = useFilterManager({
     routeName: 'applicants.index',
     props,
@@ -1334,9 +1353,23 @@ const formatPriorityName = (priority) => {
 
                 <!-- Table View -->
                 <DataTable :value="applicants" stripedRows
-                    responsiveLayout="scroll" :emptyMessage="'No applicants to display'"
+                    responsiveLayout="scroll"
                     v-model:selection="selectedRows" dataKey="profile_id" :scrollable="true"
                     class="applicants-table ios-datatable-rounded" @row-contextmenu="onRowContextMenu" contextMenu>
+
+                    <template #empty>
+                        <div class="text-center py-6">
+                            <template v-if="searchHintListLabel">
+                                <p class="text-sm text-gray-600">Not found here — found in
+                                    <button type="button" class="font-semibold text-blue-600 hover:underline"
+                                        @click="switchListTab(searchHintList)">{{ searchHintListLabel }}</button>
+                                </p>
+                            </template>
+                            <template v-else>
+                                <p class="text-sm text-gray-500">No applicants to display</p>
+                            </template>
+                        </div>
+                    </template>
 
                     <!-- Selection Column -->
                     <Column selectionMode="multiple" :exportable="false" style="width: 3rem"></Column>
@@ -1491,6 +1524,18 @@ const formatPriorityName = (priority) => {
                                     v-if="!slotProps.data.scholarship_grant[0] && slotProps.data.has_academic_record !== false"
                                     class="text-gray-400">-</span>
                             </div>
+                        </template>
+                    </Column>
+
+                    <!-- Added To List Column: only relevant on shared pipeline tabs -->
+                    <Column v-if="['waiting', 'interview', 'endorsed'].includes(activeListTab)" header="Added"
+                        style="min-width: 140px; max-width: 160px">
+                        <template #body="slotProps">
+                            <div v-if="slotProps.data.list_entry_added_at" class="text-xs">
+                                <div class="font-medium">{{ formatDateFiled(slotProps.data.list_entry_added_at) }}</div>
+                                <div class="text-gray-500">{{ slotProps.data.list_entry_added_by || 'Unknown' }}</div>
+                            </div>
+                            <span v-else class="text-xs text-gray-400">-</span>
                         </template>
                     </Column>
 

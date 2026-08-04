@@ -20,6 +20,8 @@ class ScholarshipProfileResource extends JsonResource
             'sequence_number_by_course' => $this->sequence_number_by_course ?? null,
             'sequence_number_by_school_course' => $this->sequence_number_by_school_course ?? null,
             'daily_sequence_number' => $this->daily_sequence_number ?? null,
+            'list_entry_added_at' => $this->list_entry_added_at ?? null,
+            'list_entry_added_by' => $this->list_entry_added_by ?? null,
             'unique_id' => $this->unique_id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
