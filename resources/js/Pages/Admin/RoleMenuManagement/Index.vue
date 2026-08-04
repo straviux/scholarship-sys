@@ -121,9 +121,6 @@
                                     <AppIcon :name="menu.icon || 'link'" :size="14" class="text-gray-500" />
                                     <div class="min-w-0 flex-1">
                                         <div class="text-sm font-medium text-gray-800">{{ menu.name }}</div>
-                                        <div v-if="menu.permission" class="truncate text-xs mono text-gray-400">
-                                            {{ menu.permission }}
-                                        </div>
                                     </div>
                                     <span v-if="isChecked(menu.id)"
                                         class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
@@ -140,9 +137,6 @@
                                     <AppIcon name="chevron-right" :size="12" class="text-gray-400" />
                                     <div class="min-w-0 flex-1">
                                         <div class="text-sm text-gray-700">{{ child.name }}</div>
-                                        <div v-if="child.permission" class="truncate text-xs mono text-gray-400">
-                                            {{ child.permission }}
-                                        </div>
                                     </div>
                                     <span v-if="isChecked(child.id)"
                                         class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
@@ -307,7 +301,7 @@ const menuMatchesFilters = (menu) => {
     if (showAssignedOnly.value && !isChecked(menu.id)) return false;
     const query = searchQuery.value.trim().toLowerCase();
     if (!query) return true;
-    return [menu.name, menu.permission || ''].some(value => value.toLowerCase().includes(query));
+    return menu.name.toLowerCase().includes(query);
 };
 
 const visibleMenus = computed(() =>

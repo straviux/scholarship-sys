@@ -158,7 +158,6 @@ const form = useForm({
     name: '',
     icon: 'home',
     route: '',
-    permission: '',
     order: 0,
     parent_id: null,
     category: 'main', // Default category for backward compatibility
@@ -298,7 +297,6 @@ const openDialog = (menu = null) => {
         form.name = menu.name;
         form.icon = normalizeIconName(menu.icon);
         form.route = menu.route || '';
-        form.permission = menu.permission || '';
         form.order = menu.order;
         form.parent_id = menu.parent_id;
         form.category = menu.category || 'main';
@@ -389,7 +387,6 @@ const submitAssignToGroup = () => {
                 name: item.name,
                 icon: item.icon,
                 route: item.route || '',
-                permission: item.permission || '',
                 category: item.category || 'main',
                 order: childrenCount + currentIndex + 1,
                 parent_id: assigningToGroup.value.id,
@@ -531,7 +528,6 @@ const removeFromGroup = (item) => {
             name: item.data.name,
             icon: item.data.icon,
             route: item.data.route || '',
-            permission: item.data.permission || '',
             category: item.data.category || 'main',
             order: item.data.order,
             parent_id: null, // Remove from group
@@ -865,15 +861,6 @@ const debouncedSaveOrder = () => {
                         :options="[{ label: 'None (Top-level link)', value: null }, ...groupOptions]"
                         optionLabel="label" optionValue="value" class="w-full" />
                     <InputError :message="form.errors.parent_id" class="mt-2" />
-                </div>
-
-                <!-- Permission -->
-                <div>
-                    <InputLabel for="permission" value="Permission Required" />
-                    <TextInput id="permission" v-model="form.permission" type="text" class="block w-full mt-1"
-                        placeholder="e.g., dashboard.view" />
-                    <small class="text-gray-500">Leave empty to show to all users</small>
-                    <InputError :message="form.errors.permission" class="mt-2" />
                 </div>
 
                 <!-- Active Toggle -->

@@ -967,6 +967,15 @@ class ScholarshipProfileController extends Controller
         }
 
         $query = ScholarshipRecord::where('unified_status', 'interviewed')
+            // A profile can have more than one record sitting at "interviewed"
+            // (e.g. re-applications); always surface the latest one.
+            ->whereRaw('scholarship_records.id = (
+                SELECT sr2.id FROM scholarship_records sr2
+                WHERE sr2.profile_id = scholarship_records.profile_id
+                    AND sr2.unified_status = \'interviewed\'
+                ORDER BY sr2.created_at DESC
+                LIMIT 1
+            )')
             ->with([
                 'profile' => function ($q) {
                     $q->select(
@@ -1105,7 +1114,7 @@ class ScholarshipProfileController extends Controller
             return [];
         }
 
-        return ScholarshipRecord::query()
+        $records = ScholarshipRecord::query()
             ->whereIn('id', array_keys($listsByRecordId))
             ->with([
                 'profile' => fn($q) => $q->select('profile_id', 'first_name', 'last_name', 'middle_name'),
@@ -1113,26 +1122,40 @@ class ScholarshipProfileController extends Controller
                 'course' => fn($q) => $q->select('courses.id', 'courses.shortname'),
                 'school' => fn($q) => $q->select('schools.id', 'schools.shortname'),
             ])
-            ->get()
-            ->map(function (ScholarshipRecord $record) use ($listsByRecordId) {
-                $memberships = $listsByRecordId[$record->id] ?? [];
+            ->get();
+
+        // A profile can be represented by more than one record across
+        // different approval requests (e.g. re-applications); always read
+        // the latest record for that profile, merging in the list
+        // memberships recorded against its older records so none of the
+        // audit history is lost.
+        return $records
+            ->groupBy('profile_id')
+            ->map(function ($profileRecords) use ($listsByRecordId) {
+                $latestRecord = $profileRecords->sortByDesc('created_at')->first();
+
+                $memberships = $profileRecords
+                    ->flatMap(fn(ScholarshipRecord $record) => $listsByRecordId[$record->id] ?? [])
+                    ->unique('list_number')
+                    ->values()
+                    ->all();
 
                 return [
-                    'id' => $record->id,
+                    'id' => $latestRecord->id,
                     'profile' => [
-                        'first_name' => $record->profile?->first_name,
-                        'last_name' => $record->profile?->last_name,
-                        'middle_name' => $record->profile?->middle_name,
+                        'first_name' => $latestRecord->profile?->first_name,
+                        'last_name' => $latestRecord->profile?->last_name,
+                        'middle_name' => $latestRecord->profile?->middle_name,
                     ],
-                    'program' => $record->program?->shortname,
-                    'course' => $record->course?->shortname,
-                    'school' => $record->school?->shortname,
-                    'unified_status' => $record->unified_status,
-                    'date_approved' => $record->date_approved?->toDateString(),
+                    'program' => $latestRecord->program?->shortname,
+                    'course' => $latestRecord->course?->shortname,
+                    'school' => $latestRecord->school?->shortname,
+                    'unified_status' => $latestRecord->unified_status,
+                    'date_approved' => $latestRecord->date_approved?->toDateString(),
                     'lists' => $memberships,
                     // Already moved past "interviewed" while every list containing it
                     // is still unapproved — status changed outside the list workflow.
-                    'processed_outside_list' => $record->unified_status !== 'interviewed'
+                    'processed_outside_list' => $latestRecord->unified_status !== 'interviewed'
                         && collect($memberships)->every(fn($m) => $m['approved_at'] === null),
                 ];
             })

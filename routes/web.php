@@ -22,7 +22,6 @@ use App\Http\Controllers\JpmTaggingController;
 use App\Http\Controllers\MobileUploadController;
 use App\Http\Controllers\PaymentMonitoringController;
 use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\PermissionManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\ResponsibilityCenterController;
@@ -115,7 +114,7 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
 | Access control (user / role / permission management)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->group(function () {
+Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(function () {
     // Unified Access Control Page
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
 
@@ -139,10 +138,6 @@ Route::middleware(['auth', 'check.role:users,access-control', 'maintenance'])->g
     Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->middleware('check.permission:permissions.manage')->name('permissions.update');
     Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->middleware('check.permission:permissions.manage')->name('permissions.destroy');
     Route::post('/permissions/cleanup/run', [PermissionController::class, 'cleanup'])->middleware('check.permission:permissions.manage')->name('permissions.cleanup');
-
-    // Role-Permission management (for inline assignments)
-    Route::post('/roles/permissions/attach', [RoleController::class, 'attachPermission'])->middleware('check.permission:roles.manage')->name('roles.permissions.attach');
-    Route::delete('/roles/{role}/permissions/{permission}', [RoleController::class, 'detachPermission'])->middleware('check.permission:roles.manage')->name('roles.permissions.detach');
 });
 
 /*
@@ -168,10 +163,6 @@ Route::middleware(['auth', 'check.role:administrator', 'maintenance'])->group(fu
     // Mobile Upload Settings
     Route::get('/admin/mobile-upload-settings', [MobileUploadSettingController::class, 'index'])->name('admin.mobile-upload-settings.index');
     Route::post('/admin/mobile-upload-settings', [MobileUploadSettingController::class, 'update'])->name('admin.mobile-upload-settings.update');
-
-    // Role Permissions API (used by AccessControl.vue)
-    Route::post('/permission-management/update-role', [PermissionManagementController::class, 'updateRolePermissions'])->middleware('check.permission:permissions.manage')->name('permissions.update-role');
-    Route::post('/permission-management/toggle', [PermissionManagementController::class, 'togglePermission'])->middleware('check.permission:permissions.manage')->name('permissions.toggle');
 
     // System Options
     Route::get('/system-options', [SystemOptionController::class, 'index'])->name('system-options.index');
@@ -439,8 +430,8 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Fund transactions, payment monitoring & budget reports ──────────
     Route::get('/fund-transactions', fn() => inertia('FundTransactions/Index'))
-        ->middleware('check.permission:fund_transactions.view')
-        ->name('fund_transactions.index');
+        ->middleware('check.permission:fund-transactions.view')
+        ->name('fund-transactions.index');
 
     Route::get('/payment-monitoring', [PaymentMonitoringController::class, 'index'])
         ->middleware('check.permission:payment-monitoring.view')

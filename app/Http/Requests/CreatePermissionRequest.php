@@ -27,9 +27,20 @@ class CreatePermissionRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('permissions', 'name')->ignore($this->role)
+                'regex:/^[a-z0-9]+(-[a-z0-9]+)*\.[a-z0-9]+(-[a-z0-9]+)*$/',
+                Rule::unique('permissions', 'name')->ignore($this->route('permission'))
             ],
             'description' => ['nullable', 'string', 'max:255']
+        ];
+    }
+
+    /**
+     * Get custom error messages for validator errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'name.regex' => 'Permission name must follow the "resource.action" format using lowercase letters and hyphens (e.g. reports.view, return-of-service.export).',
         ];
     }
 }

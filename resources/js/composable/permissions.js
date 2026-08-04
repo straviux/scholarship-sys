@@ -52,28 +52,6 @@ export function usePermission() {
 	};
 
 	/**
-	 * Check if user has access to a specific page (based on role-page assignment)
-	 * @param {string|string[]} page - Page name(s) to check
-	 * @returns {boolean}
-	 */
-	const hasPageAccess = (page) => {
-		if (typeof page === 'string') {
-			return auth.user.pages?.includes(page) ?? false;
-		}
-		// If array, check if user has access to any of the pages
-		return page.some((p) => auth.user.pages?.includes(p) ?? false);
-	};
-
-	/**
-	 * Check if user has access to all of the specified pages
-	 * @param {string[]} pages - Array of page names
-	 * @returns {boolean}
-	 */
-	const hasAllPageAccess = (pages) => {
-		return pages.every((page) => auth.user.pages?.includes(page) ?? false);
-	};
-
-	/**
 	 * Check if user is administrator
 	 * @returns {boolean}
 	 */
@@ -101,8 +79,6 @@ export function usePermission() {
 		hasAllRoles,
 		hasPermission,
 		hasAllPermissions,
-		hasPageAccess,
-		hasAllPageAccess,
 		isAdmin,
 		can,
 	};

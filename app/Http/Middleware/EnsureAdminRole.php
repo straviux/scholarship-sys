@@ -19,7 +19,7 @@ class EnsureAdminRole
 
         $user = auth()->user();
 
-        if (!$user->hasRole(['administrator', 'admin'])) {
+        if (!$user->hasRole('administrator')) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 

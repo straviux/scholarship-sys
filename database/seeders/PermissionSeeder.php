@@ -18,6 +18,9 @@ class PermissionSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
+            // Dashboard
+            ['name' => 'dashboard.view', 'description' => 'View dashboard'],
+
             // Applicants/Profiles Module
             ['name' => 'applicants.view', 'description' => 'View applicant profiles'],
             ['name' => 'applicants.create', 'description' => 'Create new applicants'],
@@ -98,6 +101,15 @@ class PermissionSeeder extends Seeder
             ['name' => 'return-of-service.delete', 'description' => 'Delete return of service records'],
             ['name' => 'return-of-service.export', 'description' => 'Export return of service data'],
 
+            // Fund Transactions Module
+            ['name' => 'fund-transactions.view', 'description' => 'View fund transactions'],
+
+            // Payment Monitoring Module
+            ['name' => 'payment-monitoring.view', 'description' => 'View payment monitoring'],
+
+            // Responsibility Centers Module
+            ['name' => 'responsibility-centers.view', 'description' => 'View responsibility centers'],
+
             // Admin Management
             ['name' => 'admin.manage', 'description' => 'Manage admin panel'],
             ['name' => 'admin.access', 'description' => 'Access admin panel'],
@@ -117,6 +129,7 @@ class PermissionSeeder extends Seeder
         // Assign permissions to program_manager role - like moderator but with approval capabilities
         $programManagerRole = Role::firstOrCreate(['name' => 'program_manager']);
         $programManagerPermissions = [
+            'dashboard.view',
             'applicants.view',
             'applicants.create',
             'applicants.edit',
@@ -148,6 +161,7 @@ class PermissionSeeder extends Seeder
         // Assign limited permissions to moderator role
         $moderatorRole = Role::firstOrCreate(['name' => 'moderator']);
         $moderatorPermissions = [
+            'dashboard.view',
             'applicants.view',
             'applicants.create',
             'applicants.edit',
@@ -175,6 +189,7 @@ class PermissionSeeder extends Seeder
         // Assign view-only permissions to user role
         $userRole = Role::firstOrCreate(['name' => 'user']);
         $userPermissions = [
+            'dashboard.view',
             'applicants.view',
             'scholarships.view',
             'disbursements.view',
@@ -193,6 +208,7 @@ class PermissionSeeder extends Seeder
         // Assign JPM permissions to jpm_admin role
         $jpmRole = Role::firstOrCreate(['name' => 'jpm_admin']);
         $jpmPermissions = [
+            'dashboard.view',
             'applicants.view',
             'scholarships.view',
             'jpm.view',
@@ -205,6 +221,12 @@ class PermissionSeeder extends Seeder
             'documents.download',
         ];
         $jpmRole->syncPermissions($jpmPermissions);
+
+        // OJT and Screening Officer roles exist in production but were never
+        // formally seeded. Created here with no default permissions —
+        // assign them manually via the Access Control page.
+        Role::firstOrCreate(['name' => 'ojt']);
+        Role::firstOrCreate(['name' => 'screening_officer']);
 
         $this->command->info('Permissions seeded successfully!');
         $this->command->info('Total permissions: ' . Permission::count());

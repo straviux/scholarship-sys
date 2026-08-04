@@ -42,7 +42,7 @@ let currentMaintenanceCheckInterval = null;
 
 // Check if user is admin
 function isAdmin() {
-    return hasRole('admin') || hasRole('administrator');
+    return hasRole('administrator');
 }
 
 // Check if maintenance is currently active

@@ -146,7 +146,6 @@ class MenuService
                         'route' => $item->route ?? null,
                         'order' => $item->order ?? 0,
                         'is_group' => $item->is_group ?? false,
-                        'permission' => $item->permission ?? null,
                     ];
 
                     // Load children if they exist
@@ -159,7 +158,6 @@ class MenuService
                                 'route' => $child->route ?? null,
                                 'order' => $child->order ?? 0,
                                 'is_group' => $child->is_group ?? false,
-                                'permission' => $child->permission ?? null,
                             ];
                         })->filter(function ($child) {
                             return $child['id'] !== null; // Filter out invalid children
@@ -188,22 +186,6 @@ class MenuService
     public function getMenuItem(int $id): ?MenuItem
     {
         return MenuItem::find($id);
-    }
-
-    /**
-     * Check if a menu item is accessible for a user
-     */
-    public function isAccessible($user, MenuItem $item): bool
-    {
-        if (!$item->is_active) {
-            return false;
-        }
-
-        if (!$item->permission) {
-            return true;
-        }
-
-        return $user->can($item->permission);
     }
 
     /**

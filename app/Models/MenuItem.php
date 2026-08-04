@@ -71,35 +71,4 @@ class MenuItem extends Model
 
         return $query->with('children')->get();
     }
-
-    /**
-     * Get menus filtered by user permissions
-     */
-    public static function getMenusForUser($user)
-    {
-        return self::where('is_active', true)
-            ->whereNull('parent_id')
-            ->get()
-            ->filter(function ($menu) use ($user) {
-                // If no permission required, show it
-                if (!$menu->permission) {
-                    return true;
-                }
-                // Check if user has the required permission
-                return $user->hasPermissionTo($menu->permission);
-            })
-            ->map(function ($menu) use ($user) {
-                $menu->children = $menu->children()
-                    ->get()
-                    ->filter(function ($child) use ($user) {
-                        if (!$child->permission) {
-                            return true;
-                        }
-                        return $user->hasPermissionTo($child->permission);
-                    })
-                    ->values();
-                return $menu;
-            })
-            ->values();
-    }
 }

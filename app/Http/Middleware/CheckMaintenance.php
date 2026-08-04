@@ -14,7 +14,7 @@ class CheckMaintenance
     public function handle(Request $request, Closure $next)
     {
         // Allow admin users during maintenance
-        if (auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('administrator'))) {
+        if (auth()->check() && auth()->user()->hasRole('administrator')) {
             return $next($request);
         }
 

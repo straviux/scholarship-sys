@@ -610,9 +610,18 @@ const closePermissionModal = () => {
     permissionForm.reset();
 };
 
+const PERMISSION_NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*\.[a-z0-9]+(-[a-z0-9]+)*$/;
+
+const isPermissionNameValid = computed(() => PERMISSION_NAME_PATTERN.test(permissionForm.name.trim()));
+
 const savePermission = async () => {
     if (!permissionForm.name.trim()) {
         toast.error('Permission name is required');
+        return;
+    }
+
+    if (!isPermissionNameValid.value) {
+        toast.error('Permission name must follow the "resource.action" format using lowercase letters and hyphens (e.g. reports.view, return-of-service.export).');
         return;
     }
 
@@ -638,13 +647,13 @@ const savePermission = async () => {
         closePermissionModal();
         router.reload({ only: ['permissions'] });
     } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to save permission');
+        toast.error(error.response?.data?.errors?.name?.[0] || error.response?.data?.message || 'Failed to save permission');
     }
 };
 
 // Delete permission
 const showConfirmDeletePermissionModal = ref(false);
-const permissionToDelete = ref(null);
+const permissionToDelete = ref({ id: null, name: null });
 
 const confirmDeletePermission = (permission) => {
     permissionToDelete.value = permission;
@@ -653,7 +662,7 @@ const confirmDeletePermission = (permission) => {
 
 const closeDeletePermissionModal = () => {
     showConfirmDeletePermissionModal.value = false;
-    permissionToDelete.value = null;
+    permissionToDelete.value = { id: null, name: null };
 };
 
 const deletePermission = async () => {
@@ -1338,14 +1347,19 @@ const runCleanup = async () => {
         <!-- Create/Edit Permission Modal -->
         <IosModal :visible="showPermissionModal" :title="isEditingPermission ? 'Edit Permission' : 'Create Permission'"
             :show-action="true"
-            :action-disabled="!permissionForm.name" @action="savePermission" @close="closePermissionModal"
+            :action-disabled="!permissionForm.name || !isPermissionNameValid" @action="savePermission" @close="closePermissionModal"
             @update:visible="showPermissionModal = $event">
             <div class="space-y-4 py-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Permission Name *</label>
                     <InputText v-model="permissionForm.name" placeholder="e.g., users.create, reports.view"
                         class="w-full" />
-                    <p class="text-xs text-gray-500 mt-1">Format: resource.action (e.g., users.create, reports.view)</p>
+                    <p v-if="permissionForm.name.trim() && !isPermissionNameValid" class="text-xs text-red-600 mt-1">
+                        Must follow "resource.action" format using lowercase letters and hyphens (e.g. reports.view,
+                        return-of-service.export).
+                    </p>
+                    <p v-else class="text-xs text-gray-500 mt-1">Format: resource.action (e.g., users.create,
+                        reports.view)</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -1387,10 +1401,6 @@ const runCleanup = async () => {
                         <li class="flex items-center gap-2">
                             <AppIcon name="check" class="text-green-500 text-xs" />
                             <span>Removing orphaned role-permission records</span>
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <AppIcon name="check" class="text-green-500 text-xs" />
-                            <span>Removing orphaned user-permission records</span>
                         </li>
                         <li class="flex items-center gap-2">
                             <AppIcon name="check" class="text-green-500 text-xs" />
@@ -1440,31 +1450,11 @@ const runCleanup = async () => {
 
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
                         <div class="flex items-center gap-2">
-                            <AppIcon name="trash" class="text-sm text-red-600" />
-                            <span class="text-sm text-gray-700">Orphaned user permissions removed:</span>
-                        </div>
-                        <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
-                            {{ cleanupResults.orphaned_user_permissions || 0 }}
-                        </span>
-                    </div>
-
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
-                        <div class="flex items-center gap-2">
                             <AppIcon name="copy" class="text-sm text-orange-600" />
                             <span class="text-sm text-gray-700">Duplicate role assignments removed:</span>
                         </div>
                         <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
                             {{ cleanupResults.duplicate_role_permissions || 0 }}
-                        </span>
-                    </div>
-
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
-                        <div class="flex items-center gap-2">
-                            <AppIcon name="copy" class="text-sm text-orange-600" />
-                            <span class="text-sm text-gray-700">Duplicate user assignments removed:</span>
-                        </div>
-                        <span class="font-semibold text-lg text-gray-800 min-w-[50px] text-right">
-                            {{ cleanupResults.duplicate_user_permissions || 0 }}
                         </span>
                     </div>
 
@@ -1475,9 +1465,7 @@ const runCleanup = async () => {
                         </div>
                         <span class="font-bold text-lg text-blue-800">
                             {{ (cleanupResults.orphaned_role_permissions || 0) +
-                                (cleanupResults.orphaned_user_permissions || 0) +
-                                (cleanupResults.duplicate_role_permissions || 0) +
-                                (cleanupResults.duplicate_user_permissions || 0) }}
+                                (cleanupResults.duplicate_role_permissions || 0) }}
                         </span>
                     </div>
                 </div>

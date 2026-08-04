@@ -86,7 +86,7 @@ const isAdministrator = () => {
     const user = $page.props.auth?.user;
     if (!user) return false;
     if (user.roles && Array.isArray(user.roles)) {
-        return user.roles.some(role => (role.name || role) === 'admin' || (role.name || role) === 'administrator');
+        return user.roles.some(role => (role.name || role) === 'administrator');
     }
     return false;
 };
