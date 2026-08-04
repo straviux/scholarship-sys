@@ -7,7 +7,7 @@ import { ref, watch } from "vue";
 import moment from "moment";
 import ProgramModal from "@/Pages/ScholarshipProgram/Modal/ProgramModal.vue";
 import RequirementModal from "./Modal/RequirementModal.vue";
-import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
@@ -196,52 +196,19 @@ const closeDeleteModal = () => {
         </div>
 
         <!-- iOS Delete Confirmation Dialog -->
-        <IosModal :visible="showConfirmDeleteModal" title="Confirm Deletion" width="460px" max-width="95vw"
-            body-style="padding: 0 16px;" :show-action="true" action-label="Delete"
-            action-class="ios-nav-destructive" @action="deleteProgram"
-            @update:visible="val => !val && closeDeleteModal()">
-            <div v-if="selectedProgram">
-                        <!-- Warning -->
-                        <div class="ios-section">
-                            <div class="ios-card">
-                                <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
-                                    <AppIcon name="exclamation-triangle"
-                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;" />
-                                    <div>
-                                        <div
-                                            style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
-                                            Permanently delete this program?
-                                        </div>
-                                        <div style="font-size: 13px; color: #8E8E93; line-height: 1.4;">
-                                            This action cannot be undone and may affect associated courses and
-                                            applications.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Program Info -->
-                        <div class="ios-section">
-                            <div class="ios-section-label text-compact">Program</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <span class="ios-row-label text-sm">Name</span>
-                                    <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
-                                        {{ selectedProgram.name }}
-                                    </span>
-                                </div>
-                                <div class="ios-row ios-row-last">
-                                    <span class="ios-row-label text-sm">Shortname</span>
-                                    <span style="font-size: 13px; color: #8E8E93;">{{ selectedProgram.shortname
-                                    }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="height: 20px;"></div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showConfirmDeleteModal"
+            title="Confirm Deletion"
+            width="460px"
+            message="Permanently delete this program? This action cannot be undone and may affect associated courses and applications."
+            data-label="Program"
+            :data="selectedProgram ? [
+                { label: 'Name', value: selectedProgram.name, color: '#FF3B30' },
+                { label: 'Shortname', value: selectedProgram.shortname },
+            ] : []"
+            @accept="deleteProgram"
+            @update:visible="val => !val && closeDeleteModal()"
+        />
 
         <!-- Program Create/Edit Modal -->
         <ProgramModal v-model:visible="showModal" :program="editingProgram" @saved="handleSaved" />

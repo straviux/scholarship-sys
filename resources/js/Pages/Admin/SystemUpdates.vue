@@ -149,58 +149,30 @@
         </IosModal>
 
         <!-- Delete Confirmation Dialog -->
-        <IosModal :visible="showDeleteDialog" title="Confirm Deletion" width="28rem" max-width="95vw"
-            body-style="padding: 16px;" @update:visible="showDeleteDialog = $event">
-
-            <div class="flex items-start space-x-3">
-                <AppIcon name="exclamation-triangle" :size="28" class="text-red-500 mt-1 shrink-0" />
-                <div class="flex-1">
-                    <p class="text-gray-700 mb-3">
-                        Are you sure you want to permanently delete this system update?
-                    </p>
-                    <div class="bg-gray-50 p-3 rounded-md mb-3">
-                        <h4 class="font-medium text-gray-900 mb-1">{{ updateToDelete?.title }}</h4>
-                        <p class="text-sm text-gray-600 line-clamp-2">{{ updateToDelete?.content }}</p>
-                    </div>
-                    <p class="text-sm text-red-600 font-medium">
-                        This action cannot be undone and will permanently remove the update and all associated data.
-                    </p>
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button @click="cancelDelete" label="Cancel" severity="secondary" outlined size="small" />
-                <AppButton @click="confirmDelete" :label="isDeleting ? 'Deleting...' : 'Delete'" severity="danger"
-                    icon="trash" :disabled="isDeleting" size="small" />
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteDialog"
+            title="Confirm Deletion"
+            width="450px"
+            message="Are you sure you want to permanently delete this system update? This action cannot be undone and will permanently remove the update and all associated data."
+            :data="updateToDelete ? [{ label: 'Title', value: updateToDelete.title, color: '#FF3B30' }] : []"
+            :loading="isDeleting"
+            @accept="confirmDelete"
+            @close="cancelDelete"
+        />
 
         <!-- Deactivate Confirmation Dialog -->
-        <IosModal :visible="showDeactivateDialog" title="Confirm Deactivation" width="28rem" max-width="95vw"
-            body-style="padding: 16px;" @update:visible="showDeactivateDialog = $event">
-
-            <div class="flex items-start space-x-3">
-                <AppIcon name="exclamation-triangle" :size="28" class="text-orange-500 mt-1 shrink-0" />
-                <div class="flex-1">
-                    <p class="text-gray-700 mb-3">
-                        Are you sure you want to deactivate this system update?
-                    </p>
-                    <div class="bg-gray-50 p-3 rounded-md mb-3">
-                        <h4 class="font-medium text-gray-900 mb-1">{{ updateToDeactivate?.title }}</h4>
-                        <p class="text-sm text-gray-600 line-clamp-2">{{ updateToDeactivate?.content }}</p>
-                    </div>
-                    <p class="text-sm text-orange-600">
-                        This update will no longer be visible to users, but can be reactivated later.
-                    </p>
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button @click="cancelDeactivate" label="Cancel" severity="secondary" outlined size="small" />
-                <AppButton @click="confirmDeactivate" :label="isDeactivating ? 'Deactivating...' : 'Deactivate'"
-                    severity="warning" icon="eye-slash" :disabled="isDeactivating" size="small" />
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeactivateDialog"
+            title="Confirm Deactivation"
+            width="450px"
+            message="Are you sure you want to deactivate this system update? This update will no longer be visible to users, but can be reactivated later."
+            icon-color="#f97316"
+            action-class=""
+            :data="updateToDeactivate ? [{ label: 'Title', value: updateToDeactivate.title }] : []"
+            :loading="isDeactivating"
+            @accept="confirmDeactivate"
+            @close="cancelDeactivate"
+        />
     </AdminLayout>
 </template>
 
@@ -211,6 +183,7 @@ import { usePermission } from '@/composable/permissions'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import AdminPageShell from '@/Components/admin/AdminPageShell.vue'
 import IosModal from '@/Components/ui/IosModal.vue'
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue'
 import axios from 'axios'
 
 

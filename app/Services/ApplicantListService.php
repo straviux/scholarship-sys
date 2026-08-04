@@ -67,15 +67,6 @@ class ApplicantListService
     }
 
     /**
-     * Profile ids currently sitting in a shared list — these are hidden from the
-     * main Applicants tab.
-     */
-    public function sharedListProfileIds(): array
-    {
-        return ApplicantListEntry::shared()->pluck('profile_id')->all();
-    }
-
-    /**
      * Counts for the tab badges.
      */
     public function counts(): array

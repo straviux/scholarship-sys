@@ -5,7 +5,7 @@ import AppButton from '@/Components/ui/AppButton.vue';
 import { Head, router } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import RequirementModal from "./Modal/RequirementModal.vue";
-import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
@@ -145,32 +145,21 @@ const deleteRequirement = () => {
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <IosModal :visible="showDeleteModal" title="Delete Requirement" width="420px" max-width="95vw"
-            body-style="padding: 16px;" @update:visible="showDeleteModal = $event"
-            @close="selectedRequirement = null">
-            <div class="flex items-start gap-4 py-2">
-                <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <AppIcon name="trash" class="text-red-600 text-sm" />
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm text-gray-700 mb-3">
-                        Are you sure you want to delete this requirement? This cannot be undone.
-                    </p>
-                    <div v-if="selectedRequirement" class="bg-[#f9f9fb] border border-[#e5e5ea] rounded-xl px-4 py-3">
-                        <div class="font-semibold text-gray-800 text-sm">{{ selectedRequirement.name }}</div>
-                        <div class="text-xs text-[#8e8e93] mt-0.5" v-if="selectedRequirement.description">
-                            {{ selectedRequirement.description }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" outlined rounded size="small"
-                    @click="showDeleteModal = false; selectedRequirement = null" />
-                <Button label="Delete" severity="danger" rounded size="small" :loading="deleting"
-                    @click="deleteRequirement" />
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteModal"
+            title="Delete Requirement"
+            width="420px"
+            icon="trash"
+            message="Are you sure you want to delete this requirement? This cannot be undone."
+            :data="selectedRequirement ? [
+                { label: 'Name', value: selectedRequirement.name, color: '#FF3B30' },
+                ...(selectedRequirement.description ? [{ label: 'Description', value: selectedRequirement.description }] : []),
+            ] : []"
+            :loading="deleting"
+            @accept="deleteRequirement"
+            @update:visible="showDeleteModal = $event"
+            @close="selectedRequirement = null"
+        />
 
         <!-- Requirement Modal -->
         <RequirementModal v-model:visible="showModal" :requirement="editingRequirement" @saved="handleSaved" />

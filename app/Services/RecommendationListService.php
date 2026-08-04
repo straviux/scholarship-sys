@@ -534,14 +534,9 @@ class RecommendationListService
     {
         $prefix = 'RFA-' . now()->format('Ymd');
 
-        $latestListNumber = RecommendationList::withTrashed()
-            ->where('list_number', 'like', $prefix . '-%')
-            ->orderByDesc('list_number')
-            ->value('list_number');
-
-        $nextSequence = $latestListNumber
-            ? ((int) substr($latestListNumber, -4)) + 1
-            : 1;
+        // Sequence is global across all requests ever created (not reset daily),
+        // so the last 4 digits reflect the total number of requests created so far.
+        $nextSequence = RecommendationList::withTrashed()->count() + 1;
 
         return sprintf('%s-%04d', $prefix, $nextSequence);
     }

@@ -1,13 +1,12 @@
 <template>
     <IosModal :visible="visible" :title="mode === 'edit' ? 'Edit Application' : 'Application Form'"
-        width="calc(100vw - 24px)" max-width="900px" :draggable="!isMaximized"
-        :modal-content-style="isMaximized
-            ? { width: '100vw', maxWidth: '100vw', height: '100vh', borderRadius: '0', transform: 'none' }
-            : { maxHeight: '90vh' }"
-        :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: 0 }"
+        width="calc(100vw - 24px)" max-width="900px"
+        :modal-content-style="{ minHeight: '78vh', maxHeight: '92vh' }"
+        body-class="applicant-form-body"
+        :body-style="{ display: 'flex', flexDirection: 'column', minHeight: 0 }"
         @update:visible="val => !val && closeModal()">
         <template #header-left>
-            <button v-if="activeStep !== '1'" class="ios-nav-btn text-nav"
+            <button v-if="activeStep !== '1'" class="ios-nav-btn ios-nav-cancel text-nav"
                 @click="activeStep = String(Number(activeStep) - 1)" v-tooltip.bottom="'Back'">
                 <AppIcon name="chevron-left" :size="16" />
             </button>
@@ -18,7 +17,6 @@
 
         <template #header-right>
             <div class="ios-nav-right">
-                <span class="ios-nav-step-text text-xs">{{ activeStep }} of 3</span>
                 <button v-if="activeStep === '1'" class="ios-nav-btn ios-nav-btn--inline text-nav" @click="handleNextStep1"
                     :disabled="!canProceedStep1 || isValidating" v-tooltip.bottom="step1TooltipMessage">
                     <AppIcon v-if="isValidating" name="spinner" :size="16" class="animate-spin" />
@@ -33,17 +31,10 @@
                     <AppIcon v-if="form.processing" name="spinner" :size="16" class="animate-spin" />
                     <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
                 </button>
-                <button class="ios-nav-maximize" @click="isMaximized = !isMaximized"
-                    v-tooltip.bottom="isMaximized ? 'Restore' : 'Maximize'">
-                    <AppIcon :name="isMaximized ? 'window-minimize' : 'window-maximize'" :size="14" />
-                </button>
             </div>
         </template>
 
         <!-- Body -->
-        <div class="ios-body">
-
-
                     <div class="mt-8">
                         <!-- ═══ STEPPER ═══ -->
                         <div class="flex items-center justify-center gap-0 pb-4">
@@ -86,7 +77,7 @@
                         </div>
 
                         <!-- Panel: Step 1 - Personal -->
-                        <div v-show="activeStep === '1'">
+                        <div v-show="activeStep === '1'" class="pb-6">
                             <PersonalInformationFields v-model:first_name="form.first_name"
                                 v-model:middle_name="form.middle_name"
                                 v-model:last_name="form.last_name"
@@ -169,7 +160,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
     </IosModal>
 </template>
@@ -682,6 +672,24 @@ const resetForm = () => {
     duplicateMatches.value = [];
     dupDragOffset.value = { x: 0, y: 0 };
 };
-
-const isMaximized = ref(false);
 </script>
+
+<style>
+/* Keep the scrollbar visibly present at all times instead of only on hover —
+   this modal's steps vary a lot in height and users need an obvious scroll cue. */
+.applicant-form-body {
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.applicant-form-body::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+}
+
+.dark .applicant-form-body {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.dark .applicant-form-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}
+</style>

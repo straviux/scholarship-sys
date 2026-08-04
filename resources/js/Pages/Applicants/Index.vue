@@ -7,17 +7,16 @@ import { ref, onMounted, onBeforeUnmount, watch, computed, inject } from 'vue';
 import { usePermission } from '@/composable/permissions';
 import { useApi } from '@/composable/api';
 import { useFilterManager } from '@/composables/useFilterManager';
-import { stripHtml } from '@/utils/sanitize';
 import axios from 'axios';
 
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import LoadingIndicator from '@/Components/ui/LoadingIndicator.vue';
 import ApplicantFormModal from './Modal/ApplicantFormModal.vue';
 import YakapCategoryModal from './Modal/YakapCategoryModal.vue';
 import ExportSelectedModal from './Modal/ExportSelectedModal.vue';
 import PriorityModal from './Modal/PriorityModal.vue';
 import RequirementsChecklistModal from './Modal/RequirementsChecklistModal.vue';
-import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 import InterviewAssessmentModal from './Modal/InterviewAssessmentModal.vue';
 import ProfileReviewModal from './Modal/ProfileReviewModal.vue';
 import RemarksModal from './Modal/RemarksModal.vue';
@@ -78,16 +77,7 @@ const props = defineProps({
         date_filed: { type: String },
         last_name: { type: String },
     },
-    // Approval workflow props
-    approvalStatuses: {
-        type: Array,
-        default: () => []
-    },
     declineReasons: {
-        type: Object,
-        default: () => ({})
-    },
-    autoApprovalConfig: {
         type: Object,
         default: () => ({})
     },
@@ -395,104 +385,13 @@ watch(selectedYakapLocation, (newValue) => {
 // Update YAKAP Category Modal state
 const showUpdateYakapModal = ref(false);
 const selectedProfileForYakap = ref(null);
-const originalYakapCategory = ref('');
-const originalYakapLocation = ref('');
-const updateYakapForm = useForm({
-    yakap_category: '',
-    yakap_location: ''
-});
 
 const openUpdateYakapModal = (profile, isNewApplicant = false) => {
     selectedProfileForYakap.value = profile;
-    const grants = Array.isArray(profile.scholarshipGrant) ? profile.scholarshipGrant : [];
-    const grant = grants.length > 0 ? grants[0] : null;
-
-    if (!grant) {
-        // No scholarship record exists, fetch or create one
-        axios.get(route('scholarship-record.get-or-create', profile.profile_id))
-            .then(response => {
-                const createdGrant = response.data;
-                // Update the profile with the new grant
-                if (!selectedProfileForYakap.value.scholarshipGrant) {
-                    selectedProfileForYakap.value.scholarshipGrant = [];
-                }
-                selectedProfileForYakap.value.scholarshipGrant = [createdGrant];
-
-                // Store original values to detect changes
-                originalYakapCategory.value = createdGrant.yakap_category || 'yakap-capitol';
-                originalYakapLocation.value = createdGrant.yakap_location || '';
-                updateYakapForm.yakap_category = createdGrant.yakap_category || 'yakap-capitol';
-                updateYakapForm.yakap_location = createdGrant.yakap_location || '';
-                showUpdateYakapModal.value = true;
-                if (isNewApplicant) {
-                    toast.info('Please set YAKAP category for this applicant.');
-                }
-            })
-            .catch(error => {
-                toast.error('Failed to create scholarship record');
-                console.error(error);
-            });
-    } else {
-        // Store original values to detect changes
-        originalYakapCategory.value = grant.yakap_category || 'yakap-capitol';
-        originalYakapLocation.value = grant.yakap_location || '';
-        updateYakapForm.yakap_category = grant.yakap_category || 'yakap-capitol';
-        updateYakapForm.yakap_location = grant.yakap_location || '';
-        showUpdateYakapModal.value = true;
+    showUpdateYakapModal.value = true;
+    if (isNewApplicant) {
+        toast.info('Please set YAKAP category for this applicant.');
     }
-};
-
-const closeUpdateYakapModal = () => {
-    showUpdateYakapModal.value = false;
-    selectedProfileForYakap.value = null;
-    updateYakapForm.reset();
-};
-
-const submitUpdateYakap = () => {
-    if (!selectedProfileForYakap.value) return;
-
-    const profile = selectedProfileForYakap.value;
-    const grants = Array.isArray(profile.scholarshipGrant) ? profile.scholarshipGrant : [];
-    const grant = grants.length > 0 ? grants[0] : null;
-
-    if (!grant || !grant.id) {
-        // If no grant exists, we need to create one first
-        // For now, show error with instruction to create record first
-        toast.error('Unable to update: No scholarship record exists. Please create one first.');
-        return;
-    }
-
-    // Check if values have actually changed
-    const categoryChanged = updateYakapForm.yakap_category !== originalYakapCategory.value;
-    const locationChanged = updateYakapForm.yakap_location !== originalYakapLocation.value;
-
-    if (!categoryChanged && !locationChanged) {
-        closeUpdateYakapModal();
-        return;
-    }
-
-    // Convert yakap_location object to string (municipality name or school name)
-    let yakapLocation = updateYakapForm.yakap_location;
-    if (yakapLocation && typeof yakapLocation === 'object') {
-        yakapLocation = yakapLocation.name || '';
-    }
-
-    // Create a fresh form submission with proper data types
-    axios.put(route('scholarship-record.update-yakap', grant.id), {
-        yakap_category: updateYakapForm.yakap_category,
-        yakap_location: yakapLocation || null
-    }).then(response => {
-        closeUpdateYakapModal();
-        toast.success('YAKAP category updated successfully!');
-        refreshApplicationList();
-        if (refreshActivityLogs) refreshActivityLogs();
-    }).catch(error => {
-        toast.error('Failed to update YAKAP category');
-        console.error(error.response?.data || error);
-    });
-}; const handleYakapCategoryChange = () => {
-    // Clear location when yakap category is changed
-    updateYakapForm.yakap_location = null;
 };
 
 const handleBatchYakapCategoryChange = () => {
@@ -881,20 +780,6 @@ const selectedApplicantForReview = ref(null);
 const showInterviewModal = ref(false);
 const interviewRecordId = ref(null);
 
-// Profile menu items for dropdown
-const profileMenuItems = ref([
-    {
-        label: 'Mark as Approved for Review',
-        icon: 'check',
-        command: () => markAsApproved()
-    },
-    {
-        label: 'Mark as Denied',
-        icon: 'x',
-        command: () => markAsDenied()
-    }
-]);
-
 // Priority modal state
 const showPriorityModal = ref(false);
 const selectedApplicantForPriority = ref(null);
@@ -1157,27 +1042,6 @@ const copyApplicantName = (applicant) => {
         .catch(() => toast.error('Failed to copy name'));
 };
 
-const getApplicantFullName = (applicant) => {
-    if (!applicant) return '';
-
-    const cacheKey = `fullname_${applicant.profile_id}`;
-    if (formatMemoCache.has(cacheKey)) {
-        return formatMemoCache.get(cacheKey);
-    }
-
-    const parts = [
-        applicant.last_name,
-        ',',
-        applicant.first_name,
-        applicant.middle_name,
-        applicant.extension_name
-    ].filter(Boolean);
-
-    const result = parts.join(' ').replace(' ,', ',');
-    if (!statusObj || statusObj.status !== 'member' || !statusObj.members.length) return '';
-    return statusObj.members.join(', ');
-};
-
 // Memoized date formatter to avoid moment() calls on every render
 const dateFormatterCache = new Map();
 const formatDateFiled = (date) => {
@@ -1187,17 +1051,6 @@ const formatDateFiled = (date) => {
         dateFormatterCache.set(cacheKey, moment(date).format('MMM DD, YYYY'));
     }
     return dateFormatterCache.get(cacheKey);
-};
-
-const getApplicantFullAddress = (applicant) => {
-    if (!applicant) return '';
-    const parts = [
-        applicant.barangay,
-        applicant.municipality,
-        applicant.province
-    ].filter(Boolean);
-
-    return parts.join(', ') || 'N/A';
 };
 
 // Priority helper functions
@@ -1212,19 +1065,6 @@ const getPrioritySeverity = (priority) => {
 
 const formatPriorityName = (priority) => {
     return priority.charAt(0).toUpperCase() + priority.slice(1);
-};
-
-const formatDate = (date) => {
-    if (!date) return 'N/A';
-    return moment(date).format('MMM DD, YYYY');
-};
-
-// Truncate text for display with tooltip support
-const truncateText = (text, maxLength = 80) => {
-    if (!text) return '';
-    const plainText = stripHtml(text);
-    if (plainText.length <= maxLength) return plainText;
-    return plainText.substring(0, maxLength) + '...';
 };
 
 </script>
@@ -1484,6 +1324,8 @@ const truncateText = (text, maxLength = 80) => {
                                         severity="secondary" outlined class="justify-start" />
                                 </div>
                             </Popover>
+                            <AppButton icon="tag" label="Update YAKAP" @click="openBatchYakapModal"
+                                severity="contrast" outlined rounded size="small" />
                             <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export Selected"
                                 @click="openExportSelected" severity="contrast" outlined rounded size="small" />
                         </div>
@@ -1792,14 +1634,15 @@ const truncateText = (text, maxLength = 80) => {
             subtext="Fetching all applicants matching the current filters. Large result sets may take a moment." />
 
         <!-- Confirmation Dialog -->
-        <IosModal v-model:visible="confirmDialogVisible" :title="confirmDialogHeader" width="calc(100vw - 2rem)"
-            max-width="450px" body-style="padding: 16px;" show-action :action-label="confirmDialogAcceptLabel"
-            @action="handleConfirmDialogAccept">
-            <div class="flex items-start gap-3">
-                <i v-if="confirmDialogIcon" :class="confirmDialogIcon" class="text-xl mt-0.5" />
-                <p class="m-0 text-sm leading-relaxed text-gray-700">{{ confirmDialogMessage }}</p>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            v-model:visible="confirmDialogVisible"
+            :title="confirmDialogHeader"
+            width="450px"
+            :message="confirmDialogMessage"
+            :icon="confirmDialogIcon || 'exclamation-triangle'"
+            action-class=""
+            @accept="handleConfirmDialogAccept"
+        />
 
         <!-- Display Settings Modal -->
         <IosModal v-model:visible="showDisplaySettingsModal" title="Display Settings" width="calc(100vw - 2rem)"

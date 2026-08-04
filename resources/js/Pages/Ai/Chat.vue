@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref } from 'vue';
 import axios from 'axios';
 import { Head } from '@inertiajs/vue3';
 import AiLayout from '@/Layouts/AiLayout.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 defineOptions({ layout: AiLayout });
 
@@ -90,13 +91,26 @@ const newChat = () => {
     input.value = '';
 };
 
-const deleteConversation = async (id) => {
-    if (!confirm('Delete this conversation? This cannot be undone.')) return;
+const conversationToDelete = ref(null);
+const showDeleteConversationDialog = ref(false);
+
+const deleteConversation = (id) => {
+    conversationToDelete.value = id;
+    showDeleteConversationDialog.value = true;
+};
+
+const confirmDeleteConversation = async () => {
+    const id = conversationToDelete.value;
+    showDeleteConversationDialog.value = false;
+    if (!id) return;
+
     try {
         await axios.delete(route('ai.conversations.destroy', id));
         if (currentConversationId.value === id) newChat();
         await fetchConversations();
-    } catch (e) { /* silent */ }
+    } catch (e) { /* silent */ } finally {
+        conversationToDelete.value = null;
+    }
 };
 
 const send = async (text) => {
@@ -262,4 +276,13 @@ onMounted(() => {
             </div>
         </div>
     </div>
+
+    <IosConfirmDialog
+        v-model:visible="showDeleteConversationDialog"
+        title="Confirm Delete"
+        width="400px"
+        message="Delete this conversation? This cannot be undone."
+        @accept="confirmDeleteConversation"
+        @close="conversationToDelete = null"
+    />
 </template>

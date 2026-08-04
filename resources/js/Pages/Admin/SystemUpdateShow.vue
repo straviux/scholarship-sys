@@ -136,23 +136,15 @@
         </AdminPageShell>
 
         <!-- Delete Confirmation Dialog -->
-        <IosModal :visible="showDeleteDialog" title="Confirm Deletion" width="28rem" max-width="95vw"
-            body-style="padding: 16px;" @update:visible="showDeleteDialog = $event">
-            <div class="flex items-start gap-3">
-                <AppIcon name="exclamation-triangle" :size="28" class="text-red-500 mt-1 shrink-0" />
-                <div>
-                    <p class="text-gray-700 mb-2">Are you sure you want to delete this system update?</p>
-                    <p class="text-sm text-red-600 font-medium">This action cannot be undone.</p>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button @click="showDeleteDialog = false" label="Cancel" severity="secondary" outlined
-                    size="small" />
-                <AppButton @click="confirmDelete" :label="isDeleting ? 'Deleting...' : 'Delete'" severity="danger"
-                    icon="trash" :disabled="isDeleting" size="small" />
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteDialog"
+            title="Confirm Deletion"
+            width="450px"
+            message="Are you sure you want to delete this system update? This action cannot be undone."
+            :loading="isDeleting"
+            @accept="confirmDelete"
+            @update:visible="showDeleteDialog = $event"
+        />
     </AdminLayout>
 </template>
 
@@ -161,7 +153,7 @@ import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import AdminPageShell from '@/Components/admin/AdminPageShell.vue'
-import IosModal from '@/Components/ui/IosModal.vue'
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue'
 import axios from 'axios'
 
 

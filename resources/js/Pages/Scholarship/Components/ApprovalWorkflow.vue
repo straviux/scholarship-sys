@@ -132,10 +132,7 @@
  * - Single source of truth for all scholarship record states
  * - Consistent filtering across all controllers and views
  */
-import { ref, computed } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
 import moment from 'moment';
-import { usePermission } from '@/composable/permissions';
 import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 
 // PrimeVue Components
@@ -155,33 +152,10 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['refresh']);
-
-// Permission composable
-const { hasPermission } = usePermission();
-
 // Status composable
 const { getStatusLabel, getStatusSeverity } = useScholarshipStatus();
 
 // Helper methods
-const getFullName = (profile) => {
-    if (!profile) return 'N/A';
-    const parts = [
-        profile.first_name,
-        profile.middle_name,
-        profile.last_name,
-        profile.extension_name
-    ].filter(Boolean);
-    return parts.join(' ');
-};
-
-const getInitials = (profile) => {
-    if (!profile) return 'NA';
-    const first = profile.first_name?.charAt(0) || '';
-    const last = profile.last_name?.charAt(0) || '';
-    return (first + last).toUpperCase() || 'NA';
-};
-
 const getApprovalStatusSeverity = (status) => {
     switch (status) {
         case 'approved':
@@ -195,10 +169,6 @@ const getApprovalStatusSeverity = (status) => {
         default:
             return 'secondary';
     }
-};
-
-const formatDate = (date) => {
-    return moment(date).format('MMM DD, YYYY');
 };
 
 const formatDateTime = (datetime) => {
@@ -223,18 +193,5 @@ const getStatusChangeDescription = (historyItem) => {
     return statusChanges[historyItem.new_status] || `Status changed to ${historyItem.new_status}`;
 };
 
-const isEligibleForAutoApproval = (gwa) => {
-    if (!gwa || !props.autoApprovalConfig?.grade_threshold) return false;
-    return parseFloat(gwa) >= parseFloat(props.autoApprovalConfig.grade_threshold);
-};
-
-// Permission checks
-const canApprove = (application) => {
-    return application.unified_status === 'pending';
-};
-
-const canDecline = (application) => {
-    return application.unified_status === 'pending';
-};
 </script>
 

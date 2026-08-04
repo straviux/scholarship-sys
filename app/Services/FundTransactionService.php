@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\FundTransaction;
-use App\Models\FundTransactionDocument;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -144,94 +143,4 @@ class FundTransactionService
         return true;
     }
 
-    /**
-     * Upload a document for a fund transaction.
-     *
-     * @param FundTransaction $voucher
-     * @param \Illuminate\Http\UploadedFile $file
-     * @param string $documentType
-     * @return FundTransactionDocument
-     */
-    public function uploadDocument(FundTransaction $voucher, $file, string $documentType): FundTransactionDocument
-    {
-        $dir = "documents/fund-transactions/{$voucher->id}";
-        $documentPath = storage_path("app/{$dir}");
-
-        if (!file_exists($documentPath)) {
-            mkdir($documentPath, 0755, true);
-        }
-
-        $filename = $documentType . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs($dir, $filename, 'local');
-
-        // Replace existing document of same type
-        FundTransactionDocument::where('fund_transaction_id', $voucher->id)
-            ->where('document_type', $documentType)
-            ->delete();
-
-        $document = FundTransactionDocument::create([
-            'fund_transaction_id' => $voucher->id,
-            'document_type' => $documentType,
-            'filename' => $filename,
-            'path' => $filePath,
-            'file_size' => $file->getSize(),
-            'mime_type' => $file->getMimeType(),
-            'uploaded_by' => \Illuminate\Support\Facades\Auth::id(),
-        ]);
-
-        $document->generateQRCode();
-
-        return $document;
-    }
-
-    /**
-     * Delete a document from a fund transaction.
-     *
-     * @param FundTransaction $voucher
-     * @param string $docType
-     * @return bool
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
-     */
-    public function deleteDocument(FundTransaction $voucher, string $docType): bool
-    {
-        $document = FundTransactionDocument::where('fund_transaction_id', $voucher->id)
-            ->where('document_type', $docType)
-            ->firstOrFail();
-
-        $fullPath = storage_path('app/' . $document->path);
-        if (file_exists($fullPath)) {
-            unlink($fullPath);
-        }
-
-        $document->delete();
-
-        return true;
-    }
-
-    /**
-     * Verify a document via QR code data.
-     *
-     * @param FundTransaction $voucher
-     * @param string $qrCode Base64-encoded JSON
-     * @return FundTransactionDocument
-     * @throws \InvalidArgumentException
-     */
-    public function verifyDocumentQR(FundTransaction $voucher, string $qrCode): FundTransactionDocument
-    {
-        $qrData = json_decode(base64_decode($qrCode), true);
-
-        if (!$qrData || !isset($qrData['document_id'])) {
-            throw new \InvalidArgumentException('Invalid QR code');
-        }
-
-        $document = FundTransactionDocument::findOrFail($qrData['document_id']);
-
-        if ($document->fund_transaction_id != $voucher->id) {
-            throw new \InvalidArgumentException('Document does not belong to this fund transaction');
-        }
-
-        $document->markAsVerified();
-
-        return $document;
-    }
 }

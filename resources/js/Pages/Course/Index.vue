@@ -8,7 +8,7 @@ import CourseModal from "@/Pages/Course/Modal/CourseModal.vue";
 import axios from 'axios';
 import { usePermission } from '@/composable/permissions';
 import { toast } from '@/utils/toast';
-import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 const props = defineProps({
     courses: Object,
@@ -218,53 +218,21 @@ const closeDeleteModal = () => {
         </div>
 
         <!-- iOS Delete Confirmation Dialog -->
-        <IosModal :visible="showDeleteModal" title="Confirm Deletion" width="460px" max-width="95vw"
-            body-style="padding: 0 16px;" :show-action="true" action-label="Delete" :loading="deleting"
-            action-class="ios-nav-destructive" @action="deleteCourse" @update:visible="val => !val && closeDeleteModal()">
-            <div v-if="selectedCourse">
-                        <!-- Warning -->
-                        <div class="ios-section">
-                            <div class="ios-card">
-                                <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
-                                    <AppIcon name="exclamation-triangle"
-                                        style="font-size: 24px; color: #FF3B30; flex-shrink: 0;" />
-                                    <div>
-                                        <div
-                                            style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
-                                            Permanently delete this course?
-                                        </div>
-                                        <div style="font-size: 13px; color: #8E8E93; line-height: 1.4;">
-                                            This action cannot be undone. All associated data will be removed.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Course Info -->
-                        <div class="ios-section">
-                            <div class="ios-section-label text-compact">Course</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <span class="ios-row-label text-sm">Name</span>
-                                    <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
-                                        {{ selectedCourse.name }}
-                                    </span>
-                                </div>
-                                <div class="ios-row">
-                                    <span class="ios-row-label text-sm">Shortname</span>
-                                    <span style="font-size: 13px; color: #8E8E93;">{{ selectedCourse.shortname }}</span>
-                                </div>
-                                <div class="ios-row ios-row-last">
-                                    <span class="ios-row-label text-sm">Program</span>
-                                    <span style="font-size: 13px; color: #8E8E93;">{{ selectedCourse.program }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="height: 20px;"></div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteModal"
+            title="Confirm Deletion"
+            width="460px"
+            message="Permanently delete this course? This action cannot be undone. All associated data will be removed."
+            data-label="Course"
+            :data="selectedCourse ? [
+                { label: 'Name', value: selectedCourse.name, color: '#FF3B30' },
+                { label: 'Shortname', value: selectedCourse.shortname },
+                { label: 'Program', value: selectedCourse.program },
+            ] : []"
+            :loading="deleting"
+            @accept="deleteCourse"
+            @update:visible="val => !val && closeDeleteModal()"
+        />
 
         <!-- Course Create/Edit Modal -->
         <CourseModal v-model:visible="showCourseModal" :course="editingCourse"

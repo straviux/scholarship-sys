@@ -210,7 +210,7 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import ApprovalWorkflow from '@/Pages/Scholarship/Components/ApprovalWorkflow.vue';
 import IosModal from '@/Components/ui/IosModal.vue';

@@ -216,11 +216,9 @@
 
 <script setup>
 import { computed } from 'vue';
-import moment from 'moment';
 
 const props = defineProps({
     records: { type: Array, default: () => [] },
-    today: { type: String, default: '' },
     preparedBy: { type: String, default: '' },
     preparedByPosition: { type: String, default: '' },
     preparedByOffice: { type: String, default: '' },
@@ -332,10 +330,6 @@ const uniformSchoolLabel = computed(() => firstRecord.value?.school?.name || fir
 const uniformProgramLabel = computed(() => firstRecord.value?.program?.name || firstRecord.value?.program?.shortname || '');
 const uniformAcademicYear = computed(() => firstRecord.value?.academic_year || '');
 const uniformTerm = computed(() => firstRecord.value?.term || '');
-
-function fmtDate(value) {
-    return value ? moment(value).format('MMM DD, YYYY') : '';
-}
 
 function formatApplicantName(record) {
     const lastName = record?.profile?.last_name || '';
@@ -625,7 +619,7 @@ const approvedScholarsToDate = computed(() => {
     if (approvedScholarsScopedToProgram.value.length) {
         return approvedScholarsScopedToProgram.value.length;
     }
-    return Number(props.budgetAllocation?.approved_scholars_to_date ?? totalScholars.value) || 0;
+    return Number(props.budgetAllocation?.approved_scholars_to_date ?? 0) || 0;
 });
 const totalCurrentAcademicYearGrant = computed(() => sumCurrentAcademicYearEstimatedGrant(props.records));
 const approvedScholarsCurrentAcademicYearGrantTotal = computed(() => {

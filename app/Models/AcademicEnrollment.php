@@ -13,11 +13,14 @@ class AcademicEnrollment extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const TERM_TYPES = ['semester', 'trimester', 'not_applicable'];
+
     protected $fillable = [
         'profile_id',
         'program_id',
         'school_id',
         'course_id',
+        'term_type',
         'graduation_date',
         'graduation_remarks',
         'created_by',

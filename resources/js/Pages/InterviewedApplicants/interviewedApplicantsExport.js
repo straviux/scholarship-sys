@@ -40,19 +40,6 @@ function formatProjectedTerms(value) {
     return Number.isFinite(terms) ? `${terms}` : 'Not configured';
 }
 
-function formatProjectedExpense(value) {
-    if (value === null || value === undefined || value === '') {
-        return 'Not configured';
-    }
-
-    return new Intl.NumberFormat('en-PH', {
-        style: 'currency',
-        currency: 'PHP',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(Number(value) || 0);
-}
-
 export function buildRecommendationListHtml({ recommendationList = null, paperSize = null, orientation = null, includeInterviewColumns = null, includeProjectedColumns = null } = {}) {
     const normalizedRecords = normalizeRecords(recommendationList?.records || []);
     const requestDateLabel = recommendationList?.request_date
@@ -91,19 +78,6 @@ export function buildRecommendationListHtml({ recommendationList = null, paperSi
     const paperMap = { landscape: { A4: 'a4-landscape', Letter: 'letter-landscape', Legal: 'landscape' }, portrait: { A4: 'a4', Letter: 'letter', Legal: 'long' } };
     const ps = paperMap[finalOrientation]?.[finalPaperSize] || 'a4-landscape';
     return buildInterviewedApplicantsPdfDoc(bodyHtml, title, ps);
-}
-
-export function printRecommendationList({ recommendationList = null } = {}) {
-    const printWindow = window.open('', '_blank');
-
-    if (!printWindow) {
-        return false;
-    }
-
-    printWindow.document.write(buildRecommendationListHtml({ recommendationList }));
-    printWindow.document.close();
-
-    return true;
 }
 
 // ── Recommendation List Excel export (ExcelJS) ─────────────────────────
@@ -406,7 +380,7 @@ function rlSaveWorkbookBuffer(buffer, filename) {
 
 export async function exportRecommendationListExcel({ recommendationList = null } = {}) {
     const records = recommendationList?.records || [];
-    const groupBy = recommendationList?.group_by || 'course';
+    const groupBy = recommendationList?.group_by || 'none';
     const showRemarks = Boolean(recommendationList?.show_remarks);
     const highlightJpm = Boolean(recommendationList?.highlight_jpm_members);
     const budgetAllocation = recommendationList?.budget_allocation || null;
@@ -418,11 +392,6 @@ export async function exportRecommendationListExcel({ recommendationList = null 
         : recommendationList?.created_at
             ? moment(recommendationList.created_at).format('MMMM D, YYYY')
             : moment().format('MMMM D, YYYY');
-    const preparedBy = recommendationList?.prepared_by || DEFAULT_PREPARED_BY;
-    const preparedByPosition = recommendationList?.prepared_by_position || DEFAULT_PREPARED_BY_POSITION;
-    const preparedByOffice = recommendationList?.prepared_by_office || DEFAULT_PREPARED_BY_OFFICE;
-    const approvedBy = recommendationList?.approved_by || DEFAULT_APPROVED_BY;
-    const approvedByPosition = recommendationList?.approved_by_position || DEFAULT_APPROVED_BY_POSITION;
 
     // Uniformity — a column is hidden (and hoisted into the header text
     // instead) whenever every record shares the same value, exactly like
@@ -510,10 +479,6 @@ export async function exportRecommendationListExcel({ recommendationList = null 
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         worksheet.getRow(rowIndex).height = 15;
     });
-    // Bottom rule under the letterhead block.
-    for (let c = 1; c <= totalColumns; c++) {
-        worksheet.getCell(letterheadLines.length, c).border = { bottom: RL_MEDIUM };
-    }
 
     if (logos) {
         const inset = Math.max(totalColumns * 0.25, 1);
@@ -738,7 +703,7 @@ export async function exportRecommendationListExcel({ recommendationList = null 
             : [];
         const approvedScholarsToDate = approvedScholars.length
             ? approvedScholars.length
-            : Number(budgetAllocation.approved_scholars_to_date ?? totalScholars) || 0;
+            : Number(budgetAllocation.approved_scholars_to_date ?? 0) || 0;
         const approvedScholarsCurrentAyTotal = Number(budgetAllocation.approved_scholars_current_ay_estimated_total ?? 0) || 0;
         const runningBalance = Number(budgetAllocation.total_allotment ?? 0)
             - Number(budgetAllocation.disbursed ?? 0)
@@ -847,66 +812,6 @@ export async function exportRecommendationListExcel({ recommendationList = null 
         approvalMarkCell.font = { name: RL_FONT, size: 7, color: { argb: 'FF555555' } };
         approvalMarkCell.alignment = { horizontal: 'right' };
         rowIndex += 1;
-    }
-
-    // ── Signatories (always rendered — the PDF always has names) ─────
-    rowIndex += 2;
-    const sigLeftCol = 2;
-    const sigRightCol = Math.max(totalColumns - 5, sigLeftCol + 4);
-    const sigSpan = 4;
-
-    const sigLabelRow = worksheet.getRow(rowIndex);
-    sigLabelRow.getCell(sigLeftCol).value = 'Prepared by:';
-    sigLabelRow.getCell(sigLeftCol).font = { name: RL_FONT, size: 8, bold: true };
-    sigLabelRow.getCell(sigRightCol).value = 'Approved by:';
-    sigLabelRow.getCell(sigRightCol).font = { name: RL_FONT, size: 8, bold: true };
-    rowIndex += 4; // signature space (PDF margin-top:40pt)
-
-    worksheet.mergeCells(rowIndex, sigLeftCol, rowIndex, sigLeftCol + sigSpan - 1);
-    const prepNameCell = worksheet.getCell(rowIndex, sigLeftCol);
-    prepNameCell.value = preparedBy.toUpperCase();
-    prepNameCell.font = { name: RL_FONT, size: 8, bold: true };
-    prepNameCell.alignment = { horizontal: 'center' };
-
-    worksheet.mergeCells(rowIndex, sigRightCol, rowIndex, sigRightCol + sigSpan - 1);
-    const apprNameCell = worksheet.getCell(rowIndex, sigRightCol);
-    apprNameCell.value = approvedBy.toUpperCase();
-    apprNameCell.font = { name: RL_FONT, size: 8, bold: true };
-    apprNameCell.alignment = { horizontal: 'center' };
-
-    for (let c = 0; c < sigSpan; c++) {
-        worksheet.getCell(rowIndex, sigLeftCol + c).border = { top: RL_THIN };
-        worksheet.getCell(rowIndex, sigRightCol + c).border = { top: RL_THIN };
-    }
-    rowIndex += 1;
-
-    worksheet.mergeCells(rowIndex, sigLeftCol, rowIndex, sigLeftCol + sigSpan - 1);
-    const prepPosCell = worksheet.getCell(rowIndex, sigLeftCol);
-    prepPosCell.value = preparedByPosition;
-    prepPosCell.font = { name: RL_FONT, size: 8 };
-    prepPosCell.alignment = { horizontal: 'center' };
-
-    worksheet.mergeCells(rowIndex, sigRightCol, rowIndex, sigRightCol + sigSpan - 1);
-    const apprPosCell = worksheet.getCell(rowIndex, sigRightCol);
-    apprPosCell.value = approvedByPosition;
-    apprPosCell.font = { name: RL_FONT, size: 8 };
-    apprPosCell.alignment = { horizontal: 'center' };
-    rowIndex += 1;
-
-    worksheet.mergeCells(rowIndex, sigLeftCol, rowIndex, sigLeftCol + sigSpan - 1);
-    const prepOfficeCell = worksheet.getCell(rowIndex, sigLeftCol);
-    prepOfficeCell.value = preparedByOffice;
-    prepOfficeCell.font = { name: RL_FONT, size: 8 };
-    prepOfficeCell.alignment = { horizontal: 'center' };
-    rowIndex += 3; // space before the Date line (PDF margin-top:30pt)
-
-    worksheet.mergeCells(rowIndex, sigRightCol, rowIndex, sigRightCol + sigSpan - 1);
-    const dateLineCell = worksheet.getCell(rowIndex, sigRightCol);
-    dateLineCell.value = 'Date';
-    dateLineCell.font = { name: RL_FONT, size: 8 };
-    dateLineCell.alignment = { horizontal: 'center' };
-    for (let c = 0; c < sigSpan; c++) {
-        worksheet.getCell(rowIndex, sigRightCol + c).border = { top: RL_THIN };
     }
 
     // ── Save ──────────────────────────────────────────────────────────
@@ -1289,7 +1194,7 @@ export async function exportInterviewedApplicantsExcel({
             : [];
         const approvedScholarsToDate = approvedScholars.length
             ? approvedScholars.length
-            : Number(budgetAllocation.approved_scholars_to_date ?? totalScholars) || 0;
+            : Number(budgetAllocation.approved_scholars_to_date ?? 0) || 0;
         const approvedScholarsCurrentAyTotal = Number(budgetAllocation.approved_scholars_current_ay_estimated_total ?? 0) || 0;
         const runningBalance = Number(budgetAllocation.total_allotment ?? 0)
             - Number(budgetAllocation.disbursed ?? 0)

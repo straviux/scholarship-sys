@@ -178,48 +178,30 @@
         </AdminPageShell>
 
         <!-- Delete Profile Confirmation Modal -->
-        <IosModal :visible="showDeleteProfileConfirmDialog" title="Confirm Permanent Deletion" width="500px"
-            max-width="calc(100vw - 2rem)" body-style="padding: 16px;" :show-action="true"
-            action-label="Permanently Delete" action-class="ios-nav-destructive" @action="permanentlyDeleteProfile"
-            @update:visible="showDeleteProfileConfirmDialog = $event" @close="profileToDelete = null">
-            <div class="space-y-4">
-                <div class="flex items-center gap-3">
-                    <AppIcon name="exclamation-triangle" class="text-2xl text-red-500" />
-                    <div>
-                        <p class="font-semibold text-gray-900">Permanently Delete Profile</p>
-                        <p class="text-sm text-gray-600">This action CANNOT be undone</p>
-                    </div>
-                </div>
-                <div class="bg-red-50 border border-red-200 rounded p-3">
-                    <p class="text-sm text-red-800">
-                        <strong>Profile:</strong> {{ profileToDelete ? `${profileToDelete.last_name},
-                        ${profileToDelete.first_name}${profileToDelete.middle_name ? ' ' + profileToDelete.middle_name :
-                                ''}` : 'N/A' }}
-                    </p>
-                </div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteProfileConfirmDialog"
+            title="Confirm Permanent Deletion"
+            width="500px"
+            message="Permanently delete this profile? This action CANNOT be undone."
+            data-label="Profile"
+            :data="[{ label: 'Name', value: profileToDelete ? `${profileToDelete.last_name}, ${profileToDelete.first_name}${profileToDelete.middle_name ? ' ' + profileToDelete.middle_name : ''}` : 'N/A', color: '#FF3B30' }]"
+            @accept="permanentlyDeleteProfile"
+            @update:visible="showDeleteProfileConfirmDialog = $event"
+            @close="profileToDelete = null"
+        />
 
         <!-- Delete Record Confirmation Modal -->
-        <IosModal :visible="showDeleteRecordConfirmDialog" title="Confirm Permanent Deletion" width="500px"
-            max-width="calc(100vw - 2rem)" body-style="padding: 16px;" :show-action="true"
-            action-label="Permanently Delete" action-class="ios-nav-destructive" @action="permanentlyDeleteRecord"
-            @update:visible="showDeleteRecordConfirmDialog = $event" @close="recordToDelete = null">
-            <div class="space-y-4">
-                <div class="flex items-center gap-3">
-                    <AppIcon name="exclamation-triangle" class="text-2xl text-red-500" />
-                    <div>
-                        <p class="font-semibold text-gray-900">Permanently Delete Scholarship Record</p>
-                        <p class="text-sm text-gray-600">This action CANNOT be undone</p>
-                    </div>
-                </div>
-                <div class="bg-red-50 border border-red-200 rounded p-3">
-                    <p class="text-sm text-red-800">
-                        <strong>Record:</strong> {{ recordToDelete ? recordToDelete.profile_name : 'N/A' }}
-                    </p>
-                </div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteRecordConfirmDialog"
+            title="Confirm Permanent Deletion"
+            width="500px"
+            message="Permanently delete this scholarship record? This action CANNOT be undone."
+            data-label="Record"
+            :data="[{ label: 'Name', value: recordToDelete ? recordToDelete.profile_name : 'N/A', color: '#FF3B30' }]"
+            @accept="permanentlyDeleteRecord"
+            @update:visible="showDeleteRecordConfirmDialog = $event"
+            @close="recordToDelete = null"
+        />
     </AdminLayout>
 </template>
 
@@ -228,7 +210,7 @@ import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
-import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
 

@@ -22,6 +22,7 @@ class AcademicEnrollmentService
                 'program_id' => $data['program_id'] ?? null,
                 'school_id' => $data['school_id'],
                 'course_id' => $data['course_id'] ?? null,
+                'term_type' => $data['term_type'] ?? null,
             ]);
 
             $enrollment->save();
@@ -35,6 +36,7 @@ class AcademicEnrollmentService
                     'program_id' => $enrollment->program_id,
                     'school_id' => $enrollment->school_id,
                     'course_id' => $enrollment->course_id,
+                    'term_type' => $enrollment->term_type,
                 ],
                 remarks: 'Created academic enrollment grouping.',
                 profileId: $profile->profile_id,
@@ -48,11 +50,12 @@ class AcademicEnrollmentService
     {
         return DB::transaction(function () use ($enrollment, $data) {
             $enrollment = AcademicEnrollment::query()->findOrFail($enrollment->id);
-            $oldValues = $enrollment->only(['program_id', 'school_id', 'course_id']);
+            $oldValues = $enrollment->only(['program_id', 'school_id', 'course_id', 'term_type']);
 
             $enrollment->program_id = $data['program_id'] ?? null;
             $enrollment->school_id = $data['school_id'];
             $enrollment->course_id = $data['course_id'] ?? null;
+            $enrollment->term_type = $data['term_type'] ?? null;
             $enrollment->save();
 
             foreach ($this->recordsForEnrollment($enrollment) as $record) {
@@ -71,7 +74,7 @@ class AcademicEnrollmentService
                 action: 'updated',
                 details: [
                     'old' => $oldValues,
-                    'new' => $enrollment->only(['program_id', 'school_id', 'course_id']),
+                    'new' => $enrollment->only(['program_id', 'school_id', 'course_id', 'term_type']),
                 ],
                 remarks: 'Updated academic enrollment details.',
                 profileId: $enrollment->profile_id,

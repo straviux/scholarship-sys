@@ -285,13 +285,8 @@
                         <label v-if="reportType === 'list'" class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer hover:text-gray-900">
                             <span>Show Remarks</span>
                             <ToggleSwitch v-model="showRemarks" />
-                        </label>                        <label class="flex items-center justify-between py-1.5 text-xs text-gray-700 cursor-pointer border-t border-gray-50 hover:text-gray-900">
-                            <span>Include Grant</span>
-                            <ToggleSwitch v-model="includeGrantProvision" />
                         </label>
-                        <div v-if="includeGrantProvision" class="pb-1.5">
-                            <Select v-model="grantValue" :options="grantProvisionOptions" optionLabel="label" optionValue="value" placeholder="Select grant provision..." size="small" class="w-full [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
-                        </div>                    </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -357,7 +352,6 @@ const selectedBudgetAllocationKey = ref(null);
 const selectedProfileIds = ref([]);
 const reportTitleInput = ref('');
 const profileSearchQuery = ref('');
-const cumulativeScholarSearchQuery = ref('');
 const showBudgetAllocation = ref(false);
 const showSignatories = ref(false);
 // Steps
@@ -552,32 +546,6 @@ const selectedBudgetAllocation = computed(() => {
 const selectedBudgetAllocationApprovedCount = computed(() => {
     return Number(selectedBudgetAllocation.value?.approved_scholars_to_date ?? 0) || 0;
 });
-const cumulativeScholars = computed(() => {
-    return [...(selectedBudgetAllocation.value?.approved_scholars || [])].sort((left, right) => {
-        return (left?.name || '').localeCompare(right?.name || '', undefined, { sensitivity: 'base' });
-    });
-});
-const filteredCumulativeScholars = computed(() => {
-    const searchTerm = cumulativeScholarSearchQuery.value.trim().toLowerCase();
-
-    if (!searchTerm) {
-        return cumulativeScholars.value;
-    }
-
-    return cumulativeScholars.value.filter(scholar => {
-        const haystack = [
-            scholar?.name,
-            scholar?.program,
-            scholar?.date_approved,
-            formatScholarStatus(scholar?.status),
-        ]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase();
-
-        return haystack.includes(searchTerm);
-    });
-});
 function findBudgetAllocationOption(value) {
     return budgetAllocationOptions.value.find(option => option.value === value) || null;
 }
@@ -679,37 +647,12 @@ function clearAllFilters() {
     dateTo.value = null;
 }
 
-watch(() => props.show, (value) => {
-    if (value) {
-        preparedBy.value = DEFAULT_PREPARED_BY;
-        preparedByPosition.value = DEFAULT_PREPARED_BY_POSITION;
-        preparedByOffice.value = DEFAULT_PREPARED_BY_OFFICE;
-        approvedBy.value = DEFAULT_APPROVED_BY;
-        approvedByPosition.value = DEFAULT_APPROVED_BY_POSITION;
-        highlightJpmMembers.value = false;
-        showRemarks.value = false;
-        selectedBudgetAllocationKey.value = props.budgetAllocations.length === 1
-            ? props.budgetAllocations[0].key
-            : null;
-        currentStep.value = 1;
-        reportTitleInput.value = '';
-        profileSearchQuery.value = '';
-        if (reportType.value === 'list') {
-            selectAllFilteredProfiles();
-        }
-    }
-});
-
 watch(reportType, (value) => {
     profileSearchQuery.value = '';
 
     if (value === 'list' && selectedProfileIds.value.length === 0) {
         selectAllFilteredProfiles();
     }
-});
-
-watch(selectedBudgetAllocationKey, () => {
-    cumulativeScholarSearchQuery.value = '';
 });
 
 watch(filteredApplicantIds, (newIds, oldIds = []) => {
@@ -786,8 +729,6 @@ function generateReport() {
         reportTitle,
         includeInterviewColumns: includeInterviewColumns.value,
         showInterviewerColumn: showInterviewerColumn.value,
-        includeGrantProvision: includeGrantProvision.value,
-        grant_value: grantValue.value,
         highlightJpmMembers: reportType.value === 'list' ? highlightJpmMembers.value : false,
         showRemarks: reportType.value === 'list' ? showRemarks.value : false,
         reviewedBy: showSignatories.value ? (approvedBy.value?.trim() || DEFAULT_APPROVED_BY) : '',
@@ -809,21 +750,6 @@ function formatRecommendation(value) {
 
 function formatDate(date) {
     return date ? moment(date).format('MMM DD, YYYY') : '—';
-}
-
-function capitalize(str) {
-    if (!str) return '—';
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function formatScholarStatus(status) {
-    const labels = {
-        active: 'Active',
-        completed: 'Completed',
-        'completed-transferred': 'Completed - Transferred',
-    };
-
-    return labels[status] || capitalize(String(status || '').replace(/-/g, ' '));
 }
 
 </script>

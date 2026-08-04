@@ -40,6 +40,7 @@ use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Collection;
 
 class ScholarshipProfileController extends Controller
 {
@@ -51,7 +52,6 @@ class ScholarshipProfileController extends Controller
     ];
 
     private ?array $interviewedApplicantsBudgetAllocationCache = null;
-    private ?array $interviewedApplicantsBudgetAllocationLookupCache = null;
 
     /**
      * Store a newly created resource in storage.
@@ -517,665 +517,6 @@ class ScholarshipProfileController extends Controller
 
 
     /**
-     * Generate a report for graduated scholars with filters.
-     */
-    public function graduateListReport(Request $request)
-    {
-        $query = ScholarshipProfile::with([
-            'academicEnrollments.program',
-            'academicEnrollments.school',
-            'academicEnrollments.course',
-        ])
-            ->whereHas('academicEnrollments', function ($q) {
-                $q->whereNotNull('graduation_date');
-            });
-
-        // ── Filters ──
-        if ($request->filled('program')) {
-            $programIds = array_map('trim', explode(',', $request->program));
-            $query->whereHas('academicEnrollments', function ($q) use ($programIds) {
-                $q->whereIn('program_id', $programIds)->whereNotNull('graduation_date');
-            });
-        }
-
-        if ($request->filled('school')) {
-            $schools = array_map('trim', explode(',', $request->school));
-            $query->whereHas('academicEnrollments', function ($q) use ($schools) {
-                $q->whereHas('school', function ($sq) use ($schools) {
-                    $sq->where(function ($sub) use ($schools) {
-                        foreach ($schools as $s) {
-                            $sub->orWhere('schools.shortname', 'like', '%' . $s . '%')
-                                ->orWhere('schools.name', 'like', '%' . $s . '%');
-                        }
-                    });
-                })->whereNotNull('graduation_date');
-            });
-        }
-
-        if ($request->filled('course')) {
-            $courses = array_map('trim', explode(',', $request->course));
-            $query->whereHas('academicEnrollments', function ($q) use ($courses) {
-                $q->whereHas('course', function ($cq) use ($courses) {
-                    $cq->where(function ($sub) use ($courses) {
-                        foreach ($courses as $course) {
-                            $sub->orWhere('courses.shortname', 'like', '%' . $course . '%')
-                                ->orWhere('courses.name', 'like', '%' . $course . '%');
-                        }
-                    });
-                })->whereNotNull('graduation_date');
-            });
-        }
-
-        if ($request->filled('year_graduated')) {
-            $year = $request->year_graduated;
-            $query->whereHas('academicEnrollments', function ($q) use ($year) {
-                $q->whereNotNull('graduation_date')
-                    ->whereYear('graduation_date', $year);
-            });
-        }
-
-        $profiles = $query->get();
-
-        $rows = $profiles->map(function (ScholarshipProfile $profile) use ($request) {
-            $enrollment = $profile->academicEnrollments
-                ->sortByDesc('graduation_date')
-                ->firstWhere(function ($e) use ($request) {
-                    if ($request->filled('year_graduated')) {
-                        return !empty($e->graduation_date)
-                            && \Carbon\Carbon::parse($e->graduation_date)->year == $request->year_graduated;
-                    }
-                    return !empty($e->graduation_date);
-                });
-
-            return [
-                'name'           => trim(
-                    ($profile->last_name ?? '')
-                    . (($profile->first_name || $profile->middle_name) ? ', ' : '')
-                    . trim(($profile->first_name ?? '') . ' ' . ($profile->middle_name ?? ''))
-                ),
-                'school'         => $enrollment?->school?->name ?? '—',
-                'course'         => $enrollment?->course?->name ?? '—',
-                'year_graduated' => $enrollment?->graduation_date
-                    ? \Carbon\Carbon::parse($enrollment->graduation_date)->format('Y')
-                    : '—',
-                'remarks'        => $enrollment?->graduation_remarks ?? '—',
-                '_sort_year'     => $enrollment?->graduation_date
-                    ? \Carbon\Carbon::parse($enrollment->graduation_date)->year
-                    : 0,
-                '_sort_school'   => mb_strtolower($enrollment?->school?->name ?? ''),
-                '_sort_course'   => mb_strtolower($enrollment?->course?->name ?? ''),
-                '_sort_name'     => mb_strtolower(trim(
-                    ($profile->last_name ?? '')
-                    . ($profile->first_name ?? '')
-                    . ($profile->middle_name ?? '')
-                )),
-            ];
-        })
-        ->sortBy([
-            ['_sort_year', 'desc'],
-            ['_sort_school', 'asc'],
-            ['_sort_course', 'asc'],
-            ['_sort_name', 'asc'],
-        ])
-        ->values()
-        ->map(function ($row) {
-            unset($row['_sort_year'], $row['_sort_school'], $row['_sort_course'], $row['_sort_name']);
-            return $row;
-        })
-        ->values();
-
-        return response()->json([
-            'success' => true,
-            'count'   => $rows->count(),
-            'data'    => $rows,
-        ]);
-    }
-
-    /**
-     * Generate a report based on filters (date range, program, school, course, municipality).
-     */
-    public function generateReport(Request $request)
-    {
-
-        $query = ScholarshipProfile::with([
-            'createdBy',
-            'profileRequirements.requirement',
-            'scholarshipGrant',
-            'scholarshipGrant.interviewer',
-            'academicEnrollments',
-        ]);
-
-        // ── Build scholarshipGrant-level filters ──
-        $scholarshipGrantFilters = [];
-
-        if ($request->filled('date_from') || $request->filled('date_to')) {
-            $dateFrom = $request->filled('date_from') ? $request->date_from : null;
-            $dateTo = $request->filled('date_to') ? $request->date_to : null;
-            $isTechVoc = $request->has('techvoc_date_filter');
-
-            $scholarshipGrantFilters[] = function ($q) use ($dateFrom, $dateTo, $isTechVoc) {
-                if ($dateFrom && $dateTo) {
-                    if ($isTechVoc) {
-                        $q->where(function ($sub) use ($dateFrom, $dateTo) {
-                            $sub->whereBetween('start_date', [$dateFrom, $dateTo])
-                                ->orWhereBetween('end_date', [$dateFrom, $dateTo])
-                                ->orWhere(function ($inner) use ($dateFrom, $dateTo) {
-                                    $inner->where('start_date', '<=', $dateFrom)
-                                        ->where('end_date', '>=', $dateTo);
-                                });
-                        });
-                    } else {
-                        $q->whereBetween('date_filed', [$dateFrom, $dateTo]);
-                    }
-                } elseif ($dateFrom) {
-                    if ($isTechVoc) {
-                        $q->whereDate('end_date', '>=', $dateFrom);
-                    } else {
-                        $q->whereDate('date_filed', '>=', $dateFrom);
-                    }
-                } elseif ($dateTo) {
-                    if ($isTechVoc) {
-                        $q->whereDate('start_date', '<=', $dateTo);
-                    } else {
-                        $q->whereDate('date_filed', '<=', $dateTo);
-                    }
-                }
-            };
-        }
-
-        if ($request->filled('course')) {
-            $singleCourse = $request->course;
-            $scholarshipGrantFilters[] = function ($q) use ($singleCourse) {
-                $q->whereHas('course', function ($cq) use ($singleCourse) {
-                    $cq->where('courses.shortname', 'like', '%' . $singleCourse . '%')
-                        ->orWhere('courses.name', 'like', '%' . $singleCourse . '%');
-                });
-            };
-        }
-
-        if ($request->filled('courses')) {
-            $coursesArray = array_map('trim', explode(',', $request->courses));
-            $scholarshipGrantFilters[] = function ($q) use ($coursesArray) {
-                $q->whereHas('course', function ($cq) use ($coursesArray) {
-                    $cq->where(function ($subQuery) use ($coursesArray) {
-                        foreach ($coursesArray as $course) {
-                            $subQuery->orWhere('courses.name', 'like', '%' . $course . '%');
-                        }
-                    });
-                });
-            };
-        }
-
-        if ($request->filled('unified_status')) {
-            $statuses = is_array($request->unified_status)
-                ? $request->unified_status
-                : explode(',', $request->unified_status);
-            $statuses = array_values(array_unique(array_filter(array_merge(
-                array_map('trim', $statuses),
-                in_array('active', array_map('trim', $statuses), true) ? ['approved'] : []
-            ))));
-
-            // "graduated" is not a unified_status — it's based on academic_enrollments.graduation_date
-            $hasGraduated = false;
-            $statuses = array_values(array_filter($statuses, function ($s) use (&$hasGraduated) {
-                if ($s === 'graduated') {
-                    $hasGraduated = true;
-                    return false;
-                }
-                return true;
-            }));
-
-            if (!empty($statuses)) {
-                $scholarshipGrantFilters[] = function ($q) use ($statuses) {
-                    $q->whereIn('unified_status', $statuses);
-                };
-            }
-
-            if ($hasGraduated) {
-                $query->whereHas('academicEnrollments', function ($q) {
-                    $q->whereNotNull('graduation_date');
-                });
-            }
-        }
-
-        if ($request->filled('program')) {
-            $programIds = array_map('trim', explode(',', $request->program));
-            $scholarshipGrantFilters[] = function ($q) use ($programIds) {
-                $q->whereIn('program_id', $programIds);
-            };
-        }
-
-        if ($request->filled('school')) {
-            $schools = array_map('trim', explode(',', $request->school));
-            $scholarshipGrantFilters[] = function ($q) use ($schools) {
-                $q->whereHas('school', function ($sq) use ($schools) {
-                    $sq->where(function ($subQuery) use ($schools) {
-                        foreach ($schools as $school) {
-                            $subQuery->orWhere('schools.shortname', 'like', '%' . $school . '%')
-                                ->orWhere('schools.name', 'like', '%' . $school . '%');
-                        }
-                    });
-                });
-            };
-        }
-
-        if ($request->filled('year_level')) {
-            $yearLevels = array_map('trim', explode(',', $request->year_level));
-            $scholarshipGrantFilters[] = function ($q) use ($yearLevels) {
-                $q->where(function ($subQuery) use ($yearLevels) {
-                    foreach ($yearLevels as $yearLevel) {
-                        $subQuery->orWhere('year_level', 'like', '%' . $yearLevel . '%');
-                    }
-                })->whereNotNull('year_level');
-            };
-        }
-
-        if ($request->filled('yakap_category')) {
-            $yakapCategory = $request->yakap_category;
-            $scholarshipGrantFilters[] = function ($q) use ($yakapCategory) {
-                $q->where('yakap_category', $yakapCategory);
-            };
-        }
-
-        if ($request->filled('grant_provision')) {
-            $grantProvisions = array_map('trim', explode(',', $request->grant_provision));
-            $scholarshipGrantFilters[] = function ($q) use ($grantProvisions) {
-                $q->whereIn('grant_provision', $grantProvisions);
-            };
-        }
-
-        // Apply all scholarshipGrant filters in a SINGLE whereHas so they match the SAME record
-        if (!empty($scholarshipGrantFilters)) {
-            $query->whereHas('scholarshipGrant', function ($q) use ($scholarshipGrantFilters) {
-                foreach ($scholarshipGrantFilters as $filter) {
-                    $filter($q);
-                }
-            });
-        }
-
-        // JPM Filters - handle both string and boolean values (and check for non-empty)
-        if ($request->filled('show_jpm_only') && $request->show_jpm_only !== '' && in_array($request->show_jpm_only, [1, '1', true, 'true'], true)) {
-            $query->where(function ($q) {
-                $q->where('is_jpm_member', true)
-                    ->orWhere('is_father_jpm', true)
-                    ->orWhere('is_mother_jpm', true)
-                    ->orWhere('is_guardian_jpm', true);
-            });
-        }
-
-        if ($request->filled('hide_jpm') && $request->hide_jpm !== '' && in_array($request->hide_jpm, [1, '1', true, 'true'], true)) {
-            $query->where(function ($q) {
-                $q->where('is_jpm_member', false)
-                    ->where('is_father_jpm', false)
-                    ->where('is_mother_jpm', false)
-                    ->where('is_guardian_jpm', false);
-            });
-        }
-
-        // Assign grant provision value to all matched profiles if requested (use lightweight ID query)
-        if ($request->filled('grant_value')) {
-            $grantValue = $request->grant_value;
-            $profileIds = (clone $query)->pluck('scholarship_profiles.profile_id')->toArray();
-            ScholarshipRecord::whereIn('profile_id', $profileIds)
-                ->whereIn('unified_status', self::CURRENT_SCHOLARSHIP_RECORD_STATUSES)
-                ->update(['grant_provision' => $grantValue]);
-        }
-
-        $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
-        $reportRows = [];
-
-        $query->chunk(200, function ($profiles) use ($request, $expenseProjectionService, &$reportRows) {
-            foreach ($profiles as $profile) {
-                $record = $this->resolveReportScholarshipRecord($profile, $request);
-
-                if ($record) {
-                    $record = $this->attachExpenseProjection($record, $expenseProjectionService);
-                }
-
-                $reportRows[] = $this->transformProfileForReport($profile, $record);
-            }
-        });
-
-        $reportRows = collect($reportRows);
-
-        $reportType = $request->input('report_type', 'list');
-        $filters = [
-            'name' => $request->get('name', ''),
-            'program' => ScholarshipProgram::find($request->program)->name ?? '',
-            'school' => $request->get('school', ''), // Now handles comma-separated shortnames
-            'course' => Course::find($request->course)->name ?? '',
-            'courses' => $request->get('courses', ''), // Add support for multiple courses
-            'municipality' => $request->get('municipality', ''),
-            'year_level' => $request->get('year_level', ''),
-            'yakap_category' => $request->get('yakap_category', ''),
-            'date_from' => $request->get('date_from', ''),
-            'date_to' => $request->get('date_to', ''),
-        ];
-
-        if ($reportType === 'summary') {
-            // Generate summary based on filtered results
-            // Only exclude summary if filter has single value (not multiple selections)
-            $summary = [
-                'total' => $reportRows->count(),
-            ];
-
-            // Program summary: exclude only if single program selected
-            if (!$request->filled('program')) {
-                $summary['by_program'] = $reportRows->groupBy(function ($row) {
-                    return $row['program_name'] ?: 'no_program';
-                })->map(fn($group) => $group->count());
-            }
-
-            // School summary: always include (even if schools are filtered, show breakdown of selected schools)
-            $summary['by_school'] = $reportRows->groupBy(function ($row) {
-                return $row['school_name'] ?: 'no_school';
-            })->map(fn($group) => $group->count());
-
-            // Course summary: always include (even if courses are filtered, show breakdown of selected courses)
-            $summary['by_course'] = $reportRows->groupBy(function ($row) {
-                return $row['course_name'] ?: 'no_course';
-            })->map(fn($group) => $group->count());
-
-            // Year level summary: exclude only if single year level selected
-            if (!$request->filled('year_level')) {
-                $summary['by_year_level'] = $reportRows->groupBy(function ($row) {
-                    return $row['year_level'] ?: 'no_year_level';
-                })->map(fn($group) => $group->count());
-            }
-
-            // Check if user has permission to view JPM highlighting
-            // Only enable highlighting if user has permission AND enableJpmHighlighting is true
-            $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && $request->enable_jpm_highlighting == 1;
-            $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
-            $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
-            $canViewJpm = $request->user() && $request->user()->can('jpm.view') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
-
-            return response()->json([
-                'success' => true,
-                'type' => 'summary',
-                'summary' => $summary,
-                'parameters' => $filters,
-                'canViewJpm' => $canViewJpm,
-            ]);
-        } else {
-            // Check if user has permission to view JPM highlighting
-            // Only enable highlighting if user has permission AND enableJpmHighlighting is true
-            $enableJpmHighlighting = $request->filled('enable_jpm_highlighting') && $request->enable_jpm_highlighting == 1;
-            $showJpmOnly = $request->filled('show_jpm_only') && $request->show_jpm_only;
-            $hideJpm = $request->filled('hide_jpm') && $request->hide_jpm;
-            $canViewJpm = $request->user() && $request->user()->can('jpm.view') && $enableJpmHighlighting && !$showJpmOnly && !$hideJpm;
-
-            return response()->json([
-                'success' => true,
-                'type' => 'list',
-                'count' => $reportRows->count(),
-                'data' => $reportRows,
-                'parameters' => $filters,
-                'canViewJpm' => $canViewJpm,
-            ]);
-        }
-    }
-
-    private function resolveReportScholarshipRecord(ScholarshipProfile $profile, Request $request): ?ScholarshipRecord
-    {
-        $records = $profile->relationLoaded('scholarshipGrant')
-            ? $profile->scholarshipGrant->filter(fn($record) => $record instanceof ScholarshipRecord)
-            : collect();
-
-        if ($records->isEmpty()) {
-            return null;
-        }
-
-        $matchingRecords = $records->filter(
-            fn(ScholarshipRecord $record) => $this->scholarshipRecordMatchesReportFilters($record, $request)
-        );
-
-        return $this->sortReportScholarshipRecords($matchingRecords->isNotEmpty() ? $matchingRecords : $records)->first();
-    }
-
-    private function scholarshipRecordMatchesReportFilters(ScholarshipRecord $record, Request $request): bool
-    {
-        if ($request->filled('unified_status')) {
-            $statuses = is_array($request->unified_status)
-                ? $request->unified_status
-                : explode(',', $request->unified_status);
-
-            $statuses = array_values(array_unique(array_filter(array_merge(
-                array_map('trim', $statuses),
-                in_array('active', array_map('trim', $statuses), true) ? ['approved'] : []
-            ))));
-
-            // "graduated" is handled at the profile level, not the record level
-            $statuses = array_values(array_filter($statuses, fn($s) => $s !== 'graduated'));
-
-            if (!empty($statuses) && !in_array((string) $record->unified_status, $statuses, true)) {
-                return false;
-            }
-        }
-
-        if ($request->filled('program')) {
-            $programIds = array_map('trim', explode(',', (string) $request->program));
-            if (!in_array((string) $record->program_id, $programIds, true)) {
-                return false;
-            }
-        }
-
-        if ($request->filled('school')) {
-            $schools = array_values(array_filter(array_map('trim', explode(',', (string) $request->school))));
-
-            if (!$this->matchesAnyReportTerms([
-                $record->school?->shortname,
-                $record->school?->name,
-            ], $schools)) {
-                return false;
-            }
-        }
-
-        if ($request->filled('course')) {
-            $courseFilter = trim((string) $request->course);
-
-            if (is_numeric($courseFilter)) {
-                if ((string) $record->course_id !== $courseFilter) {
-                    return false;
-                }
-            } elseif (!$this->matchesAnyReportTerms([
-                $record->course?->shortname,
-                $record->course?->name,
-            ], [$courseFilter])) {
-                return false;
-            }
-        }
-
-        if ($request->filled('courses')) {
-            $courses = array_values(array_filter(array_map('trim', explode(',', (string) $request->courses))));
-
-            if (!$this->matchesAnyReportTerms([
-                $record->course?->shortname,
-                $record->course?->name,
-            ], $courses)) {
-                return false;
-            }
-        }
-
-        if ($request->filled('year_level')) {
-            $yearLevels = array_values(array_filter(array_map('trim', explode(',', (string) $request->year_level))));
-            $recordYearLevel = trim((string) ($record->year_level ?? ''));
-
-            if ($recordYearLevel === '' || !$this->matchesAnyReportTerms([$recordYearLevel], $yearLevels)) {
-                return false;
-            }
-        }
-
-        if ($request->filled('grant_provision')) {
-            $grantProvisions = array_values(array_filter(array_map('trim', explode(',', (string) $request->grant_provision))));
-            if (!in_array((string) $record->grant_provision, $grantProvisions, true)) {
-                return false;
-            }
-        }
-
-        if ($request->filled('yakap_category') && (string) $record->yakap_category !== (string) $request->yakap_category) {
-            return false;
-        }
-
-        $isTechVoc = $request->has('techvoc_date_filter');
-
-        if ($isTechVoc) {
-            $startDate = $record->start_date?->format('Y-m-d');
-            $endDate = $record->end_date?->format('Y-m-d');
-
-            if ($request->filled('date_from') && $request->filled('date_to')) {
-                $from = (string) $request->date_from;
-                $to = (string) $request->date_to;
-                $overlaps = ($startDate && $startDate <= $to && $endDate && $endDate >= $from)
-                    || ($startDate && $startDate >= $from && $startDate <= $to)
-                    || ($endDate && $endDate >= $from && $endDate <= $to);
-                if (!$overlaps) return false;
-            } elseif ($request->filled('date_from')) {
-                if (!$endDate || $endDate < (string) $request->date_from) return false;
-            } elseif ($request->filled('date_to')) {
-                if (!$startDate || $startDate > (string) $request->date_to) return false;
-            }
-        } else {
-            $dateFiled = $record->date_filed?->format('Y-m-d');
-            if ($request->filled('date_from') && (!$dateFiled || $dateFiled < (string) $request->date_from)) return false;
-            if ($request->filled('date_to') && (!$dateFiled || $dateFiled > (string) $request->date_to)) return false;
-        }
-
-        return true;
-    }
-
-    private function matchesAnyReportTerms(array $values, array $terms): bool
-    {
-        $normalizedValues = collect($values)
-            ->map(fn($value) => trim((string) ($value ?? '')))
-            ->filter()
-            ->map(fn($value) => mb_strtolower($value))
-            ->values();
-
-        if ($normalizedValues->isEmpty()) {
-            return false;
-        }
-
-        foreach ($terms as $term) {
-            $normalizedTerm = mb_strtolower(trim((string) $term));
-
-            if ($normalizedTerm === '') {
-                continue;
-            }
-
-            if ($normalizedValues->contains(fn($value) => str_contains($value, $normalizedTerm))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function sortReportScholarshipRecords($records)
-    {
-        return $records->sortByDesc(function (ScholarshipRecord $record) {
-            return $record->date_approved?->format('Y-m-d H:i:s')
-                ?? $record->date_filed?->format('Y-m-d H:i:s')
-                ?? $record->created_at?->format('Y-m-d H:i:s')
-                ?? '';
-        })->values();
-    }
-
-    private function transformProfileForReport(ScholarshipProfile $profile, ?ScholarshipRecord $record): array
-    {
-        $reportStatus = (string) ($record?->unified_status ?? 'unknown');
-
-        // Check if the profile is graduated (has any enrollment with graduation_date)
-        $isGraduated = $profile->relationLoaded('academicEnrollments')
-            && $profile->academicEnrollments->contains(fn($e) => !empty($e->graduation_date));
-
-        if ($isGraduated) {
-            $reportStatus = 'graduated';
-        }
-
-        $graduationInfo = null;
-        if ($isGraduated) {
-            $gradEnrollment = $profile->academicEnrollments->first(fn($e) => !empty($e->graduation_date));
-            $graduationInfo = [
-                'graduation_date' => $gradEnrollment?->graduation_date,
-                'graduation_remarks' => $gradEnrollment?->graduation_remarks,
-            ];
-        }
-
-        $reportDate = $record?->date_approved ?? $record?->date_filed ?? $profile->date_filed;
-
-        return [
-            'id' => $record?->id ?? $profile->profile_id,
-            'profile_id' => $profile->profile_id,
-            'scholarship_record_id' => $record?->id,
-            'report_status' => $reportStatus,
-            'approval_status' => $reportStatus,
-            'unified_status' => $reportStatus,
-            'full_name' => trim(($profile->first_name ?? '') . ' ' . ($profile->last_name ?? '')),
-            'first_name' => $profile->first_name,
-            'middle_name' => $profile->middle_name,
-            'last_name' => $profile->last_name,
-            'extension_name' => $profile->extension_name,
-            'is_jpm_member' => (bool) $profile->is_jpm_member,
-            'is_father_jpm' => (bool) $profile->is_father_jpm,
-            'is_mother_jpm' => (bool) $profile->is_mother_jpm,
-            'is_guardian_jpm' => (bool) $profile->is_guardian_jpm,
-            'birthdate' => $profile->birthdate,
-            'gender' => $profile->gender,
-            'indigenous_group' => $profile->indigenous_group,
-            'contact_no' => $profile->contact_no,
-            'email' => $profile->email,
-            'address' => $profile->address,
-            'municipality' => $profile->municipality,
-            'barangay' => $profile->barangay,
-            'submitted_requirements' => $this->profileSubmittedRequirementNames($profile),
-            'remarks' => $record?->remarks ?? $profile->remarks,
-            'decline_reason' => $reportStatus === 'denied' ? ($record?->remarks ?? $profile->remarks) : null,
-            'program_name' => $record?->program?->shortname ?? $record?->program?->name,
-            'school_name' => $record?->school?->name ?? $record?->school?->shortname,
-            'course_name' => $record?->course?->name ?? $record?->course?->shortname,
-            'year_level' => $record?->year_level,
-            'term' => $record?->term,
-            'academic_year' => $record?->academic_year,
-            'grant_provision' => $record?->grant_provision ?? '-',
-            'grant_provision_label' => SystemOption::formatGrantProvisionLabel($record?->grant_provision, '-'),
-            'start_date' => $record?->start_date,
-            'end_date' => $record?->end_date,
-            'no_of_days' => $record?->no_of_days,
-            'no_of_hours' => $record?->no_of_hours,
-            'yakap_category' => $record?->yakap_category ?? 'yakap-capitol',
-            'yakap_location' => $record?->yakap_location,
-            'projected_total_expense' => $record?->getAttribute('projected_total_expense'),
-            'projected_total_expense_formatted' => $record?->getAttribute('projected_total_expense_formatted'),
-            'projected_term_count' => $record?->getAttribute('projected_term_count'),
-            'projected_completion_year' => $record?->getAttribute('projected_completion_year'),
-            'interviewed_at' => $record?->interviewed_at,
-            'interviewer_name' => $record?->interviewer?->name,
-            'endorsed_by' => $record?->endorsed_by,
-            'date_filed' => $record?->date_filed ?? $profile->date_filed,
-            'date_applied' => $record?->date_filed ?? $profile->date_filed,
-            'date_approved' => $record?->date_approved,
-            'date_denied' => $reportStatus === 'denied' ? $reportDate : null,
-            'report_date' => $reportDate,
-            'jpm_remarks' => $profile->jpm_remarks,
-            'graduation_info' => $graduationInfo,
-        ];
-    }
-
-    private function profileSubmittedRequirementNames(ScholarshipProfile $profile): array
-    {
-        if (!$profile->relationLoaded('profileRequirements')) {
-            return [];
-        }
-
-        return $profile->profileRequirements
-            ->map(fn($profileRequirement) => $profileRequirement->requirement?->name)
-            ->filter(fn($name) => trim((string) $name) !== '')
-            ->values()
-            ->all();
-    }
-
-    /**
      * Enhanced Scholarship Workflow Methods
      */
 
@@ -1200,8 +541,6 @@ class ScholarshipProfileController extends Controller
             'profiles' => $profiles,
             'filters' => $request->only(ScholarshipProfileListingService::FILTER_KEYS),
             'programs' => $programs,
-            'declineReasons' => config('scholarship.decline_reasons'),
-            'profiles_total' => $profiles->total(),
         ]);
     }
 
@@ -1532,7 +871,7 @@ class ScholarshipProfileController extends Controller
     /**
      * Update scholarship record status (for marking as approved/denied during review)
      */
-    public function updateStatus(Request $request, ScholarshipRecord $record)
+    public function updateStatus(Request $request, ScholarshipRecord $record, AcademicRecordSyncService $academicRecordSyncService)
     {
         if (!Gate::allows('applicants.approve')) {
             abort(403, 'Unauthorized action.');
@@ -1545,6 +884,8 @@ class ScholarshipProfileController extends Controller
         try {
             $record->unified_status = $request->unified_status;
             $record->save();
+
+            $academicRecordSyncService->syncScholarshipRecord($record->fresh());
 
             return back()->with('success', 'Application status updated successfully.');
         } catch (\Exception $e) {
@@ -2061,14 +1402,6 @@ class ScholarshipProfileController extends Controller
         }
 
         // If record_ids are provided, update the list composition
-        $rawInput = request()->input('record_ids');
-        \Log::info('refreshRecommendationList - raw record_ids input', [
-            'has_key' => request()->has('record_ids'),
-            'raw_type' => gettype($rawInput),
-            'raw_value' => $rawInput,
-            'all_input' => request()->all(),
-        ]);
-
         if (request()->has('record_ids')) {
             $recordIds = collect(request()->input('record_ids', []))
                 ->map(fn($id) => (int) $id)
@@ -2097,12 +1430,6 @@ class ScholarshipProfileController extends Controller
                     'message' => 'Some selected records are not recommended for approval.',
                 ], 422);
             }
-
-            \Log::info('refreshRecommendationList - setting record_ids', [
-                'list_id' => $recommendationList->id,
-                'old_ids' => $recommendationList->selected_record_ids,
-                'new_ids' => $recordIds->toArray(),
-            ]);
 
             $recommendationList->selected_record_ids = $recordIds->toArray();
         }
@@ -2142,12 +1469,6 @@ class ScholarshipProfileController extends Controller
         $recommendationList->save();
         $recommendationList->refresh();
 
-        \Log::info('refreshRecommendationList - saved', [
-            'list_id' => $recommendationList->id,
-            'saved_ids' => $recommendationList->fresh()->selected_record_ids,
-            'record_count' => $refreshedRecords->count(),
-        ]);
-
         Log::info('recommendation_list_refreshed', [
             'id' => $recommendationList->id,
             'list_number' => $recommendationList->list_number,
@@ -2157,69 +1478,6 @@ class ScholarshipProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => sprintf('Recommendation list %s updated with latest record data.', $recommendationList->list_number),
-            'data' => $this->transformRecommendationList($recommendationList),
-        ]);
-    }
-
-    public function removeRecordFromRecommendationList(RecommendationList $recommendationList, ScholarshipRecord $scholarshipRecord): JsonResponse
-    {
-        if (!Gate::allows('applicants.approve')) {
-            abort(403, 'You do not have permission to update recommendation lists.');
-        }
-
-        $recordId = (int) $scholarshipRecord->id;
-        $currentIds = collect($recommendationList->selected_record_ids ?? [])
-            ->map(fn($id) => (int) $id)
-            ->filter()
-            ->unique()
-            ->values();
-
-        if (!$currentIds->contains($recordId)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Record is not in this recommendation list.',
-            ], 422);
-        }
-
-        $newIds = $currentIds->filter(fn($id) => $id !== $recordId)->values();
-
-        if ($newIds->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot remove the last record. At least one record is required.',
-            ], 422);
-        }
-
-        $expenseProjectionService = app(ScholarshipExpenseProjectionService::class);
-
-        $records = ScholarshipRecord::with([
-            'profile',
-            'program', 'school', 'course', 'interviewer',
-        ])
-            ->whereIn('id', $newIds)
-            ->get()
-            ->map(fn(ScholarshipRecord $r) => $this->attachExpenseProjection($r, $expenseProjectionService))
-            ->keyBy('id');
-
-        $refreshedRecords = $newIds->map(fn($id) => $records->get($id))->filter()->values();
-
-        $recommendationList->selected_record_ids = $newIds->toArray();
-        $recommendationList->records_snapshot = $refreshedRecords;
-        $recommendationList->record_count = $refreshedRecords->count();
-        $recommendationList->total_projected_expense = $refreshedRecords->sum('projected_total_expense');
-        $recommendationList->save();
-        $recommendationList->refresh();
-
-        Log::info('recommendation_list_record_removed', [
-            'id' => $recommendationList->id,
-            'list_number' => $recommendationList->list_number,
-            'removed_record_id' => $recordId,
-            'remaining_count' => $refreshedRecords->count(),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => sprintf('Record removed from recommendation list %s.', $recommendationList->list_number),
             'data' => $this->transformRecommendationList($recommendationList),
         ]);
     }
@@ -2349,25 +1607,12 @@ class ScholarshipProfileController extends Controller
 
     private function transformRecommendationList(RecommendationList $recommendationList): array
     {
-        $allocationLookup = $this->getInterviewedApplicantsBudgetAllocationLookup();
-
-        $currentBudgetAllocation = $recommendationList->budget_allocation_key
-            ? ($allocationLookup[$recommendationList->budget_allocation_key] ?? null)
-            : null;
-
-        if (! is_array($currentBudgetAllocation)) {
-            $savedParticularId = is_array($recommendationList->budget_allocation)
-                ? ($recommendationList->budget_allocation['particular_id'] ?? null)
-                : null;
-
-            if (filled($savedParticularId)) {
-                $currentBudgetAllocation = $allocationLookup[(string) $savedParticularId] ?? null;
-            }
-        }
-
-        $budgetAllocation = is_array($currentBudgetAllocation)
-            ? $currentBudgetAllocation
-            : $recommendationList->budget_allocation;
+        // budget_allocation is a snapshot recorded at request time (see
+        // RecommendationListService::normalizeBudgetAllocation) — it must not
+        // be overwritten with a live lookup, or cumulative figures like
+        // approved_scholars_to_date would silently change every time an old
+        // request is viewed instead of staying fixed to when it was made.
+        $budgetAllocation = $recommendationList->budget_allocation;
 
         return [
             'id' => $recommendationList->id,
@@ -2577,8 +1822,10 @@ class ScholarshipProfileController extends Controller
             ->whereIn('unified_status', self::ALLOCATION_COUNTED_SCHOLARSHIP_RECORD_STATUSES)
             ->get();
 
+        $approvedRecommendationListsForCumulative = $this->getApprovedRecommendationListsForCumulativeCount();
+
         return $this->interviewedApplicantsBudgetAllocationCache = $budgetAllocations
-            ->map(function ($allocation) use ($approvedScholarRecords, $disbursedByAllocation) {
+            ->map(function ($allocation) use ($approvedScholarRecords, $disbursedByAllocation, $approvedRecommendationListsForCumulative) {
                 $disbursed = (float) ($disbursedByAllocation[$allocation['key']] ?? 0);
                 $programIds = collect($allocation['program_ids'] ?? [])
                     ->map(fn($programId) => (int) $programId)
@@ -2587,34 +1834,30 @@ class ScholarshipProfileController extends Controller
                     ->all();
                 $calendarYear = $this->getInterviewedApplicantsBudgetAllocationCalendarYear($allocation);
 
+                // approvedScholarRecordsForAllocation still drives the current-AY estimated
+                // grant total (feeds Running Balance / Remaining Balance) — do not change.
                 $approvedScholarRecordsForAllocation = $approvedScholarRecords
                     ->filter(fn(ScholarshipRecord $record) => $this->matchesInterviewedApplicantsCalendarYearProgramScholarRecord($record, $calendarYear, $programIds))
                     ->sortByDesc(fn(ScholarshipRecord $record) => $record->date_approved?->format('Y-m-d') ?? '')
                     ->unique('profile_id')
                     ->values();
 
-                $approvedScholars = $approvedScholarRecordsForAllocation
-                    ->map(function (ScholarshipRecord $record) use ($allocation) {
-                        return [
-                            'profile_id' => $record->profile_id,
-                            'program_id' => $record->program?->id ?? $record->program_id,
-                            'name' => $this->formatInterviewedApplicantsBudgetAllocationScholarName($record->profile),
-                            'program' => $record->program?->shortname ?: $record->program?->name ?: ($allocation['program'] ?? 'N/A'),
-                            'program_name' => $record->program?->name ?: null,
-                            'program_shortname' => $record->program?->shortname ?: null,
-                            'date_approved' => $record->date_approved?->format('Y-m-d'),
-                            'status' => (string) $record->unified_status,
-                        ];
-                    })
-                    ->values()
-                    ->all();
-
-                $approvedScholarsToDate = count($approvedScholars);
                 $approvedScholarsCurrentAyEstimatedTotal = round(
                     $approvedScholarRecordsForAllocation->sum(
                         fn(ScholarshipRecord $record) => $this->estimateInterviewedApplicantsBudgetAllocationCurrentAyGrant($record)
                     ),
                     2,
+                );
+
+                // Cumulative Approved No. — sum of record_count from previously APPROVED
+                // recommendation lists whose own records belong to the same scholarship
+                // program(s) (EFA/MED/TECHVOC/BAR EXAMINEES, not the budget allocation's
+                // program) and the same calendar year, rather than a live ScholarshipRecord
+                // count. No per-scholar breakdown is kept (see approved_scholars below).
+                $approvedScholarsToDate = $this->cumulativeApprovedCountForProgramsAndYear(
+                    $approvedRecommendationListsForCumulative,
+                    $allocation['programs'] ?? [],
+                    $calendarYear
                 );
 
                 return [
@@ -2634,7 +1877,7 @@ class ScholarshipProfileController extends Controller
                     'disbursed' => $disbursed,
                     'approved_scholars_to_date' => $approvedScholarsToDate,
                     'approved_scholars_current_ay_estimated_total' => $approvedScholarsCurrentAyEstimatedTotal,
-                    'approved_scholars' => $approvedScholars,
+                    'approved_scholars' => [],
                     'date_start' => $allocation['date_start'] ?? null,
                     'date_end' => $allocation['date_end'] ?? null,
                 ];
@@ -2799,36 +2042,61 @@ class ScholarshipProfileController extends Controller
         return $recordProgramId > 0 && in_array($recordProgramId, $programIds, true);
     }
 
-    private function formatInterviewedApplicantsBudgetAllocationScholarName(?ScholarshipProfile $profile): string
+    /**
+     * Approved recommendation lists, reduced to just what the Cumulative
+     * Approved No. calculation needs: how many records they carried, which
+     * scholarship program(s) (EFA/MED/TECHVOC/BAR EXAMINEES) those records
+     * belong to, and the calendar year the list's budget allocation was for.
+     */
+    private function getApprovedRecommendationListsForCumulativeCount(): Collection
     {
-        if (!$profile) {
-            return 'Unknown Scholar';
-        }
+        return RecommendationList::query()
+            ->whereNotNull('approved_at')
+            ->select(['id', 'record_count', 'records_snapshot', 'budget_allocation'])
+            ->get()
+            ->map(function (RecommendationList $recommendationList) {
+                $calendarYear = isset($recommendationList->budget_allocation['calendar_year'])
+                    ? (int) $recommendationList->budget_allocation['calendar_year']
+                    : null;
 
-        $lastName = trim((string) $profile->last_name);
-        $firstMiddle = trim(implode(' ', array_filter([
-            $profile->first_name,
-            $profile->middle_name,
-            $profile->extension_name,
-        ])));
+                $programShortnames = collect($recommendationList->records_snapshot ?? [])
+                    ->map(fn($record) => $record['program']['shortname'] ?? null)
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
 
-        if ($lastName && $firstMiddle) {
-            return $lastName . ', ' . $firstMiddle;
-        }
-
-        return trim((string) ($profile->full_name ?? 'Unknown Scholar')) ?: 'Unknown Scholar';
+                return [
+                    'record_count' => (int) ($recommendationList->record_count ?? 0),
+                    'calendar_year' => $calendarYear,
+                    'program_shortnames' => $programShortnames,
+                ];
+            });
     }
 
-    private function getInterviewedApplicantsBudgetAllocationLookup(): array
-    {
-        if ($this->interviewedApplicantsBudgetAllocationLookupCache !== null) {
-            return $this->interviewedApplicantsBudgetAllocationLookupCache;
+    /**
+     * Sum of record_count across previously approved recommendation lists that
+     * share at least one scholarship program with $programShortnames and match
+     * $calendarYear exactly.
+     */
+    private function cumulativeApprovedCountForProgramsAndYear(
+        Collection $approvedRecommendationLists,
+        array $programShortnames,
+        ?int $calendarYear
+    ): int {
+        if ($programShortnames === [] || !$calendarYear) {
+            return 0;
         }
 
-        return $this->interviewedApplicantsBudgetAllocationLookupCache = collect($this->getInterviewedApplicantsBudgetAllocations())
-            ->filter(fn($budgetAllocation) => filled($budgetAllocation['key'] ?? null))
-            ->keyBy('key')
-            ->all();
+        return $approvedRecommendationLists
+            ->filter(function (array $list) use ($programShortnames, $calendarYear) {
+                if ($list['calendar_year'] !== $calendarYear) {
+                    return false;
+                }
+
+                return collect($list['program_shortnames'])->intersect($programShortnames)->isNotEmpty();
+            })
+            ->sum('record_count');
     }
 
     private function validateInterviewAssessment(Request $request, ScholarshipRecord $record): array

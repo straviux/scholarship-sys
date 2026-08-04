@@ -1,9 +1,8 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { usePermission } from '@/composable/permissions';
 import { toast } from '@/utils/toast';
-import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 const props = defineProps({
     show: Boolean,
@@ -13,12 +12,21 @@ const props = defineProps({
 
 const emit = defineEmits(['update:show', 'deleted']);
 
-const { hasRole } = usePermission();
 const deleting = ref(false);
 
 const close = () => {
     emit('update:show', false);
 };
+
+const message = 'Permanently delete this applicant? This action cannot be undone.';
+
+const data = computed(() => {
+    if (!props.applicant) return [];
+    return [
+        { label: 'Name', value: `${props.applicant.last_name}, ${props.applicant.first_name}`, color: '#FF3B30' },
+        { label: 'Contact', value: props.applicant.contact_no },
+    ];
+});
 
 const deleteApplicant = () => {
     if (!props.applicant || deleting.value) return;
@@ -44,53 +52,15 @@ const deleteApplicant = () => {
 </script>
 
 <template>
-    <IosModal :visible="show" title="Confirm Deletion" width="460px" max-width="calc(100vw - 24px)"
-        body-style="padding: 0 16px;" :show-action="true" :loading="deleting"
-        action-class="ios-nav-destructive" @action="deleteApplicant" @update:visible="val => !val && close()">
-        <div v-if="applicant">
-                    <!-- Warning Section -->
-                    <div class="ios-section">
-                        <div class="ios-card">
-                            <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
-                                <AppIcon name="exclamation-triangle" :size="24"
-                                    style="color: #FF3B30; flex-shrink: 0;" />
-                                <div>
-                                    <div class="text-gray-800 dark:text-gray-300"
-                                        style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">
-                                    {{ hasRole('administrator') ? `Permanently delete this applicant?` : `Delete
-                                        this applicant ? ` }}
-                                    </div>
-                                    <div style="font-size: 13px; color: #8E8E93; line-height: 1.4;">
-                                        {{ hasRole('administrator')
-                                            ? `Administrators can permanently delete records. This action cannot be undone.`
-                                            : `Non-administrators can soft delete records. Administrators can restore them
-                                        later.` }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Applicant Info -->
-                    <div class="ios-section">
-                        <div class="ios-section-label text-compact">Applicant</div>
-                        <div class="ios-card">
-                            <div class="ios-row">
-                                <span class="ios-row-label text-sm">Name</span>
-                                <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
-                                    {{ applicant.last_name }}, {{ applicant.first_name }}
-                                </span>
-                            </div>
-                            <div class="ios-row ios-row-last">
-                                <span class="ios-row-label text-sm">Contact</span>
-                                <span style="font-size: 13px; color: #8E8E93;">{{ applicant.contact_no }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom spacing -->
-                    <div style="height: 20px;"></div>
-        </div>
-    </IosModal>
+    <IosConfirmDialog
+        :visible="show"
+        title="Confirm Deletion"
+        :message="message"
+        data-label="Applicant"
+        :data="data"
+        accept-label="Delete"
+        :loading="deleting"
+        @accept="deleteApplicant"
+        @update:visible="val => !val && close()"
+    />
 </template>
-

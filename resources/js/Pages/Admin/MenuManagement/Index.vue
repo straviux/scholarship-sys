@@ -12,12 +12,12 @@ import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import PrimaryButton from '@/Components/ui/buttons/PrimaryButton.vue';
 import SecondaryButton from '@/Components/ui/buttons/SecondaryButton.vue';
-import DangerButton from '@/Components/ui/buttons/DangerButton.vue';
 import InputError from '@/Components/ui/inputs/InputError.vue';
 import InputLabel from '@/Components/ui/inputs/InputLabel.vue';
 import TextInput from '@/Components/ui/inputs/TextInput.vue';
 import TextArea from '@/Components/ui/inputs/TextArea.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 // PrimeVue
 
@@ -34,6 +34,15 @@ const editingMenu = ref(null);
 const savingOrder = ref(false);
 const showDeleteConfirm = ref(false);
 const menuToDelete = ref(null);
+const deleteMenuMessage = computed(() => {
+    const name = menuToDelete.value?.name ?? '';
+    const warning = menuToDelete.value?.is_group
+        ? 'This will also delete all items under it. This action cannot be undone.'
+        : 'This will permanently delete this menu item. This action cannot be undone.';
+    return `Are you sure you want to delete "${name}"? ${warning}`;
+});
+const deleteMenuIcon = computed(() => menuToDelete.value?.is_group ? 'exclamation-triangle' : 'info-circle');
+const deleteMenuIconColor = computed(() => menuToDelete.value?.is_group ? '#FF3B30' : '#3b82f6');
 const showAssignDialog = ref(false);
 const selectedItemsToAssign = ref([]);
 const assigningToGroup = ref(null); // The group we're assigning items to
@@ -628,26 +637,17 @@ const debouncedSaveOrder = () => {
         <ConfirmDialog></ConfirmDialog>
 
         <!-- Delete Confirmation Dialog -->
-        <IosModal :visible="showDeleteConfirm" title="Confirm Delete" width="520px" max-width="95vw"
-            body-style="padding: 16px;" @update:visible="showDeleteConfirm = $event" @close="cancelDelete">
-            <div class="space-y-4">
-                <p class="text-gray-700">
-                    Are you sure you want to delete <strong>"{{ menuToDelete?.name }}"</strong>?
-                </p>
-                <p v-if="menuToDelete?.is_group" class="text-sm text-gray-600">
-                    <AppIcon name="exclamation-triangle" class="text-red-500 mr-2" />
-                    This will also delete all items under it. This action cannot be undone.
-                </p>
-                <p v-else class="text-sm text-gray-600">
-                    <AppIcon name="info-circle" class="text-blue-500 mr-2" />
-                    This will permanently delete this menu item. This action cannot be undone.
-                </p>
-            </div>
-            <div class="flex gap-2 justify-end pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <SecondaryButton @click="cancelDelete">Cancel</SecondaryButton>
-                <DangerButton @click="confirmDelete">Delete</DangerButton>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteConfirm"
+            title="Confirm Delete"
+            width="460px"
+            :message="deleteMenuMessage"
+            :icon="deleteMenuIcon"
+            :icon-color="deleteMenuIconColor"
+            @update:visible="showDeleteConfirm = $event"
+            @close="cancelDelete"
+            @accept="confirmDelete"
+        />
 
         <AdminPageShell title="Menu Management"
             description="Create menu groups, add standalone links, assign grouped items, and reorder the full navigation tree from the iOS-styled menu workspace."

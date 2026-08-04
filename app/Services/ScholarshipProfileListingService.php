@@ -26,6 +26,7 @@ class ScholarshipProfileListingService
         'academic_year',
         'term',
         'grant_provision',
+        'encoded_by',
         'review_status',
         'jpm_status',
         'needs_term_review',

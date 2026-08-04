@@ -9,6 +9,7 @@ import ChangePasswordModal from "@/Pages/Admin/Users/ChangePasswordModal.vue";
 import CreateUserModal from "@/Pages/Admin/Users/CreateUserModal.vue";
 import EditUserModal from "@/Pages/Admin/Users/EditUserModal.vue";
 import IosModal from "@/Components/ui/IosModal.vue";
+import IosConfirmDialog from "@/Components/ui/IosConfirmDialog.vue";
 import { toast } from '@/utils/toast';
 
 const props = defineProps({
@@ -1072,28 +1073,18 @@ const runCleanup = async () => {
         <!-- ============================================ -->
 
         <!-- Delete User Confirmation Dialog -->
-        <IosModal v-model:visible="showConfirmDeleteUserModal" title="Confirm Deletion" width="calc(100vw - 2rem)"
-            max-width="450px" :show-action="true"  action-class="ios-nav-destructive"
-            :loading="userForm.processing" @action="deleteUser(modalUserData.id)">
-            <div class="flex items-center gap-4 py-4">
-                <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
-                <div>
-                    <p class="text-lg font-semibold text-gray-800 mb-4">
-                        Are you sure you want to delete this use?
-                    </p>
-                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
-                        
-                                <div class="font-semibold text-red-800">{{ modalUserData.name }}</div>
-                                <div class="text-sm text-red-600">@{{ modalUserData.username }}</div>
-                            
-                    </div>
-                    <p class="text-sm text-gray-600 mt-2">
-                       This action cannot be undone. All data associated with this user will be permanently
-                            removed.
-                    </p>
-                </div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            v-model:visible="showConfirmDeleteUserModal"
+            title="Confirm Deletion"
+            message="Are you sure you want to delete this user? This action cannot be undone. All data associated with this user will be permanently removed."
+            data-label="User"
+            :data="[
+                { label: 'Name', value: modalUserData.name, color: '#FF3B30' },
+                { label: 'Username', value: `@${modalUserData.username}` },
+            ]"
+            :loading="userForm.processing"
+            @accept="deleteUser(modalUserData.id)"
+        />
 
         <!-- Change Password Modal -->
         <ChangePasswordModal :show="showChangePasswordModal" :user="selectedUser" @close="closeChangePasswordModal"
@@ -1331,24 +1322,14 @@ const runCleanup = async () => {
         </IosModal>
 
         <!-- Delete Role Confirmation Dialog -->
-        <IosModal v-model:visible="showConfirmDeleteRoleModal" title="Confirm Deletion" width="calc(100vw - 2rem)"
-            max-width="450px" :show-action="true"  action-class="ios-nav-destructive"
-            @action="deleteRole">
-            <div class="flex items-center gap-4 py-4">
-                <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
-                <div>
-                    <p class="text-lg font-semibold text-gray-800 mb-2">
-                        Are you sure you want to delete this role?
-                    </p>
-                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
-                        <div class="font-semibold text-red-700 capitalize">{{ modalRoleData.name }}</div>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-2">
-                        This action cannot be undone and may affect users with this role.
-                    </p>
-                </div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            v-model:visible="showConfirmDeleteRoleModal"
+            title="Confirm Deletion"
+            message="Are you sure you want to delete this role? This action cannot be undone and may affect users with this role."
+            data-label="Role"
+            :data="[{ label: 'Name', value: modalRoleData.name, color: '#FF3B30' }]"
+            @accept="deleteRole"
+        />
 
         <!-- ============================================ -->
         <!-- PERMISSION MODALS -->
@@ -1374,24 +1355,16 @@ const runCleanup = async () => {
         </IosModal>
 
         <!-- Delete Permission Confirmation Modal -->
-        <IosModal :visible="showConfirmDeletePermissionModal" title="Delete Permission" :show-action="true"
-            action-class="ios-nav-destructive" @action="deletePermission"
-            @close="closeDeletePermissionModal" @update:visible="showConfirmDeletePermissionModal = $event">
-            <div class="flex items-center gap-4 py-4">
-                <AppIcon name="exclamation-triangle" class="text-3xl text-red-500" />
-                <div>
-                    <p class="text-lg font-semibold text-gray-800 mb-2">
-                        Are you sure you want to delete this permission?
-                    </p>
-                    <div class="bg-gray-100 p-3 rounded border-l-4 border-red-500">
-                        <div class="font-semibold text-red-700 capitalize">{{ permissionToDelete.name }}</div>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-4">
-                        This will remove this permission from all roles that have it.
-                    </p>
-                </div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showConfirmDeletePermissionModal"
+            title="Delete Permission"
+            message="Are you sure you want to delete this permission? This will remove this permission from all roles that have it."
+            data-label="Permission"
+            :data="[{ label: 'Name', value: permissionToDelete.name, color: '#FF3B30' }]"
+            @accept="deletePermission"
+            @close="closeDeletePermissionModal"
+            @update:visible="showConfirmDeletePermissionModal = $event"
+        />
 
         <!-- ============================================ -->
         <!-- PERMISSION CLEANUP DIALOGS -->

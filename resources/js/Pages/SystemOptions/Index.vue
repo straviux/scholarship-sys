@@ -279,27 +279,20 @@
         </IosModal>
 
         <!-- Delete Confirmation Dialog -->
-        <IosModal :visible="showDeleteDialog" title="Confirm Delete" width="450px" max-width="95vw"
-            body-style="padding: 16px;" @update:visible="showDeleteDialog = $event">
-            <div class="flex items-start gap-3">
-                <AppIcon name="exclamation-triangle" class="text-orange-500 text-2xl" />
-                <div>
-                    <p class="mb-2">Are you sure you want to delete this option?</p>
-                    <div class="bg-gray-50 p-3 rounded border">
-                        <p class="font-semibold">{{ optionToDelete?.value }}</p>
-                        <p class="text-sm text-gray-600">{{ optionToDelete?.label }}</p>
-                    </div>
-                    <p class="text-sm text-orange-600 mt-3">
-                        <AppIcon name="info-circle" class="mr-1" />
-                        This action cannot be undone.
-                    </p>
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" outlined @click="showDeleteDialog = false" />
-                <Button label="Delete" severity="danger" @click="deleteOption" :loading="deleteForm.processing" />
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteDialog"
+            title="Confirm Delete"
+            width="450px"
+            message="Are you sure you want to delete this option? This action cannot be undone."
+            icon-color="#f97316"
+            :data="optionToDelete ? [
+                { label: 'Value', value: optionToDelete.value },
+                { label: 'Label', value: optionToDelete.label },
+            ] : []"
+            :loading="deleteForm.processing"
+            @accept="deleteOption"
+            @update:visible="showDeleteDialog = $event"
+        />
     </AdminLayout>
 </template>
 
@@ -311,6 +304,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 const props = defineProps({
     options: Object,

@@ -16,8 +16,6 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:visible', 'preview']);
 
-function close() { emit('update:visible', false); }
-
 /*  PDF builder  */
 const { buildHtmlDoc } = usePdfPrint();
 

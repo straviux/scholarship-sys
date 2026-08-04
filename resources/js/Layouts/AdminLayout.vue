@@ -5,6 +5,7 @@ import NotificationDropdown from "@/Components/ui/navigation/NotificationDropdow
 import ActivityLogsDropdown from "@/Components/ui/navigation/ActivityLogsDropdown.vue";
 import MaintenanceAlertModal from "@/Components/MaintenanceAlertModal.vue";
 import ScrollToTop from "@/Components/ui/ScrollToTop.vue";
+import DotGridSpotlight from "@/Components/ui/DotGridSpotlight.vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
 import { useSmoothScroll } from "@/composables/useSmoothScroll";
 import { usePermission } from "@/composable/permissions";
@@ -558,6 +559,7 @@ watch(sidebarMinimized, (isMinimized) => {
 </script>
 
 <template>
+    <DotGridSpotlight />
     <Toast position="top-center" :life="3500" :baseZIndex="20000" :onClick="onToastClick" />
     <ConfirmDialog></ConfirmDialog>
     <MaintenanceAlertModal />
@@ -1074,25 +1076,29 @@ html.dark .content-bg {
     background: rgba(156, 163, 175, 0.4);
 }
 
-/* Disable html/body scroll — content area handles it */
+/* Disable html/body scroll — content area handles it. Background is now
+   the DotGridSpotlight component (fixed, z-index: -1) showing through the
+   transparent content area. Canvas color must live on html ONLY — when both
+   html and body set a background, only html's propagates to the paint
+   canvas (behind negative z-index content); body's own background instead
+   paints as a normal box, ending up ABOVE the fixed z-index:-1 layer and
+   hiding it entirely. */
 html,
 body {
     overflow: hidden;
     height: 100%;
-    background:
-        radial-gradient(ellipse at 20% 10%, rgba(230, 235, 242, 0.7) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 30%, rgba(220, 228, 238, 0.6) 0%, transparent 45%),
-        radial-gradient(ellipse at 10% 70%, rgba(225, 231, 240, 0.5) 0%, transparent 50%),
-        radial-gradient(ellipse at 70% 85%, rgba(222, 229, 239, 0.6) 0%, transparent 40%),
-        radial-gradient(ellipse at 50% 50%, rgba(228, 233, 241, 0.55) 0%, transparent 60%),
-        linear-gradient(160deg, rgba(235, 239, 245, 0.5) 0%, rgba(225, 230, 238, 0.4) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+}
+
+html {
+    background: #eef1f6;
+}
+
+body {
+    background: transparent;
 }
 
 /* Dark mode body */
-html.dark,
-html.dark body {
+html.dark {
     background: #16181f;
     color-scheme: dark;
 }

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\AcademicEnrollment;
 use App\Models\ScholarshipProfile;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AcademicEnrollmentUpsertRequest extends FormRequest
 {
@@ -19,6 +20,7 @@ class AcademicEnrollmentUpsertRequest extends FormRequest
             'program_id' => ['nullable', 'exists:scholarship_programs,id'],
             'school_id' => ['required', 'exists:schools,id'],
             'course_id' => ['nullable', 'exists:courses,id'],
+            'term_type' => ['required', Rule::in(AcademicEnrollment::TERM_TYPES)],
         ];
     }
 
@@ -56,6 +58,7 @@ class AcademicEnrollmentUpsertRequest extends FormRequest
             'program_id' => $this->normalizeNullableId($this->input('program_id')),
             'school_id' => $this->normalizeNullableId($this->input('school_id')),
             'course_id' => $this->normalizeNullableId($this->input('course_id')),
+            'term_type' => $this->normalizeNullableId($this->input('term_type')),
         ]);
     }
 

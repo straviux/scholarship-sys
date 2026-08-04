@@ -327,6 +327,10 @@
                                                 <p class="text-sm text-gray-500 dark:text-gray-400">
                                                     {{ enrollment.school?.name || 'N/A' }}
                                                 </p>
+                                                <p v-if="enrollment.term_type"
+                                                    class="text-2xs font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+                                                    {{ formatTermType(enrollment.term_type) }}
+                                                </p>
                                                 <p v-if="enrollment.graduation_remarks"
                                                     class="text-xs text-gray-500 dark:text-gray-400">
                                                     {{ enrollment.graduation_remarks }}
@@ -534,8 +538,10 @@
                                         appendTo="body">
                                         <template #item="{ item, props }">
                                             <a v-ripple v-bind="props.action" class="flex items-center gap-2 w-full">
-                                                <AppIcon v-if="item.icon" :name="item.icon" :size="14" />
+                                                <AppIcon v-if="item.icon" :name="item.icon" :size="14"
+                                                    :style="item.iconColor ? { color: item.iconColor } : null" />
                                                 <span>{{ item.label }}</span>
+                                                <AppIcon v-if="item.items" name="chevron-right" :size="14" class="ml-auto" />
                                             </a>
                                         </template>
                                     </ContextMenu>
@@ -876,6 +882,18 @@
         <AcademicRecordDeleteModal v-model:visible="showAcademicDeleteModal" :target="deleteTarget"
             :target-type="deleteTargetType" @success="handleModalSuccess" />
 
+        <IosConfirmDialog
+            v-model:visible="showStatusUpdateConfirm"
+            title="Update Status"
+            icon="sync"
+            icon-color="#007aff"
+            action-class=""
+            :message="statusUpdateMessage"
+            :loading="statusUpdateProcessing"
+            @accept="applyAcademicTermStatusUpdate"
+            @close="statusUpdateTarget = null; statusUpdateNewStatus = null"
+        />
+
         <!-- Scholar Ledger PDF Preview -->
         <PdfPreviewModal :show="showPdfPreview" @update:show="showPdfPreview = $event" :htmlDoc="pdfPreviewHtml"
             :title="pdfPreviewTitle" :paperSize="pdfPreviewSize" />
@@ -1166,6 +1184,7 @@ import { useSystemOptions } from '@/composables/useSystemOptions';
 import { usePdfPrint, renderVueTemplate } from '@/composables/usePdfPrint';
 import { buildScholarshipCoverageText, textToEditorHtml } from '@/Pages/Scholarship/scholarLedgerUtils';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import ScholarLedgerTemplate from '@/Pages/Scholarship/Pdf/ScholarLedgerTemplate.vue';
 import ScholarCertificationTemplate from '@/Pages/Scholarship/Pdf/ScholarCertificationTemplate.vue';
 import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
@@ -1477,7 +1496,33 @@ const activityLogs = ref([]);
 const statusTimeline = ref([]);
 
 // Status composable
-const { getStatusLabel } = useScholarshipStatus();
+const { getStatusLabel, getStatusConfig, getUnifiedStatus, statusOptions } = useScholarshipStatus();
+
+const STATUS_OPTION_PRIORITY = ['active', 'completed'];
+
+const orderedStatusOptions = computed(() => {
+    return [...statusOptions.value].sort((a, b) => {
+        const aIndex = STATUS_OPTION_PRIORITY.indexOf(a.value);
+        const bIndex = STATUS_OPTION_PRIORITY.indexOf(b.value);
+        if (aIndex === -1 && bIndex === -1) return 0;
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+    });
+});
+
+const STATUS_OPTION_ICONS = {
+    pending: 'clock',
+    interviewed: 'comment',
+    approved: 'check-circle',
+    denied: 'times-circle',
+    active: 'check',
+    completed: 'flag',
+    withdrawn: 'sign-out',
+    loa: 'pause',
+    suspended: 'ban',
+    unknown: 'question-circle',
+};
 
 // Watch for tab changes and persist to localStorage
 watch(activeTab, (newValue) => {
@@ -1498,10 +1543,6 @@ onMounted(() => {
 // Computed
 const fullName = computed(() => {
     return `${props.profile.first_name} ${props.profile.middle_name || ''} ${props.profile.last_name} ${props.profile.extension_name || ''}`.trim();
-});
-
-const currentGrant = computed(() => {
-    return props.profile.scholarship_grant?.[0] || null;
 });
 
 const scholarshipRecords = computed(() => {
@@ -1581,6 +1622,7 @@ const buildLegacyAcademicEnrollmentGroups = (records = []) => {
                 program: record.program || null,
                 school: record.school || null,
                 course: record.course || null,
+                term_type: null,
                 graduation_date: null,
                 graduation_remarks: null,
                 is_graduated: false,
@@ -1663,6 +1705,7 @@ const academicEnrollmentGroups = computed(() => {
                 program: enrollment.program || null,
                 school: enrollment.school || null,
                 course: enrollment.course || null,
+                term_type: enrollment.term_type || null,
                 graduation_date: enrollment.graduation_date || null,
                 graduation_remarks: enrollment.graduation_remarks || null,
                 is_graduated: Boolean(enrollment.is_graduated || enrollment.graduation_date),
@@ -1773,7 +1816,29 @@ const academicTermContextMenuItems = computed(() => {
         );
     }
 
+    const canUpdateStatus = isLegacyAcademicRecord ? canEditLegacyAcademicRecordDetails.value : canEditAcademicTermDetails.value;
+    if (canUpdateStatus) {
+        if (items.length > 0) {
+            items.push({ separator: true });
+        }
+
+        items.push({
+            label: 'Update Status',
+            icon: 'sync',
+            items: orderedStatusOptions.value.map((option) => ({
+                label: option.label,
+                icon: STATUS_OPTION_ICONS[option.value] || 'circle',
+                iconColor: getStatusConfig(option.value).color,
+                command: () => confirmUpdateAcademicTermStatus(selectedAcademicTerm.value, option.value),
+            })),
+        });
+    }
+
     if (canDeleteAcademicTermDetails.value) {
+        if (items.length > 0) {
+            items.push({ separator: true });
+        }
+
         items.push({
             label: isLegacyAcademicRecord ? 'Delete Record' : 'Delete Term',
             icon: 'trash',
@@ -1864,6 +1929,14 @@ const buildLegacyScholarEditProfile = (record) => {
         }],
     };
 };
+
+const TERM_TYPE_LABELS = {
+    semester: 'Semester',
+    trimester: 'Trimester',
+    not_applicable: 'Not Applicable',
+};
+
+const formatTermType = (termType) => TERM_TYPE_LABELS[termType] || termType;
 
 const normalizeProgramToken = (value) => String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 
@@ -1969,74 +2042,6 @@ const formatDateTime = (dateString) => {
         minute: '2-digit',
         second: '2-digit'
     }).format(date);
-};
-
-const sortedApprovalHistory = (history) => {
-    if (!history) return [];
-    return [...history].sort((a, b) => new Date(b.performed_at) - new Date(a.performed_at));
-};
-
-const getHistoryActionLabel = (action) => {
-    const labels = {
-        'approved': 'Approved',
-        'denied': 'Denied',
-        'pending': 'Pending',
-        'active': 'Active',
-        'completed': 'Completed',
-        'completed-transferred': 'Completed - Transferred',
-        'withdrawn': 'Withdrawn',
-        'loa': 'Leave of Absence',
-        'suspended': 'Suspended',
-        'unknown': 'Unknown',
-        'declined': 'Declined',
-        'conditional': 'Conditional Approval',
-        'resubmitted': 'Resubmitted',
-        'discontinued': 'Discontinued',
-        'renewal_application': 'Renewal Application'
-    };
-    return labels[action] || action;
-};
-
-const getHistoryIcon = (action) => {
-    const icons = {
-        'approved': 'check',
-        'denied': 'times',
-        'pending': 'clock',
-        'active': 'circle-fill',
-        'completed': 'check-circle',
-        'completed-transferred': 'arrow-right-arrow-left',
-        'withdrawn': 'times-circle',
-        'loa': 'pause',
-        'suspended': 'ban',
-        'unknown': 'question',
-        'declined': 'times',
-        'conditional': 'info-circle',
-        'resubmitted': 'refresh',
-        'discontinued': 'pause',
-        'renewal_application': 'plus'
-    };
-    return icons[action] || 'circle';
-};
-
-const getHistoryStatusClass = (action) => {
-    const classes = {
-        'approved': 'border-green-400 bg-green-50 dark:bg-green-900/20',
-        'denied': 'border-red-400 bg-red-50 dark:bg-red-900/20',
-        'pending': 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20',
-        'active': 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
-        'completed': 'border-gray-400 bg-gray-50 dark:bg-[#2a3040]',
-        'completed-transferred': 'border-slate-400 bg-slate-50 dark:bg-slate-900/20',
-        'withdrawn': 'border-purple-400 bg-purple-50 dark:bg-purple-900/20',
-        'loa': 'border-orange-400 bg-orange-50 dark:bg-orange-900/20',
-        'suspended': 'border-red-900 bg-red-50 dark:bg-red-900/20',
-        'unknown': 'border-gray-300 bg-gray-50 dark:bg-[#2a3040]',
-        'declined': 'border-red-400 bg-red-50 dark:bg-red-900/20',
-        'conditional': 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
-        'resubmitted': 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20',
-        'discontinued': 'border-orange-400 bg-orange-50 dark:bg-orange-900/20',
-        'renewal_application': 'border-purple-400 bg-purple-50 dark:bg-purple-900/20'
-    };
-    return classes[action] || 'border-gray-400 bg-gray-50 dark:bg-[#2a3040]';
 };
 
 const handleSuccess = () => {
@@ -2308,6 +2313,61 @@ const confirmDeleteEnrollment = (enrollment) => {
     deleteTargetType.value = 'enrollment';
     deleteTarget.value = enrollment;
     showAcademicDeleteModal.value = true;
+};
+
+const showStatusUpdateConfirm = ref(false);
+const statusUpdateTarget = ref(null);
+const statusUpdateNewStatus = ref(null);
+const statusUpdateProcessing = ref(false);
+
+const statusUpdateMessage = computed(() => {
+    const currentStatus = statusUpdateTarget.value ? getUnifiedStatus(statusUpdateTarget.value) : null;
+    const currentLabel = currentStatus ? getStatusLabel(currentStatus) : 'Unknown';
+    const newLabel = statusUpdateNewStatus.value ? getStatusLabel(statusUpdateNewStatus.value) : '';
+    return `Change status from "${currentLabel}" to "${newLabel}"?`;
+});
+
+const confirmUpdateAcademicTermStatus = (term, status) => {
+    const record = resolveAcademicRecord(term);
+
+    if (!record?.id) {
+        toast.error('Unable to determine the record for this term.');
+        return;
+    }
+
+    statusUpdateTarget.value = term;
+    statusUpdateNewStatus.value = status;
+    showStatusUpdateConfirm.value = true;
+};
+
+const applyAcademicTermStatusUpdate = () => {
+    const record = resolveAcademicRecord(statusUpdateTarget.value);
+    const status = statusUpdateNewStatus.value;
+
+    if (!record?.id || !status) {
+        showStatusUpdateConfirm.value = false;
+        return;
+    }
+
+    statusUpdateProcessing.value = true;
+
+    router.patch(route('scholarship.record.update-status', record.id), {
+        unified_status: status,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Status updated successfully');
+        },
+        onError: () => {
+            toast.error('Failed to update status');
+        },
+        onFinish: () => {
+            statusUpdateProcessing.value = false;
+            showStatusUpdateConfirm.value = false;
+            statusUpdateTarget.value = null;
+            statusUpdateNewStatus.value = null;
+        },
+    });
 };
 
 const confirmDeleteTerm = (term) => {

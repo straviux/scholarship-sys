@@ -57,22 +57,6 @@
                              selected-rows toolbar above the table once rows are checked. -->
                         <AppButton v-if="hasPermission('reports.view')" icon="download" label="Export All"
                             @click="openExportAll" severity="info" rounded outlined :loading="reportLoading" />
-                        <!-- Legacy "Generate Report" hidden in favour of Export Selected (v-if="false") -->
-                        <AppButton icon="print" @click="reportTypePopover.toggle($event)" severity="secondary"
-                            v-tooltip.bottom="'Generate Report'" v-if="false" rounded
-                            outlined />
-                        <Popover ref="reportTypePopover">
-                            <div class="flex flex-col gap-2 w-52">
-                                <AppButton @click="openReportWizard('master-list')" label="Master List"
-                                    icon="list" severity="secondary" class="justify-start" />
-                                <AppButton @click="openReportWizard('approval-list')" label="Approval List"
-                                    icon="clipboard-check" severity="info" class="justify-start" />
-                                <AppButton @click="openReportWizard('summary')" label="Summary"
-                                    icon="bar-chart-3" severity="success" class="justify-start" />
-                                <AppButton @click="openGraduateListModal" label="Graduate List"
-                                    icon="graduation-cap" severity="warning" class="justify-start" />
-                            </div>
-                        </Popover>
                     </div>
                 </template>
             </Toolbar>
@@ -735,36 +719,6 @@
             </div>
         </IosModal>
 
-        <!-- Program Selection Modal -->
-        <IosModal :visible="showProgramSelectionModal" title="Select Program" width="calc(100vw - 2rem)"
-            max-width="640px" body-style="padding: 16px;" @update:visible="showProgramSelectionModal = $event">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button v-for="program in programs" :key="program.id"
-                    class="flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all text-left cursor-pointer"
-                    @click="selectProgramForReport(program)">
-                    <div
-                        class="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold shrink-0"
-                        :style="{ backgroundColor: program.bg_color || getProgramColor(program.id) }">
-                        {{ getProgramInitials(program) }}
-                    </div>
-                    <div class="min-w-0">
-                        <p class="font-semibold text-gray-800 text-sm">{{ program.name }}</p>
-                        <p class="text-xs text-gray-500">{{ program.shortname || program.code }}</p>
-                    </div>
-                </button>
-            </div>
-            <div v-if="!programs || programs.length === 0" class="text-center py-8 text-gray-400">
-                <AppIcon name="folder-open" :size="40" class="mx-auto mb-3 opacity-40" />
-                <p>No programs available</p>
-            </div>
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <AppButton label="Cancel" icon="times" severity="secondary"
-                        @click="showProgramSelectionModal = false" />
-                </div>
-            </template>
-        </IosModal>
-
         <!-- Export Modal (ticked rows or full filtered set) -->
         <ExportSelectedModal :show="showExportModal" :selected-rows="exportRows" :mode="exportMode"
             :default-title="exportDefaultTitle" default-sort="name" :enable-signatories="true" :enable-projected="true"
@@ -773,13 +727,6 @@
         <!-- Centered loading message while the full report dataset is fetched -->
         <LoadingIndicator :show="reportLoading" message="Generating report data…"
             subtext="Fetching all records matching the current filters. Large result sets may take a moment." />
-
-        <!-- Generate Report Modal -->
-        <ReportWizardModal v-if="!isTechvocReport" :show="showReportWizard" :mode="reportWizardMode" :selected-program="selectedReportProgram" @update:show="showReportWizard = $event" />
-
-        <!-- Graduate List Report Modal -->
-        <GraduateListReportModal :show="showGraduateListModal" @update:show="showGraduateListModal = $event" />
-
 
         <!-- Grant Provision Update Dialog -->
         <IosModal :visible="showGrantProvisionDialog" title="Update Grant Provision" width="calc(100vw - 2rem)"
@@ -812,85 +759,21 @@
         </IosModal>
 
         <!-- Delete Confirmation Modal -->
-        <IosModal :visible="showDeleteConfirmDialog" title="Confirm Soft Delete" width="calc(100vw - 2rem)"
-            max-width="500px" body-style="padding: 16px;" @update:visible="showDeleteConfirmDialog = $event">
-            <div class="space-y-4">
-                <div class="flex items-center gap-3">
-                    <AppIcon name="exclamation-triangle" :size="24" class="text-orange-500" />
-                    <div>
-                        <p class="font-semibold text-gray-900 dark:text-gray-100">Soft Delete Profile</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">This action can be undone from the Deleted
-                            Records
-                            page</p>
-                    </div>
-                </div>
-                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
-                    <p class="text-sm text-blue-800 dark:text-blue-300">
-                        <strong>Profile:</strong> {{ profileToDelete ? getFullName(profileToDelete) : 'N/A' }}
-                    </p>
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <AppButton label="Cancel" severity="secondary" outlined @click="showDeleteConfirmDialog = false" />
-                <AppButton label="Soft Delete" icon="trash" severity="danger" @click="deleteProfile" />
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteConfirmDialog"
+            title="Confirm Soft Delete"
+            width="460px"
+            message="Soft delete this profile? This action can be undone from the Deleted Records page."
+            icon-color="#f97316"
+            data-label="Profile"
+            :data="[{ label: 'Name', value: profileToDelete ? getFullName(profileToDelete) : 'N/A' }]"
+            @accept="deleteProfile"
+            @update:visible="showDeleteConfirmDialog = $event"
+        />
 
         <!-- Scholar Form Modal (Create) -->
         <ScholarFormModal v-model:visible="showAddActiveModal" mode="create" @success="refreshData" />
 
-        <!-- TechVoc Report Modal -->
-        <TechvocWizardModal :show="showTechvocReportModal" :program="selectedReportProgram"
-            @update:show="showTechvocReportModal = $event"
-            @report-generated="onTechvocReportGenerated" />
-
-        <!-- TechVoc Report: Preview -->
-        <IosModal :visible="showTechvocReportPreview" width="95vw" max-width="95vw" :modal-content-style="{ height: '90vh' }"
-            body-style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;"
-            @update:visible="showTechvocReportPreview = $event">
-            <template #header-left>
-                <button class="ios-nav-btn ios-nav-cancel text-nav" @click="goBackToTechvocFilters">
-                    <AppIcon name="chevron-left" :size="16" /> Back
-                </button>
-            </template>
-            <template #title><span class="ios-nav-title text-nav-title">TechVoc Report Preview</span></template>
-            <template #header-right>
-                <div class="ios-nav-actions">
-                    <button class="ios-icon-btn text-sm" @click="doTechvocExportExcel" title="Export to Excel">
-                        <AppIcon name="file-spreadsheet" :size="16" style="color: #34C759;" />
-                    </button>
-                    <button class="ios-icon-btn text-sm" @click="doTechvocPrint" title="Print / Save as PDF">
-                        <AppIcon name="printer" :size="16" style="color: #007AFF;" />
-                    </button>
-                </div>
-            </template>
-            <!-- Zoom Toolbar -->
-            <div class="flex items-center justify-between px-4 py-2
-                        bg-[#f2f2f7] dark:bg-[#1e242b]
-                        border-b border-[#e5e5ea] dark:border-white/10">
-                <div class="flex items-center gap-1.5">
-                    <button @click="techvocZoomLevel = Math.max(40, techvocZoomLevel - 10)"
-                        class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
-                        :disabled="techvocZoomLevel <= 40">
-                        <AppIcon name="minus" :size="10" />
-                    </button>
-                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-12 text-center">{{ techvocZoomLevel }}%</span>
-                    <button @click="techvocZoomLevel = Math.min(200, techvocZoomLevel + 10)"
-                        class="w-7 h-7 rounded-full flex items-center justify-center bg-white dark:bg-[#2a3040] border border-[#e5e5ea] dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#343d4e] transition-colors disabled:opacity-40"
-                        :disabled="techvocZoomLevel >= 200">
-                        <AppIcon name="plus" :size="10" />
-                    </button>
-                </div>
-                <span class="text-xs text-gray-400">A4 · Landscape</span>
-            </div>
-            <div class="overflow-auto bg-[#d1d1d6] dark:bg-[#1c1c1e]" style="flex: 1; min-height: 0; padding: 16px 0;">
-                <div style="display: flex; justify-content: center;">
-                    <iframe v-if="techvocReportHtml" :srcdoc="techvocReportHtml"
-                        :style="{ transform: `scale(${techvocZoomLevel / 100})`, transformOrigin: 'top center', border: 'none', background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.15)', width: '1320px', height: '1020px' }"
-                        frameborder="0"></iframe>
-                </div>
-            </div>
-        </IosModal>
 
         <!-- Context Menu -->
         <ContextMenu ref="contextMenu" :model="contextMenuItems" appendTo="body">
@@ -904,14 +787,15 @@
         </ContextMenu>
 
         <!-- Confirmation Dialog -->
-        <IosModal v-model:visible="confirmDialogVisible" :title="confirmDialogHeader" width="calc(100vw - 2rem)"
-            max-width="450px" body-style="padding: 16px;" show-action :action-label="confirmDialogAcceptLabel"
-            @action="handleConfirmDialogAccept">
-            <div class="flex items-start gap-3">
-                <i v-if="confirmDialogIcon" :class="confirmDialogIcon" class="text-xl mt-0.5" />
-                <p class="m-0 text-sm leading-relaxed text-gray-700">{{ confirmDialogMessage }}</p>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            v-model:visible="confirmDialogVisible"
+            :title="confirmDialogHeader"
+            width="450px"
+            :message="confirmDialogMessage"
+            :icon="confirmDialogIcon || 'exclamation-triangle'"
+            action-class=""
+            @accept="handleConfirmDialogAccept"
+        />
 
         <!-- Display Settings Modal -->
         <IosModal v-model:visible="showDisplaySettingsModal" title="Display Settings" width="calc(100vw - 2rem)"
@@ -950,6 +834,7 @@ import { useScholarshipStatus } from '@/composables/useScholarshipStatus';
 import { useFilterManager } from '@/composables/useFilterManager';
 
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import { toast } from '@/utils/toast';
 import axios from 'axios';
 import { getSystemOptionLabel, useSystemOptions } from '@/composables/useSystemOptions';
@@ -968,21 +853,12 @@ import TermSelect from '@/Components/selects/TermSelect.vue';
 import ScholarFormModal from '@/Components/modals/ScholarFormModal.vue';
 import ExportSelectedModal from '@/Pages/Applicants/Modal/ExportSelectedModal.vue';
 import LoadingIndicator from '@/Components/ui/LoadingIndicator.vue';
-import ReportWizardModal from './Modal/ReportWizardModal.vue';
-import GraduateListReportModal from './Modal/GraduateListReportModal.vue';
-import TechvocWizardModal from './Modal/TechvocWizardModal.vue';
-import TechVocReportTemplate from './Reports/TechVocReportTemplate.vue';
-import { renderVueTemplate } from '@/composables/usePdfPrint';
-import { getReportCss, getReportPaperConfig } from '@/Pages/Scholarship/Reports/report-styles';
 
 // Props
 const props = defineProps({
     profiles: Object,
     filters: Object,
     programs: Array,
-    approvalStatuses: Array,
-    declineReasons: Object,
-    profiles_total: [String, Number],
 });
 // Page-specific state
 
@@ -1037,7 +913,7 @@ const {
 });
 
 
-const { statusOptions, getStatusLabel, getStatusSeverity } = useScholarshipStatus();
+const { statusOptions, getStatusLabel } = useScholarshipStatus();
 
 // Status tabs — the Profiles page primarily lists Active, Completed and
 // Graduate records. Pending records live on the Applicants page. Every other
@@ -1143,13 +1019,6 @@ const activeFilterTags = computed(() => {
     }
     return tags;
 });
-
-const removeFilter = (key) => {
-    const selectKeys = ['grant_provision', 'unified_status', 'needs_term_review', 'contract_status', 'voucher_status', 'academic_year', 'term'];
-    filter.value[key] = selectKeys.includes(key) ? null : '';
-    collapseExpandedRows();
-    triggerSearch();
-};
 
 // Auto-trigger search when basic filters change
 watch(
@@ -1388,30 +1257,10 @@ const academicYearOptions = computed(() => {
 const showProfileDialog = ref(false);
 const selectedProfile = ref(null);
 
-// Modal states
-const showReportWizard = ref(false);
-const reportTypePopover = ref(null);
-const reportWizardMode = ref(''); // 'master-list' | 'approval-list' | 'summary'
-const showProgramSelectionModal = ref(false);
-const selectedReportProgram = ref(null);
-const isTechvocReport = ref(false);
-const showTechvocReportModal = ref(false);
-const showTechvocReportPreview = ref(false);
-const showGraduateListModal = ref(false);
-const techvocReportHtml = ref('');
-const techvocReportRecords = ref([]);
-const techvocZoomLevel = ref(85);
-const techvocDefaultAmount = ref(null);
-
 const PROGRAM_COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#F97316', '#EAB308', '#22C55E', '#14B8A6', '#06B6D4', '#3B82F6'];
 
 function getProgramColor(id) {
     return PROGRAM_COLORS[id % PROGRAM_COLORS.length];
-}
-
-function getProgramInitials(program) {
-    const name = program.shortname || program.name || '';
-    return name.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 }
 
 // Program avatar in the Academic column — fixed abbreviations for the four
@@ -1423,89 +1272,6 @@ function getProgramAbbrev(program) {
     if (name.includes('TEC') || name.includes('TECH')) return 'TEC';
     if (name.includes('BAR')) return 'BAR';
     return name.split(/\s+/).map(w => w[0]).join('').slice(0, 3) || '?';
-}
-
-const isTechvocProgram = (program) => {
-    if (!program) return false;
-    const name = (program.shortname || program.name || '').toUpperCase();
-    return name.includes('TECH') || name.includes('TECH-VOC');
-};
-
-function openReportWizard(mode) {
-    reportWizardMode.value = mode;
-    selectedReportProgram.value = null;
-    isTechvocReport.value = false;
-    showReportWizard.value = false;
-    showTechvocReportModal.value = false;
-    showProgramSelectionModal.value = true;
-    reportTypePopover.value?.hide();
-}
-
-function openGraduateListModal() {
-    showGraduateListModal.value = true;
-    reportTypePopover.value?.hide();
-}
-
-function selectProgramForReport(program) {
-    selectedReportProgram.value = program;
-    showProgramSelectionModal.value = false;
-
-    // TechVoc + (Approval List or Master List) → dedicated modal
-    if ((reportWizardMode.value === 'approval-list' || reportWizardMode.value === 'master-list') && isTechvocProgram(program)) {
-        isTechvocReport.value = true;
-        showReportWizard.value = false;
-        showTechvocReportModal.value = true;
-        return;
-    }
-
-    // Other programs/modes: open the standard report wizard
-    isTechvocReport.value = false;
-    showTechvocReportModal.value = false;
-    showReportWizard.value = true;
-}
-
-function onTechvocReportGenerated({ records, program: _program, title, status, defaultAmount, useInterviewedSignatories, preparedBy, preparedByTitle, preparedByOffice, signatoryName, signatoryTitle, reviewedBy }) {
-    techvocReportRecords.value = records;
-    techvocDefaultAmount.value = defaultAmount ?? null;
-    buildTechvocPreview(title, status, { useInterviewedSignatories, preparedBy, preparedByTitle, preparedByOffice, signatoryName, signatoryTitle, reviewedBy });
-}
-
-async function buildTechvocPreview(title = '', _status = null, signatoryOpts = {}) {
-    try {
-        const paperConfig = getReportPaperConfig('A4', 'landscape');
-        const filterSummary = {};
-        if (selectedReportProgram.value) {
-            filterSummary.Program = selectedReportProgram.value.shortname || selectedReportProgram.value.name;
-        }
-
-        const resolvedTitle = title || `Tech-Voc Approval List — ${selectedReportProgram.value?.shortname || ''}`;
-
-        const templateProps = {
-            records: techvocReportRecords.value,
-            filters: filterSummary,
-            options: {
-                reportTitle: resolvedTitle,
-                sortBy: 'default',
-                defaultAmount: techvocDefaultAmount.value,
-                useInterviewedSignatories: signatoryOpts.useInterviewedSignatories || false,
-                preparedBy: signatoryOpts.preparedBy || '',
-                preparedByTitle: signatoryOpts.preparedByTitle || '',
-                preparedByOffice: signatoryOpts.preparedByOffice || '',
-                signatoryName: signatoryOpts.signatoryName || '',
-                signatoryTitle: signatoryOpts.signatoryTitle || '',
-                reviewedBy: signatoryOpts.reviewedBy || '',
-            },
-            generatedAt: moment().format('MMMM DD, YYYY — h:mm A'),
-        };
-
-        const bodyHtml = renderVueTemplate(TechVocReportTemplate, templateProps);
-        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>TechVoc Report</title><style>body{margin:0;padding:0;}${getReportCss(paperConfig)}</style></head><body>${bodyHtml}</body></html>`;
-        
-        techvocReportHtml.value = fullHtml;
-        showTechvocReportPreview.value = true;
-    } catch (error) {
-        console.error('Failed to build TechVoc preview:', error);
-    }
 }
 
 const showAddActiveModal = ref(false);
@@ -1847,79 +1613,4 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleKeydown);
 });
 
-function goBackToTechvocFilters() {
-    showTechvocReportPreview.value = false;
-    showTechvocReportModal.value = true;
-}
-
-function doTechvocPrint() {
-    if (!techvocReportHtml.value) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-        alert('Pop-up blocked. Please allow pop-ups for this site.');
-        return;
-    }
-    printWindow.document.write(techvocReportHtml.value);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => printWindow.print(), 500);
-}
-
-function doTechvocExportExcel() {
-    const records = techvocReportRecords.value;
-    if (!records || records.length === 0) return;
-
-    const upper = (v) => String(v ?? '').toUpperCase();
-    const fmt = (d) => d ? moment(d).format('MMM DD, YYYY') : '';
-    const isJpm = (r) => r?.is_jpm_member || r?.is_father_jpm || r?.is_mother_jpm || r?.is_guardian_jpm;
-
-    const headers = ['#', 'NAME', 'CONTACT NO.', 'ADDRESS', 'SCHOOL', 'COURSE', 'REQ. NO. OF DAYS', 'REQ. NO. OF HOURS', 'REMARKS'];
-    const rows = records.map((rec, idx) => [
-        idx + 1,
-        upper(formatName(rec)),
-        upper(rec.contact_no || ''),
-        upper([rec.barangay, rec.municipality].filter(Boolean).join(', ')),
-        upper(rec.school_name || rec.school || ''),
-        upper(rec.course_name || rec.course || ''),
-        rec.no_of_days ?? '',
-        rec.no_of_hours ?? '',
-        upper(rec.remarks || rec.decline_reason || ''),
-    ]);
-
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'TechVoc Report');
-
-    // Uniform font: Calibri 10pt, headers bold + centered
-    const HEADER_STYLE = { font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '333333' } }, alignment: { horizontal: 'center' }, fill: { fgColor: { rgb: 'E8E8E8' } } };
-    const CELL_STYLE = { font: { name: 'Calibri', sz: 10 } };
-    const JPM_STYLE = { font: { name: 'Calibri', sz: 10, color: { rgb: 'B91C1C' }, bold: true }, fill: { fgColor: { rgb: 'FEF2F2' } } };
-
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let r = range.s.r; r <= range.e.r; r++) {
-        const isJpmRow = r > 0 && isJpm(records[r - 1]);
-        for (let c = range.s.c; c <= range.e.c; c++) {
-            const addr = XLSX.utils.encode_cell({ r, c });
-            if (!ws[addr]) continue;
-            if (!ws[addr].s) ws[addr].s = {};
-            if (r === 0) {
-                Object.assign(ws[addr].s, HEADER_STYLE);
-            } else if (isJpmRow) {
-                Object.assign(ws[addr].s, JPM_STYLE);
-            } else {
-                Object.assign(ws[addr].s, CELL_STYLE);
-            }
-        }
-    }
-
-    // Auto-fit column widths
-    const colWidths = headers.map((h, i) => {
-        const maxLen = Math.max(h.length, ...rows.map(r => String(r[i] || '').length));
-        return { wch: Math.min(Math.max(maxLen + 2, 8), 40) };
-    });
-    ws['!cols'] = colWidths;
-
-    const filename = `techvoc_report_${moment().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`;
-    XLSX.writeFile(wb, filename);
-}
 </script>

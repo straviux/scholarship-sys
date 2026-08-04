@@ -65,9 +65,6 @@ Route::controller(MobileUploadController::class)->prefix('mobile/upload')->group
     Route::post('/profile/{token}', [ProfileController::class, 'processMobileUpload'])->name('mobile.profile.upload.submit');
     Route::get('/requirement/{token}', 'showRequirementUpload')->name('mobile.requirement.upload');
     Route::post('/requirement/{token}', 'uploadRequirementFile')->name('mobile.requirement.upload.submit');
-    Route::get('/fund-transaction/{token}', 'showFundTransactionUpload')->name('mobile.upload.fund-transaction');
-    Route::get('/fund-transaction/{token}/{doc_type}', 'showFundTransactionUpload')->name('mobile.upload.fund-transaction.with-type');
-    Route::post('/fund-transaction/{token}', 'uploadFundTransactionFile')->name('mobile.upload.fund-transaction.submit');
 });
 
 Route::get('/api/server-time', function () {
@@ -87,11 +84,6 @@ Route::get('/csrf-token', function () {
 // Municipality / barangay reference data (also used by public mobile upload forms)
 Route::get('/api/municipalities', [MunicipalityController::class, 'index'])->name('api.municipalities.index');
 Route::get('/api/municipalities/{municipality}/barangays', [MunicipalityController::class, 'getBarangays'])->name('api.municipalities.barangays');
-
-// TEST ROUTE: Create mock applicants (registered only in local environment; also debug-guarded in the controller)
-if (app()->environment('local')) {
-    Route::middleware(['auth'])->post('/test-add-applicants', [ApplicantController::class, 'testAddApplicants'])->name('applicants.testAddApplicants')->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
-}
 
 // Broadcasting Authentication
 Broadcast::routes(['middleware' => ['auth']]);
@@ -269,9 +261,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Profile reports & educational background ────────────────────────
     Route::controller(ScholarshipProfileController::class)->group(function () {
-        Route::get('/profiles/generate-report', 'generateReport')->name('profile.generateReport');
         Route::get('/profiles/report-data', 'reportData')->name('profile.reportData');
-        Route::get('/profiles/graduate-list-report', 'graduateListReport')->name('profile.graduateListReport');
         Route::post('/profiles/add-educational-background', 'addEducationBackgroundApi')->name('profile-api.addeducation');
         Route::put('/profiles/update-educational-background/{id}', 'updateEducationBackgroundApi')->name('profile-api.updateeducation');
         Route::delete('/profiles/delete-educational-background/{id}', 'deleteEducationBackgroundApi')->name('profile-api.deleteeducation');
@@ -416,9 +406,6 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/interviewed-applicants/recommendation-lists/{recommendationList}/refresh', [ScholarshipProfileController::class, 'refreshRecommendationList'])
         ->middleware('check.permission:scholarships.view')
         ->name('scholarship.recommendation-lists.refresh');
-    Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}/records/{scholarshipRecord}', [ScholarshipProfileController::class, 'removeRecordFromRecommendationList'])
-        ->middleware('check.permission:scholarships.view')
-        ->name('scholarship.recommendation-lists.remove-record');
     Route::delete('/interviewed-applicants/recommendation-lists/{recommendationList}', [ScholarshipProfileController::class, 'destroyRecommendationList'])
         ->middleware('check.role:administrator')
         ->name('scholarship.recommendation-lists.destroy');

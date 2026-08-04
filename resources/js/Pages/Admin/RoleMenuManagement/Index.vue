@@ -221,22 +221,16 @@
         </AdminPageShell>
 
         <!-- Unsaved changes guard when switching roles -->
-        <IosModal v-model:visible="showSwitchConfirmModal" title="Unsaved Changes" width="calc(100vw - 2rem)"
-            max-width="420px" :show-action="true" action-label="Discard & Switch" action-class="ios-nav-destructive"
-            @action="confirmRoleSwitch">
-            <div class="flex items-start gap-4">
-                <AppIcon name="exclamation-circle" class="text-3xl text-yellow-500 mt-1" />
-                <div>
-                    <p class="font-semibold text-gray-800 mb-1">
-                        You have unsaved changes for
-                        <span class="capitalize">{{ formatRoleName(selectedRole?.name) }}</span>.
-                    </p>
-                    <p class="text-sm text-gray-600">
-                        Switching roles now will discard them. Save first if you want to keep your edits.
-                    </p>
-                </div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            v-model:visible="showSwitchConfirmModal"
+            title="Unsaved Changes"
+            width="420px"
+            icon="exclamation-circle"
+            icon-color="#f59e0b"
+            :message="switchConfirmMessage"
+            action-class="ios-nav-destructive"
+            @accept="confirmRoleSwitch"
+        />
     </AdminLayout>
 </template>
 
@@ -246,7 +240,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
-import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import draggable from 'vuedraggable';
 import axios from 'axios';
 import { toast } from '@/utils/toast';
@@ -272,6 +266,10 @@ const formatRoleName = (roleName) => {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
 };
+
+const switchConfirmMessage = computed(() =>
+    `You have unsaved changes for ${formatRoleName(selectedRole.value?.name)}. Switching roles now will discard them. Save first if you want to keep your edits.`
+);
 
 // Flat lookup of every menu item (parents + children), children annotated with their parent's name
 const flatMenus = computed(() => {

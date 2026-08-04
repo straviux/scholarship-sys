@@ -63,9 +63,6 @@ watch(selectedProgram, () => {
     selectedCourse.value = [];
 });
 
-// Debounce timer to prevent infinite filter loops
-let filterTimeout;
-
 // Budget Monitoring modal
 const showBudgetModal = ref(false);
 
@@ -123,26 +120,7 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 });
 
 // Methods
-const applyFilters = () => {
-    clearTimeout(filterTimeout);
-    filterTimeout = setTimeout(() => {
-        router.get(route('payment-monitoring.index'), {
-            search: searchInput.value,
-            transaction_status: normalizedSelectedStatus.value,
-            academic_year: selectedAcademicYear.value,
-            semester: selectedSemester.value,
-            program: normalizedSelectedProgram.value,
-            course: normalizedSelectedCourseNames.value,
-            school: normalizedSelectedSchool.value,
-        }, {
-            preserveState: false,
-            replace: true,
-        });
-    }, 800);
-};
-
 const clearFilters = () => {
-    clearTimeout(filterTimeout);
     searchInput.value = '';
     selectedStatus.value = 'all';
     selectedAcademicYear.value = '';
@@ -268,10 +246,6 @@ const formatDate = (date) => {
 // PrimeVue 4 uses object format { [dataKey]: true } when dataKey is set
 const expandedRows = ref({});
 const activeExpandedProfileId = ref(null);
-const collapseExpandedRows = () => {
-    expandedRows.value = {};
-    activeExpandedProfileId.value = null;
-};
 
 const handleRowExpand = ({ data }) => {
     activeExpandedProfileId.value = data?.profile_id ?? null;

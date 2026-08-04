@@ -414,20 +414,8 @@ class PaymentMonitoringController extends Controller
             });
         }
 
-        // Define transaction status options (enum values from disbursements.obr_status)
-        $statuses = [
-            ['label' => 'LOA', 'value' => 'LOA'],
-            ['label' => 'IRREGULAR', 'value' => 'IRREGULAR'],
-            ['label' => 'TRANSFERRED', 'value' => 'TRANSFERRED'],
-            ['label' => 'CLAIMED', 'value' => 'CLAIMED'],
-            ['label' => 'PAID', 'value' => 'PAID'],
-            ['label' => 'ON PROCESS', 'value' => 'ON PROCESS'],
-            ['label' => 'DENIED', 'value' => 'DENIED'],
-        ];
-
         return Inertia::render('PaymentMonitoring/Index', [
             'paymentData' => $paymentData->values(),
-            'availableStatuses' => $statuses,
             'budgetParticulars' => $budgetParticulars,
             'disbursedByAllocation' => $disbursedByAllocation,
             'fiscalYears' => $fiscalYears,

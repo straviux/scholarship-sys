@@ -244,7 +244,6 @@ import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import moment from 'moment';
 import { toast } from '@/utils/toast';
-import AppButton from '@/Components/ui/AppButton.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
 import InterviewAssessmentForm from '@/Components/forms/InterviewAssessmentForm.vue';
@@ -381,47 +380,6 @@ const selectedEditInterviewer = computed(() => {
     return editInterviewerOptions.value.find((option) => option.id === editForm.value.interviewer_id) || null;
 });
 
-const academicPotentialOptions = [
-    { label: 'Excellent', value: 'excellent' },
-    { label: 'Good', value: 'good' },
-    { label: 'Fair', value: 'fair' },
-];
-
-const financialNeedOptions = [
-    { label: 'High', value: 'high' },
-    { label: 'Moderate', value: 'moderate' },
-    { label: 'Low', value: 'low' },
-];
-
-const communicationSkillsOptions = [
-    { label: 'Excellent', value: 'excellent' },
-    { label: 'Good', value: 'good' },
-    { label: 'Fair', value: 'fair' },
-];
-
-const recommendationOptions = [
-    { label: 'For Approval', value: 'recommended' },
-    { label: 'For Further Evaluation', value: 'further_evaluation' },
-    { label: 'Not Recommended', value: 'not_recommended' },
-];
-
-const editValidationLabels = {
-    program_id: 'Program',
-    course_id: 'Course',
-    school_id: 'School',
-    year_level: 'Year Level',
-    term: 'Term',
-    academic_year: 'Academic Year',
-    interview_date: 'Interview Date',
-    interviewer_id: 'Interviewer',
-    endorsed_by: 'Endorsed By',
-    academic_potential: 'Academic Potential',
-    financial_need_level: 'Financial Need',
-    communication_skills: 'Communication Skills',
-    recommendation: 'Recommendation',
-    grant_provision: 'Grant Provision',
-    interview_remarks: 'Remarks',
-};
 
 const createEditFormState = () => ({
     program: localRecord.value?.program || null,

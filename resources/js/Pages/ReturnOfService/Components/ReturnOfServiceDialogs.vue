@@ -422,59 +422,25 @@
         </div>
     </IosModal>
 
-    <IosModal :visible="showDeleteBatchDialog" title="Delete Batch" width="420px" close-icon="x"
-        :icon-size="16" body-style="padding: 0 16px 24px;"
-        @update:visible="(visible) => { if (!visible) emit('close-delete-batch'); }">
-        <template #header-right>
-            <div style="width: 48px;"></div>
-        </template>
-                    <div class="ios-section">
-                        <div class="ios-card destructive-card">
-                            <div class="ios-row destructive-row">
-                                <div class="destructive-icon-wrap">
-                                    <AppIcon name="exclamation-triangle" class="text-red-500" :size="16" />
-                                </div>
-                                <div class="destructive-copy">
-                                    <p class="text-sm font-semibold text-gray-800">{{ batchToDelete?.batch_name }}</p>
-                                    <p class="text-xs text-red-600 mt-1">
-                                        This will delete all {{ batchToDelete?.total_scholars }} scholars in this batch.
-                                        This action cannot be undone.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ios-section">
-                        <button class="ios-destructive-btn text-compact" @click="emit('delete-batch')">Delete Batch</button>
-                    </div>
-                    <div style="height: 24px;"></div>
-    </IosModal>
+    <IosConfirmDialog
+        :visible="showDeleteBatchDialog"
+        title="Delete Batch"
+        width="420px"
+        :message="`This will delete all ${batchToDelete?.total_scholars} scholars in this batch. This action cannot be undone.`"
+        :data="batchToDelete ? [{ label: 'Batch', value: batchToDelete.batch_name, color: '#FF3B30' }] : []"
+        @accept="emit('delete-batch')"
+        @update:visible="(visible) => { if (!visible) emit('close-delete-batch'); }"
+    />
 
-    <IosModal :visible="showDeleteScholarDialog" title="Remove Scholar" width="420px" close-icon="x"
-        :icon-size="16" body-style="padding: 0 16px 24px;"
-        @update:visible="(visible) => { if (!visible) emit('close-delete-scholar'); }">
-        <template #header-right>
-            <div style="width: 48px;"></div>
-        </template>
-                    <div class="ios-section">
-                        <div class="ios-card destructive-card">
-                            <div class="ios-row destructive-row">
-                                <div class="destructive-icon-wrap">
-                                    <AppIcon name="exclamation-triangle" class="text-red-500" :size="16" />
-                                </div>
-                                <div class="destructive-copy">
-                                    <p class="text-sm font-semibold text-gray-700">{{ scholarToDelete?.scholar_name }}
-                                    </p>
-                                    <p class="text-xs text-red-600 mt-1">This action cannot be undone.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ios-section">
-                        <button class="ios-destructive-btn text-compact" @click="emit('delete-scholar')">Remove from Batch</button>
-                    </div>
-                    <div style="height: 24px;"></div>
-    </IosModal>
+    <IosConfirmDialog
+        :visible="showDeleteScholarDialog"
+        title="Remove Scholar"
+        width="420px"
+        message="This action cannot be undone."
+        :data="scholarToDelete ? [{ label: 'Scholar', value: scholarToDelete.scholar_name, color: '#FF3B30' }] : []"
+        @accept="emit('delete-scholar')"
+        @update:visible="(visible) => { if (!visible) emit('close-delete-scholar'); }"
+    />
 
     <IosModal :visible="showReportDialog" title="Generate Report" width="480px" close-icon="x"
         :icon-size="16" :show-action="true" action-icon="file-text" :action-disabled="!canSubmitReport"
@@ -573,6 +539,7 @@ import AppButton from '@/Components/ui/AppButton.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 const props = defineProps({
     showBatchDialog: { type: Boolean, default: false },

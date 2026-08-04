@@ -3,11 +3,11 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import ProgressSpinner from 'primevue/progressspinner';
-import { useConfirm } from 'primevue/useconfirm';
 import { toast } from '@/utils/toast';
 import axios from 'axios';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 const props = defineProps({
     visible: {
@@ -22,9 +22,9 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'success']);
 
-const confirm = useConfirm();
-
 // State
+const showUncheckConfirm = ref(false);
+const requirementToUncheck = ref(null);
 const isLoading = ref(false);
 const togglingRequirementId = ref(null);
 const requirementsData = ref([]);
@@ -108,16 +108,19 @@ const toggleRequirementClick = async (requirement, event) => {
     }
 
     if (requirement.is_checked) {
-        confirm.require({
-            message: `Are you sure you want to uncheck "${requirement.name}"? This will delete the uploaded file.`,
-            header: 'Confirm Uncheck',
-            icon: 'exclamation-triangle',
-            accept: () => confirmUncheck(requirement),
-            reject: () => { }
-        });
+        requirementToUncheck.value = requirement;
+        showUncheckConfirm.value = true;
     } else {
         requirement.is_checked = true;
         confirmCheck(requirement);
+    }
+};
+
+const acceptUncheck = () => {
+    showUncheckConfirm.value = false;
+    if (requirementToUncheck.value) {
+        confirmUncheck(requirementToUncheck.value);
+        requirementToUncheck.value = null;
     }
 };
 
@@ -486,5 +489,14 @@ onBeforeUnmount(() => {
 
     <!-- File Preview Modal -->
     <ViewAttachmentModal v-model:visible="showPreviewModal" :attachment="previewFile" />
+
+    <!-- Uncheck Confirmation Dialog -->
+    <IosConfirmDialog
+        v-model:visible="showUncheckConfirm"
+        title="Confirm Uncheck"
+        :message="`Are you sure you want to uncheck '${requirementToUncheck?.name}'? This will delete the uploaded file.`"
+        @accept="acceptUncheck"
+        @close="requirementToUncheck = null"
+    />
 </template>
 

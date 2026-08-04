@@ -677,10 +677,6 @@ function parseGrantProvision(value) {
     };
 }
 
-function fmtGrantProvisionName(value) {
-    return parseGrantProvision(value).name;
-}
-
 function isTrimesterTerm(term) {
     if (typeof term !== 'string') {
         return false;
@@ -693,13 +689,6 @@ function isTrimesterTerm(term) {
         || normalizedTerm.includes('3rd sem')
         || normalizedTerm.includes('summer')
         || normalizedTerm.includes('midyear');
-}
-
-function fmtGrantAmount(value) {
-    return new Intl.NumberFormat('en-PH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(Number(value) || 0);
 }
 
 function resolveGrantProvisionAmount(record) {
@@ -718,17 +707,6 @@ function resolveGrantProvisionAmount(record) {
     return isTrimesterTerm(record?.term)
         ? (numericAmount * 2) / 3
         : numericAmount;
-}
-
-function fmtGrantProvisionAmount(record) {
-    const rawAmount = parseGrantProvision(record?.grant_provision_label || record?.grant_provision).amount;
-    const adjustedAmount = resolveGrantProvisionAmount(record);
-
-    if (!Number.isFinite(adjustedAmount)) {
-        return rawAmount || '';
-    }
-
-    return fmtGrantAmount(adjustedAmount);
 }
 
 function currentAcademicYearGrantMultiplier(term) {
@@ -919,27 +897,12 @@ const approvedScholarsScopedToProgram = computed(() => {
 
     return scholars.filter(scholarMatchesBudgetProgram);
 });
-const approvedScholarsProgramScopeLabel = computed(() => {
-    if (explicitBudgetProgramLabel.value) {
-        return explicitBudgetProgramLabel.value;
-    }
-
-    if (props.budgetAllocation?.program_id) {
-        return props.budgetAllocation?.program || '';
-    }
-
-    return '';
-});
 const approvedScholarsScopeSuffix = computed(() => {
     const parts = [];
 
     if (approvedScholarsCalendarYearLabel.value) {
         parts.push(`CY ${approvedScholarsCalendarYearLabel.value}`);
     }
-
-    // if (approvedScholarsProgramScopeLabel.value) {
-    //     parts.push(approvedScholarsProgramScopeLabel.value);
-    // }
 
     return parts.length ? ` (${parts.join(' · ')})` : '';
 });
@@ -948,7 +911,7 @@ const approvedScholarsToDate = computed(() => {
         return approvedScholarsScopedToProgram.value.length;
     }
 
-    return Number(props.budgetAllocation?.approved_scholars_to_date ?? totalScholars.value) || 0;
+    return Number(props.budgetAllocation?.approved_scholars_to_date ?? 0) || 0;
 });
 const totalCurrentAcademicYearGrant = computed(() => sumCurrentAcademicYearEstimatedGrant(props.records));
 const approvedScholarsCurrentAcademicYearGrantTotal = computed(() => {

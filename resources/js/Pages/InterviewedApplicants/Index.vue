@@ -44,8 +44,6 @@
                 </template>
                 <template #end>
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <AppButton icon="users" label="Cumulative List" severity="secondary" rounded size="small"
-                            @click="openCumulativeScholarListModal" />
                         <AppButton v-if="activeTab === 'interviewed'" icon="printer" severity="info" text rounded
                             size="large" @click="openReportModal" v-tooltip.bottom="'Print Report'" />
                     </div>
@@ -961,9 +959,6 @@
         </ContextMenu>
 
         <!-- Generate Report Modal -->
-        <CumulativeScholarListModal :show="showCumulativeScholarListModal"
-            @update:show="showCumulativeScholarListModal = $event" :budget-allocations="props.budget_allocations" />
-
         <GenerateReportModal :show="showReportModal" @update:show="showReportModal = $event"
             :interviewed-applicants="filteredList" :budget-allocations="props.budget_allocations" />
 
@@ -985,23 +980,16 @@
             :onExcel="exportPreviewedRecommendationListExcel" />
 
         <!-- Confirmation Dialog -->
-        <IosModal v-model:visible="confirmDialogVisible" :title="confirmDialogHeader" width="calc(100vw - 2rem)"
-            max-width="450px" body-style="padding: 16px;">
-            <template #header-right>
-                <button
-                    class="ios-nav-btn ios-nav-action text-nav"
-                    type="button"
-                    @click="handleConfirmDialogAccept"
-                >
-                    
-                    <AppIcon name="check" :size="18" />
-                </button>
-            </template>
-            <div class="flex items-start gap-3">
-                <i v-if="confirmDialogIcon" :class="confirmDialogIcon" class="text-xl mt-0.5" />
-                <p class="m-0 text-sm leading-relaxed text-gray-700">{{ confirmDialogMessage }}</p>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            v-model:visible="confirmDialogVisible"
+            :title="confirmDialogHeader"
+            width="450px"
+            :message="confirmDialogMessage"
+            :icon="confirmDialogIcon || 'exclamation-triangle'"
+            :icon-color="confirmDialogIconColor"
+            :action-class="confirmDialogActionClass"
+            @accept="handleConfirmDialogAccept"
+        />
     </AdminLayout>
 </template>
 
@@ -1014,6 +1002,7 @@ import axios from 'axios';
 import AppButton from '@/Components/ui/AppButton.vue';
 import moment from 'moment';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import { toast } from '@/utils/toast';
 import { usePermission } from '@/composable/permissions';
 import { useApi } from '@/composable/api';
@@ -1021,7 +1010,6 @@ import { useApi } from '@/composable/api';
 import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import ContextMenu from 'primevue/contextmenu';
 import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
-import CumulativeScholarListModal from './Modal/CumulativeScholarListModal.vue';
 import CreateRecommendationListModal from './Modal/CreateRecommendationListModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModalIOS.vue';
 import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
@@ -1030,7 +1018,6 @@ import {
     exportInterviewedApplicantsExcel,
     exportRecommendationListExcel,
     exportRecommendationListAuditExcel,
-    printRecommendationList,
     buildRecommendationListHtml,
 } from './interviewedApplicantsExport';
 
@@ -1142,7 +1129,6 @@ const contextMenu = ref();
 const recommendationListContextMenu = ref();
 const showAssessmentDialog = ref(false);
 const assessmentInitialMode = ref('view');
-const showCumulativeScholarListModal = ref(false);
 const showReportModal = ref(false);
 const showCreateRecommendationListModal = ref(false);
 const showDeletedListsModal = ref(false);
@@ -1188,6 +1174,15 @@ function handleConfirmDialogAccept() {
         confirmDialogOnAccept.value();
     }
 }
+
+const confirmDialogIconColor = computed(() => ({
+    danger: '#FF3B30',
+    warning: '#f59e0b',
+    success: '#22c55e',
+    primary: '#007aff',
+}[confirmDialogSeverity.value] || '#FF3B30'));
+
+const confirmDialogActionClass = computed(() => confirmDialogSeverity.value === 'danger' ? 'ios-nav-destructive' : '');
 
 const denyForm = useForm({
     reason: '',
@@ -1829,22 +1824,6 @@ const openReportModal = () => {
     });
 };
 
-const openCumulativeScholarListModal = () => {
-    if ((props.budget_allocations || []).length > 0) {
-        showCumulativeScholarListModal.value = true;
-        return;
-    }
-
-    router.reload({
-        only: recommendationListReloadProps,
-        preserveState: true,
-        preserveScroll: true,
-        onFinish: () => {
-            showCumulativeScholarListModal.value = true;
-        },
-    });
-};
-
 const clearInterviewedFilters = () => {
     filters.value.recommendation = null;
     filters.value.name = '';
@@ -2048,10 +2027,6 @@ const getRecommendationTextClass = (value) => {
         not_recommended: 'text-red-600',
     };
     return map[value] || 'text-slate-500';
-};
-
-const applyFilters = () => {
-    // Filters are reactive
 };
 
 const exportSelected = async () => {

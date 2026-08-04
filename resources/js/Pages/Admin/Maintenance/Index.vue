@@ -278,29 +278,17 @@
         </AdminPageShell>
 
         <!-- Confirmation Dialog -->
-        <Teleport to="body">
-            <div v-if="showDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden ios-slide-in-right">
-                    <div class="p-6">
-                        <div class="flex items-center justify-center w-12 h-12 mx-auto rounded-full mb-4" :class="[
-                            dialogType === 'deactivate' ? 'bg-green-100' : 'bg-blue-100'
-                        ]">
-                            <span class="text-2xl">
-                                {{ dialogType === 'deactivate' ? '[DEACTIVATE]' : '[ERROR]' }}
-                            </span>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 text-center">{{ dialogTitle }}</h3>
-                        <p class="text-gray-600 text-sm mt-2 text-center">{{ dialogMessage }}</p>
-                    </div>
-                    <div class="flex gap-3 p-6 bg-gray-50 border-t">
-                        <Button @click="closeDialog" label="Cancel" severity="secondary" class="flex-1" />
-                        <Button @click="confirmDialog" :class="[
-                            'flex-1',
-                        ]" :severity="dialogType === 'deactivate' ? 'success' : 'primary'" :label="dialogAction" />
-                    </div>
-                </div>
-            </div>
-        </Teleport>
+        <IosConfirmDialog
+            :visible="showDialog"
+            :title="dialogTitle"
+            width="420px"
+            :message="dialogMessage"
+            :icon="dialogType === 'deactivate' ? 'power' : 'save'"
+            :icon-color="dialogType === 'deactivate' ? '#22c55e' : '#007aff'"
+            action-class=""
+            @accept="confirmDialog"
+            @close="closeDialog"
+        />
 
         <!-- Toast Notifications -->
         <Teleport to="body">
@@ -338,6 +326,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AdminPageShell from '@/Components/admin/AdminPageShell.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 const $page = usePage();
 

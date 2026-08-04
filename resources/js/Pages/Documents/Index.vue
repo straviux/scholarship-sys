@@ -286,48 +286,20 @@
         </IosModal>
 
         <!-- ── Delete Confirmation iOS Modal ── -->
-        <IosModal :visible="showDeleteDialog" title="Confirm Deletion" width="460px" max-width="95vw"
-            body-style="padding: 0 16px;" :show-action="true" action-label="Delete"
-            :loading="deleteForm.processing" action-class="ios-nav-destructive" @action="deleteDocument"
-            @update:visible="val => !val && (showDeleteDialog = false)">
-            <div v-if="documentToDelete">
-                        <div class="ios-section">
-                            <div class="ios-card">
-                                <div class="ios-row" style="padding: 12px 16px; gap: 12px;">
-                                    <AppIcon name="exclamation-triangle" :size="24"
-                                        style="color: #FF3B30; flex-shrink: 0;" />
-                                    <div>
-                                        <div
-                                            style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 4px;">
-                                            Permanently delete this file?
-                                        </div>
-                                        <div style="font-size: 13px; color: #8E8E93; line-height: 1.4;">
-                                            This action cannot be undone and the file will be removed from storage.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ios-section">
-                            <div class="ios-section-label text-compact">Document</div>
-                            <div class="ios-card">
-                                <div class="ios-row">
-                                    <span class="ios-row-label text-sm">Title</span>
-                                    <span style="font-size: 14px; color: #FF3B30; font-weight: 600;">
-                                        {{ documentToDelete.title }}
-                                    </span>
-                                </div>
-                                <div class="ios-row ios-row-last">
-                                    <span class="ios-row-label text-sm">File</span>
-                                    <span style="font-size: 13px; color: #8E8E93; font-family: monospace;">
-                                        {{ documentToDelete.file_name }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="height: 20px;"></div>
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteDialog"
+            title="Confirm Deletion"
+            width="460px"
+            message="Permanently delete this file? This action cannot be undone and the file will be removed from storage."
+            data-label="Document"
+            :data="documentToDelete ? [
+                { label: 'Title', value: documentToDelete.title, color: '#FF3B30' },
+                { label: 'File', value: documentToDelete.file_name },
+            ] : []"
+            :loading="deleteForm.processing"
+            @accept="deleteDocument"
+            @update:visible="val => !val && (showDeleteDialog = false)"
+        />
 
         <!-- ── View Dialog ── -->
         <IosModal :visible="showViewDialog" title="View File" width="90vw" max-width="90vw"
@@ -424,6 +396,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({

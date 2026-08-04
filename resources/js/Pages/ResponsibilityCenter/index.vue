@@ -10,6 +10,7 @@ import logger from '@/utils/logger';
 import { onToastClick } from '@/utils/toast';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -501,21 +502,17 @@ onMounted(() => {
         </IosModal>
 
         <!-- Delete Confirmation Modal -->
-        <IosModal :visible="showDeleteConfirmModal" title="Confirm Delete" width="400px" max-width="90vw"
-            body-style="padding: 16px;" @update:visible="showDeleteConfirmModal = $event">
-            <p class="text-gray-700">
-                {{ deleteConfirmType === 'rc'
-                    ? 'Are you sure you want to delete this responsibility center? This action cannot be undone.'
-                    : 'Are you sure you want to delete this particular? This action cannot be undone.' }}
-            </p>
-            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" @click="showDeleteConfirmModal = false"
-                    :disabled="processing" />
-                <AppButton :label="processing ? 'Deleting...' : 'Delete'" severity="danger" icon="trash"
-                    @click="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
-                    :disabled="processing" />
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteConfirmModal"
+            title="Confirm Delete"
+            width="400px"
+            :message="deleteConfirmType === 'rc'
+                ? 'Are you sure you want to delete this responsibility center? This action cannot be undone.'
+                : 'Are you sure you want to delete this particular? This action cannot be undone.'"
+            :loading="processing"
+            @update:visible="showDeleteConfirmModal = $event"
+            @accept="deleteConfirmType === 'rc' ? confirmDeleteRC() : executeDeleteParticular()"
+        />
     </div>
 </template>
 

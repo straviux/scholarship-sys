@@ -23,6 +23,11 @@
                     <label class="ios-label text-compact">School *</label>
                     <SchoolSelect v-model="form.school_id" />
                 </div>
+                <div class="ios-form-group">
+                    <label class="ios-label text-compact">Term Type *</label>
+                    <Select v-model="form.term_type" :options="termTypeOptions" option-label="label"
+                        option-value="value" placeholder="Select term type" class="w-full" />
+                </div>
             </div>
 
             <div class="ios-info-card">
@@ -56,11 +61,18 @@ const emit = defineEmits(['update:visible', 'success']);
 const processing = ref(false);
 const form = ref(getDefaultForm());
 
+const termTypeOptions = [
+    { label: 'Semester', value: 'semester' },
+    { label: 'Trimester', value: 'trimester' },
+    { label: 'Not Applicable', value: 'not_applicable' },
+];
+
 function getDefaultForm() {
     return {
         program_id: null,
         school_id: null,
         course_id: null,
+        term_type: null,
     };
 }
 
@@ -97,6 +109,7 @@ const fillForm = (enrollment) => {
         program_id: enrollment?.program ?? enrollment?.program_id ?? null,
         school_id: enrollment?.school ?? enrollment?.school_id ?? null,
         course_id: enrollment?.course ?? enrollment?.course_id ?? null,
+        term_type: enrollment?.term_type ?? null,
     };
 };
 
@@ -141,6 +154,11 @@ const submitEnrollment = async () => {
         return;
     }
 
+    if (!form.value.term_type) {
+        toast.error('Term type is required.');
+        return;
+    }
+
     processing.value = true;
 
     try {
@@ -148,6 +166,7 @@ const submitEnrollment = async () => {
             program_id: normalizeId(form.value.program_id),
             school_id: schoolId,
             course_id: normalizeId(form.value.course_id),
+            term_type: form.value.term_type || null,
         };
 
         const response = props.mode === 'add'

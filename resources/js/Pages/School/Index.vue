@@ -5,7 +5,7 @@ import { ref, watch } from "vue";
 import SchoolModal from "@/Pages/School/Modal/SchoolModal.vue";
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
-import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import { usePermission } from '@/composable/permissions';
 
 const props = defineProps({
@@ -158,33 +158,21 @@ const deleteSchool = () => {
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <IosModal :visible="showDeleteModal" title="Delete School" width="420px" max-width="95vw"
-            body-style="padding: 16px;" @update:visible="showDeleteModal = $event"
-            @close="selectedSchool = null">
-            <div class="flex items-start gap-4 py-2">
-                <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <AppIcon name="trash" :size="14" class="text-red-600" />
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm text-gray-700 mb-3">
-                        Are you sure you want to delete this school? This cannot be undone.
-                    </p>
-                    <div v-if="selectedSchool" class="bg-[#f9f9fb] border border-[#e5e5ea] rounded-xl px-4 py-3">
-                        <div class="font-semibold text-gray-800 text-sm">{{ selectedSchool.name }}</div>
-                        <div class="text-xs text-[#8e8e93] mt-0.5">
-                            {{ selectedSchool.shortname }}{{ selectedSchool.campus ? ` \u00b7 ${selectedSchool.campus}`
-                                : '' }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
-                <Button label="Cancel" severity="secondary" outlined rounded size="small"
-                    @click="showDeleteModal = false; selectedSchool = null" />
-                <Button label="Delete" severity="danger" rounded size="small" :loading="deleting"
-                    @click="deleteSchool" />
-            </div>
-        </IosModal>
+        <IosConfirmDialog
+            :visible="showDeleteModal"
+            title="Delete School"
+            width="420px"
+            icon="trash"
+            message="Are you sure you want to delete this school? This cannot be undone."
+            :data="selectedSchool ? [
+                { label: 'Name', value: selectedSchool.name, color: '#FF3B30' },
+                { label: 'Details', value: selectedSchool.shortname + (selectedSchool.campus ? ` \u00b7 ${selectedSchool.campus}` : '') },
+            ] : []"
+            :loading="deleting"
+            @accept="deleteSchool"
+            @update:visible="showDeleteModal = $event"
+            @close="selectedSchool = null"
+        />
 
         <!-- School Modal -->
         <SchoolModal v-model:visible="showModal" :school="editingSchool" @saved="handleSaved" />

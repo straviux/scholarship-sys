@@ -15,28 +15,6 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::patch('/fund-transactions/{id}/update-status', [FundTransactionController::class, 'updateStatus']);
     Route::delete('/fund-transactions/{id}', [FundTransactionController::class, 'destroy']);
 
-    // DV (Disbursement Voucher) Report generation
-    Route::get('/fund-transactions/{id}/dv-pdf', [FundTransactionController::class, 'generateDVPdf']);
-    Route::get('/fund-transactions/{id}/dv-excel', [FundTransactionController::class, 'generateDVExcel']);
-
-    // Payroll Report generation
-    Route::get('/fund-transactions/{id}/payroll-pdf', [FundTransactionController::class, 'generatePayrollPdf']);
-
-    // List of Scholars PDF generation
-    Route::get('/fund-transactions/{id}/list-of-scholars-pdf', [FundTransactionController::class, 'generateListOfScholarsPdf']);
-
-    // OBR (Obligatory Disbursement Report) generation
-    Route::get('/fund-transactions/{id}/obr-pdf', [FundTransactionController::class, 'generateOBRPdf']);
-    Route::get('/fund-transactions/{id}/obr-excel', [FundTransactionController::class, 'generateOBRExcel']);
-
-    // Document Upload/Download/Delete endpoints
-    Route::post('/fund-transactions/{id}/upload-document', [FundTransactionController::class, 'uploadDocument']);
-    Route::get('/fund-transactions/{id}/document/{docType}/download', [FundTransactionController::class, 'downloadDocument']);
-    Route::delete('/fund-transactions/{id}/document/{docType}', [FundTransactionController::class, 'deleteDocument']);
-    Route::post('/fund-transactions/{id}/verify-qr', [FundTransactionController::class, 'verifyDocumentQR']);
-    Route::get('/fund-transactions/{id}/documents', [FundTransactionController::class, 'getDocuments']);
-    Route::post('/fund-transactions/{id}/generate-qr', [FundTransactionController::class, 'generateQrCode']);
-
     // OBR Tracking Info endpoint - proxy to external service
     Route::get('/obr-tracking-info', [FundTransactionController::class, 'getObrTrackingInfo']);
 

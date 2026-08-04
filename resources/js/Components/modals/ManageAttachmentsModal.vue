@@ -90,10 +90,20 @@
     </IosModal>
 
     <ViewAttachmentModal v-model:visible="showViewerModal" :attachment="viewerAttachment" />
+
+    <IosConfirmDialog
+        v-model:visible="showDeleteAttachmentDialog"
+        title="Confirm Delete"
+        width="400px"
+        message="Are you sure you want to delete this attachment?"
+        @accept="confirmDeleteAttachment"
+        @close="attachmentToDelete = null"
+    />
 </template>
 
 <script setup>
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import { ref } from 'vue';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import axios from 'axios';
@@ -191,14 +201,27 @@ const downloadAttachment = (attachment) => {
     window.open(route(routeName, attachment.attachment_id), '_blank');
 };
 
-const deleteAttachment = async (attachment) => {
-    if (!confirm('Are you sure you want to delete this attachment?')) return;
+const attachmentToDelete = ref(null);
+const showDeleteAttachmentDialog = ref(false);
+
+const deleteAttachment = (attachment) => {
+    attachmentToDelete.value = attachment;
+    showDeleteAttachmentDialog.value = true;
+};
+
+const confirmDeleteAttachment = async () => {
+    const attachment = attachmentToDelete.value;
+    showDeleteAttachmentDialog.value = false;
+    if (!attachment) return;
+
     try {
         await axios.delete(route('scholarship.records.attachments.delete', attachment.attachment_id));
         toast.success('Attachment deleted successfully');
         emit('success');
     } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to delete attachment');
+    } finally {
+        attachmentToDelete.value = null;
     }
 };
 

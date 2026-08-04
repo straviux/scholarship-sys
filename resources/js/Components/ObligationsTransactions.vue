@@ -432,11 +432,24 @@
         </IosModal>
 
         <!-- Delete Confirmation Dialog -->
-        <IosModal v-model:visible="showDeleteDialog" title="Confirm Delete" width="30vw" max-width="95vw"
-            :show-action="true" action-label="Delete" action-class="ios-nav-destructive" :loading="deleting"
-            @action="deleteDisbursement">
-            <p>Are you sure you want to delete this disbursement?</p>
-        </IosModal>
+        <IosConfirmDialog
+            v-model:visible="showDeleteDialog"
+            title="Confirm Delete"
+            width="400px"
+            message="Are you sure you want to delete this disbursement?"
+            :loading="deleting"
+            @accept="deleteDisbursement"
+        />
+
+        <!-- Delete Attachment Confirmation Dialog -->
+        <IosConfirmDialog
+            v-model:visible="showDeleteAttachmentDialog"
+            title="Confirm Delete"
+            width="400px"
+            message="Are you sure you want to delete this attachment?"
+            @accept="confirmDeleteAttachment"
+            @close="attachmentToDelete = null"
+        />
 
         <!-- Manage Attachments Modal -->
         <IosModal :visible="showAttachmentsModal" title="Manage Attachments" width="50vw" max-width="95vw"
@@ -570,6 +583,7 @@ import { usePermission } from '@/composable/permissions';
 import { useSystemOptions } from '@/composables/useSystemOptions';
 import ViewAttachmentModal from '@/Components/modals/ViewAttachmentModal.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import IosConfirmDialog from '@/Components/ui/IosConfirmDialog.vue';
 import TermSelect from '@/Components/selects/TermSelect.vue';
 import YearLevelSelect from '@/Components/selects/YearLevelSelect.vue';
 import AcademicYearSelect from '@/Components/selects/AcademicYearSelect.vue';
@@ -1032,10 +1046,18 @@ const downloadAttachment = async (attachment) => {
     }
 };
 
-const deleteAttachment = async (attachment) => {
-    if (!confirm('Are you sure you want to delete this attachment?')) {
-        return;
-    }
+const attachmentToDelete = ref(null);
+const showDeleteAttachmentDialog = ref(false);
+
+const deleteAttachment = (attachment) => {
+    attachmentToDelete.value = attachment;
+    showDeleteAttachmentDialog.value = true;
+};
+
+const confirmDeleteAttachment = async () => {
+    const attachment = attachmentToDelete.value;
+    showDeleteAttachmentDialog.value = false;
+    if (!attachment) return;
 
     try {
         const response = await axios.delete(route('disbursements.attachments.delete', attachment.attachment_id));
@@ -1050,6 +1072,8 @@ const deleteAttachment = async (attachment) => {
     } catch (error) {
         console.error('Error deleting attachment:', error);
         toast.error('Failed to delete attachment');
+    } finally {
+        attachmentToDelete.value = null;
     }
 };
 

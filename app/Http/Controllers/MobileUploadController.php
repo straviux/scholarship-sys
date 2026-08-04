@@ -5,15 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Disbursement;
 use App\Models\ScholarshipRecord;
 use App\Models\ScholarshipProfileRequirement;
-use App\Models\FundTransaction;
 use App\Http\Requests\DisbursementUploadRequest;
 use App\Http\Requests\ScholarshipRecordUploadRequest;
 use App\Http\Requests\RequirementUploadRequest;
-use App\Http\Requests\FundTransactionUploadRequest;
 use App\Services\FileUploadService;
 use App\Services\DisbursementFileService;
 use App\Services\ScholarshipRecordFileService;
-use App\Services\FundTransactionFileService;
 use App\Traits\TokenValidation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +23,6 @@ class MobileUploadController extends Controller
         private FileUploadService $fileUploadService,
         private DisbursementFileService $disbursementFileService,
         private ScholarshipRecordFileService $scholarshipRecordFileService,
-        private FundTransactionFileService $fundTransactionFileService,
     ) {}
 
     /**
@@ -313,81 +309,4 @@ class MobileUploadController extends Controller
     }
 
 
-    /**
-     * Show the mobile upload page for fund transaction
-     */
-    public function showFundTransactionUpload($token, $docType = null)
-    {
-        $transaction = FundTransaction::where('upload_token', $token)->first();
-
-        if (!$transaction) {
-            Log::warning('fund_transaction_not_found', ['token' => substr($token, 0, 10) . '...']);
-            return view('mobile.upload-expired');
-        }
-
-        try {
-            $this->validateUploadToken($transaction, 'fund_transaction');
-        } catch (\Exception $e) {
-            Log::info('fund_transaction_token_expired', [
-                'id' => $transaction->id,
-                'error' => $e->getMessage(),
-            ]);
-            return view('mobile.upload-expired');
-        }
-
-        // Validate document type if provided
-        $validDocTypes = ['obr', 'dv_payroll', 'los', 'cheque'];
-        if ($docType && !in_array($docType, $validDocTypes)) {
-            $docType = null;
-        }
-
-        return view('mobile.fund-transaction-upload', compact('transaction', 'docType'));
-    }
-
-    /**
-     * Handle file upload for fund transaction
-     */
-    public function uploadFundTransactionFile(FundTransactionUploadRequest $request, $token)
-    {
-        try {
-            // Find transaction
-            $transaction = FundTransaction::where('upload_token', $token)->first();
-
-            if (!$transaction) {
-                return $this->notFound('Fund transaction not found');
-            }
-
-            // Validate token hasn't expired
-            $this->validateUploadToken($transaction, 'fund_transaction');
-
-            // Store document using service
-            $document = $this->fundTransactionFileService->storeDocument(
-                $transaction,
-                $request->file('file'),
-                $request->input('document_type')
-            );
-
-            return $this->success([
-                'document_id' => $document->id,
-                'document_type' => $document->document_type,
-                'filename' => $document->filename,
-                'size' => $document->file_size,
-                'original_size' => $document->original_file_size ?? $document->file_size,
-            ], 'File uploaded successfully', 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('fund_transaction_validation_failed', [
-                'errors' => $e->errors(),
-                'token' => substr($token, 0, 10) . '...',
-            ]);
-            return $this->unprocessable('Validation failed', $e->errors());
-        } catch (\Exception $e) {
-            Log::error('fund_transaction_upload_error', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'user_id' => Auth::id(),
-            ]);
-            return $this->error('Upload failed: ' . $e->getMessage(), code: 500);
-        }
-    }
 }
