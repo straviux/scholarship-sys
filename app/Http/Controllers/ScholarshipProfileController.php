@@ -57,7 +57,7 @@ class ScholarshipProfileController extends Controller
      * Store a newly created resource in storage.
      * and return newly created profile data as json response
      */
-    public function storeApplicant(CreateScholarshipProfileRequest $request): Response
+    public function storeApplicant(CreateScholarshipProfileRequest $request, AcademicRecordSyncService $academicRecordSyncService): Response
     {
         $validated = $request->validated();
         // is_on_waiting_list is now managed through scholarship_records.application_status (pending status)
@@ -96,7 +96,7 @@ class ScholarshipProfileController extends Controller
 
                 $program_id = $request->program_id ?? ($course ? $course->scholarship_program_id : null);
 
-                ScholarshipRecord::create([
+                $newRecord = ScholarshipRecord::create([
                     'profile_id' => $new_profile->profile_id,
                     'course_id' => $course->id ?? null,
                     'term' => $request->term,
@@ -110,6 +110,8 @@ class ScholarshipProfileController extends Controller
                     'yakap_category' => $request->yakap_category ?? null,
                     'yakap_location' => $request->yakap_location ?? null,
                 ]);
+
+                $academicRecordSyncService->syncScholarshipRecord($newRecord);
             }
         }
 
@@ -129,7 +131,7 @@ class ScholarshipProfileController extends Controller
     /**
      * Update the specified applicant profile in storage.
      */
-    public function updateApplicant(UpdateScholarshipProfileRequest $request, $id)
+    public function updateApplicant(UpdateScholarshipProfileRequest $request, $id, AcademicRecordSyncService $academicRecordSyncService)
     {
         $profile = ScholarshipProfile::findOrFail($id);
         $oldData = $profile->getAttributes();
@@ -171,7 +173,7 @@ class ScholarshipProfileController extends Controller
             if (!$hasActive) {
                 // Create new scholarship record
 
-                ScholarshipRecord::create([
+                $newRecord = ScholarshipRecord::create([
                     'profile_id' => $profile->profile_id,
                     'course_id' => $course->id ?? null,
                     'term' => $request->term,
@@ -185,6 +187,8 @@ class ScholarshipProfileController extends Controller
                     'yakap_category' => $request->yakap_category ?? null,
                     'yakap_location' => $request->yakap_location ?? null,
                 ]);
+
+                $academicRecordSyncService->syncScholarshipRecord($newRecord);
             } else {
                 // Update existing record - find by scholarship_grant_id or get the active record
                 $record = null;
@@ -210,6 +214,8 @@ class ScholarshipProfileController extends Controller
                     $record->yakap_category = $request->yakap_category ?? $record->yakap_category;
                     $record->yakap_location = $request->yakap_location ?? $record->yakap_location;
                     $record->save();
+
+                    $academicRecordSyncService->syncScholarshipRecord($record);
                 }
             }
         }
