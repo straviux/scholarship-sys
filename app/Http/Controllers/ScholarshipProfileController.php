@@ -1059,8 +1059,35 @@ class ScholarshipProfileController extends Controller
             ")
             ->first();
 
+        // Full "Recommended for Approval" pool for the approval request modal's
+        // applicant picker — independent of the table's pagination/filters, so
+        // every eligible applicant is selectable, not just the current page.
+        $recommendationEligibleApplicants = ScholarshipRecord::where('unified_status', 'interviewed')
+            ->where('recommendation', 'recommended')
+            ->whereRaw('scholarship_records.id = (
+                SELECT sr2.id FROM scholarship_records sr2
+                WHERE sr2.profile_id = scholarship_records.profile_id
+                    AND sr2.unified_status = \'interviewed\'
+                ORDER BY sr2.created_at DESC
+                LIMIT 1
+            )')
+            ->with([
+                'profile' => function ($q) {
+                    $q->select('profile_id', 'first_name', 'last_name', 'middle_name');
+                },
+                'program' => function ($q) {
+                    $q->select('scholarship_programs.id', 'scholarship_programs.name', 'scholarship_programs.shortname');
+                },
+                'school' => function ($q) {
+                    $q->select('schools.id', 'schools.name', 'schools.shortname');
+                },
+            ])
+            ->orderBy('interviewed_at', 'desc')
+            ->get(['id', 'profile_id', 'course_id', 'school_id', 'recommendation']);
+
         return Inertia::render('InterviewedApplicants/Index', [
             'interviewed_applicants' => $records,
+            'recommendation_eligible_applicants' => $recommendationEligibleApplicants,
             'interviewed_applicants_pagination' => [
                 'current_page' => $page,
                 'per_page' => $perPage,

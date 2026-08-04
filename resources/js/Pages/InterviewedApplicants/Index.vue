@@ -1026,6 +1026,10 @@ const page = usePage();
 
 const props = defineProps({
     interviewed_applicants: Array,
+    recommendation_eligible_applicants: {
+        type: Array,
+        default: () => [],
+    },
     interviewed_applicants_pagination: {
         type: Object,
         default: () => ({
@@ -1081,6 +1085,7 @@ const props = defineProps({
 const recommendationListReloadProps = [
     'interviewed_applicants',
     'interviewed_applicants_pagination',
+    'recommendation_eligible_applicants',
     'budget_allocations',
     'recommendation_lists',
     'deleted_recommendation_lists',
@@ -2591,6 +2596,20 @@ const openUpdateListModal = (recommendationList) => {
     showCreateRecommendationListModal.value = true;
 };
 
+// Full "Recommended for Approval" pool, independent of the table's
+// pagination/filters, flagged with current approval-request membership.
+const recommendationEligibleApplicantsWithFlags = computed(() => {
+    return (props.recommendation_eligible_applicants || []).map((record) => {
+        const recommendationListNumbers = Array.from(recommendationRecordIndex.value.get(Number(record.id)) || []);
+
+        return {
+            ...record,
+            is_in_recommendation_list: recommendationListNumbers.length > 0,
+            recommendation_list_numbers: recommendationListNumbers,
+        };
+    });
+});
+
 // Pool of applicants offered by the Select Applicants step: recommended
 // applicants not already in another approval request. When updating an
 // existing request, its current members are included too (pre-checked),
@@ -2601,13 +2620,12 @@ const recommendationApplicantPool = computed(() => {
             (editingRecommendationList.value.records || []).map((r) => Number(r.id))
         );
 
-        return (props.interviewed_applicants || [])
-            .filter((r) => r.recommendation === 'recommended'
-                && (!r.is_in_recommendation_list || currentIds.has(Number(r.id))));
+        return recommendationEligibleApplicantsWithFlags.value
+            .filter((r) => !r.is_in_recommendation_list || currentIds.has(Number(r.id)));
     }
 
-    return (props.interviewed_applicants || [])
-        .filter((r) => r.recommendation === 'recommended' && !r.is_in_recommendation_list);
+    return recommendationEligibleApplicantsWithFlags.value
+        .filter((r) => !r.is_in_recommendation_list);
 });
 
 async function saveUpdateListChanges(recordIds) {
