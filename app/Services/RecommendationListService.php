@@ -165,6 +165,7 @@ class RecommendationListService
 
                     $records = $this->getRecommendedInterviewedRecords($recordIds);
                     $this->ensureRecordsAreNotAlreadyIncluded($records, $recordIds);
+                    $listNumberPrefix = $this->resolveListNumberPrefix($records->pluck('program.shortname'));
                     $recordsSnapshot = $records->map(fn(ScholarshipRecord $record) => $this->snapshotRecord($record))
                         ->values()
                         ->all();
@@ -179,7 +180,7 @@ class RecommendationListService
                     }), 2);
 
                     $recommendationList = RecommendationList::create([
-                        'list_number' => $this->generateListNumber(),
+                        'list_number' => $this->generateListNumber($listNumberPrefix),
                         'report_title' => $this->cleanString($data['report_title'] ?? null) ?? 'RECOMMENDATION LIST FOR APPROVAL',
                         'request_date' => $this->normalizeDate($data['request_date'] ?? null),
                         'recommendation_status' => 'recommended',
@@ -617,13 +618,43 @@ class RecommendationListService
         return date('Y-m-d', $timestamp);
     }
 
-    private function generateListNumber(): string
+    // Prefix reflects the program the request is for (e.g. EFA, MED, TEC,
+    // BAR) instead of the generic "RFA" — derived from the first 3 letters
+    // of the program's shortname so it stays in sync as programs are
+    // added/renamed without a hardcoded map. Falls back to "RFA" when the
+    // selected records span more than one program or have no program set.
+    // Also used by the recommendation-lists:renumber command to backfill
+    // existing lists onto the new per-program prefix scheme.
+    public function resolveListNumberPrefix(Collection $programShortnames): string
     {
-        $prefix = 'RFA-' . now()->format('Ymd');
+        $shortnames = $programShortnames
+            ->filter()
+            ->map(fn($shortname) => strtoupper(trim($shortname)))
+            ->unique()
+            ->values();
 
-        // Sequence is global across all requests ever created (not reset daily),
-        // so the last 4 digits reflect the total number of requests created so far.
-        $nextSequence = RecommendationList::withTrashed()->count() + 1;
+        if ($shortnames->count() === 1) {
+            $code = substr(preg_replace('/[^A-Z]/', '', $shortnames->first()), 0, 3);
+
+            if ($code !== '') {
+                return $code;
+            }
+        }
+
+        return 'RFA';
+    }
+
+    private function generateListNumber(string $programPrefix): string
+    {
+        $prefix = $programPrefix . '-' . now()->format('Ymd');
+
+        // Sequence is global across all requests ever created under this
+        // program's prefix (not reset daily), so the last 4 digits reflect
+        // the total number of requests created so far for that program —
+        // each program starts its own sequence at 0001.
+        $nextSequence = RecommendationList::withTrashed()
+            ->where('list_number', 'like', "{$programPrefix}-%")
+            ->count() + 1;
 
         return sprintf('%s-%04d', $prefix, $nextSequence);
     }
