@@ -1898,10 +1898,24 @@ class ScholarshipProfileController extends Controller
             ->get();
 
         $approvedRecommendationListsForCumulative = $this->getApprovedRecommendationListsForCumulativeCount();
+        $latestApprovedByAllocationKey = $this->getLatestApprovedRecommendationListsByBudgetAllocationKey();
 
         return $this->interviewedApplicantsBudgetAllocationCache = $budgetAllocations
-            ->map(function ($allocation) use ($approvedScholarRecords, $disbursedByAllocation, $approvedRecommendationListsForCumulative) {
-                $disbursed = (float) ($disbursedByAllocation[$allocation['key']] ?? 0);
+            ->map(function ($allocation) use ($approvedScholarRecords, $disbursedByAllocation, $approvedRecommendationListsForCumulative, $latestApprovedByAllocationKey) {
+                // If an earlier request against this same fund has already been
+                // approved, the running balance continues from where that request
+                // left off (its own running balance minus what it actually
+                // requested) rather than recomputing from the raw allotment and
+                // live disbursement totals — those can lag behind approvals that
+                // haven't been disbursed yet.
+                $chainedBalance = $latestApprovedByAllocationKey->get($allocation['key']);
+                if ($chainedBalance) {
+                    $totalAllotment = $chainedBalance['remaining_after_approval'];
+                    $disbursed = 0.0;
+                } else {
+                    $totalAllotment = (float) ($allocation['allotment'] ?? 0);
+                    $disbursed = (float) ($disbursedByAllocation[$allocation['key']] ?? 0);
+                }
                 $programIds = collect($allocation['program_ids'] ?? [])
                     ->map(fn($programId) => (int) $programId)
                     ->filter(fn($programId) => $programId > 0)
@@ -1948,7 +1962,7 @@ class ScholarshipProfileController extends Controller
                     'fiscal_year' => $allocation['fiscal_year'],
                     'rc_name' => $allocation['rc_name'],
                     'rc_code' => $allocation['rc_code'],
-                    'total_allotment' => (float) ($allocation['allotment'] ?? 0),
+                    'total_allotment' => $totalAllotment,
                     'disbursed' => $disbursed,
                     'approved_scholars_to_date' => $approvedScholarsToDate,
                     'approved_scholars_current_ay_estimated_total' => $approvedScholarsCurrentAyEstimatedTotal,
@@ -2145,6 +2159,38 @@ class ScholarshipProfileController extends Controller
                     'record_count' => (int) ($recommendationList->record_count ?? 0),
                     'calendar_year' => $calendarYear,
                     'program_shortnames' => $programShortnames,
+                ];
+            });
+    }
+
+    /**
+     * For each budget allocation (fund) that has at least one APPROVED
+     * recommendation list against it, the most recently approved one's
+     * ending balance: its own running balance (total_allotment - disbursed,
+     * both frozen in its budget_allocation snapshot at the time it was
+     * created) minus what it actually requested (sum of grant_amount across
+     * its records_snapshot). Keyed by budget_allocation_key.
+     */
+    private function getLatestApprovedRecommendationListsByBudgetAllocationKey(): Collection
+    {
+        return RecommendationList::query()
+            ->whereNotNull('approved_at')
+            ->whereNotNull('budget_allocation_key')
+            ->select(['id', 'budget_allocation_key', 'budget_allocation', 'records_snapshot', 'approved_at'])
+            ->orderByDesc('approved_at')
+            ->get()
+            ->unique('budget_allocation_key')
+            ->mapWithKeys(function (RecommendationList $recommendationList) {
+                $budgetAllocation = $recommendationList->budget_allocation ?? [];
+                $totalAllotment = (float) ($budgetAllocation['total_allotment'] ?? 0);
+                $disbursed = (float) ($budgetAllocation['disbursed'] ?? 0);
+                $grantTotal = collect($recommendationList->records_snapshot ?? [])
+                    ->sum(fn($record) => (float) ($record['grant_amount'] ?? 0));
+
+                return [
+                    $recommendationList->budget_allocation_key => [
+                        'remaining_after_approval' => round($totalAllotment - $disbursed - $grantTotal, 2),
+                    ],
                 ];
             });
     }
