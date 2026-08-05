@@ -1534,6 +1534,25 @@ class ScholarshipProfileController extends Controller
             : ($recommendationList->grant_amount_overrides ?? []);
         $refreshedRecords = $recommendationListService->applyGrantAmounts($refreshedRecords->all(), $mainGrantAmount, $grantAmountOverrides);
 
+        // Running Balance (total_allotment/disbursed) is a snapshot too, but
+        // an already-APPROVED list's snapshot is what sibling pending
+        // requests against the same fund chain their own balance from — it
+        // must stay frozen once approved, or that chain would corrupt
+        // itself. A still-pending list has no such downstream dependents
+        // yet, so Recalculate is free to pull the current chained balance
+        // (e.g. picking up a sibling request that got approved meanwhile).
+        if (!$recommendationList->approved_at && $recommendationList->budget_allocation_key) {
+            $liveAllocation = collect($this->getInterviewedApplicantsBudgetAllocations())
+                ->firstWhere('key', $recommendationList->budget_allocation_key);
+
+            if ($liveAllocation) {
+                $budgetAllocation = $recommendationList->budget_allocation ?? [];
+                $budgetAllocation['total_allotment'] = $liveAllocation['total_allotment'];
+                $budgetAllocation['disbursed'] = $liveAllocation['disbursed'];
+                $recommendationList->budget_allocation = $budgetAllocation;
+            }
+        }
+
         $recommendationList->records_snapshot = $refreshedRecords;
         $recommendationList->record_count = count($refreshedRecords);
         $recommendationList->total_projected_expense = collect($refreshedRecords)->sum('projected_total_expense');
@@ -1902,20 +1921,20 @@ class ScholarshipProfileController extends Controller
 
         return $this->interviewedApplicantsBudgetAllocationCache = $budgetAllocations
             ->map(function ($allocation) use ($approvedScholarRecords, $disbursedByAllocation, $approvedRecommendationListsForCumulative, $latestApprovedByAllocationKey) {
+                // Allocated Fund always stays fixed to the fund's actual allotment
+                // — only the Running Balance (total_allotment - disbursed) moves.
+                $totalAllotment = (float) ($allocation['allotment'] ?? 0);
+
                 // If an earlier request against this same fund has already been
                 // approved, the running balance continues from where that request
-                // left off (its own running balance minus what it actually
-                // requested) rather than recomputing from the raw allotment and
-                // live disbursement totals — those can lag behind approvals that
-                // haven't been disbursed yet.
-                $chainedBalance = $latestApprovedByAllocationKey->get($allocation['key']);
-                if ($chainedBalance) {
-                    $totalAllotment = $chainedBalance['remaining_after_approval'];
-                    $disbursed = 0.0;
-                } else {
-                    $totalAllotment = (float) ($allocation['allotment'] ?? 0);
-                    $disbursed = (float) ($disbursedByAllocation[$allocation['key']] ?? 0);
-                }
+                // left off — i.e. "disbursed" becomes everything already
+                // committed by the approval chain so far — rather than
+                // recomputing from live disbursement totals, which can lag
+                // behind approvals that haven't been disbursed yet.
+                $chainedConsumed = $latestApprovedByAllocationKey->get($allocation['key']);
+                $disbursed = $chainedConsumed !== null
+                    ? $chainedConsumed['consumed']
+                    : (float) ($disbursedByAllocation[$allocation['key']] ?? 0);
                 $programIds = collect($allocation['program_ids'] ?? [])
                     ->map(fn($programId) => (int) $programId)
                     ->filter(fn($programId) => $programId > 0)
@@ -2165,11 +2184,13 @@ class ScholarshipProfileController extends Controller
 
     /**
      * For each budget allocation (fund) that has at least one APPROVED
-     * recommendation list against it, the most recently approved one's
-     * ending balance: its own running balance (total_allotment - disbursed,
-     * both frozen in its budget_allocation snapshot at the time it was
-     * created) minus what it actually requested (sum of grant_amount across
-     * its records_snapshot). Keyed by budget_allocation_key.
+     * recommendation list against it, the total amount already committed by
+     * the approval chain as of the most recently approved one: whatever was
+     * already committed before it (its own frozen "disbursed") plus what it
+     * itself requested (sum of grant_amount across its records_snapshot).
+     * This is meant to be used as the *next* request's "disbursed" figure —
+     * Allocated Fund (total_allotment) itself never moves, only this does.
+     * Keyed by budget_allocation_key.
      */
     private function getLatestApprovedRecommendationListsByBudgetAllocationKey(): Collection
     {
@@ -2182,14 +2203,13 @@ class ScholarshipProfileController extends Controller
             ->unique('budget_allocation_key')
             ->mapWithKeys(function (RecommendationList $recommendationList) {
                 $budgetAllocation = $recommendationList->budget_allocation ?? [];
-                $totalAllotment = (float) ($budgetAllocation['total_allotment'] ?? 0);
                 $disbursed = (float) ($budgetAllocation['disbursed'] ?? 0);
                 $grantTotal = collect($recommendationList->records_snapshot ?? [])
                     ->sum(fn($record) => (float) ($record['grant_amount'] ?? 0));
 
                 return [
                     $recommendationList->budget_allocation_key => [
-                        'remaining_after_approval' => round($totalAllotment - $disbursed - $grantTotal, 2),
+                        'consumed' => round($disbursed + $grantTotal, 2),
                     ],
                 ];
             });
