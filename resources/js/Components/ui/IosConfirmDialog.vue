@@ -98,6 +98,6 @@ const close = () => {
             </div>
         </div>
 
-        <div style="height: 4px;"></div>
+        <div style="height: 16px;"></div>
     </IosModal>
 </template>

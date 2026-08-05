@@ -653,6 +653,11 @@ class ApplicantController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $jpmOnly = $request->boolean('jpm_only');
+        if ($jpmOnly && !Gate::allows('jpm.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', '300');
 
@@ -710,6 +715,15 @@ class ApplicantController extends Controller
 
         $this->applyApplicantListTabFilter($query, $request->get('list'));
         $this->applyApplicantFilters($query, $request, $programId);
+
+        if ($jpmOnly) {
+            $query->where(function ($q) {
+                $q->where('scholarship_profiles.is_jpm_member', true)
+                    ->orWhere('scholarship_profiles.is_father_jpm', true)
+                    ->orWhere('scholarship_profiles.is_mother_jpm', true)
+                    ->orWhere('scholarship_profiles.is_guardian_jpm', true);
+            });
+        }
 
         // Cap well above the full pending set so an unfiltered "print all" isn't
         // silently truncated, while still guarding against pathological loads.

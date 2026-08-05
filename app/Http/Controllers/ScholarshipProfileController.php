@@ -1716,6 +1716,8 @@ class ScholarshipProfileController extends Controller
             'orientation' => $recommendationList->orientation,
             'record_count' => $recommendationList->record_count,
             'total_projected_expense' => (float) $recommendationList->total_projected_expense,
+            'total_request_amount' => collect($recommendationList->records_snapshot ?? [])
+                ->sum(fn($record) => (float) ($record['grant_amount'] ?? 0)),
             'main_grant_amount' => $recommendationList->main_grant_amount !== null ? (float) $recommendationList->main_grant_amount : null,
             'grant_amount_overrides' => $recommendationList->grant_amount_overrides ?? [],
             'selected_record_ids' => $recommendationList->selected_record_ids ?? [],

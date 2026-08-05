@@ -968,16 +968,20 @@ const openExportSelected = () => {
     });
 };
 
+// Export All choice modal — lets users with jpm.view scope the export down
+// to JPM-tagged applicants only, instead of always exporting every applicant
+// matching the current filters.
+const showExportAllModal = ref(false);
+const exportAllJpmOnly = ref(false);
+
 const openExportAll = () => {
-    openConfirmDialog({
-        header: 'Export All',
-        message: 'Export all applicants matching the current filters? You\'ll choose a format (PDF or Excel) in the next step.',
-        acceptLabel: '',
-        icon: 'pi pi-download',
-        onAccept: () => {
-            openReportModal();
-        },
-    });
+    exportAllJpmOnly.value = false;
+    showExportAllModal.value = true;
+};
+
+const confirmExportAll = () => {
+    showExportAllModal.value = false;
+    openReportModal(hasPermission('jpm.view') && exportAllJpmOnly.value);
 };
 
 // Confirmation Dialog (IosModal-based, matches InterviewedApplicants/Index.vue)
@@ -1006,12 +1010,18 @@ function handleConfirmDialogAccept() {
 
 // Generate a report of every applicant matching the current filters/tab,
 // not just the checked rows. Fetches the full set from the server first.
-const openReportModal = async () => {
+const openReportModal = async (jpmOnly = false) => {
     if (reportLoading.value) return;
     reportLoading.value = true;
     try {
         // Reuse the exact query string that produced the current view.
-        const qs = window.location.search || '';
+        const params = new URLSearchParams(window.location.search || '');
+        if (jpmOnly) {
+            params.set('jpm_only', '1');
+        } else {
+            params.delete('jpm_only');
+        }
+        const qs = params.toString() ? `?${params.toString()}` : '';
         const { data } = await axios.get(route('applicants.report-data') + qs);
         const rows = data?.data ?? [];
 
@@ -1688,6 +1698,36 @@ const formatPriorityName = (priority) => {
             action-class=""
             @accept="handleConfirmDialogAccept"
         />
+
+        <!-- Export All Modal -->
+        <IosModal
+            v-model:visible="showExportAllModal"
+            title="Export All"
+            width="450px"
+            body-style="padding: 0 16px;"
+            show-action
+            @action="confirmExportAll"
+        >
+            <div class="ios-section">
+                <div class="ios-card !bg-white/55 dark:!bg-[#222831]/55 backdrop-blur-[14px] backdrop-saturate-[1.8] !border-white/50 dark:!border-white/8">
+                    <div class="ios-row ios-row-last items-start gap-3 px-4 py-3.5">
+                        <AppIcon name="download" :size="24" style="color: #FF3B30; flex-shrink: 0; margin-top: 2px;" />
+                        <p class="text-sm leading-snug text-[#3c3c43] dark:text-gray-300 m-0">
+                            Export all applicants matching the current filters? You'll choose a format (PDF or Excel) in the next step.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="hasPermission('jpm.view')" class="ios-section pb-4">
+                <div class="ios-card">
+                    <div class="ios-row ios-row-last">
+                        <span class="ios-row-label text-sm">Export JPM Applicants Only</span>
+                        <ToggleSwitch v-model="exportAllJpmOnly" />
+                    </div>
+                </div>
+            </div>
+        </IosModal>
 
         <!-- Display Settings Modal -->
         <IosModal v-model:visible="showDisplaySettingsModal" title="Display Settings" width="calc(100vw - 2rem)"

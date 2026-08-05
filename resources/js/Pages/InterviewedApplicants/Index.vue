@@ -489,7 +489,7 @@
 
                             <DataTable v-else :value="filteredRecommendationLists" dataKey="id"
                                 v-model:expandedRows="recommendationListExpandedRows" showGridlines stripedRows
-                                scrollable responsiveLayout="scroll"
+                                scrollable responsiveLayout="scroll" sortField="list_number" :sortOrder="-1"
                                 class="text-sm ios-interviewed-table ios-datatable-clean"
                                 @rowContextmenu="(event) => openRecommendationListContextMenu(event.originalEvent, event.data)"
                                 contextMenu>
@@ -519,11 +519,11 @@
                                         </div>
                                     </template>
                                 </Column>
-                                <Column header="Projected Grant" sortable field="total_projected_expense"
+                                <Column header="Total Amount" sortable field="total_request_amount"
                                     headerClass="min-w-[170px]" bodyClass="min-w-[170px]">
                                     <template #body="slotProps">
                                         <div class="font-semibold text-emerald-700">
-                                            {{ formatCurrency(slotProps.data.total_projected_expense) }}
+                                            {{ formatCurrency(slotProps.data.total_request_amount) }}
                                         </div>
                                     </template>
                                 </Column>
@@ -769,6 +769,9 @@
                                 </Column>
                             </DataTable>
                         </IosModal>
+
+                        <RecommendationListDetailsModal v-model:visible="showRecommendationListDetailsModal"
+                            :recommendation-list="recommendationListForDetails" />
                     </TabPanel>
 
                     <TabPanel value="all">
@@ -1011,6 +1014,7 @@ import CourseSelect from '@/Components/selects/CourseSelect.vue';
 import ContextMenu from 'primevue/contextmenu';
 import AssessmentViewModal from './Modal/AssessmentViewModal.vue';
 import CreateRecommendationListModal from './Modal/CreateRecommendationListModal.vue';
+import RecommendationListDetailsModal from './Modal/RecommendationListDetailsModal.vue';
 import GenerateReportModal from './Modal/GenerateReportModalIOS.vue';
 import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
 import { getSystemOptionLabel } from '@/composables/useSystemOptions';
@@ -1196,6 +1200,8 @@ const denyForm = useForm({
 
 const selectedRecord = ref(null);
 const selectedRecommendationList = ref(null);
+const showRecommendationListDetailsModal = ref(false);
+const recommendationListForDetails = ref(null);
 const canManageActions = computed(() => hasRole('administrator') || hasRole('program_manager') || hasRole('screening_officer'));
 const currentUser = computed(() => page.props.auth?.user ?? null);
 
@@ -1573,6 +1579,14 @@ const recommendationListContextMenuItems = computed(() => {
     }
 
     items.push(
+        {
+            label: 'View Details',
+            icon: 'file-text',
+            command: () => {
+                recommendationListForDetails.value = recommendationList;
+                showRecommendationListDetailsModal.value = true;
+            },
+        },
         {
             label: 'Print Preview',
             icon: 'eye',

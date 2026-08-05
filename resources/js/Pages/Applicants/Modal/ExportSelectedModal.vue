@@ -2,11 +2,12 @@
 import { ref, computed, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { toast } from '@/utils/toast';
-import { exportSelectedApplicantsExcel, printSelectedApplicantsReport } from '../Reports/selectedApplicantsExport';
+import { exportSelectedApplicantsExcel, buildSelectedApplicantsPreviewHtml } from '../Reports/selectedApplicantsExport';
 import { GROUP_BY_OPTIONS } from '../Reports/reportGrouping';
 import { stripHtml } from '@/utils/sanitize';
 import AppIcon from '@/Components/ui/AppIcon.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
+import PdfPreviewModal from '@/Pages/FundTransactions/Modal/PdfPreviewModal.vue';
 import Select from 'primevue/select';
 
 const props = defineProps({
@@ -105,6 +106,30 @@ watch(groupBy, (value) => {
 });
 const generating = ref(false);
 
+// Preview modal — mirrors the RecommendationList "Print Preview" flow:
+// PDF renders into an iframe for review (zoom/print/export-excel) instead of
+// jumping straight to a print window.
+const previewVisible = ref(false);
+const previewHtml = ref('');
+const previewTitle = ref('');
+const previewPaperKey = ref('a4-landscape');
+
+const currentExportOptions = () => ({
+    selectedRows: props.selectedRows,
+    reportType: reportType.value,
+    paperSize: paperSize.value,
+    orientation: orientation.value,
+    remarksMode: remarksMode.value,
+    customTitle: customTitle.value,
+    showSignatories: props.enableSignatories && showSignatories.value,
+    showProjected: props.enableProjected && showProjected.value,
+    highlightJpm: jpmEnabled.value && highlightJpm.value,
+    showGrantProvision: props.enableGrantProvision && showGrantProvision.value,
+    groupBy: reportType.value === 'list' ? groupBy.value : 'none',
+    groupBySub: reportType.value === 'list' ? groupBySub.value : 'none',
+    sortBy: sortBy.value,
+});
+
 // Seed the title editor from `defaultTitle` when the modal opens — but only
 // while the user hasn't customised it (so their edits are never clobbered).
 let lastSeededTitle = '';
@@ -148,49 +173,31 @@ const exportAs = async (format) => {
 
     try {
         if (format === 'pdf') {
-            const opened = printSelectedApplicantsReport({
-                selectedRows: props.selectedRows,
-                reportType: reportType.value,
-                paperSize: paperSize.value,
-                orientation: orientation.value,
-                remarksMode: remarksMode.value,
-                customTitle: customTitle.value,
-                showSignatories: props.enableSignatories && showSignatories.value,
-                showProjected: props.enableProjected && showProjected.value,
-                highlightJpm: jpmEnabled.value && highlightJpm.value,
-                showGrantProvision: props.enableGrantProvision && showGrantProvision.value,
-                groupBy: reportType.value === 'list' ? groupBy.value : 'none',
-                groupBySub: reportType.value === 'list' ? groupBySub.value : 'none',
-                sortBy: sortBy.value,
-            });
-
-            if (!opened) {
-                toast.error('Pop-up blocked. Please allow pop-ups and try again.');
-                return;
-            }
+            const { html, title, paperKey } = buildSelectedApplicantsPreviewHtml(currentExportOptions());
+            previewHtml.value = html;
+            previewTitle.value = title;
+            previewPaperKey.value = paperKey;
+            previewVisible.value = true;
         } else if (format === 'excel') {
-            await exportSelectedApplicantsExcel({
-                selectedRows: props.selectedRows,
-                reportType: reportType.value,
-                remarksMode: remarksMode.value,
-                customTitle: customTitle.value,
-                showSignatories: props.enableSignatories && showSignatories.value,
-                showProjected: props.enableProjected && showProjected.value,
-                highlightJpm: jpmEnabled.value && highlightJpm.value,
-                showGrantProvision: props.enableGrantProvision && showGrantProvision.value,
-                groupBy: reportType.value === 'list' ? groupBy.value : 'none',
-                groupBySub: reportType.value === 'list' ? groupBySub.value : 'none',
-                sortBy: sortBy.value,
-            });
+            await exportSelectedApplicantsExcel(currentExportOptions());
+            close();
+            toast.success(`Exported ${props.selectedRows.length} applicant(s) as EXCEL.`);
         }
-
-        close();
-        toast.success(`Exported ${props.selectedRows.length} applicant(s) as ${format.toUpperCase()}.`);
     } catch (error) {
         console.error('Failed to export selected applicants:', error);
         toast.error(`Failed to export applicant(s) as ${format.toUpperCase()}.`);
     } finally {
         generating.value = false;
+    }
+};
+
+const exportPreviewedExcel = async () => {
+    try {
+        await exportSelectedApplicantsExcel(currentExportOptions());
+        toast.success(`Exported ${props.selectedRows.length} applicant(s) as EXCEL.`);
+    } catch (error) {
+        console.error('Failed to export selected applicants:', error);
+        toast.error('Failed to export applicant(s) as EXCEL.');
     }
 };
 </script>
@@ -201,7 +208,7 @@ const exportAs = async (format) => {
         <template #header-right>
             <div class="ios-nav-actions">
                 <button type="button" class="ios-nav-btn ios-nav-action text-nav" @click="exportAs('pdf')"
-                    :disabled="generating" v-tooltip.bottom="'Export as PDF'">
+                    :disabled="generating" v-tooltip.bottom="'Preview PDF'">
                     <AppIcon name="file-pdf" :size="16" style="color: #dc2626;" />
                 </button>
                 <button type="button" class="ios-nav-btn ios-nav-action text-nav" @click="exportAs('excel')"
@@ -346,4 +353,7 @@ const exportAs = async (format) => {
         </div>
         </div>
     </IosModal>
+
+    <PdfPreviewModal v-model:show="previewVisible" :htmlDoc="previewHtml" :title="previewTitle"
+        :paperSize="previewPaperKey" :onExcel="exportPreviewedExcel" />
 </template>

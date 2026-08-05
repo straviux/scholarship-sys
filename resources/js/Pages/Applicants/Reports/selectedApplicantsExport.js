@@ -225,7 +225,11 @@ export function prepareSelectedApplicantsRecords(selectedRows = [], { jpmFirst =
     });
 }
 
-export function printSelectedApplicantsReport({
+// Builds the full HTML document string for a selected-applicants report,
+// used by the preview modal (iframe srcdoc) rather than a direct print
+// window — matches the RecommendationList "Print Preview" flow, letting the
+// user review before printing or exporting to Excel.
+export function buildSelectedApplicantsPreviewHtml({
     selectedRows = [],
     reportType = 'list',
     paperSize = 'A4',
@@ -240,12 +244,6 @@ export function printSelectedApplicantsReport({
     groupBySub = 'none',
     sortBy = 'date_filed',
 }) {
-    const printWindow = window.open('', '_blank');
-
-    if (!printWindow) {
-        return false;
-    }
-
     const records = prepareSelectedApplicantsRecords(selectedRows, { jpmFirst: highlightJpm, sortBy });
     const generatedAt = moment().format('MMMM DD, YYYY — h:mm A');
     const pageConfig = getReportPaperConfig(paperSize, orientation);
@@ -267,13 +265,13 @@ export function printSelectedApplicantsReport({
         generatedAt,
     });
 
-    const htmlDocument = buildReportDocument(bodyHtml, getReportTitle(reportType), pageConfig)
-        .replace('<body>', '<body data-auto-print="1">');
+    const title = getReportTitle(reportType);
 
-    printWindow.document.write(htmlDocument);
-    printWindow.document.close();
-
-    return true;
+    return {
+        html: buildReportDocument(bodyHtml, title, pageConfig),
+        title,
+        paperKey: pageConfig.key,
+    };
 }
 
 // ── Excel export (ExcelJS) ──────────────────────────────────────────
