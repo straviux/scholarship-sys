@@ -488,12 +488,16 @@
                             </div>
 
                             <DataTable v-else :value="filteredRecommendationLists" dataKey="id"
-                                v-model:expandedRows="recommendationListExpandedRows" showGridlines stripedRows
-                                scrollable responsiveLayout="scroll" sortField="list_number" :sortOrder="-1"
+                                showGridlines stripedRows
+                                scrollable responsiveLayout="scroll" sortField="created_at" :sortOrder="-1"
                                 class="text-sm ios-interviewed-table ios-datatable-clean"
                                 @rowContextmenu="(event) => openRecommendationListContextMenu(event.originalEvent, event.data)"
                                 contextMenu>
-                                <Column expander :exportable="false" headerClass="w-12" bodyClass="w-12" />
+                                <Column header="#" :exportable="false" headerClass="w-12" bodyClass="w-12">
+                                    <template #body="slotProps">
+                                        <div class="text-slate-500">{{ slotProps.index + 1 }}</div>
+                                    </template>
+                                </Column>
                                 <Column field="list_number" header="List No." sortable headerClass="min-w-[160px]"
                                     bodyClass="min-w-[160px]">
                                     <template #body="slotProps">
@@ -544,14 +548,6 @@
                                         </div>
                                     </template>
                                 </Column>
-                                <Column header="Prepared By" headerClass="min-w-[180px]" bodyClass="min-w-[180px]">
-                                    <template #body="slotProps">
-                                        <div class="font-semibold text-slate-800">{{ slotProps.data.prepared_by || 'N/A'
-                                        }}</div>
-                                        <div class="text-2xs text-slate-500">{{ slotProps.data.prepared_by_position
-                                            || 'Position not set' }}</div>
-                                    </template>
-                                </Column>
                                 <Column header="Created" sortable field="created_at" headerClass="min-w-[170px]"
                                     bodyClass="min-w-[170px]">
                                     <template #body="slotProps">
@@ -569,124 +565,6 @@
                                         </button>
                                     </template>
                                 </Column>
-
-                                <template #expansion="slotProps">
-                                    <div class="grid gap-4 px-4 pb-4 xl:grid-cols-[280px,1fr]">
-                                        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                                Transaction Summary</div>
-                                            <dl class="mt-3 space-y-3 text-sm">
-                                                <div>
-                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">
-                                                        Recommendation</dt>
-                                                    <dd class="mt-1 font-semibold text-green-700">Recommended for
-                                                        Approval</dd>
-                                                </div>
-                                                <div>
-                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">List
-                                                        Approval</dt>
-                                                    <dd class="mt-1">
-                                                        <span
-                                                            :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
-                                                            {{ getRecommendationListApprovalLabel(slotProps.data) }}
-                                                        </span>
-                                                    </dd>
-                                                    <dd class="text-xs text-slate-500">{{
-                                                        formatRecommendationListApprovalMeta(slotProps.data) }}</dd>
-                                                </div>
-                                                <div>
-                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">Prepared
-                                                        By</dt>
-                                                    <dd class="mt-1 font-semibold text-slate-800">{{
-                                                        slotProps.data.prepared_by || 'N/A' }}</dd>
-                                                    <dd class="text-xs text-slate-500">{{
-                                                        slotProps.data.prepared_by_position || 'Position not set' }}
-                                                    </dd>
-                                                </div>
-                                                <div>
-                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">Approved
-                                                        By</dt>
-                                                    <dd class="mt-1 font-semibold text-slate-800">{{
-                                                        slotProps.data.approved_by || 'N/A' }}</dd>
-                                                    <dd class="text-xs text-slate-500">{{
-                                                        slotProps.data.approved_by_position || 'Position not set' }}
-                                                    </dd>
-                                                </div>
-                                                <div>
-                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">Budget
-                                                        Allocation</dt>
-                                                    <dd v-if="slotProps.data.budget_allocation"
-                                                        class="mt-1 leading-relaxed">
-                                                        <div class="font-semibold text-slate-800">{{
-                                                            formatBudgetAllocationTitle(slotProps.data.budget_allocation)
-                                                        }}</div>
-                                                        <div v-if="formatBudgetAllocationDescription(slotProps.data.budget_allocation)"
-                                                            class="text-xs text-slate-500">
-                                                            {{
-                                                                formatBudgetAllocationDescription(slotProps.data.budget_allocation)
-                                                            }}
-                                                        </div>
-                                                    </dd>
-                                                    <dd v-else class="mt-1 text-xs leading-relaxed text-slate-500">No
-                                                        saved budget allocation</dd>
-                                                </div>
-                                                <div>
-                                                    <dt class="text-xs uppercase tracking-wide text-slate-500">JPM
-                                                        Highlight</dt>
-                                                    <dd class="mt-1 text-xs leading-relaxed"
-                                                        :class="slotProps.data.highlight_jpm_members ? 'font-semibold text-emerald-700' : 'text-slate-500'">
-                                                        {{ slotProps.data.highlight_jpm_members ? `Enabled for printed
-                                                        applicant names` : 'Disabled' }}
-                                                    </dd>
-                                                </div>
-                                            </dl>
-                                        </div>
-
-                                        <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white">
-                                            <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                                                <div class="text-sm font-semibold text-slate-800">Saved Applicants
-                                                    Snapshot</div>
-                                                <div class="text-xs text-slate-500">The printed report uses this stored
-                                                    selection.</div>
-                                            </div>
-                                            <div class="overflow-x-auto">
-                                                <table class="min-w-full divide-y divide-slate-200 text-sm">
-                                                    <thead
-                                                        class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                                                        <tr>
-                                                            <th class="px-4 py-3 text-left">Name</th>
-                                                            <th class="px-4 py-3 text-left">Program</th>
-                                                            <th class="px-4 py-3 text-left">School</th>
-                                                            <th class="px-4 py-3 text-left">Projected Terms</th>
-                                                            <th class="px-4 py-3 text-left">Projected Grant</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="divide-y divide-slate-100">
-                                                        <tr v-for="record in slotProps.data.records"
-                                                            :key="`recommendation-record-${slotProps.data.id}-${record.id}`">
-                                                            <td class="px-4 py-3 font-semibold text-slate-800">
-                                                                <span class="inline-block"
-                                                                    :class="slotProps.data.highlight_jpm_members && recommendationRecordHasJpm(record) ? 'rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-900' : ''">
-                                                                    {{ formatApplicantName(record) }}
-                                                                </span>
-                                                            </td>
-                                                            <td class="px-4 py-3 text-slate-600">{{
-                                                                record.program?.shortname || 'N/A' }}</td>
-                                                            <td class="px-4 py-3 text-slate-600">{{
-                                                                record.school?.shortname || record.school?.name || 'N/A'
-                                                            }}</td>
-                                                            <td class="px-4 py-3 text-slate-600">{{
-                                                                formatProjectedTerms(record.projected_term_count) }}
-                                                            </td>
-                                                            <td class="px-4 py-3 font-semibold text-emerald-700">{{
-                                                                formatCurrency(record.projected_total_expense) }}</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
                             </DataTable>
                         </Panel>
 
@@ -1151,7 +1029,6 @@ const recommendationLists = ref([...(props.recommendation_lists || [])]);
 const recommendationListAuditRecords = ref([...(props.recommendation_list_audit_records || [])]);
 const auditOnlyBypassed = ref(false);
 const deletedRecommendationLists = ref([...(props.deleted_recommendation_lists || [])]);
-const recommendationListExpandedRows = ref({});
 const showRecommendationListPreview = ref(false);
 const recommendationListPreviewHtml = ref('');
 const recommendationListPreviewTitle = ref('');
@@ -1919,12 +1796,6 @@ const upsertDeletedRecommendationList = (recommendationList) => {
     }
 };
 
-const collapseRecommendationListRow = (recommendationListId) => {
-    const nextExpandedRows = { ...recommendationListExpandedRows.value };
-    delete nextExpandedRows[recommendationListId];
-    recommendationListExpandedRows.value = nextExpandedRows;
-};
-
 const confirmDeny = () => {
     if (!selectedRecord.value || !denyForm.reason || !denyForm.details) {
         toast.error('Please fill in all required fields');
@@ -2113,7 +1984,6 @@ const createRecommendationList = async (payload) => {
         }
 
         upsertRecommendationList(savedRecommendationList);
-        recommendationListExpandedRows.value = { [savedRecommendationList.id]: true };
         handleRecommendationListModalVisibility(false);
         activeTab.value = 'recommendation-lists';
         toast.success(response.data?.message || 'Approval request created successfully.');
@@ -2184,10 +2054,6 @@ const updateRecommendationList = async (payload) => {
         }
 
         upsertRecommendationList(savedRecommendationList);
-        recommendationListExpandedRows.value = {
-            ...recommendationListExpandedRows.value,
-            [savedRecommendationList.id]: true,
-        };
         handleRecommendationListModalVisibility(false);
         activeTab.value = 'recommendation-lists';
 
@@ -2259,10 +2125,6 @@ const performApproveRecommendationList = async (recommendationList) => {
         }
 
         upsertRecommendationList(approvedRecommendationList);
-        recommendationListExpandedRows.value = {
-            ...recommendationListExpandedRows.value,
-            [approvedRecommendationList.id]: true,
-        };
         refreshPage();
         toast.success(response.data?.message || 'Approval request approved successfully.');
     } catch (error) {
@@ -2301,10 +2163,6 @@ const performRevertRecommendationListApproval = async (recommendationList) => {
         }
 
         upsertRecommendationList(revertedRecommendationList);
-        recommendationListExpandedRows.value = {
-            ...recommendationListExpandedRows.value,
-            [revertedRecommendationList.id]: true,
-        };
         refreshPage();
         toast.success(response.data?.message || 'Approval request approval reverted successfully.');
     } catch (error) {
@@ -2402,8 +2260,6 @@ const performDeleteRecommendationList = async (recommendationList) => {
                 (existingRecommendationList) => existingRecommendationList.id !== recommendationList.id,
             );
         }
-
-        collapseRecommendationListRow(recommendationList.id);
 
         if (editingRecommendationList.value?.id === recommendationList.id) {
             handleRecommendationListModalVisibility(false);
@@ -2657,10 +2513,6 @@ const refreshRecommendationList = async (recommendationList) => {
         );
 
         upsertRecommendationList(response.data?.data);
-        recommendationListExpandedRows.value = {
-            ...recommendationListExpandedRows.value,
-            [recommendationList.id]: true,
-        };
         refreshPage();
         toast.success(response.data?.message || 'Recommendation list updated successfully.');
     } catch (error) {
@@ -2707,17 +2559,6 @@ const getRecommendationListApprovalBadgeClass = (recommendationList) => {
         : 'bg-amber-50 text-amber-700';
 };
 
-const formatRecommendationListApprovalMeta = (recommendationList) => {
-    if (!recommendationList?.is_approved) {
-        return 'Waiting for a final approval action on this saved list.';
-    }
-
-    const approverName = recommendationList?.approver?.name || 'Unknown user';
-    const approvedAt = formatDateTime(recommendationList?.approved_at);
-
-    return `Approved by ${approverName} on ${approvedAt}.`;
-};
-
 const budgetAllocationCurrencyFormatter = new Intl.NumberFormat('en-PH', {
     style: 'currency',
     currency: 'PHP',
@@ -2753,15 +2594,6 @@ const formatBudgetAllocationDescription = (budgetAllocation) => {
         description && description !== label ? description : null,
         formatBudgetAllocationAmount(budgetAllocation),
     ].filter(Boolean).join(' · ');
-};
-
-const recommendationRecordHasJpm = (record) => {
-    return Boolean(
-        record?.profile?.is_jpm_member
-        || record?.profile?.is_father_jpm
-        || record?.profile?.is_mother_jpm
-        || record?.profile?.is_guardian_jpm,
-    );
 };
 
 const refreshPage = () => {

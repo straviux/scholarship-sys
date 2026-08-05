@@ -41,6 +41,19 @@ function formatProjectedTerms(value) {
     return Number.isFinite(terms) ? `${terms}` : 'Not configured';
 }
 
+// EFA requests are grouped by school by default (school is the more useful
+// grouping there); every other program keeps the course-based default.
+// Only applies when the list has no explicit group_by of its own.
+function resolveDefaultGroupBy(records = []) {
+    const shortnames = new Set(
+        records
+            .map((record) => (record?.program?.shortname || '').trim().toUpperCase())
+            .filter(Boolean)
+    );
+
+    return (shortnames.size === 1 && [...shortnames][0].startsWith('EFA')) ? 'school' : 'course';
+}
+
 export function buildRecommendationListHtml({ recommendationList = null, paperSize = null, orientation = null, includeInterviewColumns = null, includeProjectedColumns = null } = {}) {
     const normalizedRecords = normalizeRecords(recommendationList?.records || []);
     const requestDateLabel = recommendationList?.request_date
@@ -55,7 +68,7 @@ export function buildRecommendationListHtml({ recommendationList = null, paperSi
 
     const bodyHtml = renderVueTemplate(RecommendationListTemplate, {
         records: normalizedRecords,
-        groupBy: recommendationList?.group_by || 'course',
+        groupBy: recommendationList?.group_by || resolveDefaultGroupBy(normalizedRecords),
         paperSize: finalPaperSize,
         orientation: finalOrientation,
         today: requestDateLabel,
@@ -375,7 +388,7 @@ function rlSaveWorkbookBuffer(buffer, filename) {
 
 export async function exportRecommendationListExcel({ recommendationList = null } = {}) {
     const records = recommendationList?.records || [];
-    const groupBy = recommendationList?.group_by || 'course';
+    const groupBy = recommendationList?.group_by || resolveDefaultGroupBy(records);
     const showRemarks = Boolean(recommendationList?.show_remarks);
     const highlightJpm = Boolean(recommendationList?.highlight_jpm_members);
     const budgetAllocation = recommendationList?.budget_allocation || null;
