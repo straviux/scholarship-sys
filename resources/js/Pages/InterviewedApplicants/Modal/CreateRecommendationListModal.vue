@@ -1,35 +1,32 @@
 <template>
     <IosModal :visible="show" :title="modalTitle" width="calc(100vw - 2rem)"
-        max-width="700px" body-style="padding: 16px;"
+        max-width="960px" body-style="padding: 16px;" modal-class="rl-approval-modal"
         @update:visible="val => emit('update:show', val)">
         <template #header-left>
-            <button class="ios-nav-btn ios-nav-cancel text-nav" @click="emit('update:show', false)">
+            <button v-if="steps.length > 1 && activeStep > 0" class="ios-nav-btn ios-nav-cancel text-nav" :disabled="loading"
+                @click="prevStep" v-tooltip.bottom="'Back'">
+                <AppIcon name="chevron-left" :size="16" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-cancel text-nav" @click="emit('update:show', false)">
                 <AppIcon name="x" :size="16" />
             </button>
         </template>
 
         <template #header-right>
-            <button v-if="activeStep === steps.length - 1" class="ios-nav-btn ios-nav-action text-nav" :disabled="isSubmitDisabled || loading"
+            <button v-if="activeStep < steps.length - 1" class="ios-nav-btn ios-nav-action text-nav" :disabled="loading || !canAdvancePast(activeStep + 1)"
+                @click="nextStep" v-tooltip.bottom="'Next'">
+                <AppIcon name="chevron-right" :size="16" style="color: #007aff;" />
+            </button>
+            <button v-else class="ios-nav-btn ios-nav-action text-nav" :disabled="isSubmitDisabled || loading"
                 @click="submitForm"
-                v-tooltip.bottom="isPrintIntent ? 'Save & Print' : (isUpdateListIntent ? 'Update Request' : (isEditMode ? 'Save Changes' : 'Create Request'))">
+                v-tooltip.bottom="isUpdateListIntent ? 'Update Request' : (isEditMode ? 'Save Changes' : 'Create Request')">
                 <AppIcon v-if="loading" name="loader-circle" :size="16" class="animate-spin" />
-                <AppIcon v-else-if="isPrintIntent" name="printer" :size="16" />
                 <AppIcon v-else name="check" :size="16" style="color: #16a34a;" />
             </button>
         </template>
 
-        <template #footer>
-            <button class="ios-footer-btn" :disabled="activeStep === 0 || loading" @click="prevStep">
-                <AppIcon name="chevron-left" :size="14" /> Back
-            </button>
-            <button v-if="activeStep < steps.length - 1" class="ios-footer-btn ios-footer-btn-primary" :disabled="loading || !canAdvancePast(activeStep + 1)" @click="nextStep">
-                Next <AppIcon name="chevron-right" :size="14" />
-            </button>
-            <span v-else></span>
-        </template>
-
         <!-- ═══ STEPPER INDICATOR ═══ -->
-        <div class="flex items-center justify-center gap-1 mb-5">
+        <div v-if="steps.length > 1" class="flex items-center justify-center gap-1 mb-5">
             <template v-for="(step, idx) in steps" :key="step.key">
                 <button
                     class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border-none cursor-pointer"
@@ -47,22 +44,36 @@
             </template>
         </div>
 
-        <div class="max-h-[55vh] overflow-y-auto">
-            <!-- Selection summary (only relevant while the applicants step exists) -->
-            <div v-if="showApplicantsStep" class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+        <div class="max-h-[70vh] overflow-y-auto">
+            <!-- Selection summary (only relevant while the applicants step is active) -->
+            <div v-if="showApplicantsStep && activeStep === applicantsStepIndex" class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
                 <span class="font-semibold text-gray-700">{{ selectedCount }} applicant(s) selected</span>
                 <span class="text-gray-400 ml-2">· Recommended for Approval</span>
             </div>
 
             <!-- ═══ STEP: Select Applicants ═══ -->
             <div v-if="showApplicantsStep" v-show="activeStep === applicantsStepIndex">
-                <div class="flex gap-2 mb-3">
-                    <ProgramSelect v-model="applicantProgramFilter" custom-placeholder="All Programs"
-                        class="flex-1 [&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
-                    <IconField iconPosition="left" class="flex-1">
-                        <InputIcon><AppIcon name="search" :size="14" class="text-gray-400" /></InputIcon>
-                        <InputText v-model="applicantSearch" placeholder="Search by name..." size="small" class="w-full" />
-                    </IconField>
+                <div class="flex items-end gap-3 mb-1">
+                    <InputGroup class="w-80 shrink-0" >
+                        <InputGroupAddon>
+                            <AppIcon name="search" :size="14" class="text-gray-400" />
+                        </InputGroupAddon>
+                        <InputText v-model="applicantSearch" placeholder="Search by name..." size="small" />
+                    </InputGroup>
+                    <ProgramSelect v-model="applicantProgramFilter" custom-placeholder="Program" ios-compact
+                        class="!w-48 shrink-0" />
+                    <div class="flex items-end gap-2 ml-auto shrink-0">
+                        <Select :modelValue="mainGrantProvision" @update:modelValue="onMainGrantProvisionChange"
+                            :options="grantProvisionOptions" optionLabel="label" optionValue="value"
+                            placeholder="Main grant amount" size="small" class="w-56" />
+                        <button type="button" class="ios-footer-btn text-2xs px-3 shrink-0" :disabled="!mainGrantAmount || selectedCount === 0"
+                            @click="applyMainGrantToAllSelected">
+                            Apply to All
+                        </button>
+                    </div>
+                </div>
+                <div class="text-3xs text-gray-400 mb-3">
+                    Main Grant Amount is the default per-scholar amount used for "Total amount for this request". Each scholar's amount below can still be edited individually.
                 </div>
 
                 <div v-if="eligibleApplicants.length === 0" class="py-6 text-center text-xs text-gray-400">
@@ -71,63 +82,101 @@
                 <div v-else-if="filteredApplicants.length === 0" class="py-6 text-center text-xs text-gray-400">
                     No applicants match the current filters.
                 </div>
-                <div v-else class="max-h-80 overflow-y-auto rounded-lg border border-gray-200">
-                    <table class="min-w-full text-xs">
-                        <thead class="bg-gray-50 sticky top-0">
-                            <tr>
-                                <th class="text-center px-3 py-2 font-medium text-gray-500 w-10">
-                                    <Checkbox :modelValue="allFilteredApplicantsSelected" binary
-                                        :indeterminate="someFilteredApplicantsSelected"
-                                        @update:modelValue="toggleAllFilteredApplicants" />
-                                </th>
-                                <th class="text-left px-3 py-2 font-medium text-gray-500">Name</th>
-                                <th class="text-left px-3 py-2 font-medium text-gray-500">Program</th>
-                                <th class="text-left px-3 py-2 font-medium text-gray-500">School</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="record in filteredApplicants" :key="record.id">
-                                <td class="px-3 py-2 text-center"
-                                    v-tooltip.top="!isApplicantSelectable(record) && !isApplicantSelected(record) ? 'An approval request can only include applicants from the same program' : null">
-                                    <Checkbox :modelValue="isApplicantSelected(record)" binary
-                                        :disabled="!isApplicantSelectable(record) && !isApplicantSelected(record)"
-                                        @update:modelValue="(checked) => toggleApplicant(record, checked)" />
-                                </td>
-                                <td class="px-3 py-2 font-medium text-gray-800">{{ formatApplicantName(record) }}</td>
-                                <td class="px-3 py-2 text-gray-600">{{ record.program?.shortname || 'N/A' }}</td>
-                                <td class="px-3 py-2 text-gray-600">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div v-else class="rounded-lg border border-gray-200 overflow-hidden">
+                    <div style="overflow-y: hidden; scrollbar-gutter: stable;">
+                        <table class="w-full text-xs">
+                            <colgroup>
+                                <col style="width:40px" />
+                                <col style="width:40%" />
+                                <col style="width:12%" />
+                                <col />
+                                <col style="width:155px" />
+                            </colgroup>
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="text-center px-3 py-2 font-medium text-gray-500">
+                                        <Checkbox :modelValue="allFilteredApplicantsSelected" binary
+                                            :indeterminate="someFilteredApplicantsSelected"
+                                            @update:modelValue="toggleAllFilteredApplicants" />
+                                    </th>
+                                    <th class="text-left px-3 py-2 font-medium text-gray-500">Name</th>
+                                    <th class="text-left px-3 py-2 font-medium text-gray-500">Program</th>
+                                    <th class="text-left px-3 py-2 font-medium text-gray-500">School</th>
+                                    <th class="text-right px-3 py-2 font-medium text-gray-500">Amount</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div class="max-h-[25rem] overflow-y-auto" style="scrollbar-gutter: stable;">
+                        <table class="w-full text-xs ">
+                            <colgroup>
+                                <col style="width:40px" />
+                                <col style="width:40%" />
+                                <col style="width:12%" />
+                                <col />
+                                <col style="width:155px" />
+                            </colgroup>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr v-for="record in filteredApplicants" :key="record.id">
+                                    <td class="px-3 py-2 text-center"
+                                        v-tooltip.top="!isApplicantSelectable(record) && !isApplicantSelected(record) ? 'An approval request can only include applicants from the same program' : null">
+                                        <Checkbox :modelValue="isApplicantSelected(record)" binary
+                                            :disabled="!isApplicantSelectable(record) && !isApplicantSelected(record)"
+                                            @update:modelValue="(checked) => toggleApplicant(record, checked)" />
+                                    </td>
+                                    <td class="px-3 py-2 font-medium text-gray-800 truncate">{{ formatApplicantName(record) }}</td>
+                                    <td class="px-3 py-2 text-gray-600 truncate">{{ record.program?.shortname || 'N/A' }}</td>
+                                    <td class="px-3 py-2 text-gray-600 truncate">{{ record.school?.shortname || record.school?.name || 'N/A' }}</td>
+                                    <td class="px-3 py-2">
+                                        <InputGroup v-if="isApplicantSelected(record)" class="w-full">
+                                            <InputGroupAddon class="text-2xs text-gray-500">₱</InputGroupAddon>
+                                            <InputNumber v-model="scholarAmounts[record.id]"
+                                                mode="decimal" locale="en-PH" :minFractionDigits="2" size="small"
+                                                class="[&_.p-inputnumber-input]:text-right" />
+                                        </InputGroup>
+                                        <span v-else class="block text-right text-gray-300">—</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- ═══ STEP: Report Details ═══ -->
             <div v-show="activeStep === detailsStepIndex">
                 <!-- Report Title -->
-                <div class="mb-4">
+                <div class="mb-4 w-1/2 mx-auto">
                     <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Report Title</label>
-                    <InputText v-model="form.report_title" placeholder="Approval request title"
-                        class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
+                    <Editor v-model="form.report_title" editorStyle="font-size: 0.75rem;" class="ios-card h-24">
+                        <template #toolbar>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-clean"></button>
+                            </span>
+                        </template>
+                    </Editor>
                 </div>
 
-                <!-- Request Date -->
-                <div class="mb-4">
-                    <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Request Date</label>
-                    <DatePicker v-model="form.request_date" showButtonBar showIcon iconDisplay="input"
-                        dateFormat="M dd, yy" placeholder="Select request date"
-                        class="[&_.p-datepicker]:w-full [&_.p-datepicker]:text-xs" />
-                </div>
+                <!-- Request Date & Program / Budget -->
+                <div class="flex gap-4 mb-4 w-1/2 mx-auto">
+                    <div class="w-32 shrink-0">
+                        <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Request Date</label>
+                        <DatePicker v-model="form.request_date" showButtonBar showIcon iconDisplay="input"
+                            dateFormat="M dd, yy" placeholder="Select request date" size="small" class="w-full" />
+                    </div>
 
-                <!-- Program & Budget -->
-                <div class="mb-4">
+                    <div class="flex-1">
                     <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Program &amp; Budget</label>
-                    <div class="space-y-2">
-                        <ProgramSelect v-model="form.budget_program" custom-placeholder="Select program"
-                            class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5" />
+                    <div class="space-y-2 w-80">
+                        <ProgramSelect v-model="form.budget_program" custom-placeholder="Select program" ios-compact class="w-full" />
                         <Select v-if="budgetAllocationOptions.length" v-model="selectedBudgetAllocation"
                             :options="budgetAllocationOptions" optionLabel="label" optionValue="value"
-                            placeholder="Select allocation" class="[&_.p-dropdown]:w-full [&_.p-dropdown]:text-xs [&_.p-dropdown]:py-1.5">
+                            placeholder="Select allocation" size="small" class="w-full">
                             <template #value="{ value, placeholder }">
                                 <div v-if="value" class="leading-tight">
                                     <div class="font-medium text-gray-700">{{ formatBudgetAllocationLabel(value) }}</div>
@@ -146,29 +195,25 @@
                     <div v-if="showBudgetFooter" class="text-3xs mt-1" :class="showBudgetError ? 'text-red-500' : 'text-gray-400'">
                         {{ budgetFooterMessage }}
                     </div>
+                    </div>
                 </div>
             </div>
 
             <!-- ═══ STEP: Signatories ═══ -->
             <div v-show="activeStep === signatoriesStepIndex">
-                <div class="mb-4">
+                <div class="mb-4 w-1/2 mx-auto">
                     <label class="block text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Signatories</label>
                     <div class="flex gap-2">
                         <div class="flex-1">
                             <label class="block text-3xs font-medium text-gray-500 mb-1">Prepared By</label>
-                            <InputText v-model="form.prepared_by" placeholder="Name"
-                                class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5 mb-1.5" />
-                            <InputText v-model="form.prepared_by_position" placeholder="Position"
-                                class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5 mb-1.5" />
-                            <InputText v-model="form.prepared_by_office" placeholder="Office"
-                                class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
+                            <InputText v-model="form.prepared_by" placeholder="Name" size="small" class="w-full mb-1.5" />
+                            <InputText v-model="form.prepared_by_position" placeholder="Position" size="small" class="w-full mb-1.5" />
+                            <InputText v-model="form.prepared_by_office" placeholder="Office" size="small" class="w-full" />
                         </div>
                         <div class="flex-1">
                             <label class="block text-3xs font-medium text-gray-500 mb-1">Approved By</label>
-                            <InputText v-model="form.approved_by" placeholder="Name"
-                                class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5 mb-1.5" />
-                            <InputText v-model="form.approved_by_position" placeholder="Position"
-                                class="w-full [&_.p-inputtext]:text-xs [&_.p-inputtext]:py-1.5" />
+                            <InputText v-model="form.approved_by" placeholder="Name" size="small" class="w-full mb-1.5" />
+                            <InputText v-model="form.approved_by_position" placeholder="Position" size="small" class="w-full" />
                         </div>
                     </div>
                 </div>
@@ -185,18 +230,21 @@ import AppIcon from '@/Components/ui/AppIcon.vue';
 import IosModal from '@/Components/ui/IosModal.vue';
 import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import Editor from 'primevue/editor';
 import DatePicker from 'primevue/datepicker';
 import Checkbox from 'primevue/checkbox';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
+import InputGroup from 'primevue/inputgroup';
+import InputGroupAddon from 'primevue/inputgroupaddon';
 import ProgramSelect from '@/Components/selects/ProgramSelect.vue';
+import { useSystemOptions } from '@/composables/useSystemOptions';
 
 const DEFAULT_PREPARED_BY = 'NUR-AINA S. IBRAHIM';
 const DEFAULT_PREPARED_BY_POSITION = 'Program Manager';
 const DEFAULT_PREPARED_BY_OFFICE = 'YAKAP sa Edukasyon';
 const DEFAULT_APPROVED_BY = 'AMY ROA ALVAREZ';
 const DEFAULT_APPROVED_BY_POSITION = 'Governor';
-const DEFAULT_REPORT_TITLE = 'Request for Scholarship Approval';
+const DEFAULT_REPORT_TITLE = '<p><strong>Request for Scholarship Approval</strong></p>';
 
 const props = defineProps({
     show: Boolean,
@@ -207,10 +255,6 @@ const props = defineProps({
     budgetAllocations: {
         type: Array,
         default: () => [],
-    },
-    defaultPreparedBy: {
-        type: String,
-        default: '',
     },
     submitIntent: {
         type: String,
@@ -251,8 +295,45 @@ const applicantProgramFilter = ref(null);
 const applicantSearch = ref('');
 const selectedApplicantIds = ref([]);
 
+// ═══ Grant amounts ═══
+// mainGrantAmount is the default per-scholar amount for this request;
+// scholarAmounts holds each selected scholar's actual amount (seeded from
+// mainGrantAmount, or the system-projected grant_amount as a last resort)
+// and can be edited per row — this is what "Total amount for this request"
+// sums, sidestepping ScholarshipExpenseProjectionService term-system
+// mismatches (e.g. a "3rd Semester" record being miscounted as trimester).
+// The main amount is picked from the same Grant Provision options used
+// elsewhere in the app (System Options → grant_provision) rather than
+// free-typed, so it stays anchored to a configured, known amount.
+const grantProvisionRaw = useSystemOptions('grant_provision');
+const mainGrantProvision = ref(null);
+const mainGrantAmount = ref(null);
+const scholarAmounts = ref({});
+
+const grantProvisionOptions = computed(() => {
+    const programCode = selectedBudgetProgramLabel.value;
+    return grantProvisionRaw.value.filter((option) => !option.program || option.program === programCode);
+});
+
+function onMainGrantProvisionChange(value) {
+    mainGrantProvision.value = value;
+    const option = grantProvisionOptions.value.find((opt) => opt.value === value);
+    const amount = Number(option?.amount);
+    mainGrantAmount.value = Number.isFinite(amount) ? amount : null;
+}
+
+function applyMainGrantToAllSelected() {
+    if (mainGrantAmount.value === null || mainGrantAmount.value === undefined) {
+        return;
+    }
+    const next = { ...scholarAmounts.value };
+    selectedApplicantIds.value.forEach((id) => {
+        next[id] = mainGrantAmount.value;
+    });
+    scholarAmounts.value = next;
+}
+
 const isEditMode = computed(() => props.mode === 'edit');
-const isPrintIntent = computed(() => props.submitIntent === 'print');
 const isUpdateListIntent = computed(() => props.submitIntent === 'update-list');
 
 // The applicants step only makes sense when membership is actually being set:
@@ -261,7 +342,14 @@ const isUpdateListIntent = computed(() => props.submitIntent === 'update-list');
 // membership untouched.
 const showApplicantsStep = computed(() => props.mode === 'create' || isUpdateListIntent.value);
 
+// Updating list membership only touches record_ids/grant amounts (see
+// submitForm's is_update_list branch) — Report Details/Signatories aren't
+// even part of that payload, so they're dropped from the stepper entirely
+// rather than shown and silently discarded.
 const steps = computed(() => {
+    if (isUpdateListIntent.value) {
+        return [{ key: 'applicants', label: 'Select Applicants' }];
+    }
     const list = [];
     if (showApplicantsStep.value) list.push({ key: 'applicants', label: 'Select Applicants' });
     list.push({ key: 'details', label: 'Report Details' });
@@ -269,8 +357,14 @@ const steps = computed(() => {
     return list;
 });
 const applicantsStepIndex = computed(() => (showApplicantsStep.value ? 0 : -1));
-const detailsStepIndex = computed(() => (showApplicantsStep.value ? 1 : 0));
-const signatoriesStepIndex = computed(() => (showApplicantsStep.value ? 2 : 1));
+const detailsStepIndex = computed(() => {
+    if (isUpdateListIntent.value) return -1;
+    return showApplicantsStep.value ? 1 : 0;
+});
+const signatoriesStepIndex = computed(() => {
+    if (isUpdateListIntent.value) return -1;
+    return showApplicantsStep.value ? 2 : 1;
+});
 
 function formatApplicantName(record) {
     const lastName = record?.profile?.last_name || '';
@@ -318,12 +412,26 @@ function isApplicantSelectable(record) {
     return String(record?.program?.id ?? '') === String(selectionAnchorProgramId.value);
 }
 
+// Seeds a newly-selected scholar's amount: the list's main grant amount if
+// set, otherwise the system-projected per-term grant_amount as a starting
+// point. Never overwrites an amount already entered for that scholar.
+function seedScholarAmount(record) {
+    if (scholarAmounts.value[record.id] !== undefined) {
+        return;
+    }
+    const fallback = mainGrantAmount.value ?? (Number.isFinite(Number(record?.grant_amount)) ? Number(record.grant_amount) : null);
+    if (fallback !== null) {
+        scholarAmounts.value = { ...scholarAmounts.value, [record.id]: fallback };
+    }
+}
+
 function toggleApplicant(record, checked) {
     if (checked) {
         if (!isApplicantSelectable(record)) return;
         if (!selectedApplicantIds.value.includes(record.id)) {
             selectedApplicantIds.value = [...selectedApplicantIds.value, record.id];
         }
+        seedScholarAmount(record);
         return;
     }
 
@@ -349,7 +457,10 @@ function toggleAllFilteredApplicants(checked) {
 
     const selectable = filteredApplicants.value.filter((record) => isApplicantSelectable(record));
     const selectedById = new Set(selectedApplicantIds.value);
-    selectable.forEach((record) => selectedById.add(record.id));
+    selectable.forEach((record) => {
+        selectedById.add(record.id);
+        seedScholarAmount(record);
+    });
     selectedApplicantIds.value = Array.from(selectedById);
 }
 
@@ -357,10 +468,7 @@ const selectedCount = computed(() => selectedApplicantIds.value.length);
 
 const modalTitle = computed(() => {
     if (isUpdateListIntent.value) {
-        return 'Update Approval Request';
-    }
-    if (isEditMode.value && isPrintIntent.value) {
-        return 'Print Approval Request';
+        return 'Update Approval Request List';
     }
 
     return isEditMode.value ? 'Edit Approval Request' : 'Create Approval Request';
@@ -599,9 +707,9 @@ function canAdvancePast(idx) {
     }
     return idx <= activeStep.value + 1;
 }
+function goToStep(idx) { if (idx <= activeStep.value || canAdvancePast(idx)) activeStep.value = idx; }
 function nextStep() { if (activeStep.value < steps.value.length - 1 && canAdvancePast(activeStep.value + 1)) activeStep.value++; }
 function prevStep() { if (activeStep.value > 0) activeStep.value--; }
-function goToStep(idx) { if (idx <= activeStep.value || canAdvancePast(idx)) activeStep.value = idx; }
 
 function normalizeBudgetProgram(value) {
     if (!value) {
@@ -624,7 +732,7 @@ function resetForm() {
         report_title: initialData?.report_title ?? DEFAULT_REPORT_TITLE,
         request_date: parseRequestDate(initialData?.request_date ?? initialData?.created_at) ?? new Date(),
         budget_program: initialData?.budget_program ?? initialData?.budget_allocation?.program ?? null,
-        prepared_by: initialData?.prepared_by ?? (props.defaultPreparedBy?.trim() || DEFAULT_PREPARED_BY),
+        prepared_by: initialData?.prepared_by ?? DEFAULT_PREPARED_BY,
         prepared_by_position: initialData?.prepared_by_position ?? DEFAULT_PREPARED_BY_POSITION,
         prepared_by_office: initialData?.prepared_by_office ?? DEFAULT_PREPARED_BY_OFFICE,
         approved_by: initialData?.approved_by ?? DEFAULT_APPROVED_BY,
@@ -632,9 +740,12 @@ function resetForm() {
     };
 
     if (initialData?.budget_allocation) {
-        selectedBudgetAllocation.value = budgetAllocationOptions.value
-            .find((option) => sameBudgetAllocation(option.value, initialData.budget_allocation))?.value
-            ?? initialData.budget_allocation;
+        // Always start from the stored snapshot, never a freshly matched
+        // live option — the request's scholar-count figures are frozen at
+        // creation/last save and must not silently pick up recomputed
+        // numbers just by reopening this modal. The user can still
+        // explicitly pick a different allocation from the dropdown.
+        selectedBudgetAllocation.value = initialData.budget_allocation;
     } else {
         selectedBudgetAllocation.value = budgetAllocationOptions.value.length === 1 && !isEditMode.value
             ? budgetAllocationOptions.value[0].value
@@ -649,6 +760,30 @@ function resetForm() {
     applicantProgramFilter.value = null;
     applicantSearch.value = '';
 
+    // Grant amounts: start from the stored main amount + per-scholar
+    // overrides. A record without a stored override falls back to its own
+    // system-projected grant_amount, so older requests (created before this
+    // feature) still show sensible starting values instead of blanks.
+    mainGrantAmount.value = initialData?.main_grant_amount ?? null;
+    // Reverse-match the stored amount back to a Grant Provision option so
+    // the select shows what was picked. If nothing matches (e.g. a value
+    // entered before this feature existed), the amount itself is still
+    // preserved above — only the dropdown's selection is left blank.
+    mainGrantProvision.value = mainGrantAmount.value !== null
+        ? (grantProvisionOptions.value.find((option) => Number(option.amount) === mainGrantAmount.value)?.value ?? null)
+        : null;
+    const storedOverrides = initialData?.grant_amount_overrides || {};
+    const seededAmounts = {};
+    (initialData?.records || []).forEach((record) => {
+        const stored = storedOverrides[record.id] ?? storedOverrides[String(record.id)];
+        const fallback = Number.isFinite(Number(record?.grant_amount)) ? Number(record.grant_amount) : null;
+        const amount = stored ?? mainGrantAmount.value ?? fallback;
+        if (amount !== null && amount !== undefined) {
+            seededAmounts[record.id] = amount;
+        }
+    });
+    scholarAmounts.value = seededAmounts;
+
     showBudgetError.value = false;
     activeStep.value = 0;
 }
@@ -661,6 +796,20 @@ function close() {
     emit('update:show', false);
 }
 
+// Only the currently-selected scholars' amounts are sent — entries for
+// deselected/removed scholars are dropped rather than lingering as stale
+// overrides.
+function buildGrantAmountsPayload() {
+    const payload = {};
+    selectedApplicantIds.value.forEach((id) => {
+        const amount = scholarAmounts.value[id];
+        if (amount !== null && amount !== undefined) {
+            payload[id] = amount;
+        }
+    });
+    return payload;
+}
+
 function submitForm() {
     if (isSubmitDisabled.value) {
         return;
@@ -670,6 +819,8 @@ function submitForm() {
         emit('submit', {
             is_update_list: true,
             record_ids: selectedApplicantIds.value,
+            main_grant_amount: mainGrantAmount.value,
+            grant_amounts: buildGrantAmountsPayload(),
         });
         return;
     }
@@ -683,6 +834,8 @@ function submitForm() {
 
     emit('submit', {
         ...(showApplicantsStep.value ? { record_ids: selectedApplicantIds.value } : {}),
+        main_grant_amount: mainGrantAmount.value,
+        grant_amounts: buildGrantAmountsPayload(),
         report_title: form.value.report_title,
         request_date: formatRequestDateForPayload(form.value.request_date),
         paper_size: 'A4',

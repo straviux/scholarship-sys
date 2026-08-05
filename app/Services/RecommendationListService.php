@@ -88,6 +88,27 @@ class RecommendationListService
         return DB::transaction(function () use ($recommendationList, $data) {
             $budgetAllocation = $this->normalizeBudgetAllocation($data['budget_allocation'] ?? null);
 
+            $existingRecordIds = collect($recommendationList->records_snapshot ?? [])
+                ->map(fn(array $record) => (int) ($record['id'] ?? 0))
+                ->filter()
+                ->values()
+                ->all();
+
+            // Grant amounts are only touched when the caller actually sends
+            // them — Report Details/Signatories saves must not silently wipe
+            // out amounts entered earlier via the applicants step.
+            $mainGrantAmount = array_key_exists('main_grant_amount', $data)
+                ? $this->normalizeDecimal($data['main_grant_amount'])
+                : $recommendationList->main_grant_amount;
+            $grantAmountOverrides = array_key_exists('grant_amounts', $data)
+                ? $this->normalizeGrantAmountOverrides($data['grant_amounts'], $existingRecordIds)
+                : ($recommendationList->grant_amount_overrides ?? []);
+            $recordsSnapshot = $this->applyGrantAmounts(
+                $recommendationList->records_snapshot ?? [],
+                $mainGrantAmount,
+                $grantAmountOverrides
+            );
+
             $recommendationList->fill([
                 'report_title' => $this->cleanString($data['report_title'] ?? null) ?? 'RECOMMENDATION LIST FOR APPROVAL',
                 'request_date' => array_key_exists('request_date', $data)
@@ -110,6 +131,9 @@ class RecommendationListService
                 'prepared_by_office' => $this->cleanString($data['prepared_by_office'] ?? null),
                 'approved_by' => $this->cleanString($data['approved_by'] ?? null),
                 'approved_by_position' => $this->cleanString($data['approved_by_position'] ?? null),
+                'main_grant_amount' => $mainGrantAmount,
+                'grant_amount_overrides' => $grantAmountOverrides === [] ? null : $grantAmountOverrides,
+                'records_snapshot' => $recordsSnapshot,
             ]);
 
             $recommendationList->save();
@@ -145,6 +169,10 @@ class RecommendationListService
                         ->values()
                         ->all();
 
+                    $mainGrantAmount = $this->normalizeDecimal($data['main_grant_amount'] ?? null);
+                    $grantAmountOverrides = $this->normalizeGrantAmountOverrides($data['grant_amounts'] ?? null, $recordIds);
+                    $recordsSnapshot = $this->applyGrantAmounts($recordsSnapshot, $mainGrantAmount, $grantAmountOverrides);
+
                     $budgetAllocation = $this->normalizeBudgetAllocation($data['budget_allocation'] ?? null);
                     $totalProjectedExpense = round((float) collect($recordsSnapshot)->sum(function (array $record) {
                         return (float) ($record['projected_total_expense'] ?? 0);
@@ -159,6 +187,8 @@ class RecommendationListService
                         'orientation' => $data['orientation'] ?? 'landscape',
                         'record_count' => count($recordsSnapshot),
                         'total_projected_expense' => $totalProjectedExpense,
+                        'main_grant_amount' => $mainGrantAmount,
+                        'grant_amount_overrides' => $grantAmountOverrides === [] ? null : $grantAmountOverrides,
                         'selected_record_ids' => $recordIds,
                         'records_snapshot' => $recordsSnapshot,
                         'budget_allocation_key' => $budgetAllocation['key'] ?? null,
@@ -498,6 +528,63 @@ class RecommendationListService
         }
 
         return round((float) $value, 2);
+    }
+
+    public function normalizeMainGrantAmount(mixed $value): ?float
+    {
+        return $this->normalizeDecimal($value);
+    }
+
+    /**
+     * Per-scholar manual grant amounts, keyed by scholarship_record id.
+     * Entries for ids outside $recordIds are dropped (e.g. a stale override
+     * left over after a scholar is removed from the list).
+     */
+    public function normalizeGrantAmountOverrides(mixed $grantAmounts, array $recordIds): array
+    {
+        if (! is_array($grantAmounts) || $recordIds === []) {
+            return [];
+        }
+
+        $validIds = array_flip($recordIds);
+        $normalized = [];
+
+        foreach ($grantAmounts as $recordId => $amount) {
+            $recordId = (int) $recordId;
+
+            if (! isset($validIds[$recordId]) || $amount === null || $amount === '') {
+                continue;
+            }
+
+            $normalized[$recordId] = round((float) $amount, 2);
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Layers the manual main/per-scholar grant amounts onto a records
+     * snapshot's grant_amount field — the figure "Total amount for this
+     * request" sums. A per-scholar override wins over the main amount;
+     * scholars with neither keep their system-computed grant_amount.
+     */
+    public function applyGrantAmounts(array $recordsSnapshot, ?float $mainGrantAmount, array $grantAmountOverrides): array
+    {
+        if ($mainGrantAmount === null && $grantAmountOverrides === []) {
+            return $recordsSnapshot;
+        }
+
+        return collect($recordsSnapshot)->map(function (array $record) use ($mainGrantAmount, $grantAmountOverrides) {
+            $recordId = (int) ($record['id'] ?? 0);
+
+            if (array_key_exists($recordId, $grantAmountOverrides)) {
+                $record['grant_amount'] = $grantAmountOverrides[$recordId];
+            } elseif ($mainGrantAmount !== null) {
+                $record['grant_amount'] = $mainGrantAmount;
+            }
+
+            return $record;
+        })->values()->all();
     }
 
     private function cleanString(?string $value): ?string

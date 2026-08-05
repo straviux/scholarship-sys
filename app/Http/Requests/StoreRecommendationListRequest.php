@@ -17,7 +17,10 @@ class StoreRecommendationListRequest extends FormRequest
         return [
             'record_ids' => ['required', 'array', 'min:1'],
             'record_ids.*' => ['required', 'integer', 'distinct', 'exists:scholarship_records,id'],
-            'report_title' => ['nullable', 'string', 'max:255'],
+            'main_grant_amount' => ['nullable', 'numeric', 'min:0'],
+            'grant_amounts' => ['nullable', 'array'],
+            'grant_amounts.*' => ['nullable', 'numeric', 'min:0'],
+            'report_title' => ['nullable', 'string', 'max:5000'],
             'request_date' => ['nullable', 'date'],
             'paper_size' => ['nullable', 'in:A4,Letter,Legal'],
             'orientation' => ['nullable', 'in:portrait,landscape'],

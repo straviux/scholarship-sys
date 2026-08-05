@@ -115,6 +115,10 @@ class FundTransactionController extends Controller
                 $query->where('created_by', $createdBy);
             }
 
+            if ($allocation = $request->get('allocation')) {
+                $query->where('particulars_name', $allocation);
+            }
+
             $perPage = (int) $request->get('per_page', 10);
             $paginated = $query->paginate($perPage);
 

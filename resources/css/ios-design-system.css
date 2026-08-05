@@ -1447,6 +1447,48 @@ div.ql-align-justify {
 	width: 100%;
 }
 
+/* The generic body.ios-admin-page .p-dialog input rule (min-height: 2.85rem,
+   border-radius: 18px !important) forces oversized pill inputs everywhere,
+   overriding PrimeVue's own size="small" styling — every other IosModal in
+   the app still relies on that shared rule, so it isn't touched directly.
+   This modal packs several small fields into a compact applicant table and
+   opts out instead: values are UNSET/restored to PrimeVue's own design
+   tokens (not swapped for another set of hardcoded numbers), so sizing goes
+   back to being driven entirely by PrimeVue's size="small" styling. The
+   modal shell itself (.ios-nav-bar, .ios-body, .ios-footer-bar, etc.) is
+   untouched — only the form-control internals opt out. */
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-inputtext,
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-select,
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-inputnumber-input,
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-datepicker .p-inputtext {
+	min-height: unset !important;
+	border-radius: var(--p-inputtext-border-radius) !important;
+	border-color: var(--p-inputtext-border-color) !important;
+	background: var(--p-inputtext-background) !important;
+	box-shadow: none !important;
+}
+
+/* InputGroup (search box): the addon icon box isn't covered by the rule
+   above, so it kept its own default height/radius while the input inside
+   shrank — the two visibly stopped lining up. Style the group as one fused
+   control (border + radius on the group, none on its children), using the
+   same PrimeVue tokens as everything else here. */
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-inputgroup {
+	border: 1px solid var(--p-inputtext-border-color);
+	border-radius: var(--p-inputtext-border-radius);
+	overflow: hidden;
+}
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-inputgroup:focus-within {
+	border-color: var(--p-inputtext-focus-border-color);
+}
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-inputgroup .p-inputtext,
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-inputgroup .p-inputgroupaddon,
+body.ios-admin-page .p-dialog .ios-modal.rl-approval-modal .p-inputgroup .p-inputgroup-addon {
+	border: none !important;
+	border-radius: 0 !important;
+	min-height: unset !important;
+}
+
 .disbursement-template-editor .p-editor-content .ql-editor {
 	color: #111827;
 }

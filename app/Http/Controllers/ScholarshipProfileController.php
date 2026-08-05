@@ -1451,8 +1451,10 @@ class ScholarshipProfileController extends Controller
         ]);
     }
 
-    public function refreshRecommendationList(RecommendationList $recommendationList): JsonResponse
-    {
+    public function refreshRecommendationList(
+        RecommendationList $recommendationList,
+        RecommendationListService $recommendationListService
+    ): JsonResponse {
         if (!Gate::allows('applicants.approve')) {
             abort(403, 'You do not have permission to update recommendation lists.');
         }
@@ -1517,18 +1519,33 @@ class ScholarshipProfileController extends Controller
         $refreshedRecords = $selectedRecordIds
             ->map(fn($id) => $records->get($id))
             ->filter()
-            ->values();
+            ->values()
+            ->map(fn(ScholarshipRecord $record) => $record->toArray());
+
+        // Manual grant amounts (main + per-scholar) are never recomputed here
+        // — only the record-level projections are. If the request didn't
+        // send new ones, reapply whatever is already stored so a plain
+        // "Recalculate" (no body) can't silently wipe out entered amounts.
+        $mainGrantAmount = request()->has('main_grant_amount')
+            ? $recommendationListService->normalizeMainGrantAmount(request()->input('main_grant_amount'))
+            : $recommendationList->main_grant_amount;
+        $grantAmountOverrides = request()->has('grant_amounts')
+            ? $recommendationListService->normalizeGrantAmountOverrides(request()->input('grant_amounts'), $selectedRecordIds->all())
+            : ($recommendationList->grant_amount_overrides ?? []);
+        $refreshedRecords = $recommendationListService->applyGrantAmounts($refreshedRecords->all(), $mainGrantAmount, $grantAmountOverrides);
 
         $recommendationList->records_snapshot = $refreshedRecords;
-        $recommendationList->record_count = $refreshedRecords->count();
-        $recommendationList->total_projected_expense = $refreshedRecords->sum('projected_total_expense');
+        $recommendationList->record_count = count($refreshedRecords);
+        $recommendationList->total_projected_expense = collect($refreshedRecords)->sum('projected_total_expense');
+        $recommendationList->main_grant_amount = $mainGrantAmount;
+        $recommendationList->grant_amount_overrides = $grantAmountOverrides === [] ? null : $grantAmountOverrides;
         $recommendationList->save();
         $recommendationList->refresh();
 
         Log::info('recommendation_list_refreshed', [
             'id' => $recommendationList->id,
             'list_number' => $recommendationList->list_number,
-            'record_count' => $refreshedRecords->count(),
+            'record_count' => count($refreshedRecords),
         ]);
 
         return response()->json([
@@ -1680,6 +1697,8 @@ class ScholarshipProfileController extends Controller
             'orientation' => $recommendationList->orientation,
             'record_count' => $recommendationList->record_count,
             'total_projected_expense' => (float) $recommendationList->total_projected_expense,
+            'main_grant_amount' => $recommendationList->main_grant_amount !== null ? (float) $recommendationList->main_grant_amount : null,
+            'grant_amount_overrides' => $recommendationList->grant_amount_overrides ?? [],
             'selected_record_ids' => $recommendationList->selected_record_ids ?? [],
             'records' => $recommendationList->records_snapshot ?? [],
             'budget_allocation_key' => $recommendationList->budget_allocation_key,

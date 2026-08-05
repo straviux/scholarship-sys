@@ -174,6 +174,7 @@ const statusFilter = ref(_url.get("status") || "");
 const obrNoFilter = ref(_url.get("obr_no_mode") || "");
 const obrTypeFilter = ref(normalizeObrTypeValue(_url.get("type")));
 const disbursementTypeFilter = ref(_url.get("dv_type") || "");
+const allocationFilter = ref(_url.get("allocation") || "");
 const userFilter = ref(_url.get("user") || "all");
 const currentPage = ref(1);
 const perPage = ref(parseInt(_url.get("per_page") || "10"));
@@ -214,6 +215,24 @@ const disbursementTypeFilterOptions = [
     { label: "Payroll", value: "payroll" },
 ];
 
+// Allocation filter options, sourced from responsibility centers' particulars.
+// Label shows the allocation's description alongside its name.
+const allocationFilterOptions = computed(() => {
+    const seen = new Map();
+    for (const rc of responsibilityCenters.value) {
+        for (const particular of rc.particulars || []) {
+            const name = (particular.name || "").trim();
+            if (!name || seen.has(name)) continue;
+            const description = (particular.description || "").trim();
+            seen.set(name, {
+                label: description ? `${name} — ${description}` : name,
+                value: name,
+            });
+        }
+    }
+    return Array.from(seen.values());
+});
+
 // FilterPage component configuration
 const filterConfig = computed(() => [
     {
@@ -240,6 +259,12 @@ const filterConfig = computed(() => [
         placeholder: "DV Type",
         class: "w-44",
     },
+    {
+        key: "allocation",
+        options: allocationFilterOptions.value,
+        placeholder: "Allocation",
+        class: "w-52",
+    },
 ]);
 
 const onFilterChange = (filters) => {
@@ -247,6 +272,7 @@ const onFilterChange = (filters) => {
     obrNoFilter.value = filters.obr_no_mode || "";
     obrTypeFilter.value = normalizeObrTypeValue(filters.obr_type || "");
     disbursementTypeFilter.value = filters.disbursement_type || "";
+    allocationFilter.value = filters.allocation || "";
 };
 
 const clearAllFilters = () => {
@@ -254,6 +280,7 @@ const clearAllFilters = () => {
     obrNoFilter.value = "";
     obrTypeFilter.value = "";
     disbursementTypeFilter.value = "";
+    allocationFilter.value = "";
     searchQuery.value = "";
     userFilter.value = "all";
 };
@@ -297,6 +324,7 @@ const fetchVouchers = async ({ append = false } = {}) => {
         if (obrTypeFilter.value) params.obr_type = obrTypeFilter.value;
         if (disbursementTypeFilter.value)
             params.disbursement_type = disbursementTypeFilter.value;
+        if (allocationFilter.value) params.allocation = allocationFilter.value;
         if (userFilter.value === "my-records") {
             const userId = page.props.auth?.user?.id;
             if (userId) params.created_by = userId;
@@ -1326,6 +1354,7 @@ const syncFiltersToUrl = () => {
     if (obrTypeFilter.value) params.set("type", obrTypeFilter.value);
     if (disbursementTypeFilter.value)
         params.set("dv_type", disbursementTypeFilter.value);
+    if (allocationFilter.value) params.set("allocation", allocationFilter.value);
     if (userFilter.value && userFilter.value !== "all")
         params.set("user", userFilter.value);
     if (perPage.value !== 10) params.set("per_page", perPage.value);
@@ -1344,6 +1373,7 @@ watch(
         obrNoFilter,
         obrTypeFilter,
         disbursementTypeFilter,
+        allocationFilter,
         userFilter,
     ],
     () => {
@@ -1489,6 +1519,7 @@ onMounted(() => {
                         obr_no_mode: obrNoFilter,
                         obr_type: obrTypeFilter,
                         disbursement_type: disbursementTypeFilter,
+                        allocation: allocationFilter,
                     }"
                     :user-filter="userFilter"
                     :per-page="perPage"

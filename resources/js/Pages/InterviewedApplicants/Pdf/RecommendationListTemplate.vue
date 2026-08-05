@@ -16,12 +16,12 @@
 
         <!-- ── Title + hoisted header lines ───────────────────────── -->
         <div class="center" style="padding:4pt 0 8pt;">
-            <p class="bold" style="font-size:13pt;text-transform: uppercase;">{{ resolvedReportTitle }}</p>
+            <div style="font-size:13pt;text-transform: uppercase;" v-safe-html="resolvedReportTitle"></div>
             <p v-if="schoolUniform"  style="font-size:11pt;margin-top:2pt;font-weight:bold;text-transform:uppercase;">
                 {{ uniformSchoolLabel }}
             </p>
-            <p v-if="ayTermUniform" class="t-9" style="margin-top:2pt;">
-                For Academic Year {{ uniformAcademicYear }} {{ uniformTerm }}
+            <p v-if="uniformAcademicYear || uniformTerm" class="bold" style="font-size:11pt;text-transform: uppercase;margin-top:1pt;">
+                For Academic Year {{ uniformAcademicYear }} - {{ uniformTerm }}
             </p>
             
         </div>
@@ -58,7 +58,6 @@
                                 <col style="width:6%;" />
                                 <col v-if="showSchoolColumn" style="width:14%;" />
                                 <col v-if="showProgramColumn" style="width:8%;" />
-                                <col v-if="showAcademicYearColumn" style="width:10%;" />
                                 <col style="width:5%;" />
                                 <col style="width:9%;" />
                                 <col style="width:7%;" />
@@ -72,8 +71,6 @@
                                     <th :style="TH + 'vertical-align:middle;'" rowspan="2">Year Level</th>
                                     <th v-if="showSchoolColumn" :style="TH + 'vertical-align:middle;'" rowspan="2">School</th>
                                     <th v-if="showProgramColumn" :style="TH + 'vertical-align:middle;'" rowspan="2">Program</th>
-                                    <th v-if="showAcademicYearColumn" :style="TH + 'vertical-align:middle;'" rowspan="2">
-                                        Academic Year</th>
                                     <th :style="TH" colspan="3">Projected</th>
                                     <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
                                 </tr>
@@ -93,10 +90,6 @@
                                     <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.year_level || '' }}</td>
                                     <td v-if="showSchoolColumn" :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname || '' }}</td>
                                     <td v-if="showProgramColumn" :style="TD + 'text-align:center;font-size:8pt;'">{{ record.program?.shortname || '' }}</td>
-                                    <td v-if="showAcademicYearColumn" :style="TD + 'text-align:center;font-size:8pt;line-height:1;'">
-                                        <div>{{ record.term || '' }}</div>
-                                        <div>{{ record.academic_year || '' }}</div>
-                                    </td>
                                     <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
                                     <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
                                     <td :style="TD + 'text-align:center;'">{{ fmtCompletionYear(record) }}</td>
@@ -228,7 +221,7 @@ const props = defineProps({
     budgetAllocation: { type: Object, default: null },
     highlightJpmMembers: { type: Boolean, default: false },
     showRemarks: { type: Boolean, default: false },
-    reportTitle: { type: String, default: 'Request for Scholarship Approval' },
+    reportTitle: { type: String, default: '<p><strong>Request for Scholarship Approval</strong></p>' },
     listNumber: { type: String, default: '' },
     groupBy: { type: String, default: 'course' },
     paperSize: { type: String, default: 'A4' },
@@ -289,7 +282,7 @@ const DEFAULT_PREPARED_BY_OFFICE = 'YAKAP sa Edukasyon';
 const DEFAULT_APPROVED_BY = 'AMY ROA ALVAREZ';
 const DEFAULT_APPROVED_BY_POSITION = 'Governor';
 
-const resolvedReportTitle = computed(() => props.reportTitle?.trim() || 'Request for Scholarship Approval');
+const resolvedReportTitle = computed(() => props.reportTitle?.trim() || '<p><strong>Request for Scholarship Approval</strong></p>');
 const resolvedPreparedBy = computed(() => props.preparedBy?.trim() || DEFAULT_PREPARED_BY);
 const resolvedPreparedByPosition = computed(() => props.preparedByPosition?.trim() || DEFAULT_PREPARED_BY_POSITION);
 const resolvedPreparedByOffice = computed(() => props.preparedByOffice?.trim() || DEFAULT_PREPARED_BY_OFFICE);
@@ -309,9 +302,6 @@ function schoolKey(record) {
 function programKey(record) {
     return String(record?.program?.id ?? record?.program?.name ?? record?.program?.shortname ?? '').trim().toLowerCase();
 }
-function ayTermKey(record) {
-    return `${String(record?.academic_year ?? '').trim().toLowerCase()}||${String(record?.term ?? '').trim().toLowerCase()}`;
-}
 function uniqueCount(getter) {
     const set = new Set((props.records || []).map(getter));
     return set.size;
@@ -319,11 +309,9 @@ function uniqueCount(getter) {
 
 const schoolUniform = computed(() => props.records.length > 0 && uniqueCount(schoolKey) === 1);
 const programUniform = computed(() => props.records.length > 0 && uniqueCount(programKey) === 1);
-const ayTermUniform = computed(() => props.records.length > 0 && uniqueCount(ayTermKey) === 1);
 
 const showSchoolColumn = computed(() => !schoolUniform.value);
 const showProgramColumn = computed(() => !programUniform.value);
-const showAcademicYearColumn = computed(() => !ayTermUniform.value);
 
 const firstRecord = computed(() => props.records[0] || null);
 const uniformSchoolLabel = computed(() => firstRecord.value?.school?.name || firstRecord.value?.school?.shortname || '');
@@ -447,75 +435,15 @@ function fmtCompletionYear(record) {
     return record?.projected_completion_year ?? '';
 }
 
-function parseGrantProvision(value) {
-    if (!value) {
-        return { name: '—', amount: '' };
-    }
-    const formattedValue = typeof value === 'string' && !value.includes('_')
-        ? value
-        : value.toString().split('_').map(part => (part ? part.charAt(0).toUpperCase() + part.slice(1) : '')).join(' ');
-    const normalizedValue = formattedValue
-        .replace(/^grant_/i, '')
-        .replace(/_/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    const amountMatch = normalizedValue.match(/^(.*?)(?:\s*\((?:PHP\s*)?([^()]+)\))$/i);
-    if (!amountMatch) {
-        return { name: normalizedValue || '—', amount: '' };
-    }
-    return {
-        name: amountMatch[1].trim(),
-        amount: amountMatch[2].replace(/\bPHP\b/g, '').replace(/\s{2,}/g, ' ').trim(),
-    };
-}
-
-function isTrimesterTerm(term) {
-    if (typeof term !== 'string') {
-        return false;
-    }
-    const normalizedTerm = term.toLowerCase();
-    return normalizedTerm.includes('trimester')
-        || normalizedTerm.includes('3rd semester')
-        || normalizedTerm.includes('3rd sem')
-        || normalizedTerm.includes('summer')
-        || normalizedTerm.includes('midyear');
-}
-
-function resolveGrantProvisionAmount(record) {
-    const rawAmount = parseGrantProvision(record?.grant_provision_label || record?.grant_provision).amount;
-    if (!rawAmount) {
-        return null;
-    }
-    const numericAmount = Number(rawAmount.toString().replace(/,/g, ''));
-    if (!Number.isFinite(numericAmount)) {
-        return null;
-    }
-    return isTrimesterTerm(record?.term) ? (numericAmount * 2) / 3 : numericAmount;
-}
-
-function currentAcademicYearGrantMultiplier(term) {
-    const normalizedTerm = String(term ?? '').trim().toUpperCase();
-    if (!normalizedTerm) {
-        return 0;
-    }
-    if (normalizedTerm.includes('1ST TRIMESTER') || normalizedTerm.includes('FIRST TRIMESTER')) return 3;
-    if (normalizedTerm.includes('2ND TRIMESTER') || normalizedTerm.includes('SECOND TRIMESTER')) return 2;
-    if (normalizedTerm.includes('3RD TRIMESTER') || normalizedTerm.includes('THIRD TRIMESTER')) return 1;
-    if (normalizedTerm.includes('1ST SEMESTER') || normalizedTerm.includes('FIRST SEMESTER')) return 2;
-    if (normalizedTerm.includes('2ND SEMESTER') || normalizedTerm.includes('SECOND SEMESTER')) return 1;
-    return 1;
-}
-
-function estimatedCurrentAcademicYearGrant(record) {
-    const grantAmount = resolveGrantProvisionAmount(record);
-    if (!Number.isFinite(grantAmount)) {
-        return 0;
-    }
-    return grantAmount * currentAcademicYearGrantMultiplier(record?.term);
-}
-
+// "Total amount for this request" is the sum of each scholar's one-term
+// (one-semester) grant — record.grant_amount, projected server-side by
+// ScholarshipExpenseProjectionService (grant_amount_unit is always
+// 'per_term') — not a multi-term/academic-year projection.
 function sumCurrentAcademicYearEstimatedGrant(records) {
-    return records.reduce((sum, record) => sum + estimatedCurrentAcademicYearGrant(record), 0);
+    return records.reduce((sum, record) => {
+        const grantAmount = Number(record?.grant_amount);
+        return sum + (Number.isFinite(grantAmount) ? grantAmount : 0);
+    }, 0);
 }
 
 // ── Grouping + pagination ───────────────────────────────────────────
@@ -622,16 +550,17 @@ const approvedScholarsToDate = computed(() => {
     return Number(props.budgetAllocation?.approved_scholars_to_date ?? 0) || 0;
 });
 const totalCurrentAcademicYearGrant = computed(() => sumCurrentAcademicYearEstimatedGrant(props.records));
-const approvedScholarsCurrentAcademicYearGrantTotal = computed(() => {
-    return Number(props.budgetAllocation?.approved_scholars_current_ay_estimated_total ?? 0) || 0;
-});
+// total_allotment/disbursed are frozen in the budget_allocation snapshot at
+// request creation (see RecommendationListService::normalizeBudgetAllocation)
+// and never re-pulled from a live allocation lookup once saved, so this
+// stays fixed as recorded instead of recomputing on every view/print.
 const budgetAllocationRunningBalance = computed(() => {
     if (!props.budgetAllocation) {
         return 0;
     }
     const allotment = Number(props.budgetAllocation.total_allotment ?? 0);
     const disbursed = Number(props.budgetAllocation.disbursed ?? 0);
-    return allotment - disbursed - approvedScholarsCurrentAcademicYearGrantTotal.value;
+    return allotment - disbursed;
 });
 const budgetAllocationProjectedBalance = computed(() => {
     if (!props.budgetAllocation) {

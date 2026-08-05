@@ -15,7 +15,10 @@ class UpdateRecommendationListRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'report_title' => ['nullable', 'string', 'max:255'],
+            'main_grant_amount' => ['nullable', 'numeric', 'min:0'],
+            'grant_amounts' => ['nullable', 'array'],
+            'grant_amounts.*' => ['nullable', 'numeric', 'min:0'],
+            'report_title' => ['nullable', 'string', 'max:5000'],
             'request_date' => ['nullable', 'date'],
             'paper_size' => ['nullable', 'in:A4,Letter,Legal'],
             'orientation' => ['nullable', 'in:portrait,landscape'],

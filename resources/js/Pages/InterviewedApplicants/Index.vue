@@ -498,7 +498,7 @@
                                     bodyClass="min-w-[160px]">
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
-                                        <div class="text-2xs text-slate-500">{{ slotProps.data.report_title }}</div>
+                                        <div class="text-2xs text-slate-500">{{ stripHtml(slotProps.data.report_title) }}</div>
                                         <div class="mt-2 flex flex-wrap items-center gap-2">
                                             <span
                                                 :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-3xs font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
@@ -714,7 +714,7 @@
                                     bodyClass="min-w-[170px]">
                                     <template #body="slotProps">
                                         <div class="font-semibold text-slate-800">{{ slotProps.data.list_number }}</div>
-                                        <div class="text-2xs text-slate-500">{{ slotProps.data.report_title }}</div>
+                                        <div class="text-2xs text-slate-500">{{ stripHtml(slotProps.data.report_title) }}</div>
                                         <div class="mt-2 flex flex-wrap items-center gap-2">
                                             <span
                                                 :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-3xs font-semibold', getRecommendationListApprovalBadgeClass(slotProps.data)]">
@@ -965,7 +965,7 @@
         <CreateRecommendationListModal :show="showCreateRecommendationListModal"
             @update:show="handleRecommendationListModalVisibility"
             :applicants="recommendationApplicantPool" :budget-allocations="props.budget_allocations"
-            :default-prepared-by="currentUser?.name || ''" :loading="isCreatingRecommendationList"
+            :loading="isCreatingRecommendationList"
             :mode="recommendationListModalMode" :initial-data="editingRecommendationList"
             :submit-intent="recommendationListSubmitIntent" @submit="submitRecommendationList" />
 
@@ -1574,9 +1574,14 @@ const recommendationListContextMenuItems = computed(() => {
 
     items.push(
         {
-            label: 'Print',
-            icon: 'printer',
-            command: () => printSavedRecommendationList(recommendationList),
+            label: 'Print Preview',
+            icon: 'eye',
+            command: () => generateRecommendationListPrint(recommendationList),
+        },
+        {
+            label: 'Recalculate',
+            icon: 'calculator',
+            command: () => refreshRecommendationList(recommendationList),
         },
         {
             label: 'Update List',
@@ -1870,18 +1875,6 @@ const openEditRecommendationListModal = (recommendationList) => {
     showCreateRecommendationListModal.value = true;
 };
 
-const openPrintRecommendationListModal = (recommendationList) => {
-    if (!recommendationList?.id) {
-        toast.error('Recommendation list is unavailable for printing.');
-        return;
-    }
-
-    editingRecommendationList.value = recommendationList;
-    recommendationListModalMode.value = 'edit';
-    recommendationListSubmitIntent.value = 'print';
-    showCreateRecommendationListModal.value = true;
-};
-
 const upsertRecommendationList = (recommendationList) => {
     recommendationLists.value = [
         recommendationList,
@@ -2152,7 +2145,7 @@ const generateRecommendationListPrint = (recommendationList, successMessage = nu
     }
 };
 
-const updateRecommendationList = async (payload, { shouldPrintAfterSave = false } = {}) => {
+const updateRecommendationList = async (payload) => {
     if (isCreatingRecommendationList.value) {
         return;
     }
@@ -2184,27 +2177,7 @@ const updateRecommendationList = async (payload, { shouldPrintAfterSave = false 
         handleRecommendationListModalVisibility(false);
         activeTab.value = 'recommendation-lists';
 
-        const successMessage = response.data?.message || 'Approval request updated successfully.';
-
-        if (shouldPrintAfterSave) {
-            const printOptions = {
-                includeInterviewColumns: payload?.include_interview_columns,
-                includeProjectedColumns: payload?.include_projected_columns,
-            };
-            const printed = generateRecommendationListPrint(
-                savedRecommendationList,
-                `Updated ${savedRecommendationList.list_number}. Printing approval request.`,
-                printOptions,
-            );
-
-            if (!printed) {
-                toast.success(successMessage);
-            }
-
-            return;
-        }
-
-        toast.success(successMessage);
+        toast.success(response.data?.message || 'Approval request updated successfully.');
     } catch (error) {
         console.error('Failed to update approval request:', error);
 
@@ -2219,14 +2192,15 @@ const updateRecommendationList = async (payload, { shouldPrintAfterSave = false 
 
 const submitRecommendationList = async (payload) => {
     if (payload?.is_update_list && editingRecommendationList.value?.id) {
-        await saveUpdateListChanges(payload.record_ids || []);
+        await saveUpdateListChanges(payload.record_ids || [], {
+            main_grant_amount: payload.main_grant_amount,
+            grant_amounts: payload.grant_amounts,
+        });
         return;
     }
 
     if (recommendationListModalMode.value === 'edit') {
-        await updateRecommendationList(payload, {
-            shouldPrintAfterSave: recommendationListSubmitIntent.value === 'print',
-        });
+        await updateRecommendationList(payload);
         return;
     }
 
@@ -2245,10 +2219,6 @@ const exportPreviewedRecommendationListExcel = async () => {
         console.error('Failed to export approval request:', error);
         toast.error('Failed to export approval request as EXCEL.');
     }
-};
-
-const printSavedRecommendationList = (recommendationList) => {
-    openPrintRecommendationListModal(recommendationList);
 };
 
 const performApproveRecommendationList = async (recommendationList) => {
@@ -2350,7 +2320,7 @@ const approveRecommendationList = (recommendationList) => {
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
+    const targetLabel = recommendationList.list_number || stripHtml(recommendationList.report_title) || 'this approval request';
     const approverName = currentUser.value?.name || 'the current user';
 
     openConfirmDialog({
@@ -2380,7 +2350,7 @@ const revertRecommendationListApproval = (recommendationList) => {
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
+    const targetLabel = recommendationList.list_number || stripHtml(recommendationList.report_title) || 'this approval request';
 
     openConfirmDialog({
         header: 'Revert Request Approval',
@@ -2448,7 +2418,7 @@ const deleteRecommendationList = (recommendationList) => {
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
+    const targetLabel = recommendationList.list_number || stripHtml(recommendationList.report_title) || 'this approval request';
 
     openConfirmDialog({
         header: 'Delete Approval Request',
@@ -2510,7 +2480,7 @@ const restoreRecommendationList = (recommendationList) => {
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
+    const targetLabel = recommendationList.list_number || stripHtml(recommendationList.report_title) || 'this approval request';
 
     openConfirmDialog({
         header: 'Restore Approval Request',
@@ -2568,7 +2538,7 @@ const forceDeleteRecommendationList = (recommendationList) => {
         return;
     }
 
-    const targetLabel = recommendationList.list_number || recommendationList.report_title || 'this approval request';
+    const targetLabel = recommendationList.list_number || stripHtml(recommendationList.report_title) || 'this approval request';
 
     openConfirmDialog({
         header: 'Permanently Delete Soft-Deleted List',
@@ -2628,7 +2598,7 @@ const recommendationApplicantPool = computed(() => {
         .filter((r) => !r.is_in_recommendation_list);
 });
 
-async function saveUpdateListChanges(recordIds) {
+async function saveUpdateListChanges(recordIds, grantOptions = {}) {
     if (!editingRecommendationList.value?.id) return;
 
     if (recordIds.length === 0) {
@@ -2640,7 +2610,11 @@ async function saveUpdateListChanges(recordIds) {
     try {
         const response = await axios.patch(
             route('scholarship.recommendation-lists.refresh', editingRecommendationList.value.id),
-            { record_ids: recordIds },
+            {
+                record_ids: recordIds,
+                main_grant_amount: grantOptions.main_grant_amount,
+                grant_amounts: grantOptions.grant_amounts,
+            },
         );
 
         upsertRecommendationList(response.data?.data);
@@ -2694,6 +2668,19 @@ const formatApplicantName = (record) => {
 
 const formatDateTime = (value) => {
     return value ? moment(value).format('MMM DD, YYYY h:mm A') : 'N/A';
+};
+
+// report_title is authored as HTML via the Editor in
+// CreateRecommendationListModal.vue — plain-text contexts (table row
+// previews, confirm-dialog labels) need the tags stripped or they'd show
+// literal markup instead of rendering it.
+const stripHtml = (value) => {
+    if (!value) {
+        return '';
+    }
+    const container = document.createElement('div');
+    container.innerHTML = value;
+    return (container.textContent || '').trim();
 };
 
 const getRecommendationListApprovalLabel = (recommendationList) => {
