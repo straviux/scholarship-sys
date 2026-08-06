@@ -88,8 +88,8 @@
                                             </template>
                                         </Column>
 
-                                        <Column v-if="category === 'grant_provision'" field="amount" header="Amount"
-                                            style="min-width: 140px">
+                                        <Column v-if="['grant_provision', 'incentive_type'].includes(category)"
+                                            field="amount" header="Amount" style="min-width: 140px">
                                             <template #body="slotProps">
                                                 {{ formatAmount(slotProps.data.amount) }}
                                             </template>
@@ -215,6 +215,20 @@
                     still use the grant provision option value as-is.
                 </div>
 
+                <div v-if="isIncentiveTypeForm" class="grid grid-cols-1 gap-4">
+                    <div class="flex flex-col">
+                        <label class="text-sm font-medium text-gray-700 mb-2">Amount</label>
+                        <InputNumber v-model="form.amount" placeholder="0.00" class="w-full" :min="0"
+                            :minFractionDigits="2" :maxFractionDigits="2" />
+                        <small v-if="form.errors.amount" class="text-red-500 mt-1">{{ form.errors.amount }}</small>
+                    </div>
+                </div>
+
+                <div v-if="isIncentiveTypeForm" class="text-xs text-gray-500 bg-gray-50 border rounded-lg p-3">
+                    This amount auto-fills in the Fund Transaction voucher wizard when this incentive type is
+                    selected.
+                </div>
+
                 <div v-if="isDisbursementTypeForm" class="space-y-4">
                     <div class="text-xs text-gray-500 bg-gray-50 border rounded-lg p-3 space-y-2">
                         <p>
@@ -337,6 +351,7 @@ const form = useForm({
 const deleteForm = useForm({});
 const isGrantProvisionForm = computed(() => form.category === 'grant_provision');
 const isDisbursementTypeForm = computed(() => form.category === 'disbursement_type');
+const isIncentiveTypeForm = computed(() => form.category === 'incentive_type');
 const grantProvisionProgramOptions = computed(() =>
     (props.grantProvisionPrograms || []).map((program) => ({ label: program, value: program }))
 );
@@ -366,6 +381,7 @@ const getCategoryDescription = (category) => {
         grant_provision: 'Types of grants that can be provided to scholars, with optional program and amount metadata for future use.',
         obr_status: 'Status options for OBR (Obligation Request) processing',
         disbursement_type: 'Categories of disbursements used by Fund Transactions. Each type can define default particulars and explanation templates with placeholder tokens.',
+        incentive_type: 'Incentive honors used by Incentives-type Fund Transactions. Each type has a fixed amount that auto-fills when selected.',
         priority_level: 'Priority levels for scholarship applications (e.g., low, normal, high, urgent)',
         term: 'Academic terms or semesters (e.g., 1st Semester, 2nd Semester, Summer)',
         year_level: 'Student year levels (e.g., 1st Year, 2nd Year, 3rd Year, 4th Year)',
@@ -506,6 +522,9 @@ const moveDown = (option, category) => {
 watch(() => form.category, (category) => {
     if (category !== 'grant_provision') {
         form.program = null;
+    }
+
+    if (!['grant_provision', 'incentive_type'].includes(category)) {
         form.amount = null;
     }
 

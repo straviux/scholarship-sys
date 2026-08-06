@@ -349,12 +349,14 @@ const scholars = computed(() =>
 // Mirrors blade @if conditions exactly
 const showScholars = computed(() =>
     normalizedObrType.value !== 'reimbursement'
+    && normalizedObrType.value !== 'incentives'
     && !(normalizedObrType.value === 'financial_assistance' && !isEfa.value)
     && scholars.value.length > 0
 );
 
 const showTopAmount = computed(() =>
     normalizedObrType.value === 'reimbursement'
+    || normalizedObrType.value === 'incentives'
     || (normalizedObrType.value === 'financial_assistance' && !isEfa.value)
 );
 

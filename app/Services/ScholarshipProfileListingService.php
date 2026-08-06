@@ -47,7 +47,15 @@ class ScholarshipProfileListingService
 
         $perPage = (int) $request->get('records', 10);
 
+        // withExists must run after applyOrdering(): the "all" tab branch replaces the
+        // select list with `select('scholarship_profiles.*')`, which would otherwise wipe
+        // out the computed exists column if added before it.
         $profiles = $this->applyOrdering($query, $request)
+            ->withExists(['academicEnrollments as has_deans_list_honor' => function ($enrollmentQuery) {
+                $enrollmentQuery->whereHas('terms', function ($termQuery) {
+                    $termQuery->where('academic_honor', 'deans_list');
+                });
+            }])
             ->paginate($perPage)
             ->withQueryString();
 
@@ -107,7 +115,7 @@ class ScholarshipProfileListingService
                 $query->with(['program', 'course', 'school', 'attachments', 'approvalHistory']);
             },
             'academicEnrollments' => function ($query) {
-                $query->select(['id', 'profile_id', 'graduation_date'])
+                $query->select(['id', 'profile_id', 'graduation_date', 'latin_honor'])
                     ->whereNotNull('graduation_date')
                     ->orderByDesc('graduation_date')
                     ->orderByDesc('updated_at');
@@ -428,6 +436,7 @@ class ScholarshipProfileListingService
             $profile->total_scholarships = $profile->scholarshipGrant->count();
             $profile->is_graduated = (bool) $graduatedEnrollment;
             $profile->graduation_date = $graduatedEnrollment?->graduation_date;
+            $profile->latin_honor = $graduatedEnrollment?->latin_honor;
             $profile->has_ongoing_ros = (bool) $ongoingRosRecord;
             $profile->ros_start_date = $ongoingRosRecord?->service_start_date;
             $profile->needs_legacy_term_review = $legacyTermReview['needs_review'];

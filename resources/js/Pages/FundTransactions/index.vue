@@ -23,7 +23,9 @@ import {
 import ObrTemplate from "@/Pages/FundTransactions/Pdf/ObrTemplate.vue";
 import DvTemplate from "@/Pages/FundTransactions/Pdf/DvTemplate.vue";
 import PayrollTemplate from "@/Pages/FundTransactions/Pdf/PayrollTemplate.vue";
+import IncentivesTemplate from "@/Pages/FundTransactions/Pdf/IncentivesTemplate.vue";
 import LosTemplate from "@/Pages/FundTransactions/Pdf/LosTemplate.vue";
+import IncentivesLosTemplate from "@/Pages/FundTransactions/Pdf/IncentivesLosTemplate.vue";
 import PdfPreviewModal from "@/Pages/FundTransactions/Modal/PdfPreviewModal.vue";
 
 const toast = useToast();
@@ -250,7 +252,7 @@ const filterConfig = computed(() => [
     {
         key: "obr_type",
         options: obrTypeFilterOptions.value,
-        placeholder: "OBR Type",
+        placeholder: "Transaction Type",
         class: "w-44",
     },
     {
@@ -688,10 +690,15 @@ const generateDocument = async (docType) => {
 
     if (docType === "PR") {
         try {
-            const html = renderVueTemplate(PayrollTemplate, {
-                voucher: selectedVoucher.value,
-                scholarDetails: scholarsDetails.value,
-            });
+            const isIncentives =
+                normalizeObrTypeValue(selectedVoucher.value.obr_type) === "incentives";
+            const html = renderVueTemplate(
+                isIncentives ? IncentivesTemplate : PayrollTemplate,
+                {
+                    voucher: selectedVoucher.value,
+                    scholarDetails: scholarsDetails.value,
+                },
+            );
             const title = `Payroll-${selectedVoucher.value.transaction_id || selectedVoucher.value.id}`;
             pdfPreviewHtml.value = buildHtmlDoc(html, title, "landscape");
             pdfPreviewTitle.value = title;
@@ -712,10 +719,15 @@ const generateDocument = async (docType) => {
     // LOS — client-side
     if (docType === "LOS") {
         try {
-            const html = renderVueTemplate(LosTemplate, {
-                voucher: selectedVoucher.value,
-                scholarDetails: scholarsDetails.value,
-            });
+            const isIncentives =
+                normalizeObrTypeValue(selectedVoucher.value.obr_type) === "incentives";
+            const html = renderVueTemplate(
+                isIncentives ? IncentivesLosTemplate : LosTemplate,
+                {
+                    voucher: selectedVoucher.value,
+                    scholarDetails: scholarsDetails.value,
+                },
+            );
             const title = `ListOfScholars-${selectedVoucher.value.transaction_id || selectedVoucher.value.id}`;
             pdfPreviewHtml.value = buildHtmlDoc(html, title, "a4");
             pdfPreviewTitle.value = title;
@@ -892,6 +904,7 @@ const saveRemarks = async () => {
                 particulars_description: voucherData.particulars_description,
                 amount: voucherData.amount,
                 obr_type: voucherData.obr_type,
+                incentive_type: voucherData.incentive_type,
                 scholar_ids: voucherData.scholar_ids,
                 remarks: remarksForm.remarks,
                 transaction_status: voucherData.transaction_status,
@@ -1264,6 +1277,7 @@ const saveOBRTracking = async () => {
                                 voucherData.particulars_description,
                             amount: voucherData.amount,
                             obr_type: voucherData.obr_type,
+                            incentive_type: voucherData.incentive_type,
                             scholar_ids: voucherData.scholar_ids,
                             remarks: voucherData.remarks,
                             transaction_status: statusToSend,
@@ -2040,7 +2054,7 @@ onMounted(() => {
                                         </div>
                                         <div class="ios-row">
                                             <span class="ios-row-label text-sm"
-                                                >OBR Type</span
+                                                >Transaction Type</span
                                             >
                                             <span>{{
                                                 formatObrTypeLabel(

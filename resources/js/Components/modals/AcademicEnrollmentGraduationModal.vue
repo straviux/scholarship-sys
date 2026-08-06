@@ -21,6 +21,12 @@
             </div>
 
             <div class="ios-form-group">
+                <label class="ios-label text-compact">Latin Honor</label>
+                <Select v-model="form.latin_honor" :options="latinHonorOptions" optionLabel="label"
+                    optionValue="value" placeholder="None" fluid showClear />
+            </div>
+
+            <div class="ios-form-group">
                 <label class="ios-label text-compact">Graduation Remarks</label>
                 <Textarea v-model="form.graduation_remarks" rows="4" autoResize fluid
                     placeholder="Add graduation notes or supporting context" />
@@ -44,11 +50,17 @@ const emit = defineEmits(['update:visible', 'success']);
 
 const processing = ref(false);
 const form = ref(getDefaultForm());
+const latinHonorOptions = [
+    { label: 'Cum Laude', value: 'cum_laude' },
+    { label: 'Magna Cum Laude', value: 'magna_cum_laude' },
+    { label: 'Summa Cum Laude', value: 'summa_cum_laude' },
+];
 
 function getDefaultForm() {
     return {
         graduation_date: null,
         graduation_remarks: '',
+        latin_honor: null,
     };
 }
 
@@ -64,6 +76,7 @@ watch(() => props.visible, (val) => {
     form.value = {
         graduation_date: props.enrollment?.graduation_date ? new Date(props.enrollment.graduation_date) : new Date(),
         graduation_remarks: props.enrollment?.graduation_remarks ?? '',
+        latin_honor: props.enrollment?.latin_honor ?? null,
     };
 });
 
@@ -113,6 +126,7 @@ const submitGraduation = async () => {
         const payload = {
             graduation_date: formatDateForApi(form.value.graduation_date),
             graduation_remarks: String(form.value.graduation_remarks ?? '').trim() || null,
+            latin_honor: form.value.latin_honor || null,
         };
 
         const response = await axios.put(route('academic-enrollments.graduate', props.enrollment.id), payload);

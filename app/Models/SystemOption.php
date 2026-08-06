@@ -98,6 +98,7 @@ class SystemOption extends Model
             'grant_provision' => 'Grant Provisions',
             'obr_status' => 'OBR Status',
             'disbursement_type' => 'Disbursement Types',
+            'incentive_type' => 'Incentive Types',
             'priority_level' => 'Priority Levels',
             'term' => 'Terms',
             'year_level' => 'Year Levels',

@@ -68,7 +68,8 @@ const voucherData = reactive({
         particulars_name: '',
         particulars_description: '', // Single text field for rich content
         amount: '',
-        obr_type: '' // REGULAR, FINANCIAL ASSISTANCE, or REIMBURSEMENT
+        obr_type: '', // REGULAR, FINANCIAL ASSISTANCE, or REIMBURSEMENT
+        incentive_type: '' // deans_list, cum_laude, magna_cum_laude, or summa_cum_laude (Incentives only)
     },
     disbursements: {
         type: 'disbursements', // disbursements or payroll
@@ -77,7 +78,8 @@ const voucherData = reactive({
         course: '', // Optional course for new List of Scholars step
         year_level: '', // Optional year level override
         academic_year: '', // Optional academic year
-        semester: '', // Optional semester
+        semester: '', // Optional semester (joined string; kept in sync with semesterList)
+        semesterList: [], // Multi-select term values behind `semester`
         school: '', // School name
         grant_provision: '' // Grant provision
     },
@@ -93,6 +95,8 @@ const transactionStatusOptions = computed(() => ['No OBR', ..._transactionStatus
 const _obrTypeRaw = useSystemOptions('disbursement_type');
 const _grantProvisionRaw = useSystemOptions('grant_provision');
 const grantProvisionOptions = computed(() => _grantProvisionRaw.value);
+const _incentiveTypeRaw = useSystemOptions('incentive_type');
+const incentiveTypeOptions = computed(() => _incentiveTypeRaw.value.map(o => ({ label: o.label, value: o.value })));
 const selectedParticularId = ref(null);
 
 const normalizeObrTypeValue = (value) => {
@@ -444,6 +448,8 @@ const updateSelectedCount = () => {
         if (!voucherData.disbursements.academic_year && firstScholar.academic_year) {
             voucherData.disbursements.academic_year = firstScholar.academic_year;
         }
+        autoSelectIncentiveType();
+
         logger.info('Pre-populated additional info from first scholar:', {
             course: voucherData.disbursements.course,
             year_level: voucherData.disbursements.year_level,
@@ -561,6 +567,7 @@ const loadEditData = async () => {
         voucherData.obligations.particulars_description = data.particulars_description || '';
         voucherData.obligations.amount = data.amount || '';
         voucherData.obligations.obr_type = normalizeObrTypeValue(data.obr_type);
+        voucherData.obligations.incentive_type = data.incentive_type || '';
 
         voucherData.disbursements.type = data.disbursement_type || 'disbursements';
         voucherData.disbursements.explanation = data.explanation || '';
@@ -568,6 +575,7 @@ const loadEditData = async () => {
         voucherData.disbursements.course = data.course || '';
         voucherData.disbursements.academic_year = data.academic_year || '';
         voucherData.disbursements.semester = data.semester || '';
+        voucherData.disbursements.semesterList = parseSelectedTerms(data.semester);
         voucherData.disbursements.year_level = data.year_level || '';
         voucherData.disbursements.school = data.school || '';
         voucherData.disbursements.grant_provision = data.grant_provision || '';
@@ -643,6 +651,7 @@ const handleSubmit = async () => {
             particulars_description: voucherData.obligations.particulars_description,
             amount: selectedScholars.length > 0 ? computedScholarTotal : fallbackAmount,
             obr_type: normalizedObrType.value || null,
+            incentive_type: normalizedObrType.value === 'incentives' ? (voucherData.obligations.incentive_type || null) : null,
             transaction_status: voucherData.summary.transaction_status,
             scholarship_program_id: programFilter.value?.id ?? (selectedScholars.length > 0 ? (selectedScholars[0].program_id ?? null) : null),
             fiscal_year: selectedRC.value?.fiscal_year ?? null,
@@ -972,6 +981,16 @@ const buildParticularsDescriptionByObrType = () => {
     const obrType = normalizedObrType.value;
     if (!obrType) return '';
 
+    if (obrType === 'incentives' && voucherData.obligations.incentive_type === 'deans_list') {
+        const term = toUpperOrFallback(particularsSemester.value);
+        const academicYear = toUpperOrFallback(particularsAcademicYear.value);
+        return `<p>(AWARD INCENTIVES FOR YAKAP SA EDUKASYON SCHOLARSHIP PROGRAM SCHOLARS DEAN'S LIST AWARDEES FOR ${term} ${academicYear})</p>`;
+    }
+
+    if (obrType === 'incentives' && ['cum_laude', 'magna_cum_laude', 'summa_cum_laude'].includes(voucherData.obligations.incentive_type)) {
+        return `<p>(AWARD INCENTIVES FOR YAKAP SA EDUKASYON SCHOLARSHIP PROGRAM SCHOLARS ACADEMIC HONOR AWARDEES YEAR ${new Date().getFullYear()})</p>`;
+    }
+
     const customTemplate = selectedObrTypeOption.value?.particulars_template;
     if (customTemplate) {
         return renderDisbursementTypeTemplate(customTemplate);
@@ -1014,6 +1033,14 @@ const buildExplanationByObrType = () => {
     const course = toUpperOrFallback(particularsCourse.value);
     const school = toUpperOrFallback(particularsSchool.value);
 
+    if (obrType === 'incentives' && voucherData.obligations.incentive_type === 'deans_list') {
+        return `<p>We acknowledge receipt of the sum shown opposite our names for YAKAP sa Edukasyon Scholarship Program scholars Dean's Lister Awardees.</p>`;
+    }
+
+    if (obrType === 'incentives' && ['cum_laude', 'magna_cum_laude', 'summa_cum_laude'].includes(voucherData.obligations.incentive_type)) {
+        return `<p>We acknowledge receipt of the sum shown opposite our names for YAKAP sa Edukasyon Scholarship Program scholars Academic Honor Awardees For Year ${new Date().getFullYear()}.</p>`;
+    }
+
     const customTemplate = selectedObrTypeOption.value?.explanation_template;
     if (customTemplate) {
         return renderDisbursementTypeTemplate(customTemplate);
@@ -1052,6 +1079,80 @@ watch(
             voucherData.disbursements.course = newValue;
         }
     }
+);
+
+// Joins terms with ", " between all but the last, and " & " before the last
+// (e.g. ["1ST", "2ND", "3RD"] -> "1ST, 2ND & 3RD")
+const joinWithAmpersand = (items) => {
+    if (items.length <= 1) return items[0] || '';
+    return `${items.slice(0, -1).join(', ')} & ${items[items.length - 1]}`;
+};
+
+// Splits a term like "1ST SEMESTER" into { ordinal: "1ST", unit: "SEMESTER" }.
+// Returns null for terms with no trailing unit word (e.g. "SUMMER", "N/A").
+const splitTermOrdinalUnit = (term) => {
+    const parts = String(term).trim().split(/\s+/);
+    if (parts.length < 2) return null;
+    return { ordinal: parts.slice(0, -1).join(' '), unit: parts[parts.length - 1] };
+};
+
+const leadingOrdinalNumber = (ordinal) => {
+    const match = String(ordinal).match(/^(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+};
+
+// Formats selected terms for display: when every term shares the same trailing
+// unit (SEMESTER/TRIMESTER/...), the unit is shown once at the end and the
+// ordinals are sorted and joined — e.g. "1ST & 2ND SEMESTER" or
+// "1ST, 2ND & 3RD TRIMESTER". Falls back to joining the raw terms as-is when
+// units differ or a term has no clear ordinal/unit split.
+const formatSelectedTerms = (terms) => {
+    const list = (terms || []).filter(Boolean);
+    if (list.length <= 1) return list[0] || '';
+
+    const parsed = list.map(splitTermOrdinalUnit);
+    const sharedUnit = parsed[0]?.unit;
+    const sameUnit = sharedUnit && parsed.every(p => p && p.unit === sharedUnit);
+    if (!sameUnit) return joinWithAmpersand(list);
+
+    const numbers = parsed.map(p => leadingOrdinalNumber(p.ordinal));
+    const ordered = numbers.every(n => n !== null)
+        ? parsed.map((p, i) => ({ ...p, n: numbers[i] })).sort((a, b) => a.n - b.n)
+        : parsed;
+
+    return `${joinWithAmpersand(ordered.map(p => p.ordinal))} ${sharedUnit}`;
+};
+
+// Best-effort inverse of formatSelectedTerms(), for loading an existing voucher
+// back into the term multi-select. Assumes the trailing unit on the last part
+// applies to every ordinal-only part before it — accurate for the common case
+// (all selected terms share one unit), not guaranteed for a mixed-unit fallback.
+const parseSelectedTerms = (text) => {
+    const value = String(text || '').trim();
+    if (!value) return [];
+
+    const ampIndex = value.lastIndexOf(' & ');
+    if (ampIndex === -1) return [value];
+
+    const lastPart = value.slice(ampIndex + 3).trim();
+    const restParts = value.slice(0, ampIndex).split(',').map(part => part.trim()).filter(Boolean);
+    const unit = splitTermOrdinalUnit(lastPart)?.unit;
+
+    const reconstructedRest = restParts.map((part) => {
+        const alreadyHasUnit = unit && part.toUpperCase().endsWith(unit.toUpperCase());
+        return unit && !alreadyHasUnit ? `${part} ${unit}` : part;
+    });
+
+    return [...reconstructedRest, lastPart];
+};
+
+// Keep the joined term string in sync with the multi-select term list
+watch(
+    () => voucherData.disbursements.semesterList,
+    (list) => {
+        voucherData.disbursements.semester = formatSelectedTerms(list);
+    },
+    { deep: true }
 );
 
 watch(
@@ -1125,7 +1226,8 @@ watch(
         () => particularsYearLevel.value,
         () => particularsSemester.value,
         () => particularsAcademicYear.value,
-        () => scholarsParticularSeed.value
+        () => scholarsParticularSeed.value,
+        () => voucherData.obligations.incentive_type
     ],
     () => {
         const generated = buildParticularsDescriptionByObrType();
@@ -1165,7 +1267,8 @@ watch(
         () => particularsSemester.value,
         () => particularsAcademicYear.value,
         () => scholarsParticularSeed.value,
-        () => voucherData.disbursements.type
+        () => voucherData.disbursements.type,
+        () => voucherData.obligations.incentive_type
     ],
     () => {
         const generated = buildExplanationByObrType();
@@ -1294,6 +1397,64 @@ const applyAmountToAll = () => {
     }
 };
 
+// Recomputes fresh from the current incentive type + term count each time, rather than
+// caching a "base amount" at selection time — that cache could go stale (or never get
+// set) if the incentive_type options hadn't finished loading yet when the user picked one.
+// Dean's List is awarded per term, so its amount scales with how many terms are
+// selected; other incentive types (Latin Honors) are a flat one-time amount.
+const applyIncentiveAmount = () => {
+    const selectedType = voucherData.obligations.incentive_type;
+    if (!selectedType) return;
+
+    const option = _incentiveTypeRaw.value.find(opt => opt.value === selectedType);
+    const baseAmount = Number(option?.amount);
+    if (!Number.isFinite(baseAmount)) return;
+
+    const termCount = selectedType === 'deans_list'
+        ? Math.max(1, voucherData.disbursements.semesterList.length)
+        : 1;
+    const amount = baseAmount * termCount;
+
+    voucherData.obligations.amount = amount;
+    applyToAllAmount.value = amount;
+    applyToAllChecked.value = true;
+    applyAmountToAll();
+};
+
+// Re-apply whenever the incentive type, the selected term count, or the (async-loaded)
+// incentive type options themselves change.
+watch(() => voucherData.obligations.incentive_type, () => applyIncentiveAmount());
+watch(() => voucherData.disbursements.semesterList.length, () => applyIncentiveAmount());
+watch(() => _incentiveTypeRaw.value.length, () => applyIncentiveAmount());
+
+// Auto-select the incentive type when every selected scholar shares the same
+// recorded honor (deans_list / cum_laude / magna_cum_laude / summa_cum_laude).
+// Never overrides an already-matching selection, and never guesses when
+// scholars have mixed or missing honors.
+const autoSelectIncentiveType = () => {
+    if (normalizedObrType.value !== 'incentives' || voucherData.scholars.length === 0) {
+        return;
+    }
+
+    const honors = new Set(voucherData.scholars.map(s => s.honor).filter(Boolean));
+    if (honors.size !== 1) return;
+
+    const [honor] = honors;
+    if (voucherData.obligations.incentive_type === honor) return;
+
+    voucherData.obligations.incentive_type = honor;
+};
+
+// Re-check when Transaction Type switches to Incentives after scholars are already selected
+watch(() => voucherData.obligations.obr_type, () => autoSelectIncentiveType());
+
+// Incentives always use the payroll layout
+watch(normalizedObrType, (value) => {
+    if (value === 'incentives') {
+        voucherData.disbursements.type = 'payroll';
+    }
+});
+
 // Close wizard
 // Reset voucherData to initial state
 const resetVoucherData = () => {
@@ -1309,7 +1470,8 @@ const resetVoucherData = () => {
         particulars_name: '',
         particulars_description: '',
         amount: '',
-        obr_type: ''
+        obr_type: '',
+        incentive_type: ''
     };
     voucherData.disbursements = {
         type: 'disbursements',
@@ -1318,7 +1480,8 @@ const resetVoucherData = () => {
         course: '',
         year_level: '',
         academic_year: '',
-        semester: ''
+        semester: '',
+        semesterList: []
     };
     voucherData.summary = {
         notes: '',
@@ -1571,13 +1734,20 @@ const wizardModalStyle = computed(() => ({
                 <!-- Step 2: Obligations -->
                 <div v-if="step === 2" class="space-y-4 text-gray-800">
 
-                    <!-- OBR Type + Transaction Status -->
+                    <!-- Transaction Type + Incentive Type + Transaction Status -->
                     <div
-                        class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 bg-white border border-[#e5e5ea] rounded-2xl p-4">
+                        class="grid grid-cols-1 gap-4 mb-4 bg-white border border-[#e5e5ea] rounded-2xl p-4"
+                        :class="normalizedObrType === 'incentives' ? 'lg:grid-cols-3' : 'lg:grid-cols-2'">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">OBR Type</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Type</label>
                             <Select v-model="voucherData.obligations.obr_type" :options="obrTypeOptions"
-                                optionLabel="label" optionValue="value" placeholder="Select OBR Type" class="w-full" />
+                                optionLabel="label" optionValue="value" placeholder="Select Transaction Type" class="w-full" />
+                        </div>
+                        <div v-if="normalizedObrType === 'incentives'">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Incentive Type</label>
+                            <Select v-model="voucherData.obligations.incentive_type" :options="incentiveTypeOptions"
+                                optionLabel="label" optionValue="value" placeholder="Select Incentive Type"
+                                class="w-full" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Transaction
@@ -1774,7 +1944,9 @@ const wizardModalStyle = computed(() => ({
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                                <TermSelect v-model="voucherData.disbursements.semester" />
+                                <TermSelect v-if="normalizedObrType === 'incentives'" multiple
+                                    v-model="voucherData.disbursements.semesterList" />
+                                <TermSelect v-else v-model="voucherData.disbursements.semester" />
                             </div>
                         </div>
                         <div class="bg-white border border-[#e5e5ea] rounded-2xl p-4 space-y-4">
@@ -1891,7 +2063,7 @@ const wizardModalStyle = computed(() => ({
                         <h4 class="font-medium text-gray-900 mb-3">Obligation Details</h4>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
-                                <span class="text-gray-600">OBR Type:</span>
+                                <span class="text-gray-600">Transaction Type:</span>
                                 <span class="font-medium text-gray-900">{{
                                     getObrTypeLabel(voucherData.obligations.obr_type) }}</span>
                             </div>

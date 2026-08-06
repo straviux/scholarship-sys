@@ -57,6 +57,7 @@
                                 <col style="width:12%;" />
                                 <col style="width:6%;" />
                                 <col v-if="showSchoolColumn" style="width:14%;" />
+                                <col v-if="showCourseColumn" style="width:14%;" />
                                 <col v-if="showProgramColumn" style="width:8%;" />
                                 <col style="width:5%;" />
                                 <col style="width:9%;" />
@@ -70,6 +71,7 @@
                                     <th :style="TH + 'vertical-align:middle;'" rowspan="2">Municipality</th>
                                     <th :style="TH + 'vertical-align:middle;'" rowspan="2">Year Level</th>
                                     <th v-if="showSchoolColumn" :style="TH + 'vertical-align:middle;'" rowspan="2">School</th>
+                                    <th v-if="showCourseColumn" :style="TH + 'vertical-align:middle;'" rowspan="2">Course</th>
                                     <th v-if="showProgramColumn" :style="TH + 'vertical-align:middle;'" rowspan="2">Program</th>
                                     <th :style="TH" colspan="3">Projected</th>
                                     <th :style="TH + 'vertical-align:middle;'" rowspan="2">Remarks</th>
@@ -89,6 +91,7 @@
                                     <td :style="TD + 'font-size:8pt;text-transform:uppercase;'">{{ record.profile?.municipality || '' }}</td>
                                     <td :style="TD + 'text-align:center;font-size:8pt;'">{{ record.year_level || '' }}</td>
                                     <td v-if="showSchoolColumn" :style="TD + 'font-size:8pt;'">{{ record.school?.name || record.school?.shortname || '' }}</td>
+                                    <td v-if="showCourseColumn" :style="TD + 'font-size:8pt;'">{{ record.course?.name || record.course?.shortname || '' }}</td>
                                     <td v-if="showProgramColumn" :style="TD + 'text-align:center;font-size:8pt;'">{{ record.program?.shortname || '' }}</td>
                                     <td :style="TD + 'text-align:center;'">{{ fmtProjectedTerms(record) }}</td>
                                     <td :style="TD + 'text-align:right;'">{{ fmtProjectedExpense(record) }}</td>
@@ -302,6 +305,9 @@ function schoolKey(record) {
 function programKey(record) {
     return String(record?.program?.id ?? record?.program?.name ?? record?.program?.shortname ?? '').trim().toLowerCase();
 }
+function courseKey(record) {
+    return String(record?.course?.id ?? record?.course?.name ?? record?.course?.shortname ?? '').trim().toLowerCase();
+}
 function uniqueCount(getter) {
     const set = new Set((props.records || []).map(getter));
     return set.size;
@@ -309,8 +315,13 @@ function uniqueCount(getter) {
 
 const schoolUniform = computed(() => props.records.length > 0 && uniqueCount(schoolKey) === 1);
 const programUniform = computed(() => props.records.length > 0 && uniqueCount(programKey) === 1);
+const courseUniform = computed(() => props.records.length > 0 && uniqueCount(courseKey) === 1);
 
-const showSchoolColumn = computed(() => !schoolUniform.value);
+// School is already the section heading when grouped by school, so the data
+// column would just repeat it — show Course instead in that case. Any other
+// grouping (course/program/etc.) keeps the School column as before.
+const showSchoolColumn = computed(() => props.groupBy !== 'school' && !schoolUniform.value);
+const showCourseColumn = computed(() => props.groupBy === 'school' && !courseUniform.value);
 const showProgramColumn = computed(() => !programUniform.value);
 
 const firstRecord = computed(() => props.records[0] || null);

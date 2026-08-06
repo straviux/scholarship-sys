@@ -2546,18 +2546,30 @@ class ScholarshipProfileController extends Controller
                         }, 'school' => function ($q) {
                             $q->select('id', 'name');
                         }])
-                        ->orderByRaw('CASE 
+                        ->orderByRaw('CASE
                             WHEN date_approved IS NOT NULL THEN date_approved
                             WHEN date_filed IS NOT NULL THEN date_filed
                             ELSE created_at
                         END DESC')
                         ->limit(1);
                 }])
+                ->with(['academicEnrollments' => function ($query) {
+                    $query->select(['id', 'profile_id', 'graduation_date', 'latin_honor'])
+                        ->with(['terms' => function ($termQuery) {
+                            $termQuery->select(['id', 'academic_enrollment_id', 'academic_honor'])
+                                ->whereNotNull('academic_honor')
+                                ->orderByRaw('COALESCE(date_approved, date_filed, created_at) DESC')
+                                ->orderByDesc('id');
+                        }]);
+                }])
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get()
                 ->map(function ($scholar) {
                     $latestScholarship = $scholar->scholarshipRecords->first();
+                    $latinHonor = $scholar->academicEnrollments->pluck('latin_honor')->filter()->first();
+                    $academicHonor = $scholar->academicEnrollments->pluck('terms')->flatten()->pluck('academic_honor')->filter()->first();
+
                     return [
                         'id' => $latestScholarship?->id,  // Add the scholarship record ID
                         'profile_id' => $scholar->profile_id,
@@ -2572,6 +2584,7 @@ class ScholarshipProfileController extends Controller
                         'term' => $latestScholarship?->term,
                         'active_records_count' => $scholar->scholarshipRecords->count(),
                         'program_id' => $latestScholarship?->program_id ?? $latestScholarship?->course?->scholarship_program_id,
+                        'honor' => $latinHonor ?: $academicHonor,
                     ];
                 });
 

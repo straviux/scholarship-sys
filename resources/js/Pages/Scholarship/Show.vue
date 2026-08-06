@@ -10,9 +10,15 @@
                     <AppButton icon="arrow-left" text rounded severity="secondary" @click="goBackToProfiles()"
                         v-tooltip.top="'Back to Profiles'" />
                     <div class="min-w-0">
-                        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">
-                            {{ profile.first_name }} {{ profile.middle_name }} {{ profile.last_name }}
-                            {{ profile.extension_name }}
+                        <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">
+                            <span>{{ profile.first_name }} {{ profile.middle_name }} {{ profile.last_name }}
+                                {{ profile.extension_name }}</span>
+                            <span v-for="honor in scholarHonorBadges" :key="honor.value"
+                                class="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-3xs font-bold uppercase tracking-[0.1em]"
+                                :class="honor.class">
+                                <AppIcon name="award" :size="8" />
+                                {{ honor.label }}
+                            </span>
                         </h1>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Scholar Profile</p>
                     </div>
@@ -356,6 +362,22 @@
                                                         </p>
                                                     </div>
                                                 </div>
+                                                <div v-if="enrollment.latin_honor"
+                                                    class="flex items-center justify-center gap-3 rounded-2xl border border-purple-200 bg-purple-50 px-4 py-2 text-purple-900 shadow-sm dark:border-purple-400/30 dark:bg-purple-900/20 dark:text-purple-200">
+                                                    <div
+                                                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white dark:bg-purple-500">
+                                                        <AppIcon name="award" :size="18" />
+                                                    </div>
+                                                    <div class="min-w-0 text-center">
+                                                        <p
+                                                            class="text-2xs font-semibold uppercase tracking-[0.18em] text-purple-700 dark:text-purple-300">
+                                                            Latin Honor
+                                                        </p>
+                                                        <p class="text-sm font-semibold">
+                                                            {{ formatHonorLabel(enrollment.latin_honor) }}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                                 <div v-if="enrollment.needsTermReview"
                                                     class="flex items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-amber-900 shadow-sm dark:border-amber-400/30 dark:bg-amber-900/20 dark:text-amber-100">
                                                     <div
@@ -479,6 +501,16 @@
                                                         <Chip v-if="slotProps.data.unified_status"
                                                             :label="getStatusLabel(slotProps.data.unified_status)"
                                                             :class="getStatusClass(slotProps.data.unified_status)" />
+                                                        <span v-else class="text-gray-400 dark:text-gray-500">—</span>
+                                                    </template>
+                                                </Column>
+
+                                                <Column header="Honor" headerClass="min-w-[120px]"
+                                                    bodyClass="min-w-[120px]">
+                                                    <template #body="slotProps">
+                                                        <Chip v-if="slotProps.data.academic_honor"
+                                                            :label="formatHonorLabel(slotProps.data.academic_honor)"
+                                                            class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200" />
                                                         <span v-else class="text-gray-400 dark:text-gray-500">—</span>
                                                     </template>
                                                 </Column>
@@ -1708,6 +1740,7 @@ const academicEnrollmentGroups = computed(() => {
                 term_type: enrollment.term_type || null,
                 graduation_date: enrollment.graduation_date || null,
                 graduation_remarks: enrollment.graduation_remarks || null,
+                latin_honor: enrollment.latin_honor || null,
                 is_graduated: Boolean(enrollment.is_graduated || enrollment.graduation_date),
                 openTermCount: countOpenAcademicTerms(enrollment.terms),
                 needsTermReview: countOpenAcademicTerms(enrollment.terms) > 1,
@@ -2030,6 +2063,39 @@ const formatDateShort = (dateString) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
 };
+
+const HONOR_LABELS = {
+    deans_list: "Dean's List",
+    cum_laude: 'Cum Laude',
+    magna_cum_laude: 'Magna Cum Laude',
+    summa_cum_laude: 'Summa Cum Laude',
+};
+
+const HONOR_BADGE_CLASS = 'bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-amber-950 shadow-sm ring-1 ring-amber-300/70 dark:from-amber-500 dark:via-yellow-500 dark:to-amber-600 dark:text-amber-950 dark:ring-amber-400/50';
+
+const formatHonorLabel = (value) => HONOR_LABELS[value] || value;
+
+// Distinct honor titles held by this scholar, gathered across all academic enrollments/terms
+const scholarHonorBadges = computed(() => {
+    const values = new Set();
+
+    for (const enrollment of academicEnrollmentGroups.value) {
+        if (enrollment.latin_honor) {
+            values.add(enrollment.latin_honor);
+        }
+        for (const term of enrollment.terms || []) {
+            if (term.academic_honor) {
+                values.add(term.academic_honor);
+            }
+        }
+    }
+
+    return Array.from(values).map((value) => ({
+        value,
+        label: formatHonorLabel(value),
+        class: HONOR_BADGE_CLASS,
+    }));
+});
 
 const formatDateTime = (dateString) => {
     if (!dateString) return 'N/A';

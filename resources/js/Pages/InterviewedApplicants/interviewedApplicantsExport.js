@@ -138,6 +138,9 @@ function rlSchoolKey(record) {
 function rlProgramKey(record) {
     return String(record?.program?.id ?? record?.program?.name ?? record?.program?.shortname ?? '').trim().toLowerCase();
 }
+function rlCourseKey(record) {
+    return String(record?.course?.id ?? record?.course?.name ?? record?.course?.shortname ?? '').trim().toLowerCase();
+}
 function rlUniqueCount(records, getter) {
     return new Set(records.map(getter)).size;
 }
@@ -413,7 +416,11 @@ export async function exportRecommendationListExcel({ recommendationList = null 
     // into the header text below the title.
     const schoolUniform = records.length > 0 && rlUniqueCount(records, rlSchoolKey) === 1;
     const programUniform = records.length > 0 && rlUniqueCount(records, rlProgramKey) === 1;
-    const showSchoolColumn = !schoolUniform;
+    const courseUniform = records.length > 0 && rlUniqueCount(records, rlCourseKey) === 1;
+    // School is already the section heading when grouped by school, so the
+    // data column would just repeat it — show Course instead in that case.
+    const showSchoolColumn = groupBy !== 'school' && !schoolUniform;
+    const showCourseColumn = groupBy === 'school' && !courseUniform;
     const showProgramColumn = !programUniform;
 
     const firstRecord = records[0] || null;
@@ -433,6 +440,9 @@ export async function exportRecommendationListExcel({ recommendationList = null 
     if (showSchoolColumn) {
         columns.push({ key: 'school', header: 'School', width: 20, align: 'left', rowspan2: true });
     }
+    if (showCourseColumn) {
+        columns.push({ key: 'course', header: 'Course', width: 20, align: 'left', rowspan2: true });
+    }
     if (showProgramColumn) {
         columns.push({ key: 'program', header: 'Program', width: 10, align: 'center', rowspan2: true });
     }
@@ -451,6 +461,7 @@ export async function exportRecommendationListExcel({ recommendationList = null 
         municipality: (record) => String(record?.profile?.municipality || '').toUpperCase(),
         year: (record) => record?.year_level || '',
         school: (record) => record?.school?.name || record?.school?.shortname || '',
+        course: (record) => record?.course?.name || record?.course?.shortname || '',
         program: (record) => record?.program?.shortname || '',
         projTerms: (record) => {
             const terms = Number(record?.projected_term_count);

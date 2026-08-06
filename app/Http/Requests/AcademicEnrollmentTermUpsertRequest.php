@@ -6,6 +6,7 @@ use App\Models\AcademicEnrollment;
 use App\Models\AcademicEnrollmentTerm;
 use App\Models\ScholarshipProgram;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AcademicEnrollmentTermUpsertRequest extends FormRequest
 {
@@ -33,6 +34,7 @@ class AcademicEnrollmentTermUpsertRequest extends FormRequest
             'date_filed' => ['nullable', 'date'],
             'date_approved' => ['nullable', 'date'],
             'unified_status' => ['nullable', 'string', 'max:50', 'in:pending,approved,active,completed,completed-transferred,denied,withdrawn,loa,suspended,unknown'],
+            'academic_honor' => ['nullable', 'string', Rule::in(['deans_list'])],
             'grant_provision' => ['nullable', 'string', 'max:50'],
             'remarks' => ['nullable', 'string', 'max:1000'],
         ];
@@ -94,6 +96,7 @@ class AcademicEnrollmentTermUpsertRequest extends FormRequest
         $this->merge([
             'academic_year' => $this->normalizeNullableString($this->input('academic_year')),
             'term' => $this->normalizeNullableString($this->input('term')),
+            'academic_honor' => $this->normalizeNullableString($this->input('academic_honor')),
             'grant_provision' => $this->normalizeNullableString($this->input('grant_provision')),
             'remarks' => $this->normalizeNullableString($this->input('remarks')),
             'unified_status' => $this->normalizeNullableString($this->input('unified_status')),

@@ -24,6 +24,7 @@ class FundTransaction extends Model
         'semester',
         'year_level',
         'obr_type',
+        'incentive_type',
         'payee_type',
         'payee_name',
         'payee_address',

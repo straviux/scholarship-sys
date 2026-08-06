@@ -65,10 +65,17 @@
                 </div>
             </div>
 
-            <div class="ios-form-group">
-                <label class="ios-label text-compact">Grant Provision</label>
-                <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
-                    optionValue="value" placeholder="Select Grant Provision" fluid showClear />
+            <div class="grid grid-cols-2 gap-4">
+                <div class="ios-form-group">
+                    <label class="ios-label text-compact">Grant Provision</label>
+                    <Select v-model="form.grant_provision" :options="grantProvisionOptions" optionLabel="label"
+                        optionValue="value" placeholder="Select Grant Provision" fluid showClear />
+                </div>
+                <div class="ios-form-group">
+                    <label class="ios-label text-compact">Academic Honor</label>
+                    <Select v-model="form.academic_honor" :options="academicHonorOptions" optionLabel="label"
+                        optionValue="value" placeholder="None" fluid showClear />
+                </div>
             </div>
 
             <div class="ios-form-group">
@@ -119,6 +126,7 @@ const allowedTermStatuses = new Set(['pending', 'approved', 'active', 'completed
 
 const processing = ref(false);
 const grantProvisionOptions = useSystemOptions('grant_provision');
+const academicHonorOptions = [{ label: "Dean's List", value: 'deans_list' }];
 const statusOptions = computed(() => rawStatusOptions.value.filter((option) => allowedTermStatuses.has(option.value) && option.value !== 'unknown'));
 const form = ref(getDefaultForm());
 
@@ -135,6 +143,7 @@ function getDefaultForm() {
         date_approved: null,
         unified_status: 'pending',
         grant_provision: null,
+        academic_honor: null,
         remarks: '',
     };
 }
@@ -249,6 +258,7 @@ const fillForm = (term) => {
         date_approved: term?.date_approved ? new Date(term.date_approved) : null,
         unified_status: term?.unified_status ?? 'pending',
         grant_provision: term?.grant_provision ?? null,
+        academic_honor: term?.academic_honor ?? null,
         remarks: term?.remarks ?? '',
     };
 };
@@ -326,6 +336,7 @@ const submitTerm = async () => {
             date_approved: formatDateForApi(form.value.date_approved),
             unified_status: normalizeOptionValue(form.value.unified_status) ?? 'pending',
             grant_provision: normalizeOptionValue(form.value.grant_provision),
+            academic_honor: normalizeOptionValue(form.value.academic_honor),
             remarks: normalizeEditorHtml(form.value.remarks),
         };
 

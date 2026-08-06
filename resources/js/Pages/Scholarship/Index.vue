@@ -281,6 +281,18 @@
                                                 v-tooltip.bottom="slotProps.data.graduation_date ? `Graduated ${formatDate(slotProps.data.graduation_date)}` : 'Graduated'">
                                                 Graduated
                                             </span>
+                                            <span v-if="slotProps.data.latin_honor"
+                                                class="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-[0.1em] text-amber-950 shadow-sm ring-1 ring-amber-300/70 dark:from-amber-500 dark:via-yellow-500 dark:to-amber-600 dark:text-amber-950 dark:ring-amber-400/50"
+                                                v-tooltip.bottom="getHonorLabel(slotProps.data.latin_honor)">
+                                                <AppIcon name="award" :size="8" />
+                                                {{ getHonorLabel(slotProps.data.latin_honor) }}
+                                            </span>
+                                            <span v-if="slotProps.data.has_deans_list_honor"
+                                                class="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 px-1.5 py-0.5 text-3xs font-bold uppercase tracking-[0.1em] text-amber-950 shadow-sm ring-1 ring-amber-300/70 dark:from-amber-500 dark:via-yellow-500 dark:to-amber-600 dark:text-amber-950 dark:ring-amber-400/50"
+                                                v-tooltip.bottom="`Dean's List`">
+                                                <AppIcon name="award" :size="8" />
+                                                Dean's List
+                                            </span>
                                             <span v-if="slotProps.data.has_ongoing_ros"
                                                 class="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-2xs font-semibold uppercase tracking-[0.12em] text-sky-800 dark:bg-sky-900/35 dark:text-sky-200"
                                                 v-tooltip.bottom="slotProps.data.ros_start_date ? `ROS ongoing since ${formatDate(slotProps.data.ros_start_date)}` : 'ROS ongoing'">
@@ -1380,6 +1392,15 @@ const getInitials = (profile) => {
     const lastInitial = profile.last_name?.charAt(0) || '';
     return (firstInitial + lastInitial).toUpperCase() || '?';
 };
+
+const HONOR_LABELS = {
+    deans_list: "Dean's List",
+    cum_laude: 'Cum Laude',
+    magna_cum_laude: 'Magna Cum Laude',
+    summa_cum_laude: 'Summa Cum Laude',
+};
+
+const getHonorLabel = (value) => HONOR_LABELS[value] || value;
 
 // Copy "lastname, firstname" to the clipboard
 const copyProfileName = (profile) => {

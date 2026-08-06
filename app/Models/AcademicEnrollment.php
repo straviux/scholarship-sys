@@ -23,6 +23,7 @@ class AcademicEnrollment extends Model
         'term_type',
         'graduation_date',
         'graduation_remarks',
+        'latin_honor',
         'created_by',
         'updated_by',
     ];

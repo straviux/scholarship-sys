@@ -178,11 +178,11 @@ class SystemOptionController extends Controller
 
     private function normalizeMetadata(array $validated, string $category): array
     {
-        if ($category !== 'grant_provision') {
+        if (!in_array($category, ['grant_provision', 'incentive_type'], true)) {
             $validated['program'] = null;
             $validated['amount'] = null;
         } else {
-            $validated['program'] = $validated['program'] ?: null;
+            $validated['program'] = $category === 'grant_provision' ? ($validated['program'] ?: null) : null;
             $validated['amount'] = $validated['amount'] === '' ? null : ($validated['amount'] ?? null);
         }
 

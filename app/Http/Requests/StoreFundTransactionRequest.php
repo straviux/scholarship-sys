@@ -32,6 +32,7 @@ class StoreFundTransactionRequest extends FormRequest
             'particulars_description' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
             'obr_type' => ['nullable', 'string', Rule::in($this->validObrTypes())],
+            'incentive_type' => ['nullable', 'string', 'max:50'],
             'scholar_ids' => ['nullable', 'array'],
             'scholar_ids.*.profile_id' => ['nullable'],
             'scholar_ids.*.scholarship_record_id' => ['nullable'],

@@ -39,7 +39,11 @@ class AcademicEnrollmentTermService
                 remarks: 'Created academic term.',
             );
 
-            return $this->loadTermForRecord($record->id);
+            $term = $this->loadTermForRecord($record->id);
+            $term->academic_honor = $data['academic_honor'] ?? null;
+            $term->save();
+
+            return $term;
         });
     }
 
@@ -87,7 +91,11 @@ class AcademicEnrollmentTermService
                 );
             }
 
-            return $this->loadTermForRecord($record->id);
+            $updatedTerm = $this->loadTermForRecord($record->id);
+            $updatedTerm->academic_honor = $data['academic_honor'] ?? null;
+            $updatedTerm->save();
+
+            return $updatedTerm;
         });
     }
 

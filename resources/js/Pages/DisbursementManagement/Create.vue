@@ -99,9 +99,9 @@
                     <h2 class="text-lg font-semibold text-slate-900 mb-6">Fund Transaction Mapping</h2>
 
                     <div class="space-y-6">
-                        <!-- OBR Type -->
+                        <!-- Transaction Type -->
                         <div>
-                            <label class="block text-sm font-medium text-slate-900 mb-2">OBR Type</label>
+                            <label class="block text-sm font-medium text-slate-900 mb-2">Transaction Type</label>
                             <InputText v-model="form.obr_type" placeholder="e.g., Regular Obligation, Capital Outlay..."
                                 class="w-full text-sm" />
                         </div>

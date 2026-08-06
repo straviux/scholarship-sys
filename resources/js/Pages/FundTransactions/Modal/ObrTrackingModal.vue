@@ -13,7 +13,7 @@
                                         class="font-medium text-gray-700 dark:text-gray-100">
                                         {{
                                             modelValue.obr_no }}</span></p>
-                                <p class="flex justify-between"><span class="text-xs">OBR Type:</span> <span
+                                <p class="flex justify-between"><span class="text-xs">Transaction Type:</span> <span
                                         class="font-medium text-gray-700 dark:text-gray-100">
                                         {{
                                             formatObrTypeLabel(modelValue.obr_type) }}</span></p>

@@ -136,6 +136,7 @@ class AcademicEnrollmentService
 
             $enrollment->graduation_date = $data['graduation_date'];
             $enrollment->graduation_remarks = $data['graduation_remarks'] ?? null;
+            $enrollment->latin_honor = $data['latin_honor'] ?? null;
             $enrollment->save();
 
             ActivityLogService::log(

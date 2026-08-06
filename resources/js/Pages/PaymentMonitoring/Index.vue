@@ -455,7 +455,7 @@ watch(groupedData, () => {
                         </template>
                     </Column>
 
-                    <Column header="OBR Type / Kind" style="min-width: 160px">
+                    <Column header="Transaction Type / Kind" style="min-width: 160px">
                         <template #body="{ data }">
                             <span v-if="data.latest.obr_type" class="text-xs font-medium" :class="{
                                 'text-gray-700': data.latest.obr_type === 'REGULAR',
@@ -539,7 +539,7 @@ watch(groupedData, () => {
                                         </div>
                                     </template>
                                 </Column>
-                                <Column header="OBR Type" style="min-width: 140px">
+                                <Column header="Transaction Type" style="min-width: 140px">
                                     <template #body="{ data }">
                                         <span v-if="data.obr_type" class="font-medium" :class="{
                                             'text-gray-700': data.obr_type === 'REGULAR',

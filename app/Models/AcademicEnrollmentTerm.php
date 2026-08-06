@@ -20,6 +20,7 @@ class AcademicEnrollmentTerm extends Model
         'academic_year',
         'term',
         'unified_status',
+        'academic_honor',
         'date_filed',
         'date_approved',
         'grant_provision',
